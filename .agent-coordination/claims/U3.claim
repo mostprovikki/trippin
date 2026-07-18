@@ -1,0 +1,8 @@
+task: U3
+agent: u3-notify-77c2e9
+session: unknown
+started: 2026-07-18T21:26:14Z
+status: done
+files:
+  - web/src/composables/useNotify.js
+  - web/src/composables/useNotify.test.js
