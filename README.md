@@ -93,3 +93,19 @@ balancer, etc.) that handles HTTPS and forwards to `http://<host>:3000`.
 
 Everything the app owns lives under `data/` (SQLite DB + uploaded documents).
 See [`docs/backup.md`](docs/backup.md) for the backup/restore procedure.
+
+## Smoke test
+
+`e2e/smoke.mjs` is a dependency-free end-to-end check: it boots the real
+server in-process on a random port against a throwaway temp SQLite DB and
+uploads dir, then walks the full organizer + participant golden path (seed →
+login → people → trip → destination decide → confirm dates → participant
+link → profile/doc/checklist as participant → budget → itinerary → readiness
+→ archive → clone). Run it with:
+
+```bash
+node e2e/smoke.mjs
+```
+
+It prints `SMOKE OK` and exits 0 on success, or exits 1 with the failing
+assertion on error. No `npm test` wiring needed — it's a plain Node script.
