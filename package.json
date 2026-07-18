@@ -1,0 +1,10 @@
+{
+  "name": "trip-planner",
+  "private": true,
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev": "npm run dev --workspace=server & npm run dev --workspace=web & wait",
+    "test": "npm test --workspace=server && npm test --workspace=web",
+    "build": "npm run build --workspace=web"
+  }
+}

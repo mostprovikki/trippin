@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "vitest run",
+    "migrate": "node -e \"import('./src/db.js').then(m=>import('./src/migrate.js').then(g=>g.runMigrations(m.getDb())))\""
+  },
+  "dependencies": {
+    "fastify": "^5.2.0",
+    "fastify-plugin": "^5.0.1",
+    "@fastify/autoload": "^6.0.3",
+    "@fastify/cookie": "^11.0.1",
+    "@fastify/multipart": "^9.0.1",
+    "@fastify/rate-limit": "^10.1.1",
+    "@fastify/static": "^8.0.3",
+    "better-sqlite3": "^12.4.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "ajv": "^8.17.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": { "vitest": "^3.2.0" }
+}
