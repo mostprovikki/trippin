@@ -16,4 +16,13 @@ describe('api client', () => {
     await participantApi('tok123').get('/api/participant/me')
     expect(fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer tok123')
   })
+  it('dispatches tripper:unauthorized with current path on 401', async () => {
+    const handler = vi.fn()
+    window.addEventListener('tripper:unauthorized', handler)
+    fetch.mockResolvedValue(new Response(JSON.stringify({ error: { code: 'UNAUTHORIZED', message: 'no' } }), { status: 401 }))
+    await expect(api.get('/api/me')).rejects.toThrow('no')
+    expect(handler).toHaveBeenCalledTimes(1)
+    expect(handler.mock.calls[0][0].detail.path).toBe(location.pathname + location.search)
+    window.removeEventListener('tripper:unauthorized', handler)
+  })
 })

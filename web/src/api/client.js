@@ -9,7 +9,9 @@ async function request(path, { method = 'GET', body, headers = {}, redirectOn401
   if (res.status === 204) return null
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    if (res.status === 401 && redirectOn401 && location.pathname !== '/login') location.assign('/login')
+    if (res.status === 401 && redirectOn401 && location.pathname !== '/login') {
+      window.dispatchEvent(new CustomEvent('tripper:unauthorized', { detail: { path: location.pathname + location.search } }))
+    }
     throw new ApiError(res.status, data.error?.code || 'UNKNOWN', data.error?.message || res.statusText)
   }
   return data

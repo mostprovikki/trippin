@@ -1,0 +1,11 @@
+task: U4
+agent: u4-authredirect-471755
+session: unknown
+started: 2026-07-18T21:26:09Z
+status: done
+files:
+  - web/src/api/client.js
+  - web/src/api/client.test.js
+  - web/src/router.js
+  - web/src/views/LoginView.vue
+  - web/src/views/LoginView.test.js

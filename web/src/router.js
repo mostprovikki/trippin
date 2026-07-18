@@ -30,6 +30,11 @@ router.beforeEach(async (to) => {
     didInitialFetch = true
     await auth.fetchMe()
   }
-  if (!auth.organizer) return { path: '/login' }
+  if (!auth.organizer) return { path: '/login', query: { redirect: to.fullPath } }
   return true
+})
+
+window.addEventListener('tripper:unauthorized', (e) => {
+  if (router.currentRoute.value.path === '/login') return
+  router.push({ path: '/login', query: { redirect: e.detail?.path || router.currentRoute.value.fullPath } })
 })

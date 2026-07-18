@@ -18,7 +18,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 
 const email = ref('')
@@ -26,6 +26,7 @@ const password = ref('')
 const error = ref('')
 const submitting = ref(false)
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 async function onSubmit() {
@@ -33,7 +34,8 @@ async function onSubmit() {
   submitting.value = true
   try {
     await auth.login(email.value, password.value)
-    router.push('/')
+    const dest = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') ? route.query.redirect : '/'
+    router.push(dest)
   } catch (e) {
     error.value = e.message
   } finally {
