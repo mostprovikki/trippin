@@ -1,1 +1,10 @@
-<template><main class="page"><h1>New Trip</h1><p>Implemented in a later task.</p></main></template>
+<script setup>
+import TripWizard from '../components/TripWizard.vue'
+</script>
+
+<template>
+  <main class="page">
+    <h1>New trip</h1>
+    <TripWizard />
+  </main>
+</template>
