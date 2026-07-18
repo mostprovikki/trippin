@@ -1,0 +1,8 @@
+task: U5
+agent: u5-emptystate-f54613
+session: unknown
+started: 2026-07-18T21:26:13Z
+status: done
+files:
+  - web/src/components/EmptyState.vue
+  - web/src/components/EmptyState.test.js
