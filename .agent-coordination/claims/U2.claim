@@ -1,0 +1,8 @@
+task: U2
+agent: u2-usedraft-b7c363
+session: unknown
+started: 2026-07-18T21:28:52Z
+status: done
+files:
+  - web/src/composables/useDraft.js
+  - web/src/composables/useDraft.test.js
