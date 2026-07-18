@@ -103,3 +103,10 @@ Anything you can't resolve inside your task boundary — a needed cross-file cha
 ---
 
 **Summary of hard rules:** stay in your Files list · never edit frozen files · claim before you work · `git add` only your paths · never destructive git · scope tests to your files · escalate, don't cross boundaries.
+
+## 9. Phase-2 amendments (usability/PrimeVue — 2026-07-19)
+
+- Active plan: `docs/superpowers/plans/2026-07-19-tripper-usability-primevue.md` (tasks U1–U14, waves 0–3). Its File Ownership Map is authoritative for this phase.
+- §2 frozen list AMENDED: `web/src/main.js`, `web/src/App.vue`, `web/src/api/client.js`, `web/src/router.js`, `web/src/assets/main.css`, `web/package.json` are task-owned per that map. Root `package.json`/`package-lock.json`: hands-off except U1's single `npm install --workspace=web`.
+- Claims use `U<N>.claim`. Wave gate: do not start a wave-N task until every wave-(N−1) claim is `status: done` and its final commit exists.
+- Everything else in this contract unchanged.

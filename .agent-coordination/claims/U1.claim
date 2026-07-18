@@ -1,0 +1,13 @@
+task: U1
+agent: u1-primevue-8b0094
+session: unknown
+started: 2026-07-18T20:30:53Z
+status: done
+files:
+  - AGENTS.md
+  - web/package.json
+  - package-lock.json
+  - web/src/main.js
+  - web/src/App.vue
+  - web/src/test-utils.js
+  - web/src/test-utils.test.js
