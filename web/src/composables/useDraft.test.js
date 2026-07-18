@@ -81,4 +81,24 @@ describe('useDraft', () => {
     expect(d2.isDirty.value).toBe(true)
     d.teardown(); d2.teardown()
   })
+
+  it('teardown() flushes a pending debounced write (unmount within debounce window)', async () => {
+    const d = useDraft('t', factory)
+    d.draft.name = 'typed-then-left'
+    // let Vue's deep watcher flush (microtask) and schedule the debounce timer,
+    // without advancing past debounceMs — simulates immediate in-app navigation
+    // before the 400ms window elapses.
+    await vi.advanceTimersByTimeAsync(0)
+    d.teardown()
+    const stored = JSON.parse(localStorage.getItem('tripper:draft:t'))
+    expect(stored.name).toBe('typed-then-left')
+  })
+
+  it('teardown() after clear() does not resurrect the draft', () => {
+    const d = useDraft('t', factory)
+    d.draft.name = 'x'
+    d.clear()
+    d.teardown()
+    expect(localStorage.getItem('tripper:draft:t')).toBeNull()
+  })
 })

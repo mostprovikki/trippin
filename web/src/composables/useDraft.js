@@ -60,7 +60,10 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
 
   function teardown() {
     window.removeEventListener('beforeunload', onBeforeUnload)
+    const hadPendingWrite = timer !== null
     clearTimeout(timer)
+    timer = null
+    if (hadPendingWrite) persistNow()
   }
   if (getCurrentInstance()) onBeforeUnmount(teardown)
 
