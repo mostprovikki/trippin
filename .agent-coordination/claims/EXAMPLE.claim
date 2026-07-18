@@ -1,0 +1,10 @@
+task: T00
+agent: example-purpose-a1b2c3
+session: unknown
+started: 2026-07-18T00:00:00Z
+status: in_progress   # in_progress | done
+files:
+  - path/to/file/you/will/write.js
+  - path/to/its/test.js
+# takeover: <only if reclaiming a stale claim — who/why/when>
+# partial: <only if you stopped early — what's done, what remains>
