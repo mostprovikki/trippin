@@ -101,4 +101,23 @@ describe('useDraft', () => {
     d.teardown()
     expect(localStorage.getItem('tripper:draft:t')).toBeNull()
   })
+
+  it('load() adoption of server data does not persist a pristine snapshot', async () => {
+    const d = useDraft('t', factory)
+    d.load({ name: 'server' })
+    await vi.advanceTimersByTimeAsync(500)
+    expect(localStorage.getItem('tripper:draft:t')).toBeNull()
+    d.teardown()
+  })
+
+  it('returning to baseline removes the stored key', async () => {
+    const d = useDraft('t', factory)
+    d.draft.name = 'x'
+    await vi.advanceTimersByTimeAsync(500)
+    expect(localStorage.getItem('tripper:draft:t')).not.toBeNull()
+    d.draft.name = ''
+    await vi.advanceTimersByTimeAsync(500)
+    expect(localStorage.getItem('tripper:draft:t')).toBeNull()
+    d.teardown()
+  })
 })

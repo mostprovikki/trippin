@@ -1,0 +1,5 @@
+task: U15
+agent: u15-review-fixes-f5025f
+started: 2026-07-19T04:48:43Z
+status: done
+files: web/src/components/DestinationPanel.vue, web/src/composables/useDraft.js, web/src/composables/useDraft.test.js

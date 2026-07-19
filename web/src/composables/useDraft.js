@@ -36,8 +36,14 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
 
   watch(draft, () => {
     isDirty.value = JSON.stringify(bulkSnapshot(draft, urlFields)) !== baseline.value
-    clearTimeout(timer)
-    timer = setTimeout(persistNow, debounceMs)
+    if (isDirty.value) {
+      clearTimeout(timer)
+      timer = setTimeout(persistNow, debounceMs)
+    } else {
+      clearTimeout(timer)
+      timer = null
+      try { localStorage.removeItem(storageKey) } catch { /* ignore */ }
+    }
     if (router && route && urlFields.length) {
       const q = { ...route.query }
       let changed = false
