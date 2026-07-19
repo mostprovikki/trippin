@@ -1,0 +1,7 @@
+task: U13
+agent: u13-appnav-42c362
+session: unknown
+started: 2026-07-19T00:09:02Z
+status: done
+files:
+  - web/src/components/AppNav.vue
