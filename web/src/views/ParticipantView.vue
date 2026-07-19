@@ -1,6 +1,9 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import Tag from 'primevue/tag'
+import ProgressSpinner from 'primevue/progressspinner'
+import Message from 'primevue/message'
 import { useParticipantStore } from '../stores/participant.js'
 import ParticipantProfileForm from '../components/ParticipantProfileForm.vue'
 import ParticipantDocs from '../components/ParticipantDocs.vue'
@@ -25,22 +28,22 @@ onMounted(async () => {
 
 <template>
   <main class="page">
-    <div v-if="invalidLink" class="card">
-      <p>This link is no longer valid — ask your trip organizer for a new one</p>
-    </div>
+    <Message v-if="invalidLink" severity="warn" :closable="false">
+      This link is no longer valid — ask your trip organizer for a new one
+    </Message>
 
     <template v-else-if="loading">
-      <p>Loading…</p>
+      <ProgressSpinner style="width: 2.5rem; height: 2.5rem" />
     </template>
 
     <template v-else>
-      <div v-if="store.error" class="card">
-        <p>{{ store.error }}</p>
-      </div>
+      <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
       <section class="card" v-if="store.trip">
-        <h1>{{ store.trip.name }}</h1>
-        <p><span class="badge">{{ store.trip.status }}</span></p>
+        <h1>
+          {{ store.trip.name }}
+          <Tag :value="store.trip.status" severity="info" />
+        </h1>
         <p><strong>Destination:</strong> {{ store.trip.destination || 'TBD' }}</p>
         <p>
           <strong>Dates:</strong>
@@ -49,8 +52,8 @@ onMounted(async () => {
             : 'TBD' }}
         </p>
         <p v-if="store.trip.description">{{ store.trip.description }}</p>
-        <div v-if="store.trip.vibe_tags && store.trip.vibe_tags.length">
-          <span v-for="tag in store.trip.vibe_tags" :key="tag" class="badge">{{ tag }}</span>
+        <div v-if="store.trip.vibe_tags && store.trip.vibe_tags.length" class="tag-row">
+          <Tag v-for="tag in store.trip.vibe_tags" :key="tag" :value="tag" severity="secondary" />
         </div>
         <div v-if="store.trip.goals && store.trip.goals.length">
           <h3>Goals</h3>
@@ -70,3 +73,11 @@ onMounted(async () => {
     </template>
   </main>
 </template>
+
+<style scoped>
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+</style>

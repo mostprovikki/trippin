@@ -1,5 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
+import Checkbox from 'primevue/checkbox'
+import Button from 'primevue/button'
 import { useChecklistsStore } from '../stores/checklists.js'
 import { useAuthStore } from '../stores/auth.js'
 
@@ -80,12 +82,10 @@ function discardDraft() {
   <div class="card">
     <h3>{{ checklist.name }} <span class="badge">{{ checklist.kind }}</span></h3>
 
-    <ul>
+    <ul class="checklist-items">
       <li v-for="item in checklist.items" :key="item.id">
-        <label>
-          <input type="checkbox" :checked="!!item.done" @change="toggleDone(item)" />
-          {{ item.title }}
-        </label>
+        <Checkbox :model-value="!!item.done" binary :input-id="`cl-item-${item.id}`" @update:model-value="toggleDone(item)" />
+        <label :for="`cl-item-${item.id}`">{{ item.title }}</label>
         <span v-if="isOverdue(item)" class="badge badge-warn">Overdue</span>
 
         <template v-if="isTasks">
@@ -96,11 +96,11 @@ function discardDraft() {
           <input type="date" :value="item.due_date || ''" @change="changeDueDate(item, $event.target.value)" />
         </template>
 
-        <button type="button" class="btn" @click="removeItem(item.id)">Delete</button>
+        <Button type="button" label="Delete" severity="danger" outlined @click="removeItem(item.id)" />
       </li>
     </ul>
 
-    <form class="field" @submit.prevent="addItem">
+    <form class="field checklist-add" @submit.prevent="addItem">
       <input v-model="newTitle" placeholder="New item title" />
       <template v-if="isTasks">
         <select v-model="newAssignee">
@@ -109,13 +109,13 @@ function discardDraft() {
         </select>
         <input v-model="newDueDate" type="date" />
       </template>
-      <button type="submit" class="btn btn-primary">Add item</button>
+      <Button type="submit" label="Add item" />
     </form>
 
     <div v-if="isPacking && auth.aiEnabled">
-      <button type="button" class="btn" :disabled="store.aiBusy" @click="suggestPacking">
+      <Button type="button" severity="secondary" outlined :loading="store.aiBusy" @click="suggestPacking">
         {{ store.aiBusy ? 'Generating…' : 'AI packing suggest' }}
-      </button>
+      </Button>
     </div>
     <div v-else-if="isPacking">
       <p>AI disabled — set LLM_PROVIDER</p>
@@ -126,20 +126,32 @@ function discardDraft() {
       <ul>
         <li v-for="(item, idx) in draft.items" :key="idx">{{ item.title }}</li>
       </ul>
-      <button type="button" class="btn btn-primary" @click="applyDraft">Apply</button>
-      <button type="button" class="btn" @click="discardDraft">Discard</button>
+      <Button type="button" label="Apply" @click="applyDraft" />
+      <Button type="button" label="Discard" severity="secondary" outlined @click="discardDraft" />
     </div>
 
-    <div>
-      <button v-if="!checklist.is_template && !showSaveAsTemplate" type="button" class="btn" @click="showSaveAsTemplate = true">
-        Save as template
-      </button>
-      <form v-if="showSaveAsTemplate" class="field" @submit.prevent="saveAsTemplate">
+    <div class="checklist-footer">
+      <Button
+        v-if="!checklist.is_template && !showSaveAsTemplate"
+        type="button"
+        label="Save as template"
+        severity="secondary"
+        outlined
+        @click="showSaveAsTemplate = true"
+      />
+      <form v-if="showSaveAsTemplate" class="field checklist-add" @submit.prevent="saveAsTemplate">
         <input v-model="templateName" placeholder="Template name" />
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn" @click="showSaveAsTemplate = false">Cancel</button>
+        <Button type="submit" label="Save" />
+        <Button type="button" label="Cancel" severity="secondary" outlined @click="showSaveAsTemplate = false" />
       </form>
-      <button type="button" class="btn" @click="removeChecklist">Delete checklist</button>
+      <Button type="button" label="Delete checklist" severity="danger" outlined @click="removeChecklist" />
     </div>
   </div>
 </template>
+
+<style scoped>
+.checklist-items { list-style: none; padding: 0; }
+.checklist-items li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+.checklist-add { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.checklist-footer { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+</style>

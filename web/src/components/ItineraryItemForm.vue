@@ -1,5 +1,9 @@
 <script setup>
 import { reactive, watch } from 'vue'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import Select from 'primevue/select'
+import Button from 'primevue/button'
 
 const props = defineProps({ item: { type: Object, default: null } })
 const emit = defineEmits(['submit', 'cancel'])
@@ -39,35 +43,33 @@ function submit() {
   <form class="card" @submit.prevent="submit">
     <div class="field">
       <label>Title</label>
-      <input v-model="form.title" required />
+      <InputText v-model="form.title" required fluid />
     </div>
     <div class="field">
       <label>Time</label>
-      <input v-model="form.time_range" placeholder="e.g. 09:00-11:00" />
+      <InputText v-model="form.time_range" placeholder="e.g. 09:00-11:00" fluid />
     </div>
     <div class="field">
       <label>Location</label>
-      <input v-model="form.location" />
+      <InputText v-model="form.location" fluid />
     </div>
     <div class="field">
       <label>Category</label>
-      <select v-model="form.category">
-        <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-      </select>
+      <Select v-model="form.category" :options="categories" fluid />
     </div>
     <div class="field">
       <label>Estimated cost</label>
-      <input v-model="form.est_cost" type="number" step="0.01" />
+      <InputText v-model="form.est_cost" type="number" step="0.01" fluid />
     </div>
     <div class="field">
       <label>Notes</label>
-      <textarea v-model="form.notes"></textarea>
+      <Textarea v-model="form.notes" fluid auto-resize />
     </div>
     <div class="field">
       <label>Link</label>
-      <input v-model="form.link" />
+      <InputText v-model="form.link" fluid />
     </div>
-    <button class="btn btn-primary" type="submit">Save</button>
-    <button class="btn" type="button" @click="$emit('cancel')">Cancel</button>
+    <Button type="submit" label="Save" />
+    <Button type="button" label="Cancel" severity="secondary" outlined @click="$emit('cancel')" />
   </form>
 </template>

@@ -1,5 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
 import { useItineraryStore } from '../stores/itinerary.js'
 import { useAuthStore } from '../stores/auth.js'
 import ItineraryItemForm from './ItineraryItemForm.vue'
@@ -57,18 +59,18 @@ function discardDayDraft() {
 <template>
   <div class="card">
     <h3>{{ day.day_date }}</h3>
-    <ul style="list-style:none;padding:0;margin:0">
-      <li v-for="(item, idx) in day.items" :key="item.id" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-bottom:1px solid #e2e2e2">
+    <ul class="day-items">
+      <li v-for="(item, idx) in day.items" :key="item.id" class="day-item">
         <span>{{ categoryIcon(item.category) }}</span>
-        <span v-if="item.time_range" class="badge">{{ item.time_range }}</span>
+        <Tag v-if="item.time_range" :value="item.time_range" severity="secondary" />
         <strong>{{ item.title }}</strong>
         <span v-if="item.location">— {{ item.location }}</span>
         <span v-if="item.est_cost != null">${{ item.est_cost }}</span>
-        <span style="margin-left:auto;display:flex;gap:0.25rem">
-          <button class="btn" type="button" :disabled="idx === 0" @click="move(idx, -1)">↑</button>
-          <button class="btn" type="button" :disabled="idx === day.items.length - 1" @click="move(idx, 1)">↓</button>
-          <button class="btn" type="button" @click="editingId = item.id">Edit</button>
-          <button class="btn" type="button" @click="remove(item.id)">Delete</button>
+        <span class="day-item-actions">
+          <Button type="button" severity="secondary" outlined :disabled="idx === 0" @click="move(idx, -1)">↑</Button>
+          <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" @click="move(idx, 1)">↓</Button>
+          <Button type="button" label="Edit" severity="secondary" outlined @click="editingId = item.id" />
+          <Button type="button" label="Delete" severity="danger" outlined @click="remove(item.id)" />
         </span>
       </li>
     </ul>
@@ -76,36 +78,44 @@ function discardDayDraft() {
     <ItineraryItemForm v-if="editingId" :item="editingItem" @submit="onEditSubmit" @cancel="editingId = null" />
 
     <p v-if="!adding && !editingId">
-      <button class="btn" type="button" @click="adding = true">Add item</button>
+      <Button type="button" label="Add item" severity="secondary" outlined @click="adding = true" />
     </p>
     <ItineraryItemForm v-if="adding" @submit="onAddSubmit" @cancel="adding = false" />
 
-    <div style="margin-top:1rem">
+    <div class="day-ai">
       <div v-if="aiEnabled">
         <div class="field">
           <label>Regenerate instruction (optional)</label>
           <input v-model="instruction" placeholder="e.g. more relaxed" />
         </div>
-        <button class="btn" type="button" :disabled="store.aiBusy" @click="regen">
+        <Button type="button" severity="secondary" outlined :loading="store.aiBusy" @click="regen">
           {{ store.aiBusy ? 'Generating…' : 'Regenerate day' }}
-        </button>
+        </Button>
       </div>
-      <p v-else class="badge">AI disabled — set LLM_PROVIDER</p>
+      <Tag v-else severity="secondary" value="AI disabled — set LLM_PROVIDER" />
     </div>
 
-    <div v-if="dayDraft" class="card" style="background:#f6f7f9">
+    <div v-if="dayDraft" class="card day-draft">
       <h4>Draft for {{ day.day_date }}</h4>
-      <ul style="list-style:none;padding:0;margin:0">
+      <ul class="day-items">
         <li v-for="(it, i) in dayDraft" :key="i">
           {{ categoryIcon(it.category) }}
-          <span v-if="it.time_range" class="badge">{{ it.time_range }}</span>
+          <Tag v-if="it.time_range" :value="it.time_range" severity="secondary" />
           <strong>{{ it.title }}</strong>
           <span v-if="it.location">— {{ it.location }}</span>
           <span v-if="it.est_cost != null">${{ it.est_cost }}</span>
         </li>
       </ul>
-      <button class="btn btn-primary" type="button" @click="applyDayDraft">Apply</button>
-      <button class="btn" type="button" @click="discardDayDraft">Discard</button>
+      <Button type="button" label="Apply" @click="applyDayDraft" />
+      <Button type="button" label="Discard" severity="secondary" outlined @click="discardDayDraft" />
     </div>
   </div>
 </template>
+
+<style scoped>
+.day-items { list-style: none; padding: 0; margin: 0; }
+.day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid #e2e2e2; }
+.day-item-actions { margin-left: auto; display: flex; gap: 0.25rem; }
+.day-ai { margin-top: 1rem; }
+.day-draft { background: #f6f7f9; }
+</style>

@@ -1,8 +1,31 @@
 <script setup>
 import { reactive, ref, watch } from 'vue'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import Select from 'primevue/select'
+import Button from 'primevue/button'
 import { useParticipantStore } from '../stores/participant.js'
 
 const store = useParticipantStore()
+
+const dietaryOptions = [
+  { label: '', value: '' },
+  { label: 'Veg', value: 'veg' },
+  { label: 'Non-veg', value: 'non_veg' },
+  { label: 'Vegan', value: 'vegan' }
+]
+const paceOptions = [
+  { label: '', value: '' },
+  { label: 'Relaxed', value: 'relaxed' },
+  { label: 'Moderate', value: 'moderate' },
+  { label: 'Packed', value: 'packed' }
+]
+const budgetOptions = [
+  { label: '', value: '' },
+  { label: 'Low', value: 'low' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'High', value: 'high' }
+]
 
 function blank() {
   return {
@@ -58,64 +81,49 @@ async function submit() {
     <form @submit.prevent="submit">
       <div class="field">
         <label for="pf-name">Name</label>
-        <input id="pf-name" v-model="form.name" required />
+        <InputText id="pf-name" v-model="form.name" required fluid />
       </div>
       <div class="field">
         <label for="pf-phone">Phone</label>
-        <input id="pf-phone" v-model="form.phone" />
+        <InputText id="pf-phone" v-model="form.phone" fluid />
       </div>
       <div class="field">
         <label for="pf-email">Email</label>
-        <input id="pf-email" type="email" v-model="form.email" />
+        <InputText id="pf-email" type="email" v-model="form.email" fluid />
       </div>
       <div class="field">
         <label for="pf-emergency">Emergency contact</label>
-        <input id="pf-emergency" v-model="form.emergency_contact" />
+        <InputText id="pf-emergency" v-model="form.emergency_contact" fluid />
       </div>
       <div class="field">
         <label for="pf-dietary">Dietary</label>
-        <select id="pf-dietary" v-model="form.dietary">
-          <option value=""></option>
-          <option value="veg">Veg</option>
-          <option value="non_veg">Non-veg</option>
-          <option value="vegan">Vegan</option>
-        </select>
+        <Select input-id="pf-dietary" v-model="form.dietary" :options="dietaryOptions" option-label="label" option-value="value" fluid />
       </div>
       <div class="field">
         <label for="pf-allergies">Allergies</label>
-        <input id="pf-allergies" v-model="form.allergies" />
+        <InputText id="pf-allergies" v-model="form.allergies" fluid />
       </div>
       <div class="field">
         <label for="pf-medical">Medical notes</label>
-        <textarea id="pf-medical" v-model="form.medical_notes"></textarea>
+        <Textarea id="pf-medical" v-model="form.medical_notes" fluid auto-resize />
       </div>
       <div class="field">
         <label for="pf-pace">Preferred pace</label>
-        <select id="pf-pace" v-model="form.pace">
-          <option value=""></option>
-          <option value="relaxed">Relaxed</option>
-          <option value="moderate">Moderate</option>
-          <option value="packed">Packed</option>
-        </select>
+        <Select input-id="pf-pace" v-model="form.pace" :options="paceOptions" option-label="label" option-value="value" fluid />
       </div>
       <div class="field">
         <label for="pf-interests">Interests (comma-separated)</label>
-        <input id="pf-interests" v-model="form.interests" placeholder="hiking, museums, food" />
+        <InputText id="pf-interests" v-model="form.interests" placeholder="hiking, museums, food" fluid />
       </div>
       <div class="field">
         <label for="pf-budget">Budget band</label>
-        <select id="pf-budget" v-model="form.budget_band">
-          <option value=""></option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
+        <Select input-id="pf-budget" v-model="form.budget_band" :options="budgetOptions" option-label="label" option-value="value" fluid />
       </div>
       <div class="field">
         <label for="pf-city">Home city</label>
-        <input id="pf-city" v-model="form.home_city" />
+        <InputText id="pf-city" v-model="form.home_city" fluid />
       </div>
-      <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
+      <Button type="submit" :label="saving ? 'Saving…' : 'Save'" :disabled="saving" />
       <span v-if="confirmed" class="badge badge-ok pf-confirmed">Profile confirmed ✓</span>
     </form>
   </section>

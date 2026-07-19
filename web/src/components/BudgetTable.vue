@@ -1,5 +1,9 @@
 <script setup>
 import { computed } from 'vue'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -23,46 +27,38 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
 </script>
 
 <template>
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Category</th>
-        <th>Estimate</th>
-        <th>Basis</th>
-        <th v-if="draft">AI draft</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="line in modelValue" :key="line.category">
-        <td>{{ label(line.category) }}</td>
-        <td>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            :value="line.estimate"
-            @input="update(line.category, 'estimate', Number($event.target.value))"
-          />
-        </td>
-        <td>
-          <input
-            type="text"
-            :value="line.basis"
-            @input="update(line.category, 'basis', $event.target.value)"
-          />
-        </td>
-        <td v-if="draft">
-          <span v-if="draftFor(line.category)">
-            {{ draftFor(line.category).estimate }} — {{ draftFor(line.category).basis }}
-          </span>
-        </td>
-      </tr>
-      <tr>
-        <td><strong>Total</strong></td>
-        <td><strong>{{ total }}</strong></td>
-        <td></td>
-        <td v-if="draft"></td>
-      </tr>
-    </tbody>
-  </table>
+  <DataTable :value="modelValue" data-key="category">
+    <Column header="Category">
+      <template #body="{ data }">{{ label(data.category) }}</template>
+      <template #footer><strong>Total</strong></template>
+    </Column>
+    <Column header="Estimate">
+      <template #body="{ data }">
+        <InputNumber
+          :model-value="data.estimate"
+          :min="0"
+          :max-fraction-digits="2"
+          fluid
+          @update:model-value="update(data.category, 'estimate', Number($event) || 0)"
+        />
+      </template>
+      <template #footer><strong>{{ total }}</strong></template>
+    </Column>
+    <Column header="Basis">
+      <template #body="{ data }">
+        <InputText
+          :model-value="data.basis"
+          fluid
+          @update:model-value="update(data.category, 'basis', $event)"
+        />
+      </template>
+    </Column>
+    <Column v-if="draft" header="AI draft">
+      <template #body="{ data }">
+        <span v-if="draftFor(data.category)">
+          {{ draftFor(data.category).estimate }} — {{ draftFor(data.category).basis }}
+        </span>
+      </template>
+    </Column>
+  </DataTable>
 </template>

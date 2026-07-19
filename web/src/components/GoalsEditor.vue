@@ -1,6 +1,9 @@
 <script setup>
 import { reactive } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 
 const props = defineProps({
   goals: { type: Array, default: () => [] }
@@ -52,29 +55,29 @@ function remove(id) {
     <ul class="goals-list">
       <li v-for="goal in goals" :key="goal.id" class="goal-item">
         <template v-if="editing[goal.id]">
-          <div class="field"><label>Title</label><input v-model="editing[goal.id].title" /></div>
-          <div class="field"><label>Fixed date</label><input type="date" v-model="editing[goal.id].fixed_date" /></div>
-          <div class="field"><label>Fixed place</label><input v-model="editing[goal.id].fixed_place" /></div>
-          <div class="field"><label>Notes</label><textarea v-model="editing[goal.id].notes"></textarea></div>
-          <button type="button" class="btn btn-primary" @click="submitEdit(goal.id)">Save</button>
-          <button type="button" class="btn" @click="cancelEdit(goal.id)">Cancel</button>
+          <div class="field"><label>Title</label><InputText v-model="editing[goal.id].title" fluid /></div>
+          <div class="field"><label>Fixed date</label><InputText type="date" v-model="editing[goal.id].fixed_date" fluid /></div>
+          <div class="field"><label>Fixed place</label><InputText v-model="editing[goal.id].fixed_place" fluid /></div>
+          <div class="field"><label>Notes</label><Textarea v-model="editing[goal.id].notes" fluid auto-resize /></div>
+          <Button type="button" label="Save" @click="submitEdit(goal.id)" />
+          <Button type="button" label="Cancel" severity="secondary" outlined @click="cancelEdit(goal.id)" />
         </template>
         <template v-else>
           <strong>{{ goal.title }}</strong>
           <span v-if="goal.fixed_date"> — {{ goal.fixed_date }}</span>
           <span v-if="goal.fixed_place"> @ {{ goal.fixed_place }}</span>
           <p v-if="goal.notes">{{ goal.notes }}</p>
-          <button type="button" class="btn" @click="startEdit(goal)">Edit</button>
-          <button type="button" class="btn" @click="remove(goal.id)">Delete</button>
+          <Button type="button" label="Edit" severity="secondary" outlined @click="startEdit(goal)" />
+          <Button type="button" label="Delete" severity="danger" outlined @click="remove(goal.id)" />
         </template>
       </li>
     </ul>
     <form class="goal-add-form" @submit.prevent="submitAdd">
-      <div class="field"><label>New goal title</label><input v-model="form.title" placeholder="e.g. Visit temple" /></div>
-      <div class="field"><label>Fixed date</label><input type="date" v-model="form.fixed_date" /></div>
-      <div class="field"><label>Fixed place</label><input v-model="form.fixed_place" /></div>
-      <div class="field"><label>Notes</label><textarea v-model="form.notes"></textarea></div>
-      <button type="submit" class="btn btn-primary">Add goal</button>
+      <div class="field"><label>New goal title</label><InputText v-model="form.title" placeholder="e.g. Visit temple" fluid /></div>
+      <div class="field"><label>Fixed date</label><InputText type="date" v-model="form.fixed_date" fluid /></div>
+      <div class="field"><label>Fixed place</label><InputText v-model="form.fixed_place" fluid /></div>
+      <div class="field"><label>Notes</label><Textarea v-model="form.notes" fluid auto-resize /></div>
+      <Button type="submit" label="Add goal" />
     </form>
   </div>
 </template>

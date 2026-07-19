@@ -26,23 +26,31 @@ const tabs = [
 </template>
 
 <style scoped>
+/* Router-driven tab bar styled with PrimeVue design tokens (Tabs component
+   doesn't fit router navigation, so this mirrors its underline look). */
 .trip-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
   overflow-x: auto;
   margin-bottom: 1rem;
-  border-bottom: 1px solid #e2e2e2;
+  border-bottom: 1px solid var(--p-content-border-color, #e2e2e2);
 }
 .trip-tab {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   text-decoration: none;
-  color: #1a1a1a;
+  color: var(--p-text-muted-color, #6b7280);
+  font-weight: 500;
   white-space: nowrap;
   border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.trip-tab:hover {
+  color: var(--p-text-color, #1a1a1a);
 }
 .trip-tab-active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: var(--p-primary-color, #2563eb);
+  border-bottom-color: var(--p-primary-color, #2563eb);
   font-weight: 600;
 }
 </style>

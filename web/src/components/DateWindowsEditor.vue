@@ -1,5 +1,7 @@
 <script setup>
 import { reactive, watch } from 'vue'
+import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
 
 const props = defineProps({
   windows: { type: Array, default: () => [] }
@@ -31,20 +33,20 @@ function save() {
     <div v-for="(row, idx) in rows" :key="idx" class="dwe-row">
       <div class="field">
         <label>Start date</label>
-        <input type="date" v-model="row.start_date" />
+        <InputText type="date" v-model="row.start_date" fluid />
       </div>
       <div class="field">
         <label>End date</label>
-        <input type="date" v-model="row.end_date" />
+        <InputText type="date" v-model="row.end_date" fluid />
       </div>
       <div class="field">
         <label>Note</label>
-        <input v-model="row.note" placeholder="optional" />
+        <InputText v-model="row.note" placeholder="optional" fluid />
       </div>
-      <button type="button" class="btn" @click="removeRow(idx)">Remove</button>
+      <Button type="button" label="Remove" severity="secondary" outlined size="small" @click="removeRow(idx)" />
     </div>
-    <button type="button" class="btn" @click="addRow">Add date window</button>
-    <button type="button" class="btn btn-primary" @click="save">Save windows</button>
+    <Button type="button" label="Add date window" severity="secondary" outlined @click="addRow" />
+    <Button type="button" label="Save windows" @click="save" />
   </div>
 </template>
 
@@ -60,5 +62,8 @@ function save() {
   margin-bottom: 0;
   min-width: 8rem;
   flex: 1;
+}
+.date-windows-editor > .p-button {
+  margin-right: 0.5rem;
 }
 </style>

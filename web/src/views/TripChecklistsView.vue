@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import InputText from 'primevue/inputtext'
+import Button from 'primevue/button'
+import Message from 'primevue/message'
 import { api } from '../api/client.js'
 import { useChecklistsStore } from '../stores/checklists.js'
 import ChecklistCard from '../components/ChecklistCard.vue'
@@ -40,7 +43,7 @@ async function addFromTemplate() {
   <main class="page">
     <h1>Trip Checklists</h1>
 
-    <div v-if="store.error" class="card">{{ store.error }}</div>
+    <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
     <div class="card">
       <h2>New checklist</h2>
@@ -51,8 +54,8 @@ async function addFromTemplate() {
           <option value="tasks">Tasks</option>
         </select>
         <label for="checklist-name">Name</label>
-        <input id="checklist-name" v-model="newName" placeholder="Checklist name" />
-        <button type="submit" class="btn btn-primary">Create</button>
+        <InputText id="checklist-name" v-model="newName" placeholder="Checklist name" />
+        <Button type="submit" label="Create" />
       </form>
     </div>
 
@@ -63,7 +66,7 @@ async function addFromTemplate() {
           <option value="">Select a template…</option>
           <option v-for="t in store.templates" :key="t.id" :value="t.id">{{ t.name }} ({{ t.kind }})</option>
         </select>
-        <button type="submit" class="btn">Add from template</button>
+        <Button type="submit" label="Add from template" severity="secondary" outlined />
       </form>
     </div>
 

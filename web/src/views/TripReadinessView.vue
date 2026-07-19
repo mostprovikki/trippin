@@ -1,6 +1,9 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import Tag from 'primevue/tag'
+import ProgressBar from 'primevue/progressbar'
+import Message from 'primevue/message'
 import { useReadinessStore } from '../stores/readiness.js'
 
 const route = useRoute()
@@ -25,22 +28,29 @@ const checklistPct = computed(() => {
   if (!c || !c.total_items) return 0
   return Math.round((c.done_items / c.total_items) * 100)
 })
+
+function chipText(chip) {
+  return `${chip.ok ? '✓' : '✗'} ${chip.label}${chip.detail ? ` (${chip.detail})` : ''}`
+}
 </script>
 
 <template>
   <main class="page">
     <h1>Trip Readiness</h1>
 
-    <div v-if="store.error" class="card">{{ store.error }}</div>
+    <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
     <template v-if="store.data">
       <div class="card">
         <h2>Decisions</h2>
-        <p>
-          <span v-for="chip in decisionChips" :key="chip.label" class="badge" :class="chip.ok ? 'badge-ok' : 'badge-warn'" style="margin-right: 0.5rem;">
-            {{ chip.ok ? '✓' : '✗' }} {{ chip.label }}<template v-if="chip.detail"> ({{ chip.detail }})</template>
-          </span>
-        </p>
+        <div class="tag-row">
+          <Tag
+            v-for="chip in decisionChips"
+            :key="chip.label"
+            :value="chipText(chip)"
+            :severity="chip.ok ? 'success' : 'warn'"
+          />
+        </div>
       </div>
 
       <div class="card">
@@ -59,21 +69,22 @@ const checklistPct = computed(() => {
             <tr v-for="p in store.data.participants" :key="p.person_id">
               <td>{{ p.name }}</td>
               <td>
-                <span class="badge" :class="p.profile_confirmed ? 'badge-ok' : 'badge-warn'">
-                  {{ p.profile_confirmed ? '✓' : '✗' }}
-                </span>
+                <Tag :value="p.profile_confirmed ? '✓' : '✗'" :severity="p.profile_confirmed ? 'success' : 'warn'" />
               </td>
               <td>{{ p.docs_count }}</td>
               <td>
                 <span v-if="!p.doc_warnings.length">—</span>
-                <span v-for="(w, i) in p.doc_warnings" :key="i" class="badge badge-warn" style="margin-right: 0.25rem;">
-                  {{ w.doc_type }} {{ w.level }} ({{ w.expiry_date }})
-                </span>
+                <div v-else class="tag-row">
+                  <Tag
+                    v-for="(w, i) in p.doc_warnings"
+                    :key="i"
+                    :value="`${w.doc_type} ${w.level} (${w.expiry_date})`"
+                    severity="warn"
+                  />
+                </div>
               </td>
               <td>
-                <span class="badge" :class="p.has_active_link ? 'badge-ok' : 'badge-warn'">
-                  {{ p.has_active_link ? '✓' : '✗' }}
-                </span>
+                <Tag :value="p.has_active_link ? '✓' : '✗'" :severity="p.has_active_link ? 'success' : 'warn'" />
               </td>
             </tr>
           </tbody>
@@ -83,9 +94,7 @@ const checklistPct = computed(() => {
       <div class="card">
         <h2>Checklists</h2>
         <p>{{ store.data.checklists.done_items }} / {{ store.data.checklists.total_items }} done ({{ checklistPct }}%)</p>
-        <div style="background:#e2e2e2; border-radius: 999px; height: 0.5rem; overflow: hidden;">
-          <div :style="{ width: checklistPct + '%', height: '100%', background: '#2563eb' }"></div>
-        </div>
+        <ProgressBar :value="checklistPct" :show-value="false" style="height: 0.5rem" />
         <h3>Overdue</h3>
         <p v-if="!store.data.checklists.overdue.length">No overdue items.</p>
         <ul v-else>
@@ -97,3 +106,11 @@ const checklistPct = computed(() => {
     </template>
   </main>
 </template>
+
+<style scoped>
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+</style>

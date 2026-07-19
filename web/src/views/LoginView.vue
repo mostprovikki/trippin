@@ -4,14 +4,20 @@
     <form class="card" @submit.prevent="onSubmit">
       <div class="field">
         <label for="email">Email</label>
-        <input id="email" v-model="email" type="email" required autocomplete="username" />
+        <InputText id="email" v-model="email" type="email" required autocomplete="username" fluid />
       </div>
       <div class="field">
         <label for="password">Password</label>
-        <input id="password" v-model="password" type="password" required autocomplete="current-password" />
+        <Password
+          v-model="password"
+          input-id="password"
+          :feedback="false"
+          :input-props="{ required: true, autocomplete: 'current-password' }"
+          fluid
+        />
       </div>
       <p v-if="error" class="badge-warn badge">{{ error }}</p>
-      <button class="btn btn-primary" type="submit" :disabled="submitting">Log in</button>
+      <Button type="submit" label="Log in" :disabled="submitting" />
     </form>
   </main>
 </template>
@@ -19,6 +25,9 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
 import { useAuthStore } from '../stores/auth.js'
 
 const email = ref('')

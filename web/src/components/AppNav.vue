@@ -30,13 +30,30 @@ async function onLogout() {
 </script>
 
 <style scoped>
-.app-nav { border-radius: 0; border-left: 0; border-right: 0; border-top: 0; }
+.app-nav {
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid #e5e5e7;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  padding: 0.375rem 1.25rem;
+}
 .app-nav-link {
-  color: #1a1a1a;
+  color: #1d1d1f;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 0.9375rem;
   padding: 0.5rem 0.75rem;
   display: inline-block;
+  border-radius: 8px;
+  transition: color 0.15s ease, background 0.15s ease;
 }
-.app-nav-link.router-link-active { color: #2563eb; }
+.app-nav-link:hover {
+  background: #f5f5f7;
+}
+.app-nav-link.router-link-active {
+  color: #2563eb;
+  font-weight: 600;
+}
 </style>

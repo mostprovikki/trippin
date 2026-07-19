@@ -19,10 +19,19 @@ const emit = defineEmits(['cta'])
 
 <style scoped>
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 2rem 1rem;
-  color: #6b7280;
+  padding: 3.5rem 1.5rem;
+  color: #6e6e73;
 }
-.empty-state i { font-size: 2rem; }
-.empty-state p { margin: 0.5rem 0 1rem; }
+.empty-state i {
+  font-size: 2rem;
+  color: #aeaeb2;
+}
+.empty-state p {
+  margin: 0.75rem 0 1.25rem;
+  font-size: 0.9375rem;
+}
 </style>

@@ -2,7 +2,9 @@
   <Toast position="top-right" />
   <ConfirmDialog />
   <AppNav v-if="!route.meta.bare && auth.organizer" />
-  <RouterView />
+  <main>
+    <RouterView />
+  </main>
 </template>
 
 <script setup>

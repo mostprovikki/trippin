@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import { usePeopleStore } from '../stores/people.js'
 import { useNotify } from '../composables/useNotify.js'
 
@@ -64,10 +68,10 @@ function isExpired(doc) {
           <td>{{ doc.doc_type }}</td>
           <td>{{ doc.doc_number || '-' }}</td>
           <td>
-            <span :class="['badge', isExpired(doc) ? 'badge-warn' : '']">{{ doc.expiry_date || '-' }}</span>
+            <Tag :severity="isExpired(doc) ? 'warn' : 'secondary'" :value="doc.expiry_date || '-'" />
           </td>
           <td><a :href="`/api/documents/${doc.id}/file`" target="_blank">{{ doc.original_name }}</a></td>
-          <td><button class="btn" @click="remove(doc)">Delete</button></td>
+          <td><Button type="button" label="Delete" severity="danger" outlined @click="remove(doc)" /></td>
         </tr>
       </tbody>
     </table>
@@ -80,19 +84,17 @@ function isExpired(doc) {
       </div>
       <div class="field">
         <label for="doc-type">Type</label>
-        <select id="doc-type" v-model="docType">
-          <option v-for="t in DOC_TYPES" :key="t" :value="t">{{ t }}</option>
-        </select>
+        <Select label-id="doc-type" v-model="docType" :options="DOC_TYPES" fluid />
       </div>
       <div class="field">
         <label for="doc-number">Number (optional)</label>
-        <input id="doc-number" v-model="docNumber" />
+        <InputText id="doc-number" v-model="docNumber" fluid />
       </div>
       <div class="field">
         <label for="doc-expiry">Expiry (optional)</label>
-        <input id="doc-expiry" type="date" v-model="expiryDate" />
+        <InputText id="doc-expiry" type="date" v-model="expiryDate" fluid />
       </div>
-      <button type="submit" class="btn btn-primary" :disabled="uploading">{{ uploading ? 'Uploading…' : 'Upload' }}</button>
+      <Button type="submit" :loading="uploading" :label="uploading ? 'Uploading…' : 'Upload'" />
     </form>
   </div>
 </template>
