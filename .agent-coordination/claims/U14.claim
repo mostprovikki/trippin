@@ -1,0 +1,9 @@
+task: U14
+agent: u14-integration-opus48
+session: unknown
+started: 2026-07-19T00:14:22Z
+status: done
+files:
+  - web/src/assets/main.css
+  - e2e/smoke.mjs
+  - .agent-coordination/NOTES.md
