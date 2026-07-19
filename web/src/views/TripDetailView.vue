@@ -1,12 +1,18 @@
 <script setup>
-import { reactive, ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
+import { useConfirm } from 'primevue/useconfirm'
+import Tag from 'primevue/tag'
+import Button from 'primevue/button'
+import ProgressSpinner from 'primevue/progressspinner'
 import { useTripsStore } from '../stores/trips.js'
 import { usePeopleStore } from '../stores/people.js'
 import TripTabs from '../components/TripTabs.vue'
 import DateWindowsEditor from '../components/DateWindowsEditor.vue'
 import GoalsEditor from '../components/GoalsEditor.vue'
 import DestinationPanel from '../components/DestinationPanel.vue'
+import { useDraft, confirmDiscard } from '../composables/useDraft.js'
+import { useNotify } from '../composables/useNotify.js'
 
 const route = useRoute()
 const store = useTripsStore()
@@ -14,7 +20,11 @@ const people = usePeopleStore()
 
 const tripId = computed(() => route.params.id)
 
-const basics = reactive({ name: '', description: '', origin_city: '', vibe_tags: '' })
+const confirm = useConfirm()
+const notify = useNotify()
+const loading = ref(true)
+const basicsDraft = useDraft(`trip:${route.params.id}:basics`, () => ({ name: '', description: '', origin_city: '', vibe_tags: '' }))
+const basics = basicsDraft.draft
 const newParticipantId = ref('')
 const revealedLink = ref(null)
 
@@ -30,18 +40,27 @@ const availablePeople = computed(() => {
 
 function loadBasics(trip) {
   if (!trip) return
-  basics.name = trip.name || ''
-  basics.description = trip.description || ''
-  basics.origin_city = trip.origin_city || ''
-  basics.vibe_tags = (trip.vibe_tags || []).join(', ')
+  basicsDraft.load({
+    name: trip.name || '',
+    description: trip.description || '',
+    origin_city: trip.origin_city || '',
+    vibe_tags: (trip.vibe_tags || []).join(', ')
+  })
 }
 
 async function load() {
-  await store.fetchTrip(tripId.value)
-  loadBasics(store.current)
-  await store.fetchCandidates(tripId.value)
-  await store.fetchLinks(tripId.value)
-  try { await people.fetchPeople() } catch { /* ignore */ }
+  loading.value = true
+  try {
+    await store.fetchTrip(tripId.value)
+    loadBasics(store.current)
+    await store.fetchCandidates(tripId.value)
+    await store.fetchLinks(tripId.value)
+    try { await people.fetchPeople() } catch { /* non-critical */ }
+  } catch (e) {
+    notify.error(e.message)
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(load)
@@ -56,26 +75,37 @@ async function saveBasics() {
       vibe_tags: basics.vibe_tags.split(',').map((s) => s.trim()).filter(Boolean)
     })
     loadBasics(trip)
-  } catch { /* store.error surfaced below */ }
+    basicsDraft.clear()
+    notify.success('Trip saved')
+  } catch (e) {
+    notify.error(e.message)
+  }
 }
+
+onBeforeRouteLeave(async () => {
+  if (!basicsDraft.isDirty.value) return true
+  const ok = await confirmDiscard(confirm)
+  if (ok) basicsDraft.clear()
+  return ok
+})
 
 async function advanceStatus() {
   if (!nextTransition.value) return
-  try { await store.setStatus(tripId.value, nextTransition.value.target) } catch { /* surfaced via store.error */ }
+  try { await store.setStatus(tripId.value, nextTransition.value.target) } catch (e) { notify.error(e.message) }
 }
 
 async function onSaveWindows(windows) {
-  try { await store.saveWindows(tripId.value, windows) } catch { /* surfaced */ }
+  try { await store.saveWindows(tripId.value, windows) } catch (e) { notify.error(e.message) }
 }
 
 async function onAddGoal(goal) {
-  try { await store.addGoal(tripId.value, goal) } catch { /* surfaced */ }
+  try { await store.addGoal(tripId.value, goal) } catch (e) { notify.error(e.message) }
 }
 async function onUpdateGoal(goalId, goal) {
-  try { await store.updateGoal(goalId, goal) } catch { /* surfaced */ }
+  try { await store.updateGoal(goalId, goal) } catch (e) { notify.error(e.message) }
 }
 async function onDeleteGoal(goalId) {
-  try { await store.deleteGoal(goalId) } catch { /* surfaced */ }
+  try { await store.deleteGoal(goalId) } catch (e) { notify.error(e.message) }
 }
 
 async function addParticipant() {
@@ -83,11 +113,20 @@ async function addParticipant() {
   try {
     await store.addParticipant(tripId.value, newParticipantId.value)
     newParticipantId.value = ''
-  } catch { /* surfaced */ }
+  } catch (e) { notify.error(e.message) }
 }
-async function removeParticipant(personId) {
-  if (!confirm('Remove this participant?')) return
-  try { await store.removeParticipant(tripId.value, personId) } catch { /* surfaced */ }
+function removeParticipant(personId) {
+  confirm.require({
+    message: 'Remove this participant?',
+    header: 'Remove participant',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Remove',
+    acceptClass: 'p-button-danger',
+    rejectLabel: 'Cancel',
+    accept: async () => {
+      try { await store.removeParticipant(tripId.value, personId) } catch (e) { notify.error(e.message) }
+    }
+  })
 }
 
 async function createLink(personId) {
@@ -95,13 +134,18 @@ async function createLink(personId) {
     const result = await store.createLink(tripId.value, personId)
     revealedLink.value = { personId, url: result.url }
     await store.fetchLinks(tripId.value)
-  } catch { /* surfaced */ }
+  } catch (e) { notify.error(e.message) }
 }
 async function copyLink(url) {
-  try { await navigator.clipboard.writeText(location.origin + url) } catch { /* clipboard may be unavailable */ }
+  try {
+    await navigator.clipboard.writeText(location.origin + url)
+    notify.success('Link copied')
+  } catch {
+    notify.error('Could not access clipboard — copy the link manually')
+  }
 }
 async function revokeLink(linkId) {
-  try { await store.revokeLink(linkId) } catch { /* surfaced */ }
+  try { await store.revokeLink(linkId) } catch (e) { notify.error(e.message) }
 }
 function linksFor(personId) {
   return store.links.filter((l) => l.person_id === personId)
@@ -110,10 +154,13 @@ function linksFor(personId) {
 
 <template>
   <main class="page">
-    <h1>Trip</h1>
+    <h1>
+      {{ store.current?.name || 'Trip' }}
+      <Tag v-if="store.current" :value="store.current.status" severity="info" />
+    </h1>
     <TripTabs :trip-id="tripId" />
 
-    <div v-if="store.error" class="card trip-error">{{ store.error }}</div>
+    <ProgressSpinner v-if="loading && !store.current" style="width: 2.5rem; height: 2.5rem" />
 
     <template v-if="store.current">
       <section class="card">
@@ -122,9 +169,9 @@ function linksFor(personId) {
         <div class="field"><label for="td-desc">Description</label><textarea id="td-desc" v-model="basics.description"></textarea></div>
         <div class="field"><label for="td-origin">Origin city</label><input id="td-origin" v-model="basics.origin_city" /></div>
         <div class="field"><label for="td-vibe">Vibe tags (comma-separated)</label><input id="td-vibe" v-model="basics.vibe_tags" /></div>
-        <button type="button" class="btn btn-primary" @click="saveBasics">Save changes</button>
+        <Button label="Save changes" @click="saveBasics" />
         <p>Status: <span class="badge badge-ok">{{ store.current.status }}</span></p>
-        <button v-if="nextTransition" type="button" class="btn" @click="advanceStatus">{{ nextTransition.label }}</button>
+        <Button v-if="nextTransition" :label="nextTransition.label" severity="secondary" outlined @click="advanceStatus" />
       </section>
 
       <section class="card">
@@ -177,7 +224,6 @@ function linksFor(personId) {
 </template>
 
 <style scoped>
-.trip-error { border-color: #fca5a5; color: #7f1d1d; }
 .participants-list { list-style: none; padding: 0; }
 .participant-row { border-bottom: 1px solid #e2e2e2; padding: 0.5rem 0; }
 .link-reveal { margin-top: 0.5rem; }
