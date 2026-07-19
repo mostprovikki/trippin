@@ -1,8 +1,12 @@
 <script setup>
 import { ref } from 'vue'
+import { useConfirm } from 'primevue/useconfirm'
 import { useParticipantStore } from '../stores/participant.js'
+import { useNotify } from '../composables/useNotify.js'
 
 const store = useParticipantStore()
+const confirm = useConfirm()
+const notify = useNotify()
 
 const DOC_TYPES = ['passport', 'visa', 'national_id', 'driving_license', 'vaccination', 'other']
 
@@ -36,13 +40,18 @@ async function upload() {
   }
 }
 
-async function remove(doc) {
-  if (!confirm(`Delete document "${doc.original_name}"?`)) return
-  try {
-    await store.deleteDocument(doc.id)
-  } catch {
-    /* store.error surfaced by parent view */
-  }
+function remove(doc) {
+  confirm.require({
+    message: `Delete document "${doc.original_name}"?`, header: 'Delete document', icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Delete', acceptClass: 'p-button-danger', rejectLabel: 'Cancel',
+    accept: async () => {
+      try {
+        await store.deleteDocument(doc.id)
+      } catch (e) {
+        notify.error(e.message)
+      }
+    }
+  })
 }
 
 function isExpired(doc) {

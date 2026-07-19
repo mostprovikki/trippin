@@ -1,0 +1,12 @@
+task: U11
+agent: u11-panels-8b057d
+session: unknown
+started: 2026-07-18T23:44:42Z
+status: done
+files:
+  - web/src/components/DestinationPanel.vue
+  - web/src/components/DocumentList.vue
+  - web/src/components/ParticipantDocs.vue
+  - web/src/components/GoalsEditor.vue
+  - web/src/views/TripArchiveView.vue
+  - web/src/no-raw-confirm.test.js

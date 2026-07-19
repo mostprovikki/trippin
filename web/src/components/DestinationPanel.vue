@@ -1,7 +1,9 @@
 <script setup>
 import { reactive } from 'vue'
+import { useConfirm } from 'primevue/useconfirm'
 import { useTripsStore } from '../stores/trips.js'
 import { useAuthStore } from '../stores/auth.js'
+import { useNotify } from '../composables/useNotify.js'
 
 const props = defineProps({
   tripId: { type: String, required: true },
@@ -10,6 +12,8 @@ const props = defineProps({
 
 const store = useTripsStore()
 const auth = useAuthStore()
+const confirm = useConfirm()
+const notify = useNotify()
 
 const form = reactive({ name: '', rationale: '', best_dates: '', est_budget_per_person: '', caveats: '' })
 
@@ -21,8 +25,12 @@ async function markDecided(candidateId) {
   await store.decide(candidateId)
 }
 
-async function removeCandidate(candidateId) {
-  if (confirm('Delete this candidate?')) await store.deleteCandidate(candidateId)
+function removeCandidate(candidateId) {
+  confirm.require({
+    message: 'Delete this candidate?', header: 'Delete candidate', icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Delete', acceptClass: 'p-button-danger', rejectLabel: 'Cancel',
+    accept: async () => { try { await store.deleteCandidate(candidateId) } catch (e) { notify.error(e.message) } }
+  })
 }
 
 async function submitManual() {

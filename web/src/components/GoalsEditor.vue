@@ -1,10 +1,12 @@
 <script setup>
 import { reactive } from 'vue'
+import { useConfirm } from 'primevue/useconfirm'
 
 const props = defineProps({
   goals: { type: Array, default: () => [] }
 })
 const emit = defineEmits(['add', 'update', 'delete'])
+const confirm = useConfirm()
 
 const form = reactive({ title: '', fixed_date: '', fixed_place: '', notes: '' })
 const editing = reactive({})
@@ -37,7 +39,11 @@ function submitEdit(id) {
   delete editing[id]
 }
 function remove(id) {
-  if (confirm('Delete this goal?')) emit('delete', id)
+  confirm.require({
+    message: 'Delete this goal?', header: 'Delete goal', icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Delete', acceptClass: 'p-button-danger', rejectLabel: 'Cancel',
+    accept: () => emit('delete', id)
+  })
 }
 </script>
 
