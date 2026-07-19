@@ -1,9 +1,14 @@
 <script setup>
 import { reactive, watch } from 'vue'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
+import { useConfirm } from 'primevue/useconfirm'
+import Button from 'primevue/button'
+import { useDraft, confirmDiscard } from '../composables/useDraft.js'
 
 const props = defineProps({
   initial: { type: Object, default: () => ({}) },
-  submitLabel: { type: String, default: 'Save' }
+  submitLabel: { type: String, default: 'Save' },
+  draftKey: { type: String, default: '' }
 })
 const emit = defineEmits(['submit', 'cancel'])
 
@@ -14,17 +19,42 @@ function blank() {
   }
 }
 
-const form = reactive(blank())
-
-function loadFrom(src) {
+function mapped(src) {
   const b = blank()
+  const out = {}
   for (const k of Object.keys(b)) {
-    if (k === 'interests') form.interests = Array.isArray(src?.interests) ? src.interests.join(', ') : ''
-    else form[k] = src?.[k] ?? ''
+    if (k === 'interests') out.interests = Array.isArray(src?.interests) ? src.interests.join(', ') : ''
+    else out[k] = src?.[k] ?? ''
   }
+  return out
 }
-loadFrom(props.initial)
-watch(() => props.initial, (v) => loadFrom(v))
+
+const confirm = useConfirm()
+const router = useRouter()
+const route = useRoute()
+
+// Draft-backed when draftKey given; plain reactive otherwise.
+const draftApi = props.draftKey
+  ? useDraft(props.draftKey, blank, { router, route })
+  : null
+const form = draftApi ? draftApi.draft : reactive(blank())
+
+if (draftApi) {
+  draftApi.load(mapped(props.initial))
+  watch(() => props.initial, (v) => draftApi.load(mapped(v)))
+  onBeforeRouteLeave(async () => {
+    if (!draftApi.isDirty.value) return true
+    const ok = await confirmDiscard(confirm)
+    if (ok) draftApi.clear()
+    return ok
+  })
+} else {
+  Object.assign(form, mapped(props.initial))
+  watch(() => props.initial, (v) => Object.assign(form, mapped(v)))
+}
+
+function clearDraft() { draftApi?.clear() }
+defineExpose({ clearDraft })
 
 function submit() {
   const fields = {
@@ -41,6 +71,11 @@ function submit() {
     home_city: form.home_city || null
   }
   emit('submit', fields)
+}
+
+function onCancel() {
+  clearDraft()
+  emit('cancel')
 }
 </script>
 
@@ -105,7 +140,7 @@ function submit() {
       <label for="pf-city">Home city</label>
       <input id="pf-city" v-model="form.home_city" />
     </div>
-    <button type="submit" class="btn btn-primary">{{ submitLabel }}</button>
-    <button type="button" class="btn" @click="emit('cancel')">Cancel</button>
+    <Button type="submit" :label="submitLabel" />
+    <Button type="button" label="Cancel" severity="secondary" outlined @click="onCancel" />
   </form>
 </template>

@@ -1,0 +1,10 @@
+task: U7
+agent: u7-people-839b99
+session: unknown
+started: 2026-07-18T23:44:40Z
+status: done
+files:
+  - web/src/views/PeopleListView.vue
+  - web/src/components/PersonForm.vue
+  - web/src/views/PersonDetailView.vue
+  - web/src/views/PeopleListView.test.js
