@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
-import Aura from '@primevue/themes/aura'
+import { TripperPreset } from './theme.js'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 import App from './App.vue'
@@ -12,7 +12,7 @@ import 'primeicons/primeicons.css'
 createApp(App)
   .use(createPinia())
   .use(router)
-  .use(PrimeVue, { theme: { preset: Aura, options: { darkModeSelector: 'none' } } })
+  .use(PrimeVue, { theme: { preset: TripperPreset, options: { darkModeSelector: 'none' } } })
   .use(ToastService)
   .use(ConfirmationService)
   .mount('#app')

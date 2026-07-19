@@ -1,193 +1,118 @@
-/* Global shell: page scaffolding + utilities only. PrimeVue handles component chrome. */
+/* Global shell: tokens, page scaffolding, form/table utilities. PrimeVue owns component chrome. */
 
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
+
+  --app-bg: #faf9f7;
+  --app-surface: #ffffff;
+  --app-border: #e7e5e0;
+  --app-text: #1c1917;
+  --app-text-muted: #78716c;
+  --app-primary: #0f766e;
+  --app-primary-soft: #f0fdfa;
+  --app-accent: #d97706;
+  --app-accent-soft: #fef3c7;
+  --app-radius-sm: 8px;
+  --app-radius: 12px;
+  --app-shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05);
+  --app-shadow-md: 0 4px 12px rgba(28, 25, 23, 0.08);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: #f7f7f8;
-  color: #1d1d1f;
+  background: var(--app-bg);
+  color: var(--app-text);
   font-size: 0.9375rem;
   line-height: 1.5;
 }
 
-/* Typography scale */
-h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 1rem;
-}
+/* Typography scale: 24 / 18 / 16 base 15 / small 13 */
+h1 { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.015em; margin: 0 0 1rem; }
+h2 { font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 0.75rem; }
+h3 { font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; }
 
-h2 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 0.75rem;
-}
+a { color: var(--app-primary); }
 
-h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-}
-
-a {
-  color: #2563eb;
-}
-
-/* Page container */
 .page {
   max-width: 64rem;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 3rem;
 }
 
-/* Card */
 .card {
-  background: #fff;
-  border: 1px solid #e5e5e7;
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow-sm);
   padding: 1.25rem;
   margin-bottom: 1rem;
 }
 
-/* Buttons (legacy utility; PrimeVue Button styles itself) */
-.btn {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border: 1px solid #d2d2d7;
-  border-radius: 8px;
-  background: #fff;
-  color: #1d1d1f;
-  cursor: pointer;
-  font-size: 0.9375rem;
-  font-family: inherit;
-  text-decoration: none;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.btn:hover {
-  background: #f5f5f7;
-}
-
-.btn-primary {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-}
-
 /* Form field */
-.field {
-  display: block;
-  margin-bottom: 1rem;
-}
-
+.field { display: block; margin-bottom: 1rem; }
 .field label {
   display: block;
   margin-bottom: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #6e6e73;
+  color: var(--app-text-muted);
 }
-
 .field input,
 .field select,
 .field textarea {
   width: 100%;
   padding: 0.5rem 0.625rem;
-  border: 1px solid #d2d2d7;
-  border-radius: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
   font-size: 0.9375rem;
   font-family: inherit;
-  background: #fff;
-  color: #1d1d1f;
+  background: var(--app-surface);
+  color: var(--app-text);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
 }
 
-/* Table */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
+/* Table (legacy — being replaced by DataTable; keep until purge task) */
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align: left; padding: 0.625rem 0.5rem; border-bottom: 1px solid var(--app-border); }
+.table th { font-size: 0.8125rem; font-weight: 600; color: var(--app-text-muted); }
 
-.table th,
-.table td {
-  text-align: left;
-  padding: 0.625rem 0.5rem;
-  border-bottom: 1px solid #e5e5e7;
-}
+/* Badges (legacy — keep until purge task) */
+.badge { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 999px; background: #eceae6; color: var(--app-text); font-size: 0.75rem; font-weight: 500; }
+.badge-warn { background: var(--app-accent-soft); color: #92400e; }
+.badge-ok { background: #d1fae5; color: #065f46; }
 
-.table th {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #6e6e73;
-}
-
-/* Badges */
-.badge {
+/* Legacy .btn (still used by a few components until purge task) */
+.btn {
   display: inline-block;
-  padding: 0.125rem 0.625rem;
-  border-radius: 999px;
-  background: #ececee;
-  color: #1d1d1f;
-  font-size: 0.75rem;
-  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-surface);
+  color: var(--app-text);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
+.btn:hover { background: #f5f4f1; }
+.btn-primary { background: var(--app-primary); border-color: var(--app-primary); color: #fff; }
+.btn-primary:hover { background: #115e59; border-color: #115e59; }
 
-.badge-warn {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.badge-ok {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-/* Responsive table collapse */
 @media (max-width: 40rem) {
-  .table,
-  .table thead,
-  .table tbody,
-  .table th,
-  .table td,
-  .table tr {
-    display: block;
-  }
-
-  .table thead {
-    display: none;
-  }
-
-  .table tr {
-    margin-bottom: 0.75rem;
-    border: 1px solid #e5e5e7;
-    border-radius: 8px;
-  }
-
-  .table td {
-    border-bottom: none;
-  }
+  .table, .table thead, .table tbody, .table th, .table td, .table tr { display: block; }
+  .table thead { display: none; }
+  .table tr { margin-bottom: 0.75rem; border: 1px solid var(--app-border); border-radius: var(--app-radius-sm); }
+  .table td { border-bottom: none; }
 }
