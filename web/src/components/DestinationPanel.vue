@@ -18,11 +18,11 @@ const notify = useNotify()
 const form = reactive({ name: '', rationale: '', best_dates: '', est_budget_per_person: '', caveats: '' })
 
 async function suggestWithAi() {
-  await store.aiSuggest(props.tripId)
+  try { await store.aiSuggest(props.tripId) } catch (e) { notify.error(e.message) }
 }
 
 async function markDecided(candidateId) {
-  await store.decide(candidateId)
+  try { await store.decide(candidateId) } catch (e) { notify.error(e.message) }
 }
 
 function removeCandidate(candidateId) {
@@ -35,14 +35,16 @@ function removeCandidate(candidateId) {
 
 async function submitManual() {
   if (!form.name) return
-  await store.addCandidate(props.tripId, {
-    name: form.name,
-    rationale: form.rationale || undefined,
-    best_dates: form.best_dates || undefined,
-    est_budget_per_person: form.est_budget_per_person ? Number(form.est_budget_per_person) : undefined,
-    caveats: form.caveats || undefined
-  })
-  form.name = ''; form.rationale = ''; form.best_dates = ''; form.est_budget_per_person = ''; form.caveats = ''
+  try {
+    await store.addCandidate(props.tripId, {
+      name: form.name,
+      rationale: form.rationale || undefined,
+      best_dates: form.best_dates || undefined,
+      est_budget_per_person: form.est_budget_per_person ? Number(form.est_budget_per_person) : undefined,
+      caveats: form.caveats || undefined
+    })
+    form.name = ''; form.rationale = ''; form.best_dates = ''; form.est_budget_per_person = ''; form.caveats = ''
+  } catch (e) { notify.error(e.message) }
 }
 </script>
 
