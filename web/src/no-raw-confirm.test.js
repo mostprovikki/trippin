@@ -5,15 +5,11 @@ import { fileURLToPath } from 'node:url'
 
 const SRC = dirname(fileURLToPath(import.meta.url))
 
-// ESCALATION (U11, see .agent-coordination/NOTES.md): these two files are outside
-// U11's file ownership (web/src/components/DestinationPanel.vue, DocumentList.vue,
-// ParticipantDocs.vue, GoalsEditor.vue, web/src/views/TripArchiveView.vue) but still
-// contain raw confirm()/prompt() calls as of this writing. They belong to another
-// wave-2 task's conversion scope. Remove entries here once that task converts them.
-const ALLOWLIST = [
-  join(SRC, 'views', 'PersonDetailView.vue'),
-  join(SRC, 'views', 'TripDetailView.vue')
-]
+// Wave-2 integration (resolved): U11's initial run allowlisted PersonDetailView.vue
+// and TripDetailView.vue because they still had raw confirm()/prompt() before U7/U8
+// finished converting them. Both are now converted to PrimeVue useConfirm, so the
+// allowlist is empty and the guard covers the whole tree.
+const ALLOWLIST = []
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
