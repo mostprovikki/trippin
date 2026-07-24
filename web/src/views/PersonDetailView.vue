@@ -55,14 +55,21 @@ function onDelete() {
 
 <template>
   <main class="page">
-    <h1>{{ store.current?.name || 'Person' }}</h1>
+    <div class="list-head">
+      <h1>{{ store.current?.name || 'Person' }}</h1>
+      <Button v-if="store.current" label="Delete person" severity="danger" outlined @click="onDelete" />
+    </div>
 
     <ProgressSpinner v-if="loading" style="width: 2.5rem; height: 2.5rem" />
 
     <template v-else-if="store.current">
       <PersonForm ref="formRef" :initial="store.current" submit-label="Save" :draft-key="`person:${route.params.id}:edit`" @submit="onSave" @cancel="() => {}" />
-      <Button label="Delete person" severity="danger" outlined @click="onDelete" />
       <DocumentList :person-id="route.params.id" />
     </template>
   </main>
 </template>
+
+<style scoped>
+.list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.list-head h1 { margin: 0; }
+</style>

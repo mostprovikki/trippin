@@ -38,9 +38,10 @@ async function onCreate(fields) {
 
 <template>
   <main class="page">
-    <h1>People</h1>
-
-    <Button :label="showForm ? 'Cancel' : 'Add person'" :severity="showForm ? 'secondary' : undefined" :outlined="showForm" @click="showForm = !showForm" />
+    <div class="list-head">
+      <h1>People</h1>
+      <Button :label="showForm ? 'Cancel' : 'Add person'" :icon="showForm ? undefined : 'pi pi-plus'" :severity="showForm ? 'secondary' : undefined" :outlined="showForm" @click="showForm = !showForm" />
+    </div>
 
     <PersonForm v-if="showForm" ref="formRef" submit-label="Create" draft-key="person-new" @submit="onCreate" @cancel="showForm = false" />
 
@@ -67,4 +68,6 @@ async function onCreate(fields) {
 
 <style scoped>
 .skeleton-row { margin-bottom: 0.5rem; }
+.list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.list-head h1 { margin: 0; }
 </style>
