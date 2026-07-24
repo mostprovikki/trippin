@@ -4,7 +4,10 @@ import { useRoute } from 'vue-router'
 import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
 import Message from 'primevue/message'
-import { useReadinessStore } from '../stores/readiness.js'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import { useReadinessStore } from '../../stores/readiness.js'
+import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
 const tripId = route.params.id
@@ -35,8 +38,8 @@ function chipText(chip) {
 </script>
 
 <template>
-  <main class="page">
-    <h1>Trip Readiness</h1>
+  <div>
+    <SectionHeader title="Readiness" description="Is everyone — and everything — actually ready?" />
 
     <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
@@ -55,40 +58,33 @@ function chipText(chip) {
 
       <div class="card">
         <h2>Participants</h2>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Profile</th>
-              <th>Docs</th>
-              <th>Doc warnings</th>
-              <th>Link</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="p in store.data.participants" :key="p.person_id">
-              <td>{{ p.name }}</td>
-              <td>
-                <Tag :value="p.profile_confirmed ? '✓' : '✗'" :severity="p.profile_confirmed ? 'success' : 'warn'" />
-              </td>
-              <td>{{ p.docs_count }}</td>
-              <td>
-                <span v-if="!p.doc_warnings.length">—</span>
-                <div v-else class="tag-row">
-                  <Tag
-                    v-for="(w, i) in p.doc_warnings"
-                    :key="i"
-                    :value="`${w.doc_type} ${w.level} (${w.expiry_date})`"
-                    severity="warn"
-                  />
-                </div>
-              </td>
-              <td>
-                <Tag :value="p.has_active_link ? '✓' : '✗'" :severity="p.has_active_link ? 'success' : 'warn'" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <DataTable :value="store.data.participants" data-key="person_id">
+          <Column field="name" header="Name" />
+          <Column header="Profile">
+            <template #body="{ data }">
+              <Tag :value="data.profile_confirmed ? '✓' : '✗'" :severity="data.profile_confirmed ? 'success' : 'warn'" />
+            </template>
+          </Column>
+          <Column field="docs_count" header="Docs" />
+          <Column header="Doc warnings">
+            <template #body="{ data }">
+              <span v-if="!data.doc_warnings.length">—</span>
+              <div v-else class="tag-row">
+                <Tag
+                  v-for="(w, i) in data.doc_warnings"
+                  :key="i"
+                  :value="`${w.doc_type} ${w.level} (${w.expiry_date})`"
+                  severity="warn"
+                />
+              </div>
+            </template>
+          </Column>
+          <Column header="Link">
+            <template #body="{ data }">
+              <Tag :value="data.has_active_link ? '✓' : '✗'" :severity="data.has_active_link ? 'success' : 'warn'" />
+            </template>
+          </Column>
+        </DataTable>
       </div>
 
       <div class="card">
@@ -104,7 +100,7 @@ function chipText(chip) {
         </ul>
       </div>
     </template>
-  </main>
+  </div>
 </template>
 
 <style scoped>

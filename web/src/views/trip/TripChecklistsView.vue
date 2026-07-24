@@ -4,13 +4,20 @@ import { useRoute } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
-import { api } from '../api/client.js'
-import { useChecklistsStore } from '../stores/checklists.js'
-import ChecklistCard from '../components/ChecklistCard.vue'
+import Select from 'primevue/select'
+import { api } from '../../api/client.js'
+import { useChecklistsStore } from '../../stores/checklists.js'
+import ChecklistCard from '../../components/ChecklistCard.vue'
+import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
 const tripId = route.params.id
 const store = useChecklistsStore()
+
+const KIND_OPTIONS = [
+  { label: 'Packing', value: 'packing' },
+  { label: 'Tasks', value: 'tasks' }
+]
 
 const participants = ref([])
 const newKind = ref('packing')
@@ -40,32 +47,20 @@ async function addFromTemplate() {
 </script>
 
 <template>
-  <main class="page">
-    <h1>Trip Checklists</h1>
+  <div>
+    <SectionHeader title="Checklists" description="Packing lists and shared tasks, assignable to participants." />
 
     <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
     <div class="card">
       <h2>New checklist</h2>
-      <form class="field" @submit.prevent="createChecklist">
-        <label for="checklist-kind">Kind</label>
-        <select id="checklist-kind" v-model="newKind">
-          <option value="packing">Packing</option>
-          <option value="tasks">Tasks</option>
-        </select>
-        <label for="checklist-name">Name</label>
+      <form class="checklist-form-row" @submit.prevent="createChecklist">
+        <Select v-model="newKind" :options="KIND_OPTIONS" option-label="label" option-value="value" aria-label="Kind" />
         <InputText id="checklist-name" v-model="newName" placeholder="Checklist name" />
         <Button type="submit" label="Create" />
       </form>
-    </div>
-
-    <div class="card">
-      <h2>From template</h2>
-      <form class="field" @submit.prevent="addFromTemplate">
-        <select v-model="selectedTemplate">
-          <option value="">Select a template…</option>
-          <option v-for="t in store.templates" :key="t.id" :value="t.id">{{ t.name }} ({{ t.kind }})</option>
-        </select>
+      <form class="checklist-form-row" @submit.prevent="addFromTemplate">
+        <Select v-model="selectedTemplate" :options="store.templates" option-label="name" option-value="id" placeholder="Select a template…" aria-label="Template" />
         <Button type="submit" label="Add from template" severity="secondary" outlined />
       </form>
     </div>
@@ -76,5 +71,10 @@ async function addFromTemplate() {
       :checklist="checklist"
       :participants="participants"
     />
-  </main>
+  </div>
 </template>
+
+<style scoped>
+.checklist-form-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.checklist-form-row:last-child { margin-bottom: 0; }
+</style>

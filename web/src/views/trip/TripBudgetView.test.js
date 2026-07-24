@@ -2,20 +2,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
-import { mountWithBase } from '../test-utils.js'
+import { mountWithBase } from '../../test-utils.js'
 import TripBudgetView from './TripBudgetView.vue'
-import { useBudgetStore } from '../stores/budget.js'
-import { api } from '../api/client.js'
+import { useBudgetStore } from '../../stores/budget.js'
+import { api } from '../../api/client.js'
 
 async function mountView() {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/trips/:id/budget', component: TripBudgetView },
-             { path: '/trips/:id', name: 'trip', component: { template: '<div/>' } },
-             { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: { template: '<div/>' } },
-             { path: '/trips/:id/checklists', name: 'trip-checklists', component: { template: '<div/>' } },
-             { path: '/trips/:id/readiness', name: 'trip-readiness', component: { template: '<div/>' } },
-             { path: '/trips/:id/archive', name: 'trip-archive', component: { template: '<div/>' } }]
+    routes: [{ path: '/trips/:id/budget', name: 'trip-budget', component: TripBudgetView }]
   })
   await router.push('/trips/t1/budget')
   await router.isReady()
@@ -39,9 +34,9 @@ describe('TripBudgetView', () => {
     expect(wrapper.findComponent({ name: 'BudgetTable' }).props('modelValue')).toEqual([{ category: 'stay', amount: 500 }])
   })
 
-  it('shows trip name in header', async () => {
+  it('shows section header', async () => {
     const { wrapper } = await mountView()
     await flushPromises()
-    expect(wrapper.find('h1').text()).toContain('Goa 2026')
+    expect(wrapper.find('h1').text()).toBe('Budget')
   })
 })

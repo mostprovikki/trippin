@@ -4,12 +4,18 @@ import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
-import { api } from '../api/client.js'
-import { useAuthStore } from '../stores/auth.js'
-import { useBudgetStore } from '../stores/budget.js'
-import { useDraft, confirmDiscard } from '../composables/useDraft.js'
-import { useNotify } from '../composables/useNotify.js'
-import BudgetTable from '../components/BudgetTable.vue'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
+import Select from 'primevue/select'
+import { api } from '../../api/client.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { useBudgetStore } from '../../stores/budget.js'
+import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
+import { useNotify } from '../../composables/useNotify.js'
+import BudgetTable from '../../components/BudgetTable.vue'
+import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
 const tripId = route.params.id
@@ -19,7 +25,6 @@ const confirm = useConfirm()
 const notify = useNotify()
 
 const loading = ref(true)
-const tripName = ref('')
 const participants = ref([])
 const newOverride = reactive({ person_id: '', amount: 0, note: '' })
 
@@ -33,7 +38,6 @@ onMounted(async () => {
   try {
     const trip = (await api.get(`/api/trips/${tripId}`)).trip
     participants.value = trip?.participants || []
-    tripName.value = trip?.name || ''
   } catch { participants.value = [] }
   try { await store.fetchBudget(tripId) } catch (e) { notify.error(e.message) } finally { loading.value = false }
 })
@@ -94,8 +98,8 @@ onBeforeRouteLeave(async () => {
 </script>
 
 <template>
-  <main class="page">
-    <h1>{{ tripName || 'Trip' }} — Budget</h1>
+  <div>
+    <SectionHeader title="Budget" description="Category estimates, AI draft, and per-person split." />
 
     <div v-if="loading" class="card"><Skeleton v-for="i in 4" :key="i" height="1.5rem" style="margin-bottom: 0.5rem" /></div>
 
@@ -125,32 +129,39 @@ onBeforeRouteLeave(async () => {
         <p>Participants: {{ store.participant_count }}</p>
         <p>Equal share: {{ store.equal_share }}</p>
 
-        <table class="table">
-          <thead>
-            <tr><th>Person</th><th>Override amount</th><th>Note</th><th></th></tr>
-          </thead>
-          <tbody>
-            <tr v-for="o in overridesDraft.draft.overrides" :key="o.person_id">
-              <td>{{ o.person_name }}</td>
-              <td><input type="number" min="0" step="0.01" v-model.number="o.amount" /></td>
-              <td><input type="text" v-model="o.note" /></td>
-              <td><button type="button" class="btn" @click="removeOverrideRow(o.person_id)">Remove</button></td>
-            </tr>
-            <tr>
-              <td>
-                <select v-model="newOverride.person_id">
-                  <option value="">Select person…</option>
-                  <option v-for="p in participants" :key="p.id" :value="p.id">{{ p.name }}</option>
-                </select>
-              </td>
-              <td><input type="number" min="0" step="0.01" v-model.number="newOverride.amount" /></td>
-              <td><input type="text" v-model="newOverride.note" placeholder="Note" /></td>
-              <td><button type="button" class="btn" @click="addOverrideRow">Add</button></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="override-add">
+          <Select v-model="newOverride.person_id" :options="participants" option-label="name" option-value="id" placeholder="Select person…" />
+          <InputNumber v-model="newOverride.amount" :min="0" :max-fraction-digits="2" placeholder="Amount" />
+          <InputText v-model="newOverride.note" placeholder="Note" />
+          <Button label="Add" icon="pi pi-plus" outlined :disabled="!newOverride.person_id" @click="addOverrideRow" />
+        </div>
+
+        <DataTable :value="overridesDraft.draft.overrides" data-key="person_id">
+          <Column header="Person">
+            <template #body="{ data }">{{ data.person_name }}</template>
+          </Column>
+          <Column header="Override amount">
+            <template #body="{ data }">
+              <InputNumber v-model="data.amount" :min="0" :max-fraction-digits="2" fluid />
+            </template>
+          </Column>
+          <Column header="Note">
+            <template #body="{ data }">
+              <InputText v-model="data.note" fluid />
+            </template>
+          </Column>
+          <Column>
+            <template #body="{ data }">
+              <Button label="Remove" size="small" severity="danger" text @click="removeOverrideRow(data.person_id)" />
+            </template>
+          </Column>
+        </DataTable>
         <Button label="Save overrides" @click="saveOverrides" />
       </div>
     </template>
-  </main>
+  </div>
 </template>
+
+<style scoped>
+.override-add { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+</style>

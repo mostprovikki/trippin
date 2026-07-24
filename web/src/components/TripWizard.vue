@@ -104,7 +104,7 @@ async function submit() {
     }
     clear()
     notify.success(`Trip "${trip.name}" created`)
-    router.push({ name: 'trip', params: { id: trip.id } })
+    router.push({ name: 'trip-overview', params: { id: trip.id } })
   } catch (e) {
     notify.error(e.message)
   } finally {

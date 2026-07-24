@@ -13,7 +13,7 @@ function makeRouter() {
       { path: '/', component: { template: '<div/>' } },
       { path: '/trips/new', component: { template: '<div/>' } },
       { path: '/people', component: { template: '<div/>' } },
-      { path: '/trips/:id', name: 'trip', component: { template: '<div/>' } }
+      { path: '/trips/:id', name: 'trip-overview', component: { template: '<div/>' } }
     ]
   })
 }

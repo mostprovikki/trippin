@@ -42,7 +42,7 @@ onMounted(async () => {
 
     <section v-for="group in grouped" :key="group.status" class="trips-group">
       <h2><Tag :value="group.status" severity="secondary" /></h2>
-      <RouterLink v-for="trip in group.trips" :key="trip.id" :to="{ name: 'trip', params: { id: trip.id } }" class="card trip-card">
+      <RouterLink v-for="trip in group.trips" :key="trip.id" :to="{ name: 'trip-overview', params: { id: trip.id } }" class="card trip-card">
         <h3>{{ trip.name }}</h3>
         <p v-if="trip.destination">{{ trip.destination }}</p>
         <p v-if="trip.start_date || trip.end_date">{{ trip.start_date }} – {{ trip.end_date }}</p>

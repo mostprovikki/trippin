@@ -4,18 +4,17 @@ import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
 import Tag from 'primevue/tag'
-import { useItineraryStore } from '../stores/itinerary.js'
-import { useTripsStore } from '../stores/trips.js'
-import { useAuthStore } from '../stores/auth.js'
-import { useDraft } from '../composables/useDraft.js'
-import { useNotify } from '../composables/useNotify.js'
-import EmptyState from '../components/EmptyState.vue'
-import DayCard from '../components/DayCard.vue'
+import { useItineraryStore } from '../../stores/itinerary.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { useDraft } from '../../composables/useDraft.js'
+import { useNotify } from '../../composables/useNotify.js'
+import EmptyState from '../../components/EmptyState.vue'
+import DayCard from '../../components/DayCard.vue'
+import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
 const tripId = route.params.id
 const store = useItineraryStore()
-const trips = useTripsStore()
 const auth = useAuthStore()
 const notify = useNotify()
 
@@ -28,9 +27,6 @@ watch(() => store.draft, (d) => { aiDraftStore.draft.ai = d ?? null })
 onMounted(async () => {
   try {
     await store.fetchItinerary(tripId)
-    if (!trips.current || trips.current.id !== tripId) {
-      try { await trips.fetchTrip(tripId) } catch { /* header falls back to generic */ }
-    }
     if (aiDraftStore.draft.ai && !store.draft) store.draft = aiDraftStore.draft.ai
   } catch (e) {
     notify.error(e.message)
@@ -66,8 +62,8 @@ function discardWholeDraft() {
 </script>
 
 <template>
-  <main class="page">
-    <h1>{{ trips.current?.name || 'Trip' }} — Itinerary</h1>
+  <div>
+    <SectionHeader title="Itinerary" description="Day-by-day plan. Days are generated from confirmed dates." />
 
     <div v-if="store.error" class="card">
       <strong>Error:</strong> {{ store.error }}
@@ -87,7 +83,7 @@ function discardWholeDraft() {
         <Tag v-else severity="secondary" value="AI disabled — set LLM_PROVIDER" />
       </div>
 
-      <div v-if="store.draft" class="card" style="background:#f6f7f9">
+      <div v-if="store.draft" class="card ai-draft-card">
         <h2>AI draft preview</h2>
         <div v-for="d in store.draft" :key="d.day_date" style="margin-bottom:1rem">
           <h3>{{ d.day_date }}</h3>
@@ -106,5 +102,9 @@ function discardWholeDraft() {
 
       <DayCard v-for="day in store.days" :key="day.id" :day="day" />
     </template>
-  </main>
+  </div>
 </template>
+
+<style scoped>
+.ai-draft-card { background: var(--app-primary-soft); }
+</style>
