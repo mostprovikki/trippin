@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
+import Tag from 'primevue/tag'
 import { useChecklistsStore } from '../stores/checklists.js'
 import { useAuthStore } from '../stores/auth.js'
 
@@ -80,13 +81,13 @@ function discardDraft() {
 
 <template>
   <div class="card">
-    <h3>{{ checklist.name }} <span class="badge">{{ checklist.kind }}</span></h3>
+    <h3>{{ checklist.name }} <Tag :value="checklist.kind" severity="secondary" /></h3>
 
     <ul class="checklist-items">
       <li v-for="item in checklist.items" :key="item.id">
         <Checkbox :model-value="!!item.done" binary :input-id="`cl-item-${item.id}`" @update:model-value="toggleDone(item)" />
         <label :for="`cl-item-${item.id}`">{{ item.title }}</label>
-        <span v-if="isOverdue(item)" class="badge badge-warn">Overdue</span>
+        <Tag v-if="isOverdue(item)" value="Overdue" severity="warn" />
 
         <template v-if="isTasks">
           <select :value="item.assignee_person_id || ''" @change="changeAssignee(item, $event.target.value)">

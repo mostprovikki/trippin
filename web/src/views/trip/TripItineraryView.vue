@@ -89,7 +89,7 @@ function discardWholeDraft() {
           <h3>{{ d.day_date }}</h3>
           <ul style="list-style:none;padding:0;margin:0">
             <li v-for="(it, i) in d.items" :key="i">
-              <span v-if="it.time_range" class="badge">{{ it.time_range }}</span>
+              <Tag v-if="it.time_range" :value="it.time_range" severity="secondary" />
               <strong>{{ it.title }}</strong>
               <span v-if="it.location">— {{ it.location }}</span>
               <span v-if="it.est_cost != null">${{ it.est_cost }}</span>

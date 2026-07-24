@@ -1,5 +1,6 @@
 <script setup>
 import Checkbox from 'primevue/checkbox'
+import Tag from 'primevue/tag'
 import { useParticipantStore } from '../stores/participant.js'
 
 const store = useParticipantStore()
@@ -26,7 +27,7 @@ async function toggle(item) {
       <li v-for="item in store.packing" :key="item.id">
         <Checkbox :model-value="!!item.done" binary :input-id="`pcl-pack-${item.id}`" @update:model-value="toggle(item)" />
         <label :for="`pcl-pack-${item.id}`">{{ item.title }}</label>
-        <span class="badge">{{ item.checklist_name }}</span>
+        <Tag :value="item.checklist_name" severity="secondary" />
       </li>
     </ul>
     <p v-else>Nothing to pack yet.</p>
@@ -36,9 +37,7 @@ async function toggle(item) {
       <li v-for="item in store.tasks" :key="item.id">
         <Checkbox :model-value="!!item.done" binary :input-id="`pcl-task-${item.id}`" @update:model-value="toggle(item)" />
         <label :for="`pcl-task-${item.id}`">{{ item.title }}</label>
-        <span v-if="item.due_date" class="badge" :class="{ 'badge-warn': isOverdue(item) }">
-          due {{ item.due_date }}
-        </span>
+        <Tag v-if="item.due_date" :value="`due ${item.due_date}`" :severity="isOverdue(item) ? 'warn' : 'secondary'" />
       </li>
     </ul>
     <p v-else>No tasks assigned to you.</p>

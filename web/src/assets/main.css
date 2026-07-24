@@ -82,33 +82,10 @@ a { color: var(--app-primary); }
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
 }
 
-/* Table (legacy — being replaced by DataTable; keep until purge task) */
+/* Plain table used by the few list views not on DataTable (PeopleList, ParticipantDocs) */
 .table { width: 100%; border-collapse: collapse; }
 .table th, .table td { text-align: left; padding: 0.625rem 0.5rem; border-bottom: 1px solid var(--app-border); }
 .table th { font-size: 0.8125rem; font-weight: 600; color: var(--app-text-muted); }
-
-/* Badges (legacy — keep until purge task) */
-.badge { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 999px; background: #eceae6; color: var(--app-text); font-size: 0.75rem; font-weight: 500; }
-.badge-warn { background: var(--app-accent-soft); color: #92400e; }
-.badge-ok { background: #d1fae5; color: #065f46; }
-
-/* Legacy .btn (still used by a few components until purge task) */
-.btn {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--app-border);
-  border-radius: var(--app-radius-sm);
-  background: var(--app-surface);
-  color: var(--app-text);
-  cursor: pointer;
-  font-size: 0.9375rem;
-  font-family: inherit;
-  text-decoration: none;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-.btn:hover { background: #f5f4f1; }
-.btn-primary { background: var(--app-primary); border-color: var(--app-primary); color: #fff; }
-.btn-primary:hover { background: #115e59; border-color: #115e59; }
 
 @media (max-width: 40rem) {
   .table, .table thead, .table tbody, .table th, .table td, .table tr { display: block; }

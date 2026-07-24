@@ -171,7 +171,7 @@ async function submit() {
           <label :for="`wp-${p.id}`">{{ p.name }}</label>
         </li>
       </ul>
-      <RouterLink :to="addPersonTo" class="btn" data-test="add-person-link">Add new person</RouterLink>
+      <RouterLink :to="addPersonTo" class="wizard-add-link" data-test="add-person-link"><i class="pi pi-plus" aria-hidden="true" /> Add new person</RouterLink>
     </div>
 
     <Message v-for="e in stepErrors" :key="e" severity="error" :closable="false">{{ e }}</Message>
@@ -186,6 +186,17 @@ async function submit() {
 
 <style scoped>
 .wizard-nav { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.wizard-add-link {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  text-decoration: none;
+  color: var(--app-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.wizard-add-link:hover { border-color: var(--app-primary); color: var(--app-primary); }
 .wizard-participants { list-style: none; padding: 0; }
 .wizard-participants li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
 .radio-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0; }

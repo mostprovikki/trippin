@@ -4,6 +4,7 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
+import Tag from 'primevue/tag'
 import { useParticipantStore } from '../stores/participant.js'
 
 const store = useParticipantStore()
@@ -124,7 +125,7 @@ async function submit() {
         <InputText id="pf-city" v-model="form.home_city" fluid />
       </div>
       <Button type="submit" :label="saving ? 'Saving…' : 'Save'" :disabled="saving" />
-      <span v-if="confirmed" class="badge badge-ok pf-confirmed">Profile confirmed ✓</span>
+      <Tag v-if="confirmed" value="Profile confirmed ✓" severity="success" class="pf-confirmed" />
     </form>
   </section>
 </template>

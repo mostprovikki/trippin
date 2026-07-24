@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
+import Button from 'primevue/button'
+import Tag from 'primevue/tag'
 import { useParticipantStore } from '../stores/participant.js'
 import { useNotify } from '../composables/useNotify.js'
 
@@ -87,10 +89,10 @@ async function download(doc) {
           <td>{{ doc.doc_type }}</td>
           <td>{{ doc.doc_number || '-' }}</td>
           <td>
-            <span :class="['badge', isExpired(doc) ? 'badge-warn' : '']">{{ doc.expiry_date || '-' }}</span>
+            <Tag :value="doc.expiry_date || '-'" :severity="isExpired(doc) ? 'warn' : 'secondary'" />
           </td>
           <td><a href="#" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
-          <td><button type="button" class="btn" @click="remove(doc)">Delete</button></td>
+          <td><Button label="Delete" size="small" severity="danger" text @click="remove(doc)" /></td>
         </tr>
       </tbody>
     </table>
@@ -115,7 +117,7 @@ async function download(doc) {
         <label for="doc-expiry">Expiry (optional)</label>
         <input id="doc-expiry" type="date" v-model="expiryDate" />
       </div>
-      <button type="submit" class="btn btn-primary" :disabled="uploading">{{ uploading ? 'Uploading…' : 'Upload' }}</button>
+      <Button type="submit" :label="uploading ? 'Uploading…' : 'Upload'" :disabled="uploading" />
     </form>
   </section>
 </template>

@@ -16,7 +16,7 @@
           fluid
         />
       </div>
-      <p v-if="error" class="badge-warn badge">{{ error }}</p>
+      <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
       <Button type="submit" label="Log in" :disabled="submitting" />
     </form>
   </main>
@@ -28,6 +28,7 @@ import { useRoute, useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
+import Message from 'primevue/message'
 import { useAuthStore } from '../stores/auth.js'
 
 const email = ref('')
