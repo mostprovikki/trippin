@@ -110,3 +110,20 @@ Anything you can't resolve inside your task boundary — a needed cross-file cha
 - §2 frozen list AMENDED: `web/src/main.js`, `web/src/App.vue`, `web/src/api/client.js`, `web/src/router.js`, `web/src/assets/main.css`, `web/package.json` are task-owned per that map. Root `package.json`/`package-lock.json`: hands-off except U1's single `npm install --workspace=web`.
 - Claims use `U<N>.claim`. Wave gate: do not start a wave-N task until every wave-(N−1) claim is `status: done` and its final commit exists.
 - Everything else in this contract unchanged.
+
+## UI process rules
+
+1. **No bare routes.** Every new authenticated view renders inside a shared
+   layout (`TripLayout` for trip sections, the AppNav shell otherwise) with
+   persistent navigation and a visible way back (sidebar/breadcrumb). Only
+   `/login` and `/p/:token` are bare. Adding a trip section = adding a child
+   route under `/trips/:id` + an entry in `web/src/utils/tripNav.js`. Never
+   a flat top-level route.
+2. **Tests passing ≠ done.** A UI change is complete only after the golden
+   path is click-driven in a real browser (playwright-core + the cached
+   chromium headless shell; plain `chrome --headless --screenshot` hangs on
+   Vite's HMR socket) and the screenshots have actually been looked at:
+   every section reachable from every other, no blank frames, no console
+   errors. See `e2e/ui-walk.mjs`.
+3. **IA before features.** New feature waves start with a navigation/IA
+   design pass (brainstorm → spec), not with per-ticket view additions.
