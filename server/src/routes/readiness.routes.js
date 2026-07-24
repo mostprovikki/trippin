@@ -3,7 +3,7 @@ import { expiryWarnings } from '../lib/expiry.js'
 
 export default async function routes(app) {
   app.get('/trips/:id/readiness', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = app.db.prepare('SELECT * FROM trips WHERE id = ?').get(req.params.id)
+    const trip = app.ownedTrip(req, req.params.id)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const tripId = trip.id
 

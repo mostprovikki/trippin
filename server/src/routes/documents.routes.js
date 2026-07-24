@@ -57,27 +57,33 @@ export default async function routes(app) {
     try { await unlink(row.file_path) } catch { /* ignore fs errors */ }
   }
 
-  // --- organizer routes ---
+  // --- organizer routes (scoped to the organizer's own persons) ---
+  const ownedDoc = (req) => app.db.prepare(
+    'SELECT d.* FROM documents d JOIN persons p ON p.id = d.person_id WHERE d.id = ? AND p.organizer_id = ?'
+  ).get(req.params.id, req.organizer.id)
+
   app.post('/people/:personId/documents', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    if (!app.ownedPerson(req, req.params.personId)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     const doc = await saveUpload(req, req.params.personId, reply)
     if (!doc) return
     return reply.code(201).send({ document: docJson(doc) })
   })
 
-  app.get('/people/:personId/documents', { preHandler: app.requireOrganizer }, async (req) => {
+  app.get('/people/:personId/documents', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    if (!app.ownedPerson(req, req.params.personId)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     const documents = app.db.prepare('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at')
       .all(req.params.personId).map(docJson)
     return { documents }
   })
 
   app.get('/documents/:id/file', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const row = getDoc(req.params.id)
+    const row = ownedDoc(req)
     if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     return sendFile(reply, row)
   })
 
   app.delete('/documents/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const row = getDoc(req.params.id)
+    const row = ownedDoc(req)
     if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     await removeDoc(row)
     return reply.code(204).send()

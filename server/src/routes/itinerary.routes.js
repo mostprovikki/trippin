@@ -50,9 +50,18 @@ const applyDraftBodySchema = { type: 'object', required: ['days'], properties: {
 const applyDayBodySchema = { type: 'object', required: ['items'], properties: { items: { type: 'array', items: draftItemSchema } } }
 
 export default async function routes(app) {
-  const getTrip = (id) => app.db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
+  // Unscoped re-reads for rows whose ownership the handler already verified.
+  const get = (id) => app.db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
   const getDay = (id) => app.db.prepare('SELECT * FROM itinerary_days WHERE id = ?').get(id)
   const getItem = (id) => app.db.prepare('SELECT * FROM itinerary_items WHERE id = ?').get(id)
+  const getTrip = (req) => app.ownedTrip(req, req.params.id)
+  const ownedDay = (req) => app.db.prepare(
+    'SELECT d.* FROM itinerary_days d JOIN trips t ON t.id = d.trip_id WHERE d.id = ? AND t.organizer_id = ?'
+  ).get(req.params.dayId, req.organizer.id)
+  const ownedItem = (req) => app.db.prepare(
+    `SELECT i.* FROM itinerary_items i JOIN itinerary_days d ON d.id = i.day_id
+     JOIN trips t ON t.id = d.trip_id WHERE i.id = ? AND t.organizer_id = ?`
+  ).get(req.params.itemId, req.organizer.id)
 
   function listItems(dayId) {
     return app.db.prepare('SELECT * FROM itinerary_items WHERE day_id = ? ORDER BY position').all(dayId).map(itemToJson)
@@ -111,13 +120,13 @@ export default async function routes(app) {
   }
 
   app.get('/trips/:id/itinerary', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     return { days: listDays(trip.id) }
   })
 
   app.post('/trips/:id/itinerary/init', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
     ensureDays(trip)
@@ -125,7 +134,7 @@ export default async function routes(app) {
   })
 
   app.post('/days/:dayId/items', { preHandler: app.requireOrganizer, schema: { body: itemBodySchema(['title']) } }, async (req, reply) => {
-    const day = getDay(req.params.dayId)
+    const day = ownedDay(req)
     if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
     const b = req.body
     const { maxPos } = app.db.prepare('SELECT COALESCE(MAX(position), -1) AS maxPos FROM itinerary_items WHERE day_id = ?').get(day.id)
@@ -139,7 +148,7 @@ export default async function routes(app) {
   })
 
   app.put('/items/:itemId', { preHandler: app.requireOrganizer, schema: { body: itemBodySchema([]) } }, async (req, reply) => {
-    const item = getItem(req.params.itemId)
+    const item = ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     const b = req.body || {}
     const fields = ['title', 'time_range', 'location', 'category', 'est_cost', 'notes', 'link']
@@ -150,7 +159,7 @@ export default async function routes(app) {
   })
 
   app.delete('/items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const item = getItem(req.params.itemId)
+    const item = ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     app.db.prepare('DELETE FROM itinerary_items WHERE id = ?').run(item.id)
     reply.code(204)
@@ -161,7 +170,7 @@ export default async function routes(app) {
     '/days/:dayId/items/order',
     { preHandler: app.requireOrganizer, schema: { body: { type: 'object', required: ['item_ids'], properties: { item_ids: { type: 'array', items: { type: 'string' } } } } } },
     async (req, reply) => {
-      const day = getDay(req.params.dayId)
+      const day = ownedDay(req)
       if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
       const tx = app.db.transaction((ids) => {
         ids.forEach((itemId, idx) => app.db.prepare('UPDATE itinerary_items SET position = ? WHERE id = ? AND day_id = ?').run(idx, itemId, day.id))
@@ -173,7 +182,7 @@ export default async function routes(app) {
 
   app.post('/trips/:id/itinerary/ai-draft', { preHandler: app.requireOrganizer }, async (req, reply) => {
     if (aiGuard(reply)) return
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
     const goals = app.db.prepare('SELECT title, fixed_date, fixed_place, notes FROM trip_goals WHERE trip_id = ?').all(trip.id)
@@ -190,7 +199,7 @@ export default async function routes(app) {
   })
 
   app.post('/trips/:id/itinerary/apply-draft', { preHandler: app.requireOrganizer, schema: { body: applyDraftBodySchema } }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
     const range = dateRange(trip.start_date, trip.end_date)
@@ -214,9 +223,9 @@ export default async function routes(app) {
 
   app.post('/days/:dayId/ai-regen', { preHandler: app.requireOrganizer }, async (req, reply) => {
     if (aiGuard(reply)) return
-    const day = getDay(req.params.dayId)
+    const day = ownedDay(req)
     if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
-    const trip = getTrip(day.trip_id)
+    const trip = get(day.trip_id)
     const currentItems = listItems(day.id)
     const instruction = (req.body && req.body.instruction) || null
     try {
@@ -229,7 +238,7 @@ export default async function routes(app) {
   })
 
   app.post('/days/:dayId/apply', { preHandler: app.requireOrganizer, schema: { body: applyDayBodySchema } }, async (req, reply) => {
-    const day = getDay(req.params.dayId)
+    const day = ownedDay(req)
     if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
     const tx = app.db.transaction((items) => {
       app.db.prepare('DELETE FROM itinerary_items WHERE day_id = ?').run(day.id)

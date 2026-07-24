@@ -29,10 +29,10 @@ function budgetShape(app, tripId) {
 }
 
 export default async function routes(app) {
-  const getTrip = (id) => app.db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
+  const getTrip = (req) => app.ownedTrip(req, req.params.id)
 
   app.get('/trips/:id/budget', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     return budgetShape(app, trip.id)
   })
@@ -60,7 +60,7 @@ export default async function routes(app) {
       },
     },
   }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const upsert = app.db.prepare(`INSERT INTO budget_lines (id, trip_id, category, estimate, basis) VALUES (?, ?, ?, ?, ?)
       ON CONFLICT (trip_id, category) DO UPDATE SET estimate = excluded.estimate, basis = excluded.basis`)
@@ -94,7 +94,7 @@ export default async function routes(app) {
       },
     },
   }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const overrides = req.body.overrides
     for (const o of overrides) {
@@ -111,7 +111,7 @@ export default async function routes(app) {
   })
 
   app.post('/trips/:id/budget/ai-draft', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (aiGuard(reply)) return
     try {

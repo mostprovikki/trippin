@@ -42,11 +42,12 @@ function archiveToJson(row) {
 
 export default async function routes(app) {
   const db = app.db
-  const getTrip = (id) => db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
+  const get = (id) => db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
+  const getTrip = (req) => app.ownedTrip(req, req.params.id)
   const getArchive = (tripId) => db.prepare('SELECT * FROM archives WHERE trip_id = ?').get(tripId)
 
   app.post('/trips/:id/archive', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (getArchive(trip.id)) return httpError(reply, 409, 'ALREADY_ARCHIVED', 'Trip is already archived')
 
@@ -72,7 +73,7 @@ export default async function routes(app) {
   })
 
   app.get('/trips/:id/archive', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const archive = getArchive(trip.id)
     if (!archive) return httpError(reply, 404, 'NOT_ARCHIVED', 'Trip has not been archived')
@@ -81,7 +82,7 @@ export default async function routes(app) {
   })
 
   app.put('/trips/:id/archive', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const archive = getArchive(trip.id)
     if (!archive) return httpError(reply, 404, 'NOT_ARCHIVED', 'Trip has not been archived')
@@ -95,7 +96,7 @@ export default async function routes(app) {
   })
 
   app.put('/trips/:id/actuals', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const actuals = req.body?.actuals || []
     for (const a of actuals) {
@@ -111,16 +112,16 @@ export default async function routes(app) {
   })
 
   app.post('/trips/:id/clone', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const name = req.body?.name
     if (!name) return httpError(reply, 400, 'NAME_REQUIRED', 'name is required')
 
     const newId = randomUUID()
     const tx = db.transaction(() => {
-      db.prepare(`INSERT INTO trips (id, name, status, vibe_tags, origin_city, currency, destination_mode)
-        VALUES (?, ?, 'idea', ?, ?, ?, 'open')`)
-        .run(newId, name, trip.vibe_tags, trip.origin_city, trip.currency)
+      db.prepare(`INSERT INTO trips (id, organizer_id, name, status, vibe_tags, origin_city, currency, destination_mode)
+        VALUES (?, ?, ?, 'idea', ?, ?, ?, 'open')`)
+        .run(newId, req.organizer.id, name, trip.vibe_tags, trip.origin_city, trip.currency)
 
       const goals = db.prepare('SELECT title, notes FROM trip_goals WHERE trip_id = ?').all(trip.id)
       const insGoal = db.prepare('INSERT INTO trip_goals (id, trip_id, title, fixed_date, fixed_place, notes) VALUES (?, ?, ?, NULL, NULL, ?)')
@@ -148,6 +149,6 @@ export default async function routes(app) {
     tx()
 
     reply.code(201)
-    return { trip: tripToJson(db, getTrip(newId)) }
+    return { trip: tripToJson(db, get(newId)) }
   })
 }

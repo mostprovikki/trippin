@@ -18,25 +18,26 @@ export function personToJson(row) {
 export default async function routes(app) {
   const opts = (required = []) => ({ preHandler: app.requireOrganizer, schema: { body: bodySchema(required) } })
   const get = (id) => app.db.prepare('SELECT * FROM persons WHERE id = ?').get(id)
+  const owned = (req) => app.ownedPerson(req, req.params.id)
 
-  app.get('/people', { preHandler: app.requireOrganizer }, async () =>
-    ({ people: app.db.prepare('SELECT * FROM persons ORDER BY name').all().map(personToJson) }))
+  app.get('/people', { preHandler: app.requireOrganizer }, async (req) =>
+    ({ people: app.db.prepare('SELECT * FROM persons WHERE organizer_id = ? ORDER BY name').all(req.organizer.id).map(personToJson) }))
 
   app.post('/people', opts(['name']), async (req, reply) => {
     const id = randomUUID()
     const vals = Object.fromEntries(FIELDS.map(f => [f, f === 'interests' ? JSON.stringify(req.body.interests || []) : req.body[f] ?? null]))
-    app.db.prepare(`INSERT INTO persons (id, ${FIELDS.join(',')}) VALUES (?, ${FIELDS.map(() => '?').join(',')})`)
-      .run(id, ...FIELDS.map(f => vals[f]))
+    app.db.prepare(`INSERT INTO persons (id, organizer_id, ${FIELDS.join(',')}) VALUES (?, ?, ${FIELDS.map(() => '?').join(',')})`)
+      .run(id, req.organizer.id, ...FIELDS.map(f => vals[f]))
     return reply.code(201).send({ person: personToJson(get(id)) })
   })
 
   app.get('/people/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const row = get(req.params.id)
+    const row = owned(req)
     return row ? { person: personToJson(row) } : httpError(reply, 404, 'NOT_FOUND', 'No such person')
   })
 
   app.put('/people/:id', opts([]), async (req, reply) => {
-    if (!get(req.params.id)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    if (!owned(req)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     for (const f of FIELDS) if (f in req.body)
       app.db.prepare(`UPDATE persons SET ${f} = ?, updated_at = datetime() WHERE id = ?`)
         .run(f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], req.params.id)
@@ -44,7 +45,7 @@ export default async function routes(app) {
   })
 
   app.delete('/people/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    if (!get(req.params.id)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    if (!owned(req)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     const inTrip = app.db.prepare(`SELECT 1 FROM trip_participants tp JOIN trips t ON t.id = tp.trip_id
       WHERE tp.person_id = ? AND t.status != 'archived'`).get(req.params.id)
     if (inTrip) return httpError(reply, 409, 'TRIP_MEMBER', 'Person is part of a non-archived trip')

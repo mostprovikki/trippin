@@ -17,14 +17,18 @@ export function tripToJson(db, row) {
 }
 
 export default async function routes(app) {
+  // Unscoped re-read for rows whose ownership the handler already verified.
   const get = (id) => app.db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
-  const getGoal = (id) => app.db.prepare('SELECT * FROM trip_goals WHERE id = ?').get(id)
+  const owned = (req) => app.ownedTrip(req, req.params.id)
+  const getGoal = (req, id) => app.db.prepare(
+    'SELECT g.* FROM trip_goals g JOIN trips t ON t.id = g.trip_id WHERE g.id = ? AND t.organizer_id = ?'
+  ).get(id, req.organizer.id)
 
   app.get('/trips', { preHandler: app.requireOrganizer }, async (req) => {
     const { status } = req.query || {}
     const rows = status
-      ? app.db.prepare('SELECT * FROM trips WHERE status = ? ORDER BY created_at DESC').all(status)
-      : app.db.prepare('SELECT * FROM trips ORDER BY created_at DESC').all()
+      ? app.db.prepare('SELECT * FROM trips WHERE organizer_id = ? AND status = ? ORDER BY created_at DESC').all(req.organizer.id, status)
+      : app.db.prepare('SELECT * FROM trips WHERE organizer_id = ? ORDER BY created_at DESC').all(req.organizer.id)
     const trips = rows.map((row) => {
       const { count } = app.db.prepare('SELECT COUNT(*) AS count FROM trip_participants WHERE trip_id = ?').get(row.id)
       return {
@@ -41,10 +45,11 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const id = randomUUID()
     const b = req.body
-    app.db.prepare(`INSERT INTO trips (id, name, description, vibe_tags, origin_city, date_mode, start_date, end_date, flex_days, destination_mode, destination)
-      VALUES (@id, @name, @description, @vibe_tags, @origin_city, @date_mode, @start_date, @end_date, @flex_days, @destination_mode, @destination)`)
+    app.db.prepare(`INSERT INTO trips (id, organizer_id, name, description, vibe_tags, origin_city, date_mode, start_date, end_date, flex_days, destination_mode, destination)
+      VALUES (@id, @organizer_id, @name, @description, @vibe_tags, @origin_city, @date_mode, @start_date, @end_date, @flex_days, @destination_mode, @destination)`)
       .run({
         id,
+        organizer_id: req.organizer.id,
         name: b.name,
         description: b.description ?? null,
         vibe_tags: JSON.stringify(b.vibe_tags ?? []),
@@ -58,20 +63,23 @@ export default async function routes(app) {
       })
     if (Array.isArray(b.participant_ids)) {
       const ins = app.db.prepare('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)')
-      for (const personId of b.participant_ids) ins.run(id, personId)
+      for (const personId of b.participant_ids) {
+        if (!app.ownedPerson(req, personId)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+        ins.run(id, personId)
+      }
     }
     reply.code(201)
     return { trip: tripToJson(app.db, get(id)) }
   })
 
   app.get('/trips/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = get(req.params.id)
+    const trip = owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     return { trip: tripToJson(app.db, trip) }
   })
 
   app.put('/trips/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = get(req.params.id)
+    const trip = owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const b = req.body || {}
     const updates = []
@@ -92,7 +100,7 @@ export default async function routes(app) {
     preHandler: app.requireOrganizer,
     schema: { body: { type: 'object', required: ['status'], properties: { status: { type: 'string' } } } },
   }, async (req, reply) => {
-    const trip = get(req.params.id)
+    const trip = owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const target = req.body.status
     if (target === 'archived') return httpError(reply, 400, 'USE_ARCHIVE_ENDPOINT', 'Archive via POST /api/trips/:id/archive')
@@ -124,7 +132,7 @@ export default async function routes(app) {
       },
     },
   }, async (req, reply) => {
-    const trip = get(req.params.id)
+    const trip = owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const tx = app.db.transaction((windows) => {
       app.db.prepare('DELETE FROM trip_date_windows WHERE trip_id = ?').run(trip.id)
@@ -148,18 +156,18 @@ export default async function routes(app) {
       },
     },
   }, async (req, reply) => {
-    const trip = get(req.params.id)
+    const trip = owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const id = randomUUID()
     const b = req.body
     app.db.prepare('INSERT INTO trip_goals (id, trip_id, title, fixed_date, fixed_place, notes) VALUES (?, ?, ?, ?, ?, ?)')
       .run(id, trip.id, b.title, b.fixed_date ?? null, b.fixed_place ?? null, b.notes ?? null)
     reply.code(201)
-    return getGoal(id)
+    return getGoal(req, id)
   })
 
   app.put('/goals/:goalId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const goal = getGoal(req.params.goalId)
+    const goal = getGoal(req, req.params.goalId)
     if (!goal) return httpError(reply, 404, 'NOT_FOUND', 'No such goal')
     const b = req.body || {}
     const fields = ['title', 'fixed_date', 'fixed_place', 'notes']
@@ -172,11 +180,11 @@ export default async function routes(app) {
       }
     }
     if (updates.length) app.db.prepare(`UPDATE trip_goals SET ${updates.join(', ')} WHERE id = @id`).run(params)
-    return getGoal(goal.id)
+    return getGoal(req, goal.id)
   })
 
   app.delete('/goals/:goalId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const goal = getGoal(req.params.goalId)
+    const goal = getGoal(req, req.params.goalId)
     if (!goal) return httpError(reply, 404, 'NOT_FOUND', 'No such goal')
     app.db.prepare('DELETE FROM trip_goals WHERE id = ?').run(goal.id)
     reply.code(204)
@@ -187,8 +195,9 @@ export default async function routes(app) {
     preHandler: app.requireOrganizer,
     schema: { body: { type: 'object', required: ['person_id'], properties: { person_id: { type: 'string' } } } },
   }, async (req, reply) => {
-    const trip = get(req.params.id)
+    const trip = owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (!app.ownedPerson(req, req.body.person_id)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     const existing = app.db.prepare('SELECT 1 FROM trip_participants WHERE trip_id = ? AND person_id = ?').get(trip.id, req.body.person_id)
     if (existing) return httpError(reply, 409, 'ALREADY_MEMBER', 'Person is already a participant')
     app.db.prepare('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)').run(trip.id, req.body.person_id)
@@ -197,7 +206,7 @@ export default async function routes(app) {
   })
 
   app.delete('/trips/:id/participants/:personId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = get(req.params.id)
+    const trip = owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     app.db.prepare('DELETE FROM trip_participants WHERE trip_id = ? AND person_id = ?').run(trip.id, req.params.personId)
     reply.code(204)

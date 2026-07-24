@@ -1,0 +1,91 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import { makeTestApp, loginOrganizer, createOrganizer, createTrip, createPerson, authedInject } from './helpers.js'
+
+// Organizer data isolation: organizer B must not see or touch organizer A's
+// trips, persons, or anything reachable through them — bare ids read as 404.
+let app, db, aCookie, bCookie, aTrip, aPerson
+
+beforeEach(async () => {
+  ;({ app, db } = await makeTestApp())
+  const a = loginOrganizer(app, db) // default organizer owns the fixtures
+  aCookie = a.cookie
+  const orgB = createOrganizer(db, { email: 'b@x.dev' })
+  bCookie = `tp_session=${app.signSession(orgB)}`
+  aTrip = createTrip(db, { name: 'A Trip' })
+  aPerson = createPerson(db, { name: 'A Person' })
+  db.prepare('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)').run(aTrip.id, aPerson.id)
+})
+
+describe('organizer isolation', () => {
+  it("B's trip list excludes A's trips; A still sees them", async () => {
+    const b = await authedInject(app, bCookie, { method: 'GET', url: '/api/trips' })
+    expect(b.json().trips).toHaveLength(0)
+    const a = await authedInject(app, aCookie, { method: 'GET', url: '/api/trips' })
+    expect(a.json().trips.map((t) => t.id)).toContain(aTrip.id)
+  })
+
+  it("B gets 404 on A's trip and its sub-resources", async () => {
+    for (const url of [
+      `/api/trips/${aTrip.id}`,
+      `/api/trips/${aTrip.id}/budget`,
+      `/api/trips/${aTrip.id}/itinerary`,
+      `/api/trips/${aTrip.id}/checklists`,
+      `/api/trips/${aTrip.id}/readiness`,
+      `/api/trips/${aTrip.id}/candidates`,
+      `/api/trips/${aTrip.id}/links`,
+      `/api/trips/${aTrip.id}/archive`,
+    ]) {
+      const res = await authedInject(app, bCookie, { method: 'GET', url })
+      expect(res.statusCode, url).toBe(404)
+    }
+  })
+
+  it("B cannot mutate A's trip", async () => {
+    const put = await authedInject(app, bCookie, { method: 'PUT', url: `/api/trips/${aTrip.id}`, payload: { name: 'stolen' } })
+    expect(put.statusCode).toBe(404)
+    const status = await authedInject(app, bCookie, { method: 'POST', url: `/api/trips/${aTrip.id}/status`, payload: { status: 'planning' } })
+    expect(status.statusCode).toBe(404)
+    expect(db.prepare('SELECT name FROM trips WHERE id = ?').get(aTrip.id).name).toBe('A Trip')
+  })
+
+  it("B's people list excludes A's person; by-id access 404s", async () => {
+    const list = await authedInject(app, bCookie, { method: 'GET', url: '/api/people' })
+    expect(list.json().people).toHaveLength(0)
+    const get = await authedInject(app, bCookie, { method: 'GET', url: `/api/people/${aPerson.id}` })
+    expect(get.statusCode).toBe(404)
+    const del = await authedInject(app, bCookie, { method: 'DELETE', url: `/api/people/${aPerson.id}` })
+    expect(del.statusCode).toBe(404)
+  })
+
+  it("B cannot attach A's person to B's own trip", async () => {
+    const bTrip = await authedInject(app, bCookie, { method: 'POST', url: '/api/trips', payload: { name: 'B Trip' } })
+    const bTripId = bTrip.json().trip.id
+    const res = await authedInject(app, bCookie, {
+      method: 'POST', url: `/api/trips/${bTripId}/participants`, payload: { person_id: aPerson.id },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it("B cannot create or revoke links for A's trip", async () => {
+    const create = await authedInject(app, bCookie, {
+      method: 'POST', url: `/api/trips/${aTrip.id}/participants/${aPerson.id}/link`,
+    })
+    expect(create.statusCode).toBe(404)
+
+    const real = await authedInject(app, aCookie, {
+      method: 'POST', url: `/api/trips/${aTrip.id}/participants/${aPerson.id}/link`,
+    })
+    expect(real.statusCode).toBe(201)
+    const linkId = db.prepare('SELECT id FROM participant_links WHERE trip_id = ?').get(aTrip.id).id
+    const revoke = await authedInject(app, bCookie, { method: 'POST', url: `/api/links/${linkId}/revoke` })
+    expect(revoke.statusCode).toBe(404)
+  })
+
+  it('trips created via API belong to their creator', async () => {
+    const res = await authedInject(app, bCookie, { method: 'POST', url: '/api/trips', payload: { name: 'B Trip' } })
+    const id = res.json().trip.id
+    expect(db.prepare('SELECT organizer_id FROM trips WHERE id = ?').get(id).organizer_id).toBeTruthy()
+    const aList = await authedInject(app, aCookie, { method: 'GET', url: '/api/trips' })
+    expect(aList.json().trips.map((t) => t.id)).not.toContain(id)
+  })
+})

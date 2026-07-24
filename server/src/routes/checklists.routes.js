@@ -35,9 +35,20 @@ function itemToJson(db, itemId) {
 
 export default async function routes(app) {
   const db = app.db
+  // Unscoped re-reads for rows whose ownership the handler already verified.
+  // Templates (is_template=1, trip_id NULL) are shared across organizers.
   const getChecklist = (id) => db.prepare('SELECT * FROM checklists WHERE id = ?').get(id)
   const getTrip = (id) => db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
   const getItem = (id) => db.prepare('SELECT * FROM checklist_items WHERE id = ?').get(id)
+  const ownedChecklist = (req, id) => db.prepare(
+    `SELECT c.* FROM checklists c LEFT JOIN trips t ON t.id = c.trip_id
+     WHERE c.id = ? AND (c.is_template = 1 OR t.organizer_id = ?)`
+  ).get(id, req.organizer.id)
+  const ownedItem = (req) => db.prepare(
+    `SELECT ci.* FROM checklist_items ci JOIN checklists c ON c.id = ci.checklist_id
+     LEFT JOIN trips t ON t.id = c.trip_id
+     WHERE ci.id = ? AND (c.is_template = 1 OR t.organizer_id = ?)`
+  ).get(req.params.itemId, req.organizer.id)
   const nextPosition = (checklistId) =>
     db.prepare('SELECT COALESCE(MAX(position), -1) AS maxPos FROM checklist_items WHERE checklist_id = ?')
       .get(checklistId).maxPos + 1
@@ -47,12 +58,14 @@ export default async function routes(app) {
     const templateOnly = req.query?.template === '1' || req.query?.template === 1
     const rows = templateOnly
       ? db.prepare('SELECT * FROM checklists WHERE is_template = 1 ORDER BY name').all()
-      : db.prepare('SELECT * FROM checklists ORDER BY name').all()
+      : db.prepare(`SELECT * FROM checklists
+          WHERE is_template = 1 OR trip_id IN (SELECT id FROM trips WHERE organizer_id = ?)
+          ORDER BY name`).all(req.organizer.id)
     return { checklists: rows.map((r) => checklistToJson(db, r)) }
   })
 
   app.get('/trips/:tripId/checklists', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.tripId)
+    const trip = app.ownedTrip(req, req.params.tripId)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const rows = db.prepare('SELECT * FROM checklists WHERE trip_id = ? ORDER BY name').all(trip.id)
     return { checklists: rows.map((r) => checklistToJson(db, r)) }
@@ -79,7 +92,7 @@ export default async function routes(app) {
     if (!isTemplate && !b.trip_id)
       return httpError(reply, 400, 'VALIDATION', 'trip_id is required unless is_template is set')
     if (!isTemplate) {
-      const trip = getTrip(b.trip_id)
+      const trip = app.ownedTrip(req, b.trip_id)
       if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     }
     const id = randomUUID()
@@ -91,7 +104,7 @@ export default async function routes(app) {
   })
 
   app.put('/checklists/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const checklist = getChecklist(req.params.id)
+    const checklist = ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     const b = req.body || {}
     const updates = []
@@ -107,7 +120,7 @@ export default async function routes(app) {
   })
 
   app.delete('/checklists/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const checklist = getChecklist(req.params.id)
+    const checklist = ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     db.prepare('DELETE FROM checklists WHERE id = ?').run(checklist.id)
     reply.code(204)
@@ -129,7 +142,7 @@ export default async function routes(app) {
       },
     },
   }, async (req, reply) => {
-    const checklist = getChecklist(req.params.id)
+    const checklist = ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     const id = randomUUID()
     const b = req.body
@@ -141,7 +154,7 @@ export default async function routes(app) {
   })
 
   app.put('/checklist-items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const item = getItem(req.params.itemId)
+    const item = ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     const b = req.body || {}
     const updates = []
@@ -157,7 +170,7 @@ export default async function routes(app) {
   })
 
   app.delete('/checklist-items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const item = getItem(req.params.itemId)
+    const item = ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     db.prepare('DELETE FROM checklist_items WHERE id = ?').run(item.id)
     reply.code(204)
@@ -169,7 +182,7 @@ export default async function routes(app) {
     preHandler: app.requireOrganizer,
     schema: { body: { type: 'object', required: ['template_id'], properties: { template_id: { type: 'string' } } } },
   }, async (req, reply) => {
-    const trip = getTrip(req.params.tripId)
+    const trip = app.ownedTrip(req, req.params.tripId)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const template = getChecklist(req.body.template_id)
     if (!template || !template.is_template) return httpError(reply, 404, 'NOT_FOUND', 'No such template')
@@ -193,7 +206,7 @@ export default async function routes(app) {
     preHandler: app.requireOrganizer,
     schema: { body: { type: 'object', required: ['name'], properties: { name: { type: 'string', minLength: 1 } } } },
   }, async (req, reply) => {
-    const source = getChecklist(req.params.id)
+    const source = ownedChecklist(req, req.params.id)
     if (!source) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
 
     const newId = randomUUID()
@@ -213,7 +226,7 @@ export default async function routes(app) {
 
   // ---- AI packing suggestion ----
   app.post('/checklists/:id/ai-packing-suggest', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const checklist = getChecklist(req.params.id)
+    const checklist = ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     if (checklist.kind !== 'packing') return httpError(reply, 400, 'NOT_PACKING', 'Checklist is not a packing list')
     if (checklist.is_template) return httpError(reply, 404, 'NOT_FOUND', 'Template has no trip context')

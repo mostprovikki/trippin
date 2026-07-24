@@ -28,14 +28,17 @@ export function buildPrefSummary(db, tripId) {
 }
 
 export default async function routes(app) {
-  const getTrip = (id) => app.db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
-  const getCandidate = (id) => app.db.prepare('SELECT * FROM destination_candidates WHERE id = ?').get(id)
+  const get = (id) => app.db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
+  const getTrip = (req) => app.ownedTrip(req, req.params.id)
+  const getCandidate = (req, id) => app.db.prepare(
+    'SELECT c.* FROM destination_candidates c JOIN trips t ON t.id = c.trip_id WHERE c.id = ? AND t.organizer_id = ?'
+  ).get(id, req.organizer.id)
   const listCandidates = (tripId) => app.db.prepare(
     'SELECT * FROM destination_candidates WHERE trip_id = ? ORDER BY decided DESC, created_at ASC, rowid ASC'
   ).all(tripId)
 
   app.get('/trips/:id/candidates', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     return { candidates: listCandidates(trip.id) }
   })
@@ -56,7 +59,7 @@ export default async function routes(app) {
       },
     },
   }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const id = randomUUID()
     const b = req.body
@@ -65,11 +68,11 @@ export default async function routes(app) {
       VALUES (?, ?, ?, ?, ?, ?, ?, 'manual')`)
       .run(id, trip.id, b.name, b.rationale ?? null, b.best_dates ?? null, b.est_budget_per_person ?? null, b.caveats ?? null)
     reply.code(201)
-    return { candidate: getCandidate(id) }
+    return { candidate: getCandidate(req, id) }
   })
 
   app.post('/trips/:id/candidates/ai-suggest', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = getTrip(req.params.id)
+    const trip = getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (aiGuard(reply)) return reply
     const prefSummary = buildPrefSummary(app.db, trip.id)
@@ -85,7 +88,7 @@ export default async function routes(app) {
   })
 
   app.post('/candidates/:id/decide', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const candidate = getCandidate(req.params.id)
+    const candidate = getCandidate(req, req.params.id)
     if (!candidate) return httpError(reply, 404, 'NOT_FOUND', 'No such candidate')
     const tx = app.db.transaction(() => {
       app.db.prepare('UPDATE destination_candidates SET decided = 0 WHERE trip_id = ?').run(candidate.trip_id)
@@ -94,11 +97,11 @@ export default async function routes(app) {
         .run(candidate.name, candidate.trip_id)
     })
     tx()
-    return { trip: tripToJson(app.db, getTrip(candidate.trip_id)) }
+    return { trip: tripToJson(app.db, get(candidate.trip_id)) }
   })
 
   app.delete('/candidates/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const candidate = getCandidate(req.params.id)
+    const candidate = getCandidate(req, req.params.id)
     if (!candidate) return httpError(reply, 404, 'NOT_FOUND', 'No such candidate')
     if (candidate.decided) return httpError(reply, 400, 'DECIDED', 'Cannot delete a decided candidate')
     app.db.prepare('DELETE FROM destination_candidates WHERE id = ?').run(candidate.id)
