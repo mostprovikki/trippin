@@ -41,9 +41,14 @@ const dateRange = computed(() =>
 
 <template>
   <main class="p-page">
-    <Message v-if="invalidLink" severity="warn" :closable="false">
-      This link is no longer valid — ask your trip organizer for a new one
-    </Message>
+    <div v-if="invalidLink" class="invalid-link-box">
+      <p class="invalid-link-brand"><i class="pi pi-compass" aria-hidden="true" /> Tripper</p>
+      <div class="card invalid-link-card">
+        <i class="pi pi-link" aria-hidden="true" />
+        <h1>This link isn't valid</h1>
+        <p>It may have expired or been revoked — ask your trip organizer for a fresh link.</p>
+      </div>
+    </div>
 
     <ProgressSpinner v-else-if="loading" style="width: 2.5rem; height: 2.5rem" />
 
@@ -97,6 +102,23 @@ const dateRange = computed(() =>
 
 <style scoped>
 .p-page { max-width: 30rem; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+.invalid-link-box { max-width: 22rem; margin: 3rem auto 0; }
+.invalid-link-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin: 0 0 1rem;
+  color: var(--app-primary);
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: -0.01em;
+}
+.invalid-link-card { text-align: center; padding: 2rem 1.5rem; }
+.invalid-link-card > i { font-size: 2rem; color: var(--app-text-muted); }
+.invalid-link-card h1 { margin: 0.75rem 0 0.375rem; font-size: 1.375rem; }
+.invalid-link-card p { margin: 0; color: var(--app-text-muted); }
 .p-hero h1 { margin: 0 0 0.375rem; }
 .p-greeting { margin: 0 0 0.25rem; color: var(--app-text-muted); font-size: 0.875rem; }
 .p-meta { margin: 0; color: var(--app-text-muted); display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }

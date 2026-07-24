@@ -3,6 +3,7 @@ import { reactive, watch } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
+import Select from 'primevue/select'
 import { useDraft, confirmDiscard } from '../composables/useDraft.js'
 
 const props = defineProps({
@@ -11,6 +12,25 @@ const props = defineProps({
   draftKey: { type: String, default: '' }
 })
 const emit = defineEmits(['submit', 'cancel'])
+
+const DIETARY_OPTIONS = [
+  { label: '—', value: '' },
+  { label: 'Veg', value: 'veg' },
+  { label: 'Non-veg', value: 'non_veg' },
+  { label: 'Vegan', value: 'vegan' }
+]
+const PACE_OPTIONS = [
+  { label: '—', value: '' },
+  { label: 'Relaxed', value: 'relaxed' },
+  { label: 'Moderate', value: 'moderate' },
+  { label: 'Packed', value: 'packed' }
+]
+const BUDGET_BAND_OPTIONS = [
+  { label: '—', value: '' },
+  { label: 'Low', value: 'low' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'High', value: 'high' }
+]
 
 function blank() {
   return {
@@ -99,12 +119,7 @@ function onCancel() {
     </div>
     <div class="field">
       <label for="pf-dietary">Dietary</label>
-      <select id="pf-dietary" v-model="form.dietary">
-        <option value=""></option>
-        <option value="veg">Veg</option>
-        <option value="non_veg">Non-veg</option>
-        <option value="vegan">Vegan</option>
-      </select>
+      <Select input-id="pf-dietary" v-model="form.dietary" :options="DIETARY_OPTIONS" option-label="label" option-value="value" fluid />
     </div>
     <div class="field">
       <label for="pf-allergies">Allergies</label>
@@ -116,12 +131,7 @@ function onCancel() {
     </div>
     <div class="field">
       <label for="pf-pace">Pace</label>
-      <select id="pf-pace" v-model="form.pace">
-        <option value=""></option>
-        <option value="relaxed">Relaxed</option>
-        <option value="moderate">Moderate</option>
-        <option value="packed">Packed</option>
-      </select>
+      <Select input-id="pf-pace" v-model="form.pace" :options="PACE_OPTIONS" option-label="label" option-value="value" fluid />
     </div>
     <div class="field">
       <label for="pf-interests">Interests (comma-separated)</label>
@@ -129,12 +139,7 @@ function onCancel() {
     </div>
     <div class="field">
       <label for="pf-budget">Budget band</label>
-      <select id="pf-budget" v-model="form.budget_band">
-        <option value=""></option>
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
+      <Select input-id="pf-budget" v-model="form.budget_band" :options="BUDGET_BAND_OPTIONS" option-label="label" option-value="value" fluid />
     </div>
     <div class="field">
       <label for="pf-city">Home city</label>

@@ -59,7 +59,7 @@ async function submitManual() {
       <Button v-if="auth.aiEnabled" type="button" severity="secondary" outlined :loading="store.aiBusy" @click="suggestWithAi">
         {{ store.aiBusy ? 'Generating…' : 'Suggest with AI' }}
       </Button>
-      <Tag v-else severity="warn" value="AI disabled — set LLM_PROVIDER" />
+      <Tag v-else severity="warn" value="AI suggestions are turned off" />
     </div>
 
     <div v-if="!candidates.length" class="dest-empty">No destination candidates yet.</div>

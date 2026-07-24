@@ -24,7 +24,8 @@ const routes = [
   },
   { path: '/people', name: 'people', component: () => import('./views/PeopleListView.vue'), meta: { auth: true } },
   { path: '/people/:id', name: 'person', component: () => import('./views/PersonDetailView.vue'), meta: { auth: true } },
-  { path: '/p/:token', name: 'participant', component: () => import('./views/ParticipantView.vue'), meta: { public: true, bare: true } }
+  { path: '/p/:token', name: 'participant', component: () => import('./views/ParticipantView.vue'), meta: { public: true, bare: true } },
+  { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('./views/NotFoundView.vue'), meta: { public: true } }
 ]
 
 export const router = createRouter({

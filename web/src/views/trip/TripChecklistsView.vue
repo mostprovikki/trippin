@@ -8,6 +8,7 @@ import Select from 'primevue/select'
 import { api } from '../../api/client.js'
 import { useChecklistsStore } from '../../stores/checklists.js'
 import ChecklistCard from '../../components/ChecklistCard.vue'
+import EmptyState from '../../components/EmptyState.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
@@ -64,6 +65,12 @@ async function addFromTemplate() {
         <Button type="submit" label="Add from template" severity="secondary" outlined />
       </form>
     </div>
+
+    <EmptyState
+      v-if="!store.checklists.length"
+      icon="pi pi-check-square"
+      message="No checklists yet — create one or start from a template."
+    />
 
     <ChecklistCard
       v-for="checklist in store.checklists"

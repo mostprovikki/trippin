@@ -197,7 +197,15 @@ async function advanceStatus() {
   .trip-shell { display: block; padding: 1rem 1rem 3rem; }
   .trip-sidebar { position: sticky; top: 3.25rem; z-index: 10; background: var(--app-bg); margin: 0 -1rem 1rem; padding: 0.5rem 1rem; border-bottom: 1px solid var(--app-border); }
   .trip-sidebar-head { margin-bottom: 0.5rem; }
-  .trip-sidebar-nav { flex-direction: row; overflow-x: auto; gap: 0.25rem; scrollbar-width: none; }
+  .trip-sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.25rem;
+    scrollbar-width: none;
+    /* Right-edge fade hints at horizontal scrollability */
+    -webkit-mask-image: linear-gradient(to right, black 92%, transparent);
+    mask-image: linear-gradient(to right, black 92%, transparent);
+  }
   .trip-sidebar-nav::-webkit-scrollbar { display: none; }
   .trip-nav-group { display: none; }
   .trip-nav-item { white-space: nowrap; flex: 0 0 auto; }

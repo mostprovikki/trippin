@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import { useChecklistsStore } from '../stores/checklists.js'
 import { useAuthStore } from '../stores/auth.js'
@@ -21,6 +22,10 @@ const showSaveAsTemplate = ref(false)
 const templateName = ref('')
 
 const isTasks = computed(() => props.checklist.kind === 'tasks')
+const assigneeOptions = computed(() => [
+  { label: 'Unassigned', value: '' },
+  ...props.participants.map((p) => ({ label: p.name, value: p.person_id }))
+])
 const isPacking = computed(() => props.checklist.kind === 'packing')
 const draft = computed(() =>
   store.packingDraft && store.packingDraft.checklistId === props.checklist.id ? store.packingDraft : null
@@ -90,10 +95,14 @@ function discardDraft() {
         <Tag v-if="isOverdue(item)" value="Overdue" severity="warn" />
 
         <template v-if="isTasks">
-          <select :value="item.assignee_person_id || ''" @change="changeAssignee(item, $event.target.value)">
-            <option value="">Unassigned</option>
-            <option v-for="p in participants" :key="p.person_id" :value="p.person_id">{{ p.name }}</option>
-          </select>
+          <Select
+            :model-value="item.assignee_person_id || ''"
+            :options="assigneeOptions"
+            option-label="label"
+            option-value="value"
+            aria-label="Assignee"
+            @update:model-value="changeAssignee(item, $event)"
+          />
           <input type="date" :value="item.due_date || ''" @change="changeDueDate(item, $event.target.value)" />
         </template>
 
@@ -104,10 +113,7 @@ function discardDraft() {
     <form class="field checklist-add" @submit.prevent="addItem">
       <input v-model="newTitle" placeholder="New item title" />
       <template v-if="isTasks">
-        <select v-model="newAssignee">
-          <option value="">Unassigned</option>
-          <option v-for="p in participants" :key="p.person_id" :value="p.person_id">{{ p.name }}</option>
-        </select>
+        <Select v-model="newAssignee" :options="assigneeOptions" option-label="label" option-value="value" aria-label="Assignee" />
         <input v-model="newDueDate" type="date" />
       </template>
       <Button type="submit" label="Add item" />
@@ -119,7 +125,7 @@ function discardDraft() {
       </Button>
     </div>
     <div v-else-if="isPacking">
-      <p>AI disabled — set LLM_PROVIDER</p>
+      <p>AI suggestions are turned off</p>
     </div>
 
     <div v-if="draft" class="card">

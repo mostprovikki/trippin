@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import { useParticipantStore } from '../stores/participant.js'
 import { useNotify } from '../composables/useNotify.js'
@@ -105,9 +106,7 @@ async function download(doc) {
       </div>
       <div class="field">
         <label for="doc-type">Type</label>
-        <select id="doc-type" v-model="docType">
-          <option v-for="t in DOC_TYPES" :key="t" :value="t">{{ t }}</option>
-        </select>
+        <Select input-id="doc-type" v-model="docType" :options="DOC_TYPES" fluid />
       </div>
       <div class="field">
         <label for="doc-number">Number (optional)</label>

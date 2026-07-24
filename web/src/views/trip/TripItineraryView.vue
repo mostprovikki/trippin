@@ -80,7 +80,7 @@ function discardWholeDraft() {
             {{ store.aiBusy ? 'Generating…' : 'AI draft (whole trip)' }}
           </Button>
         </div>
-        <Tag v-else severity="secondary" value="AI disabled — set LLM_PROVIDER" />
+        <Tag v-else severity="secondary" value="AI suggestions are turned off" />
       </div>
 
       <div v-if="store.draft" class="card ai-draft-card">

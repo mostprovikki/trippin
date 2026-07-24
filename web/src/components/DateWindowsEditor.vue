@@ -45,6 +45,9 @@ function save() {
       </div>
       <Button type="button" label="Remove" severity="secondary" outlined size="small" @click="removeRow(idx)" />
     </div>
+    <p v-if="!rows.length" class="dwe-empty">
+      <i class="pi pi-calendar-plus" aria-hidden="true" /> No date windows yet — add one to propose dates.
+    </p>
     <Button type="button" label="Add date window" severity="secondary" outlined @click="addRow" />
     <Button type="button" label="Save windows" @click="save" />
   </div>
@@ -65,5 +68,13 @@ function save() {
 }
 .date-windows-editor > .p-button {
   margin-right: 0.5rem;
+}
+.dwe-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  color: var(--app-text-muted);
+  font-size: 0.9375rem;
 }
 </style>

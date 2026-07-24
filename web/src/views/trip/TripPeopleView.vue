@@ -110,7 +110,7 @@ function activeLink(personId) {
         </div>
         <div class="participant-actions">
           <Button label="Create link" size="small" outlined icon="pi pi-link" @click="createLink(p.person_id)" />
-          <Button label="Remove" size="small" severity="danger" text @click="removeParticipant(p.person_id)" />
+          <Button label="Remove" size="small" severity="danger" outlined @click="removeParticipant(p.person_id)" />
         </div>
       </div>
 
@@ -124,7 +124,7 @@ function activeLink(personId) {
         <li v-for="link in linksFor(p.person_id)" :key="link.id">
           <span class="link-meta">created {{ link.created_at }}</span>
           <Tag v-if="link.revoked_at" value="revoked" severity="warn" />
-          <Button v-else label="Revoke" size="small" severity="danger" text @click="revokeLink(link.id)" />
+          <Button v-else label="Revoke" size="small" severity="danger" outlined @click="revokeLink(link.id)" />
         </li>
       </ul>
     </div>

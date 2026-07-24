@@ -92,7 +92,7 @@ function discardDayDraft() {
           {{ store.aiBusy ? 'Generating…' : 'Regenerate day' }}
         </Button>
       </div>
-      <Tag v-else severity="secondary" value="AI disabled — set LLM_PROVIDER" />
+      <Tag v-else severity="secondary" value="AI suggestions are turned off" />
     </div>
 
     <div v-if="dayDraft" class="card day-draft">

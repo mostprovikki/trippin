@@ -116,7 +116,7 @@ onBeforeRouteLeave(async () => {
       <div class="card">
         <h2>AI draft</h2>
         <Button v-if="auth.aiEnabled" :label="store.aiBusy ? 'Generating…' : 'AI draft'" :disabled="store.aiBusy" @click="runAiDraft" />
-        <p v-else>AI disabled — set LLM_PROVIDER</p>
+        <p v-else>AI suggestions are turned off</p>
         <div v-if="store.draft">
           <p>Compare the "AI draft" column above against your estimates, then apply or discard.</p>
           <Button label="Apply" @click="applyDraft" />

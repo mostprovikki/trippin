@@ -93,3 +93,6 @@ a { color: var(--app-primary); }
   .table tr { margin-bottom: 0.75rem; border: 1px solid var(--app-border); border-radius: var(--app-radius-sm); }
   .table td { border-bottom: none; }
 }
+
+/* Keep toasts clear of the sticky AppNav */
+.p-toast.p-toast-top-right { top: 4rem; }

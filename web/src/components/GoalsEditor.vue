@@ -52,7 +52,8 @@ function remove(id) {
 
 <template>
   <div class="goals-editor">
-    <ul class="goals-list">
+    <p v-if="!goals.length" class="goals-empty">No goals yet — add the first one below.</p>
+    <ul v-else class="goals-list">
       <li v-for="goal in goals" :key="goal.id" class="goal-item">
         <template v-if="editing[goal.id]">
           <div class="field"><label>Title</label><InputText v-model="editing[goal.id].title" fluid /></div>
@@ -83,6 +84,7 @@ function remove(id) {
 </template>
 
 <style scoped>
+.goals-empty { color: var(--app-text-muted); font-size: 0.9375rem; }
 .goals-list { list-style: none; padding: 0; }
 .goal-item { border-bottom: 1px solid #e2e2e2; padding: 0.5rem 0; }
 </style>
