@@ -22,6 +22,16 @@ onMounted(async () => {
   try { await store.fetchPeople() } catch (e) { notify.error(e.message) } finally { loading.value = false }
 })
 
+// the name cell stays a real RouterLink so the row keeps a focusable, correctly
+// announced target for keyboard and screen-reader users; this handler only
+// widens the mouse hit area to the rest of the row. Clicks that started on
+// something interactive are left alone — that element already has its own
+// behaviour, and hijacking them would navigate away instead.
+function onRowClick(event, person) {
+  if (event.target.closest('a, button, input, select, textarea, label, [role="button"]')) return
+  router.push({ name: 'person', params: { id: person.id } })
+}
+
 async function onCreate(fields) {
   try {
     const person = await store.createPerson(fields)
@@ -56,10 +66,14 @@ async function onCreate(fields) {
         <tr><th>Name</th><th>Home city</th><th>Dietary</th></tr>
       </thead>
       <tbody>
-        <tr v-for="person in store.people" :key="person.id">
+        <tr v-for="person in store.people" :key="person.id" class="person-row" @click="onRowClick($event, person)">
+          <!-- data-label feeds the stacked mobile layout: under 40rem main.css
+               hides the thead, so without these the values render as bare
+               unlabelled lines. The name needs none — it reads as the row's
+               heading rather than a labelled field. -->
           <td><router-link :to="{ name: 'person', params: { id: person.id } }">{{ person.name }}</router-link></td>
-          <td>{{ person.home_city || '-' }}</td>
-          <td><Tag v-if="person.dietary" :value="person.dietary" severity="secondary" /></td>
+          <td data-label="Home city">{{ person.home_city || '-' }}</td>
+          <td data-label="Dietary"><Tag v-if="person.dietary" :value="person.dietary" severity="secondary" /></td>
         </tr>
       </tbody>
     </table>
@@ -68,6 +82,8 @@ async function onCreate(fields) {
 
 <style scoped>
 .skeleton-row { margin-bottom: 0.5rem; }
+.person-row { cursor: pointer; transition: background-color 0.15s ease; }
+.person-row:hover { background: var(--app-hover); }
 .list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
 .list-head h1 { margin: 0; }
 </style>

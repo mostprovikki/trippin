@@ -78,12 +78,18 @@ function isExpired(doc) {
       </thead>
       <tbody>
         <tr v-for="doc in store.documents" :key="doc.id">
-          <td>{{ doc.doc_type }}</td>
-          <td>{{ doc.doc_number || '-' }}</td>
-          <td>
+          <!-- data-label carries the header text into the row: under 40rem
+               main.css hides the thead and stacks the cells, so without it a
+               passport number and an expiry date are two bare strings. The
+               action cell is left unlabelled on purpose — the button says what
+               it does, and a "Delete" prefix in front of it would just be
+               noise. -->
+          <td data-label="Type">{{ doc.doc_type }}</td>
+          <td data-label="Number">{{ doc.doc_number || '-' }}</td>
+          <td data-label="Expiry">
             <Tag :severity="isExpired(doc) ? 'warn' : 'secondary'" :value="doc.expiry_date || '-'" />
           </td>
-          <td><a :href="`/api/documents/${doc.id}/file`" target="_blank">{{ doc.original_name }}</a></td>
+          <td data-label="File"><a :href="`/api/documents/${doc.id}/file`" target="_blank">{{ doc.original_name }}</a></td>
           <td><Button type="button" label="Delete" severity="danger" outlined @click="remove(doc)" /></td>
         </tr>
       </tbody>

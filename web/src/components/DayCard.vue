@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import { useItineraryStore } from '../stores/itinerary.js'
@@ -9,6 +10,7 @@ import ItineraryItemForm from './ItineraryItemForm.vue'
 const props = defineProps({ day: { type: Object, required: true } })
 const store = useItineraryStore()
 const auth = useAuthStore()
+const confirm = useConfirm()
 const aiEnabled = computed(() => auth.aiEnabled)
 
 const adding = ref(false)
@@ -29,8 +31,17 @@ async function move(idx, dir) {
   await store.reorder(props.day.id, items.map((it) => it.id))
 }
 
-async function remove(itemId) {
-  await store.deleteItem(itemId)
+// confirmed even though it is a single item: the row is only a summary — notes
+// and link are never shown here — so the click destroys work the user cannot
+// see, let alone re-type. Delete also sits last in a four-button cluster right
+// beside Edit, which is the misclick this catches.
+function remove(item) {
+  confirm.require({
+    message: `Delete "${item.title}" from ${props.day.day_date}? Its time, location, cost and notes go with it.`,
+    header: 'Delete itinerary item', icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Delete', acceptClass: 'p-button-danger', rejectLabel: 'Cancel',
+    accept: async () => { try { await store.deleteItem(item.id) } catch { /* store.error is rendered by the parent view */ } }
+  })
 }
 
 async function onAddSubmit(item) {
@@ -70,7 +81,7 @@ function discardDayDraft() {
           <Button type="button" severity="secondary" outlined :disabled="idx === 0" @click="move(idx, -1)">↑</Button>
           <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" @click="move(idx, 1)">↓</Button>
           <Button type="button" label="Edit" severity="secondary" outlined @click="editingId = item.id" />
-          <Button type="button" label="Delete" severity="danger" outlined @click="remove(item.id)" />
+          <Button type="button" label="Delete" severity="danger" outlined @click="remove(item)" />
         </span>
       </li>
     </ul>

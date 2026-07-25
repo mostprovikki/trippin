@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useConfirm } from 'primevue/useconfirm'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
@@ -15,6 +16,7 @@ const props = defineProps({
 
 const store = useChecklistsStore()
 const auth = useAuthStore()
+const confirm = useConfirm()
 
 const newTitle = ref('')
 const newAssignee = ref('')
@@ -62,11 +64,28 @@ async function addItem() {
   newAssignee.value = ''
   newDueDate.value = ''
 }
+// deliberately not confirmed: everything an item holds — title, assignee, due
+// date — is visible in the row you are deleting, and the add form directly
+// below re-creates it in one field. This is also by far the most frequent
+// delete in the app, and a dialog here is what would train people to dismiss
+// the checklist-level one below without reading it.
 async function removeItem(itemId) {
   await store.deleteItem(itemId)
 }
-async function removeChecklist() {
-  await store.deleteChecklist(props.checklist.id)
+function removeChecklist() {
+  const count = props.checklist.items?.length || 0
+  // the button says "Delete checklist" and gives no hint that the items go
+  // too, so the cascade — the part that actually can't be re-typed — has to be
+  // spelled out with a count rather than a generic "are you sure?".
+  const cascade = count
+    ? ` Its ${count} item${count === 1 ? '' : 's'} will be deleted with it.`
+    : ''
+  confirm.require({
+    message: `Delete the checklist "${props.checklist.name}"?${cascade} This cannot be undone.`,
+    header: 'Delete checklist', icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Delete', acceptClass: 'p-button-danger', rejectLabel: 'Cancel',
+    accept: async () => { try { await store.deleteChecklist(props.checklist.id) } catch { /* store.error is rendered by the parent view */ } }
+  })
 }
 async function saveAsTemplate() {
   if (!templateName.value.trim()) return

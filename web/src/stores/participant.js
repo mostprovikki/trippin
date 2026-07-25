@@ -15,6 +15,10 @@ export const useParticipantStore = defineStore('participant', {
   actions: {
     async load(token) {
       this.token = token
+      // Cleared on entry, not just set on failure: this action is re-runnable
+      // from the participant page's Try again button, and a successful retry
+      // would otherwise leave the previous failure's banner on screen.
+      this.error = null
       const capi = participantApi(token)
       try {
         const me = await capi.get('/api/participant/me')

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
@@ -21,6 +21,19 @@ const confirm = useConfirm()
 const notify = useNotify()
 
 const form = reactive({ name: '', rationale: '', best_dates: '', est_budget_per_person: null, caveats: '' })
+
+function resetForm() {
+  form.name = ''
+  form.rationale = ''
+  form.best_dates = ''
+  form.est_budget_per_person = null
+  form.caveats = ''
+}
+
+// The panel is reused when the parent moves between trips, so a half-typed
+// candidate would otherwise survive the jump and be submitted against whichever
+// trip you landed on.
+watch(() => props.tripId, resetForm)
 
 async function suggestWithAi() {
   try { await store.aiSuggest(props.tripId) } catch (e) { notify.error(e.message) }
@@ -48,7 +61,7 @@ async function submitManual() {
       est_budget_per_person: form.est_budget_per_person ? Number(form.est_budget_per_person) : undefined,
       caveats: form.caveats || undefined
     })
-    form.name = ''; form.rationale = ''; form.best_dates = ''; form.est_budget_per_person = null; form.caveats = ''
+    resetForm()
   } catch (e) { notify.error(e.message) }
 }
 </script>

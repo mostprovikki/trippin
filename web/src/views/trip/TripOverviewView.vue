@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Tag from 'primevue/tag'
 import { useTripsStore } from '../../stores/trips.js'
@@ -14,6 +14,7 @@ const trips = useTripsStore()
 const readiness = useReadinessStore()
 const budget = useBudgetStore()
 
+const tripId = computed(() => route.params.id)
 const trip = computed(() => trips.current)
 const actions = computed(() => nextActions(readiness.data))
 const percent = computed(() => readinessPercent(readiness.data))
@@ -25,12 +26,21 @@ const dateRange = computed(() =>
 )
 const statusIndex = computed(() => STATUSES.indexOf(trip.value?.status))
 
-onMounted(async () => {
-  try { await budget.fetchBudget(route.params.id) } catch { /* stat shows — */ }
-  if (readiness.lastTripId !== route.params.id) {
-    try { await readiness.fetch(route.params.id) } catch { /* layout badge already reported */ }
+async function load() {
+  // both stores are shared across trips, so without clearing them the stat cards
+  // quote the previous trip's total and readiness under the new trip's name.
+  budget.$reset()
+  if (readiness.lastTripId !== tripId.value) readiness.data = null
+  try { await budget.fetchBudget(tripId.value) } catch { /* stat shows — */ }
+  if (readiness.lastTripId !== tripId.value) {
+    try { await readiness.fetch(tripId.value) } catch { /* layout badge already reported */ }
   }
-})
+}
+
+onMounted(load)
+// TripLayout is reused when only :id changes, so this view is never remounted
+// between trips and has to refetch for the new :id itself.
+watch(tripId, load)
 </script>
 
 <template>

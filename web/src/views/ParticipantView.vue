@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import ProgressSpinner from 'primevue/progressspinner'
 import Message from 'primevue/message'
@@ -14,16 +15,29 @@ const store = useParticipantStore()
 
 const loading = ref(true)
 const invalidLink = ref(false)
+const loadError = ref(null)
 
-onMounted(async () => {
+async function load() {
+  loading.value = true
+  invalidLink.value = false
+  loadError.value = null
+  // the store never clears error on success, so a retry that works would
+  // otherwise keep the previous failure banner above a perfectly fine page.
+  store.error = null
   try {
     await store.load(route.params.token)
   } catch (e) {
+    // two different dead ends for the participant, and only one of them is worth
+    // retrying: a revoked or expired link needs a new link from the organizer,
+    // while a 500 or a dropped connection usually clears on a second attempt.
     if (e.status === 401) invalidLink.value = true
+    else loadError.value = e.message || 'Something went wrong loading your trip.'
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(load)
 
 const checklistItems = computed(() => [...store.packing, ...store.tasks])
 const checklistDone = computed(() => checklistItems.value.filter((i) => i.done).length)
@@ -52,10 +66,24 @@ const dateRange = computed(() =>
 
     <ProgressSpinner v-else-if="loading" style="width: 2.5rem; height: 2.5rem" />
 
+    <div v-else-if="loadError || !store.trip" class="invalid-link-box">
+      <p class="invalid-link-brand"><i class="pi pi-compass" aria-hidden="true" /> Tripper</p>
+      <div class="card invalid-link-card">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true" />
+        <h1>Something went wrong</h1>
+        <p>{{ loadError || "We couldn't load your trip just now." }}</p>
+        <Button label="Try again" icon="pi pi-refresh" outlined class="retry-button" @click="load" />
+      </div>
+    </div>
+
     <template v-else>
       <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
-      <section v-if="store.trip" class="card p-hero">
+      <!-- the hero and the step cards all read store.trip / store.person, so they
+           live inside this branch rather than beside it: when the load failed
+           they used to render anyway, three empty forms bound to null under an
+           error message, with nothing to retry and nowhere to go. -->
+      <section class="card p-hero">
         <p v-if="store.person" class="p-greeting">Hi {{ store.person.name }} 👋 you're invited to</p>
         <h1>{{ store.trip.name }}</h1>
         <p class="p-meta">
@@ -119,6 +147,7 @@ const dateRange = computed(() =>
 .invalid-link-card > i { font-size: 2rem; color: var(--app-text-muted); }
 .invalid-link-card h1 { margin: 0.75rem 0 0.375rem; font-size: 1.375rem; }
 .invalid-link-card p { margin: 0; color: var(--app-text-muted); }
+.retry-button { margin-top: 1.25rem; }
 .p-hero h1 { margin: 0 0 0.375rem; }
 .p-greeting { margin: 0 0 0.25rem; color: var(--app-text-muted); font-size: 0.875rem; }
 .p-meta { margin: 0; color: var(--app-text-muted); display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }

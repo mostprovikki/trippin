@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
@@ -29,10 +29,21 @@ const availablePeople = computed(() => {
   return people.people.filter((p) => !memberIds.has(p.id))
 })
 
-onMounted(async () => {
+async function load() {
+  // a half-picked "Add person" selection and a one-time link reveal both belong
+  // to the trip they were made on; trips.links is shared store state, so leaving
+  // it would list the previous trip's links against these participants.
+  newParticipantId.value = null
+  revealedLink.value = null
+  trips.links = []
   try { await trips.fetchLinks(tripId.value) } catch (e) { notify.error(e.message) }
   try { await people.fetchPeople() } catch { /* select stays empty; non-critical */ }
-})
+}
+
+onMounted(load)
+// TripLayout is reused when only :id changes, so this view is never remounted
+// between trips and has to refetch for the new :id itself.
+watch(tripId, load)
 
 async function addParticipant() {
   if (!newParticipantId.value) return
@@ -73,8 +84,18 @@ async function copyLink(url) {
   }
 }
 
-async function revokeLink(linkId) {
-  try { await trips.revokeLink(linkId) } catch (e) { notify.error(e.message) }
+function revokeLink(linkId, personName) {
+  confirm.require({
+    message: `Revoke this link? ${personName || 'This person'} will immediately lose access to the trip, and the link cannot be restored — you'd have to create a new one.`,
+    header: 'Revoke link',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Revoke',
+    acceptClass: 'p-button-danger',
+    rejectLabel: 'Cancel',
+    accept: async () => {
+      try { await trips.revokeLink(linkId) } catch (e) { notify.error(e.message) }
+    }
+  })
 }
 
 function linksFor(personId) {
@@ -124,7 +145,7 @@ function activeLink(personId) {
         <li v-for="link in linksFor(p.person_id)" :key="link.id">
           <span class="link-meta">created {{ link.created_at }}</span>
           <Tag v-if="link.revoked_at" value="revoked" severity="warn" />
-          <Button v-else label="Revoke" size="small" severity="danger" outlined @click="revokeLink(link.id)" />
+          <Button v-else label="Revoke" size="small" severity="danger" outlined @click="revokeLink(link.id, p.name)" />
         </li>
       </ul>
     </div>

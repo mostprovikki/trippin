@@ -96,12 +96,18 @@ async function download(doc) {
       </thead>
       <tbody>
         <tr v-for="doc in store.documents" :key="doc.id">
-          <td>{{ doc.doc_type }}</td>
-          <td>{{ doc.doc_number || '-' }}</td>
-          <td>
+          <!-- data-label carries the header text into the row: under 40rem
+               main.css hides the thead and stacks the cells, so without it a
+               passport number and an expiry date are two bare strings. The
+               action cell is left unlabelled on purpose — the button says what
+               it does, and a "Delete" prefix in front of it would just be
+               noise. -->
+          <td data-label="Type">{{ doc.doc_type }}</td>
+          <td data-label="Number">{{ doc.doc_number || '-' }}</td>
+          <td data-label="Expiry">
             <Tag :value="doc.expiry_date || '-'" :severity="isExpired(doc) ? 'warn' : 'secondary'" />
           </td>
-          <td><a href="#" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
+          <td data-label="File"><a href="#" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
           <td><Button label="Delete" size="small" severity="danger" text @click="remove(doc)" /></td>
         </tr>
       </tbody>

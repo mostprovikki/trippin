@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
 import { useTripsStore } from '../stores/trips.js'
 import { useNotify } from '../composables/useNotify.js'
@@ -11,6 +12,7 @@ const store = useTripsStore()
 const router = useRouter()
 const notify = useNotify()
 const loading = ref(true)
+const loadError = ref(null)
 
 const STATUS_ORDER = ['idea', 'planning', 'confirmed', 'active', 'archived']
 
@@ -23,9 +25,23 @@ const grouped = computed(() => {
   return STATUS_ORDER.filter((s) => groups[s]?.length).map((s) => ({ status: s, trips: groups[s] }))
 })
 
-onMounted(async () => {
-  try { await store.fetchTrips() } catch (e) { notify.error(e.message) } finally { loading.value = false }
-})
+async function load() {
+  loading.value = true
+  loadError.value = null
+  try {
+    await store.fetchTrips()
+  } catch (e) {
+    // Kept on the page as well as in a toast. Once the toast faded, a failed
+    // fetch left an empty store behind the friendly "No trips yet" empty state —
+    // a 500 read as "you have no trips" and invited the user to create one.
+    loadError.value = e.message
+    notify.error(e.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(load)
 </script>
 
 <template>
@@ -37,6 +53,11 @@ onMounted(async () => {
 
     <div v-if="loading" class="card">
       <Skeleton v-for="i in 3" :key="i" height="2rem" style="margin-bottom: 0.5rem" />
+    </div>
+
+    <div v-else-if="loadError" class="trips-error">
+      <Message severity="error" :closable="false">{{ loadError }}</Message>
+      <Button label="Try again" icon="pi pi-refresh" outlined @click="load" />
     </div>
 
     <EmptyState v-else-if="!store.trips.length" icon="pi pi-map" message="No trips yet — plan your first one." cta-label="New trip" @cta="router.push('/trips/new')" />
@@ -65,6 +86,8 @@ onMounted(async () => {
 .page-wide { max-width: 80rem; }
 .list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
 .list-head h1 { margin: 0; }
+.trips-error { margin-top: 0.5rem; }
+.trips-error :deep(.p-message) { margin-bottom: 0.75rem; }
 .trips-group { margin-top: 1.5rem; }
 .group-title { color: var(--app-text-muted); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
 .trip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr)); gap: 1rem; }
