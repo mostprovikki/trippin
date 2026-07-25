@@ -11,6 +11,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+import { purgeQaData } from './purge-qa.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const shots = path.join(here, 'shots')
@@ -136,5 +137,7 @@ await browser.close()
 // treats its 404 as "not archived".
 const realErrors = consoleErrors.filter((e) => !/favicon|sourcemap|\/api\/trips\/[\w-]+\/archive/i.test(e))
 if (realErrors.length) { failures++; console.error('CONSOLE ERRORS:\n' + realErrors.join('\n')) }
+purgeQaData()
+
 if (failures) { console.error(`\n${failures} failure(s)`); process.exit(1) }
 console.log('\nUI WALK OK — now LOOK at e2e/shots/*.png before calling this done.')

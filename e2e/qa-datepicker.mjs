@@ -11,6 +11,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+import { purgeQaData } from './purge-qa.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const shots = path.join(here, 'shots')
@@ -1709,6 +1710,8 @@ if (openViaCounts.icon && !openViaCounts.input) {
 
 console.log('\n--- measurements ---')
 for (const n of notes) console.log(n)
+
+purgeQaData()
 
 if (failures) { console.error(`\n${failures} failure(s)`); process.exit(1) }
 console.log('\nDATEPICKER QA OK — now LOOK at e2e/shots/dp-*.png before calling this done.')

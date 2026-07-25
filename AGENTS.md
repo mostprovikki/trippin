@@ -127,3 +127,18 @@ Anything you can't resolve inside your task boundary — a needed cross-file cha
    errors. See `e2e/ui-walk.mjs`.
 3. **IA before features.** New feature waves start with a navigation/IA
    design pass (brainstorm → spec), not with per-ticket view additions.
+4. **Gates clean up after themselves, and never depend on another gate's
+   litter.** A gate that drives the real app writes real rows, so it must
+   call `purgeQaData()` from `e2e/purge-qa.mjs` before it exits, and it must
+   *create* whatever trip/person it needs rather than reusing `trips[0]`.
+   Left unchecked this compounded to 19 junk trips, 37 junk document rows and
+   210MB of orphaned upload blobs — and it was not merely untidy: a
+   person-scoped Select degenerated to a single option, which is thin enough
+   to hide a real defect during visual QA. It also hid two gates silently
+   depending on leftovers (`qa-upload-reselect.mjs` skipped its whole
+   participant surface once the leftovers were gone). Give any new
+   gate-generated name a matching GLOB in
+   `server/scripts/purge-qa-data.js`; run that script with no flags for a
+   dry run, `--apply` to delete. Trips/persons are scoped by `organizer_id`,
+   so remember the seeded `Asha Kumar` / `Vietnam` belong to
+   demo@tripper.dev, NOT to the demo@example.com most gates log in as.

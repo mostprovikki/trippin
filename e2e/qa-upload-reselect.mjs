@@ -14,6 +14,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+import { purgeQaData } from './purge-qa.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const shots = path.join(here, 'shots')
@@ -117,10 +118,29 @@ await page.waitForURL(`${BASE}/`, { timeout: 10000 })
 ok('login')
 
 // ---------- surface 1: organizer person detail (DocumentList.vue) ----------
+// This gate used to assume a person already existed, which only held because
+// earlier gate runs left one behind — and since trips/persons are scoped by
+// organizer, the seeded Asha Kumar belongs to demo@tripper.dev, not to the
+// demo@example.com this gate logs in as. Now that the gates clean up after
+// themselves, create the person we need instead of inheriting someone's litter.
 await page.goto(`${BASE}/people`, { waitUntil: 'networkidle' })
+await page.waitForTimeout(500)
+if (!(await page.locator('a[href^="/people/"]').count())) {
+  const name = `QA Person ${Date.now() % 100000}`
+  await page.getByRole('button', { name: /add person/i }).first().click()
+  await page.waitForTimeout(400)
+  await page.locator('#pf-name').fill(name)
+  await page.locator('#pf-city').fill('Chennai')
+  await page.getByRole('button', { name: /^Create$/ }).click()
+  await page.waitForURL(/\/people\/[\w-]+/, { timeout: 8000 }).catch(() => {})
+  await page.waitForTimeout(500)
+  if (/\/people\/[\w-]+/.test(page.url())) ok('person created', name)
+  else fail('person create', `still at ${page.url()}`)
+  await page.goto(`${BASE}/people`, { waitUntil: 'networkidle' })
+}
 const personLink = page.locator('a[href^="/people/"]').first()
 if (!(await personLink.count())) {
-  fail('person detail', 'no person on /people — seed one first')
+  fail('person detail', 'could not create or find a person on /people')
 } else {
   await personLink.click()
   await page.waitForURL(/\/people\/[\w-]+/, { timeout: 8000 })
@@ -132,10 +152,40 @@ if (!(await personLink.count())) {
 // ---------- surface 2: participant page (ParticipantDocs.vue) ----------
 // Tokens are stored hashed, so an existing link can't be recovered — mint a
 // fresh one through the UI, which reveals the URL once.
+// A share link needs a trip that has this person as a participant. The gate used
+// to just grab trips[0], which silently worked only because previous runs had
+// left junk trips behind on this organizer; once the gates clean up, there is
+// nothing to inherit and the whole participant surface went unverified. Create
+// what we need via the API (cookie-authenticated) rather than depending on
+// leftovers.
 const tripId = await page.evaluate(async () => {
-  const r = await fetch('/api/trips', { credentials: 'include' }).then((x) => x.json()).catch(() => null)
-  const list = Array.isArray(r) ? r : r?.trips || []
-  return list[0]?.id || null
+  const json = (r) => r.json().catch(() => null)
+  const listRes = await fetch('/api/trips', { credentials: 'include' }).then(json)
+  const list = Array.isArray(listRes) ? listRes : listRes?.trips || []
+  let id = list[0]?.id || null
+  if (!id) {
+    const created = await fetch('/api/trips', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: `QA Upload Trip ${Date.now()}` })
+    }).then(json)
+    id = created?.id || created?.trip?.id || null
+  }
+  if (!id) return null
+  // Attach the first person so the trip has a participant card to mint from.
+  const peopleRes = await fetch('/api/people', { credentials: 'include' }).then(json)
+  const people = Array.isArray(peopleRes) ? peopleRes : peopleRes?.people || []
+  const personId = people[0]?.id
+  if (personId) {
+    await fetch(`/api/trips/${id}/participants`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ person_id: personId })
+    }).catch(() => {})
+  }
+  return id
 })
 let participantUrl = null
 if (tripId) {
@@ -194,5 +244,7 @@ if (!participantUrl) {
 console.log('\n--- console/page errors ---')
 console.log(consoleErrors.length ? consoleErrors.join('\n') : '(none)')
 await browser.close()
+purgeQaData()
+
 if (failures) { console.error(`\n${failures} failure(s)`); process.exit(1) }
 console.log('\nUPLOAD RESELECT OK')
