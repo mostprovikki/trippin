@@ -91,5 +91,5 @@ async function submitManual() {
 <style scoped>
 .destination-toolbar { margin-bottom: 1rem; }
 .dest-card h3 { margin-top: 0; display: flex; align-items: center; gap: 0.5rem; }
-.dest-empty { color: #666; margin-bottom: 1rem; }
+.dest-empty { color: var(--app-text-muted); margin-bottom: 1rem; }
 </style>

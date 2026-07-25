@@ -67,9 +67,29 @@ async function pageAndFocus(panel, forward, dayNumber) {
       : '.p-datepicker-prev-button, [data-pc-section="prevbutton"]'
   )
   if (!btn) return false
+  const frame = () => new Promise((r) => requestAnimationFrame(r))
+  // Identify which month is on screen, so we can tell the new grid from the old.
+  const monthLabel = () => {
+    const m = panel.querySelector('.p-datepicker-select-month')
+    const y = panel.querySelector('.p-datepicker-select-year')
+    return `${m ? m.textContent.trim() : ''} ${y ? y.textContent.trim() : ''}`
+  }
+  const before = monthLabel()
+
   btn.click()
 
-  const frame = () => new Promise((r) => requestAnimationFrame(r))
+  // Wait for the header to actually change before going looking for the target
+  // day. Skipping this is a real race, not a theoretical one: day numbers repeat
+  // across months, so while the outgoing grid is still mounted a search for "31"
+  // happily matches the OUTGOING month's 31st, focuses it, and reports success —
+  // landing a month away from the intended date. It showed up as an intermittent
+  // failure of the ArrowLeft walk at a month boundary.
+  for (let i = 0; i < 30 && monthLabel() === before; i++) {
+    await nextTick()
+    await frame()
+  }
+  if (monthLabel() === before) return false
+
   const targetSpan = () => {
     const td = dayCells(panel).find(
       (c) => !isOtherMonth(c) && Number((spanOf(c)?.textContent || '').trim()) === dayNumber

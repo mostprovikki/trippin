@@ -5,6 +5,7 @@ import Button from 'primevue/button'
 import { useAuthStore } from '../stores/auth.js'
 import { useTripsStore } from '../stores/trips.js'
 import { TRIP_SECTIONS } from '../utils/tripNav.js'
+import { isDark, toggleThemeMode } from '../composables/useThemeMode.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,6 +52,19 @@ async function onLogout() {
     <div class="app-nav-right">
       <RouterLink to="/" class="app-nav-link" :class="{ 'app-nav-link-active': route.name === 'trips' || String(route.name).startsWith('trip') }">Trips</RouterLink>
       <RouterLink to="/people" class="app-nav-link" :class="{ 'app-nav-link-active': route.name === 'people' || route.name === 'person' }">People</RouterLink>
+      <Button
+        type="button"
+        severity="secondary"
+        text
+        rounded
+        size="small"
+        class="app-theme-toggle"
+        :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'"
+        :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
+        :title="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
+        data-test="theme-toggle"
+        @click="toggleThemeMode"
+      />
       <Button label="Logout" severity="secondary" text size="small" @click="onLogout" />
     </div>
   </header>
@@ -66,7 +80,7 @@ async function onLogout() {
   gap: 1rem;
   padding: 0.5rem 1.25rem;
   border-bottom: 1px solid var(--app-border);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--app-nav-bg);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
 }
@@ -83,7 +97,7 @@ async function onLogout() {
 .app-crumb { color: var(--app-text-muted); text-decoration: none; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .app-crumb:hover { color: var(--app-text); }
 .app-crumb-current { color: var(--app-text); font-weight: 600; }
-.app-crumb-sep { font-size: 0.75rem; color: var(--app-border); }
+.app-crumb-sep { font-size: 0.75rem; color: var(--app-text-subtle); }
 .app-nav-right { display: flex; align-items: center; gap: 0.25rem; }
 .app-nav-link {
   color: var(--app-text);
@@ -93,7 +107,7 @@ async function onLogout() {
   padding: 0.375rem 0.625rem;
   border-radius: var(--app-radius-sm);
 }
-.app-nav-link:hover { background: #f5f4f1; }
+.app-nav-link:hover { background: var(--app-hover); }
 .app-nav-link-active { color: var(--app-primary); font-weight: 600; }
 
 @media (max-width: 640px) {

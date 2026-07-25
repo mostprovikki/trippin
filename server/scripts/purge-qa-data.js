@@ -32,6 +32,7 @@ const TRIP_PATTERNS = [
   'Palette QA *',   // e2e/qa-surface-palette.mjs
   'Keynav QA *',    // e2e/qa-picker-keynav.mjs
   'QA Upload Trip *', // e2e/qa-upload-reselect.mjs
+  'Dark QA *',      // e2e/qa-dark-mode.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]

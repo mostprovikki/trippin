@@ -14,6 +14,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+import { purgeQaData } from './purge-qa.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const shots = path.join(here, 'shots')
@@ -113,38 +114,54 @@ await page.getByRole('button', { name: /sign in|log in/i }).click()
 await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 10000 })
 ok('login', EMAIL)
 
-// ---------- DatePicker panel: the two elements measured as slate ----------
-// A trip's Dates section is the shortest route to a non-typeable picker.
-await page.goto(`${BASE}/trips/new`, { waitUntil: 'networkidle' })
-const nameInput = page.getByLabel(/trip name|name/i).first()
-await nameInput.fill(`Palette QA ${Date.now()}`)
-
-// Walk the wizard to the step that has a date field, whatever it is called.
-async function openAnyPicker() {
-  for (let i = 0; i < 6; i++) {
-    const icon = page.locator('.p-datepicker-input-icon').first()
-    if (await icon.count()) {
-      await icon.click({ force: true })
-      const panel = page.locator('.p-datepicker-panel').first()
-      if (await panel.waitFor({ state: 'visible', timeout: 2000 }).then(() => true).catch(() => false)) return panel
-    }
-    const next = page.getByRole('button', { name: /next|continue/i }).first()
-    if (!(await next.count())) break
-    await next.click().catch(() => {})
-    await page.waitForTimeout(400)
+// ---------- fixtures ----------
+// Create the trip and person this gate needs instead of reusing whatever a
+// previous run left in the dev DB. That coupling is exactly what made this gate
+// start failing the moment the database was cleaned, and it is also how a gate
+// ends up silently measuring nothing.
+const ids = await page.evaluate(async () => {
+  const json = (r) => r.json().catch(() => null)
+  let people = await fetch('/api/people', { credentials: 'include' }).then(json)
+  people = Array.isArray(people) ? people : people?.people || []
+  let personId = people[0]?.id
+  if (!personId) {
+    const p = await fetch('/api/people', {
+      method: 'POST', credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: `QA Person ${Date.now() % 100000}`, base_city: 'Chennai' })
+    }).then(json)
+    personId = p?.id || p?.person?.id
   }
-  return null
-}
+  let trips = await fetch('/api/trips', { credentials: 'include' }).then(json)
+  trips = Array.isArray(trips) ? trips : trips?.trips || []
+  let tripId = trips[0]?.id
+  if (!tripId) {
+    const t = await fetch('/api/trips', {
+      method: 'POST', credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: `Palette QA ${Date.now()}` })
+    }).then(json)
+    tripId = t?.id || t?.trip?.id
+  }
+  return { tripId, personId }
+})
+if (!ids.tripId || !ids.personId) fail('fixtures', `could not create a trip/person (${JSON.stringify(ids)})`)
 
-let panel = await openAnyPicker()
-if (!panel) {
-  // Fall back to the standalone Dates section of an existing trip.
-  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
-  const firstTrip = page.locator('a[href^="/trips/"]').first()
-  if (await firstTrip.count()) {
-    const href = await firstTrip.getAttribute('href')
-    await page.goto(`${BASE}${href.replace(/\/$/, '')}/dates`, { waitUntil: 'networkidle' })
-    await page.locator('.p-datepicker-input-icon').first().click({ force: true }).catch(() => {})
+// ---------- DatePicker panel: the two elements measured as slate ----------
+let panel = null
+if (ids.tripId) {
+  await page.goto(`${BASE}/trips/${ids.tripId}/dates`, { waitUntil: 'networkidle' })
+  // A fresh trip has no date windows, so there is no DateField until one is added.
+  if (!(await page.locator('.p-datepicker-input-icon').count())) {
+    const add = page.getByRole('button', { name: /add date window/i }).first()
+    if (await add.count()) {
+      await add.click()
+      await page.waitForTimeout(400)
+    }
+  }
+  const icon = page.locator('.p-datepicker-input-icon').first()
+  if (await icon.count()) {
+    await icon.click({ force: true }).catch(() => {})
     const p = page.locator('.p-datepicker-panel').first()
     if (await p.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false)) panel = p
   }
@@ -206,15 +223,10 @@ if (!panel) {
 // options. Two matters: the selected option is brand teal by design, so a
 // single-option Select (which is what the people-scoped ones degrade to on a
 // thin dev DB) cannot expose the neutral {text.color} at all.
-const tripHref = await page.locator('a[href^="/trips/"]').first().getAttribute('href').catch(() => null)
-const personHref = await (async () => {
-  await page.goto(`${BASE}/people`, { waitUntil: 'networkidle' })
-  return page.locator('a[href^="/people/"]').first().getAttribute('href').catch(() => null)
-})()
 const candidates = [
-  personHref && `${BASE}${personHref}`,                                  // doc-type Select: 6 fixed options
-  tripHref && `${BASE}${tripHref.replace(/\/$/, '')}/itinerary`,
-  tripHref && `${BASE}${tripHref.replace(/\/$/, '')}/budget`
+  ids.personId && `${BASE}/people/${ids.personId}`,        // doc-type Select: 6 fixed options
+  ids.tripId && `${BASE}/trips/${ids.tripId}/itinerary`,
+  ids.tripId && `${BASE}/trips/${ids.tripId}/budget`
 ].filter(Boolean)
 
 let selectChecked = false
@@ -258,5 +270,6 @@ if (consoleErrors.length) {
   failures += consoleErrors.length
 }
 await browser.close()
+purgeQaData()
 console.log(failures ? `PALETTE QA FAILED (${failures})` : 'PALETTE QA OK')
 process.exit(failures ? 1 : 0)

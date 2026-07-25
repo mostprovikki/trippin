@@ -114,8 +114,8 @@ function discardDayDraft() {
 
 <style scoped>
 .day-items { list-style: none; padding: 0; margin: 0; }
-.day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid #e2e2e2; }
+.day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--app-border); }
 .day-item-actions { margin-left: auto; display: flex; gap: 0.25rem; }
 .day-ai { margin-top: 1rem; }
-.day-draft { background: #f6f7f9; }
+.day-draft { background: var(--app-surface-alt); }
 </style>

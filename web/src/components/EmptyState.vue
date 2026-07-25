@@ -24,11 +24,11 @@ const emit = defineEmits(['cta'])
   align-items: center;
   text-align: center;
   padding: 3.5rem 1.5rem;
-  color: #6e6e73;
+  color: var(--app-text-muted);
 }
 .empty-state i {
   font-size: 2rem;
-  color: #aeaeb2;
+  color: var(--app-text-subtle);
 }
 .empty-state p {
   margin: 0.75rem 0 1.25rem;

@@ -87,5 +87,5 @@ function remove(id) {
 <style scoped>
 .goals-empty { color: var(--app-text-muted); font-size: 0.9375rem; }
 .goals-list { list-style: none; padding: 0; }
-.goal-item { border-bottom: 1px solid #e2e2e2; padding: 0.5rem 0; }
+.goal-item { border-bottom: 1px solid var(--app-border); padding: 0.5rem 0; }
 </style>

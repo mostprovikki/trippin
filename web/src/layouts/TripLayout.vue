@@ -166,13 +166,13 @@ async function advanceStatus() {
   transition: background 0.15s ease;
 }
 .trip-nav-item i:first-child { color: var(--app-text-muted); font-size: 0.875rem; width: 1rem; text-align: center; }
-.trip-nav-item:hover { background: #f0efec; }
+.trip-nav-item:hover { background: var(--app-hover); }
 .trip-nav-active { background: var(--app-primary-soft); color: var(--app-primary); }
 .trip-nav-active i:first-child { color: var(--app-primary); }
 .trip-nav-label { flex: 1; }
 .trip-nav-badge {
   background: var(--app-accent);
-  color: #fff;
+  color: var(--app-accent-contrast);
   border-radius: 999px;
   font-size: 0.6875rem;
   font-weight: 700;

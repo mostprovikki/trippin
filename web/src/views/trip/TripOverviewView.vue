@@ -40,7 +40,7 @@ onMounted(async () => {
         <h1>{{ trip.name }}</h1>
         <p class="hero-sub">
           <i class="pi pi-map-marker" /> {{ trip.destination || 'Destination TBD' }}
-          <span class="hero-sep">·</span>
+          <span class="hero-sep" aria-hidden="true">·</span>
           <i class="pi pi-calendar" /> {{ dateRange || 'Dates TBD' }}
         </p>
         <div v-if="(trip.vibe_tags || []).length" class="hero-tags">
@@ -95,17 +95,20 @@ onMounted(async () => {
 .hero { display: flex; justify-content: space-between; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
 .hero h1 { margin-bottom: 0.375rem; }
 .hero-sub { margin: 0; color: var(--app-text-muted); display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
-.hero-sep { color: var(--app-border); }
+/* --app-border is a BORDER colour; as text it renders at ~1.1:1 on white and
+   1.7:1 on the dark surface, i.e. all but invisible. Separators are decorative
+   but they still have to be seen. */
+.hero-sep { color: var(--app-text-subtle); }
 .hero-tags { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-top: 0.625rem; }
 
 .status-stepper { list-style: none; display: flex; gap: 0.25rem; padding: 0; margin: 0; }
 .status-step {
   font-size: 0.75rem; font-weight: 600; text-transform: capitalize;
   padding: 0.25rem 0.75rem; border-radius: 999px;
-  background: #f0efec; color: var(--app-text-muted);
+  background: var(--app-surface-alt); color: var(--app-text-muted);
 }
 .status-step-done { background: var(--app-primary-soft); color: var(--app-primary); }
-.status-step-current { background: var(--app-primary); color: #fff; }
+.status-step-current { background: var(--app-primary); color: var(--app-primary-contrast); }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; margin-bottom: 1rem; }
 .stat-card { display: flex; flex-direction: column; gap: 0.25rem; text-decoration: none; color: inherit; margin-bottom: 0; transition: box-shadow 0.15s ease, transform 0.15s ease; }

@@ -21,6 +21,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+import { purgeQaData } from './purge-qa.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const shots = path.join(here, 'shots')
@@ -143,9 +144,38 @@ await page.getByRole('button', { name: /sign in|log in/i }).click()
 await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 10000 })
 ok('login', EMAIL)
 
+// ---------- fixtures ----------
+// Create the trip rather than reusing whatever the dev DB happens to hold: the
+// gates purge their own rows now, so there is nothing to inherit, and a gate
+// that depends on leftovers either breaks or silently measures nothing.
+const tripId = await page.evaluate(async () => {
+  const json = (r) => r.json().catch(() => null)
+  let trips = await fetch('/api/trips', { credentials: 'include' }).then(json)
+  trips = Array.isArray(trips) ? trips : trips?.trips || []
+  if (trips[0]?.id) return trips[0].id
+  const t = await fetch('/api/trips', {
+    method: 'POST', credentials: 'include',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: `Keynav QA ${Date.now()}` })
+  }).then(json)
+  return t?.id || t?.trip?.id || null
+})
+if (!tripId) {
+  fail('fixtures', 'could not create a trip to host a date field')
+  await browser.close()
+  process.exit(1)
+}
+
 // ---------- open a picker and put focus on a day ----------
-const tripHref = await page.locator('a[href^="/trips/"]').first().getAttribute('href')
-await page.goto(`${BASE}${tripHref.replace(/\/$/, '')}/dates`, { waitUntil: 'networkidle' })
+await page.goto(`${BASE}/trips/${tripId}/dates`, { waitUntil: 'networkidle' })
+// A fresh trip has no date windows, so no DateField renders until one is added.
+if (!(await page.locator('input.p-datepicker-input').count())) {
+  const add = page.getByRole('button', { name: /add date window/i }).first()
+  if (await add.count()) {
+    await add.click()
+    await page.waitForTimeout(400)
+  }
+}
 const input = page.locator('input.p-datepicker-input').first()
 await input.click({ force: true }).catch(() => {})
 // ArrowDown on the input opens the overlay and hands focus to a day cell.
@@ -180,7 +210,10 @@ if (!(await panel.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).
         await page.keyboard.press('ArrowRight')
         await page.waitForTimeout(90)
         const s2 = await settledFocusState(page)
-        if (s2.error) { firstBreak = firstBreak || { at: cur, why: s2.error }; break }
+        if (s2.error) {
+          firstBreak = firstBreak || { at: cur, why: s2.error, activeClass: s2.activeClass }
+          break
+        }
         const got = resolveDate(s2)
         const want = addDays(cur, 1)
         trail.push(got)
@@ -195,7 +228,9 @@ if (!(await panel.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).
       if (firstBreak) {
         const j = firstBreak.jump
         fail('ArrowRight steps one day at a time',
-          `at ${firstBreak.at} expected ${firstBreak.want} but focus landed on ${firstBreak.got}` +
+          (firstBreak.why
+            ? `at ${firstBreak.at} focus was lost: ${firstBreak.why}${firstBreak.activeClass ? ` (active=${firstBreak.activeClass})` : ''}`
+            : `at ${firstBreak.at} expected ${firstBreak.want} but focus landed on ${firstBreak.got}`) +
           (j !== null ? ` (jumped ${j} days)` : '') +
           `\n         trail: ${trail.slice(0, 12).join(' -> ')}${trail.length > 12 ? ' ...' : ''}`)
       } else {
@@ -210,7 +245,10 @@ if (!(await panel.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).
         await page.keyboard.press('ArrowLeft')
         await page.waitForTimeout(90)
         const s2 = await settledFocusState(page)
-        if (s2.error) { backBreak = backBreak || { at: back, why: s2.error }; break }
+        if (s2.error) {
+          backBreak = backBreak || { at: back, why: s2.error, activeClass: s2.activeClass }
+          break
+        }
         const got = resolveDate(s2)
         const want = addDays(back, -1)
         backTrail.push(got)
@@ -223,7 +261,9 @@ if (!(await panel.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).
       if (backBreak) {
         const j = backBreak.jump
         fail('ArrowLeft steps one day at a time',
-          `at ${backBreak.at} expected ${backBreak.want} but focus landed on ${backBreak.got}` +
+          (backBreak.why
+            ? `at ${backBreak.at} focus was lost: ${backBreak.why}${backBreak.activeClass ? ` (active=${backBreak.activeClass})` : ''}`
+            : `at ${backBreak.at} expected ${backBreak.want} but focus landed on ${backBreak.got}`) +
           (j !== null ? ` (jumped ${j} days)` : '') +
           `\n         trail: ${backTrail.slice(0, 12).join(' -> ')}${backTrail.length > 12 ? ' ...' : ''}`)
       } else {
@@ -259,5 +299,6 @@ if (consoleErrors.length) {
   failures += consoleErrors.length
 }
 await browser.close()
+purgeQaData()
 console.log(failures ? `KEYNAV QA FAILED (${failures})` : 'KEYNAV QA OK')
 process.exit(failures ? 1 : 0)

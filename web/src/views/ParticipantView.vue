@@ -60,7 +60,7 @@ const dateRange = computed(() =>
         <h1>{{ store.trip.name }}</h1>
         <p class="p-meta">
           <i class="pi pi-map-marker" /> {{ store.trip.destination || 'Destination TBD' }}
-          <span class="p-sep">·</span>
+          <span class="p-sep" aria-hidden="true">·</span>
           <i class="pi pi-calendar" /> {{ dateRange }}
         </p>
         <p v-if="store.trip.description" class="p-desc">{{ store.trip.description }}</p>
@@ -122,7 +122,7 @@ const dateRange = computed(() =>
 .p-hero h1 { margin: 0 0 0.375rem; }
 .p-greeting { margin: 0 0 0.25rem; color: var(--app-text-muted); font-size: 0.875rem; }
 .p-meta { margin: 0; color: var(--app-text-muted); display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
-.p-sep { color: var(--app-border); }
+.p-sep { color: var(--app-text-subtle); }
 .p-desc { margin: 0.625rem 0 0; }
 .p-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }
 .p-goals { list-style: none; padding: 0; margin: 0.75rem 0 0; }
@@ -137,8 +137,8 @@ const dateRange = computed(() =>
   width: 1.75rem; height: 1.75rem;
   border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: #f0efec; color: var(--app-text-muted);
+  background: var(--app-surface-alt); color: var(--app-text-muted);
   font-weight: 700; font-size: 0.875rem;
 }
-.step-done .step-num { background: var(--app-primary); color: #fff; }
+.step-done .step-num { background: var(--app-primary); color: var(--app-primary-contrast); }
 </style>

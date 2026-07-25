@@ -7,17 +7,72 @@
 
   --app-bg: #faf9f7;
   --app-surface: #ffffff;
+  /* One step in from --app-surface: draft rows, inert step chips, table zebra. */
+  --app-surface-alt: #faf9f7;
   --app-border: #e7e5e0;
   --app-text: #1c1917;
   --app-text-muted: #78716c;
+  /* Tertiary — the quietest readable text (empty-state hints). */
+  --app-text-subtle: #a8a29e;
   --app-primary: #0f766e;
   --app-primary-soft: #f0fdfa;
+  /* Text sitting ON --app-primary. Inverts between schemes, because the dark
+     primary is a light teal that white text would disappear into. */
+  --app-primary-contrast: #ffffff;
   --app-accent: #d97706;
   --app-accent-soft: #fef3c7;
+  /* Text sitting ON --app-accent; inverts with the scheme for the same reason
+     --app-primary-contrast does. */
+  --app-accent-contrast: #ffffff;
+  --app-success: #16a34a;
+  /* Hover wash for nav rows and list items. */
+  --app-hover: #f5f4f1;
+  /* Focus ring on the plain .field inputs, tinted from --app-primary. */
+  --app-focus-ring: rgba(15, 118, 110, 0.15);
+  /* The sticky nav is translucent over scrolling content, so it needs the page
+     colour at partial alpha rather than a flat surface token. */
+  --app-nav-bg: rgba(255, 255, 255, 0.85);
   --app-radius-sm: 8px;
   --app-radius: 12px;
   --app-shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05);
   --app-shadow-md: 0 4px 12px rgba(28, 25, 23, 0.08);
+}
+
+/* Dark scheme. The class is set by src/composables/useThemeMode.js (and, before
+   first paint, by the inline script in index.html), and is the SAME selector
+   PrimeVue's darkModeSelector uses — so component chrome and these app tokens
+   can never end up showing different schemes.
+
+   Surfaces follow Aura's dark convention: the page is the darkest layer and
+   cards sit above it, which is the opposite of light mode where cards are white
+   on a tinted page. Kept in the stone family so dark is warm too. */
+:root.app-dark {
+  color-scheme: dark;
+
+  --app-bg: #0c0a09;
+  --app-surface: #1c1917;
+  --app-surface-alt: #292524;
+  --app-border: #44403c;
+  --app-text: #fafaf9;
+  --app-text-muted: #a8a29e;
+  --app-text-subtle: #78716c;
+  /* Teal-400, not the light-mode teal-700, which is unreadable on a dark
+     surface (about 1.5:1 against #1c1917). */
+  --app-primary: #2dd4bf;
+  --app-primary-soft: rgba(45, 212, 191, 0.14);
+  --app-primary-contrast: #0c0a09;
+  --app-accent: #fbbf24;
+  --app-accent-soft: rgba(251, 191, 36, 0.16);
+  --app-accent-contrast: #0c0a09;
+  --app-success: #4ade80;
+  --app-hover: #292524;
+  /* Carries more alpha than light: a 15% wash disappears against #0c0a09. */
+  --app-focus-ring: rgba(45, 212, 191, 0.28);
+  --app-nav-bg: rgba(12, 10, 9, 0.85);
+  /* Shadows read as depth against light, not dark, so they lean on darkness
+     rather than opacity here. */
+  --app-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --app-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 * { box-sizing: border-box; }
@@ -79,7 +134,33 @@ a { color: var(--app-primary); }
 .field textarea:focus {
   outline: none;
   border-color: var(--app-primary);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+  box-shadow: 0 0 0 3px var(--app-focus-ring);
+}
+
+/* The file picker's button is native shadow-DOM chrome, so it inherits nothing
+   from the theme and no DOM audit can see it. Left alone it renders as generic
+   OS grey — measured rgb(239,239,239) in light and rgb(107,107,107) in dark.
+   Note the dark value passes AA against its white label (~5.3:1), so a contrast
+   check does NOT catch it: the defect is that it is a NEUTRAL grey among warm
+   stone surfaces, sitting right next to a teal Upload button. Style it to read
+   as a secondary button in the app's own tokens. */
+input[type='file'] { color: var(--app-text); }
+input[type='file']::file-selector-button {
+  margin-right: 0.625rem;
+  padding: 0.3125rem 0.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-surface-alt);
+  color: var(--app-text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+input[type='file']::file-selector-button:hover {
+  background: var(--app-hover);
+  border-color: var(--app-text-subtle);
 }
 
 /* Plain table used by the few list views not on DataTable (PeopleList, ParticipantDocs) */

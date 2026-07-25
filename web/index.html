@@ -4,6 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trip Planner</title>
+    <script>
+      // Set the colour scheme BEFORE first paint. /src/main.js is a module and
+      // therefore deferred, so deciding this in Vue would flash a white page at
+      // anyone using dark mode. Deliberately duplicates the small resolve rule
+      // in src/composables/useThemeMode.js — keep the storage key, the class
+      // name and the 'system' default in step with that file.
+      (function () {
+        try {
+          var stored = localStorage.getItem('tripper:theme')
+          var dark = stored === 'dark' ||
+            ((!stored || stored === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) {
+            document.documentElement.classList.add('app-dark')
+            document.documentElement.style.colorScheme = 'dark'
+          }
+        } catch (e) { /* no storage: fall through to light */ }
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

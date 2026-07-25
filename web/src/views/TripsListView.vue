@@ -81,7 +81,7 @@ onMounted(async () => {
 .trip-card-idea { border-left-color: var(--app-text-muted); }
 .trip-card-planning { border-left-color: var(--app-accent); }
 .trip-card-confirmed { border-left-color: var(--app-primary); }
-.trip-card-active { border-left-color: #16a34a; }
+.trip-card-active { border-left-color: var(--app-success); }
 .trip-card-archived { border-left-color: var(--app-border); opacity: 0.75; }
 .trip-meta { margin: 0.125rem 0; color: var(--app-text-muted); font-size: 0.8438rem; display: flex; align-items: center; gap: 0.375rem; }
 </style>
