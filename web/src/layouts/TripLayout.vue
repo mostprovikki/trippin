@@ -85,7 +85,7 @@ async function advanceStatus() {
         <template v-if="trips.current">
           <span class="trip-sidebar-name">{{ trips.current.name }}</span>
           <div class="trip-sidebar-status">
-            <Tag :value="trips.current.status" :severity="trips.current.status === 'archived' ? 'secondary' : 'info'" />
+            <Tag class="status-tag" :value="trips.current.status" :severity="trips.current.status === 'archived' ? 'secondary' : 'info'" />
             <Button v-if="nextTransition" :label="nextTransition.label" size="small" outlined @click="advanceStatus" />
           </div>
         </template>
@@ -140,7 +140,10 @@ async function advanceStatus() {
   top: 4.5rem;
 }
 .trip-sidebar-head { margin-bottom: 1rem; }
-.trip-sidebar-name { display: block; font-weight: 650; font-size: 1.0625rem; letter-spacing: -0.01em; margin-bottom: 0.375rem; overflow-wrap: anywhere; }
+/* 1rem, not the 1.0625rem this used to carry: 17px was a step that existed
+   nowhere else in the app. The 650 weight is what makes it read as the sidebar's
+   title, not the extra pixel. */
+.trip-sidebar-name { display: block; font-weight: 650; font-size: 1rem; letter-spacing: -0.01em; margin-bottom: 0.375rem; overflow-wrap: anywhere; }
 .trip-sidebar-status { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 
 .trip-sidebar-nav { display: flex; flex-direction: column; gap: 0.125rem; }

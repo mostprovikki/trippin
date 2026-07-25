@@ -8,6 +8,23 @@ export const TripperPreset = definePreset(Aura, {
       50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4', 400: '#2dd4bf',
       500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 800: '#115e59', 900: '#134e4a', 950: '#042f2e'
     },
+    // Aura ships form fields — and every Button, which derives its radius from
+    // this same token — at 6px. That is not a step on this app's scale: cards
+    // are 12px, nav rows and the plain .field inputs 8px, kbd caps 4px. A button
+    // with a tighter corner than the field containing it is the kind of mismatch
+    // you feel without being able to name. Set here rather than per-component so
+    // buttons, inputs and selects all move together.
+    formField: {
+      borderRadius: 'var(--app-radius-sm)'
+    },
+    // The other half of the same problem: everything Aura calls "content"
+    // (progress bars, panels, the surfaces its components draw) also defaults to
+    // 6px. Pointing both semantic radii at the 8px step is what actually removes
+    // the off-scale value, rather than overriding each component that happens to
+    // read one of them.
+    content: {
+      borderRadius: 'var(--app-radius-sm)'
+    },
     colorScheme: {
       light: {
         // Aura's surface ramp is `slate`, a *cool* neutral, and almost every
@@ -75,6 +92,18 @@ export const TripperPreset = definePreset(Aura, {
     }
   },
   components: {
+    tag: {
+      // Aura's 6px is off this app's scale. Tags are small inline chips — the
+      // same size class as the kbd caps in the search trigger, which use the
+      // 4px step — so they take that rather than the 8px control radius. Status
+      // tags override this to a full pill in main.css, matching the overview
+      // stepper that shows the same values.
+      //
+      // Nested under `root` because that is the shape of a component preset
+      // ({ root, icon, colorScheme }) — a bare borderRadius here merges as a new
+      // top-level key that no token reads, and silently does nothing.
+      root: { borderRadius: 'var(--app-radius-xs)' }
+    },
     button: {
       colorScheme: {
         light: {

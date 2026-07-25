@@ -53,8 +53,13 @@ function removeCandidate(candidateId) {
 
 async function submitManual() {
   if (!form.name) return
+  // Captured before the await: if the user moves to another trip while this is
+  // in flight, the store correctly refuses to list the new row here — it belongs
+  // to the trip they left. Silence would then read as "my candidate vanished",
+  // so say where it went. Mirrors reportOffScreenCreate in TripChecklistsView.
+  const target = props.tripId
   try {
-    await store.addCandidate(props.tripId, {
+    await store.addCandidate(target, {
       name: form.name,
       rationale: form.rationale || undefined,
       best_dates: form.best_dates || undefined,
@@ -62,6 +67,7 @@ async function submitManual() {
       caveats: form.caveats || undefined
     })
     resetForm()
+    if (store.lastTripId !== target) notify.success('Candidate added to the trip you started from.')
   } catch (e) { notify.error(e.message) }
 }
 </script>

@@ -40,6 +40,9 @@ describe('checklists store', () => {
   it('createChecklist() POSTs /api/checklists and appends to checklists', async () => {
     fetch.mockImplementation(() => jsonResponse({ checklist: { id: 'c2', kind: 'tasks', name: 'Tasks', items: [] } }, 201))
     const store = useChecklistsStore()
+    // the row is only rendered when it belongs to the list on screen, so the
+    // store has to be looking at t1 for this to be that trip's own create.
+    store.lastTripId = 't1'
     await store.createChecklist({ kind: 'tasks', name: 'Tasks', trip_id: 't1' })
     expect(fetch).toHaveBeenCalledWith('/api/checklists', expect.objectContaining({
       method: 'POST',
@@ -100,6 +103,7 @@ describe('checklists store', () => {
   it('fromTemplate() POSTs /api/trips/:tripId/checklists/from-template and appends to checklists', async () => {
     fetch.mockImplementation(() => jsonResponse({ checklist: { id: 'c3', name: 'Beach', items: [] } }, 201))
     const store = useChecklistsStore()
+    store.lastTripId = 't1'
     await store.fromTemplate('t1', 'tpl1')
     expect(fetch).toHaveBeenCalledWith('/api/trips/t1/checklists/from-template', expect.objectContaining({
       method: 'POST',
@@ -188,7 +192,10 @@ describe('checklists store trip tagging', () => {
     const p = store.fetchForTrip('t2')
     expect(store.checklists).toEqual([])
     expect(store.packingDraft).toBe(null)
-    expect(store.lastTripId).toBe(null)
+    // tagged before the list lands, not after: the tag is what tells a create
+    // whether its row belongs on the page, and the create form is usable while
+    // this request is still out.
+    expect(store.lastTripId).toBe('t2')
     // templates are organizer-scoped, not trip-scoped: blanking the dropdown on
     // every trip change would be a regression, not a fix.
     expect(store.templates).toEqual([{ id: 'tpl1', items: [] }])
@@ -270,6 +277,74 @@ describe('checklists store stale responses', () => {
 
     expect(store.packingDraft).toEqual({ checklistId: 'c2', items: [{ title: 'Sunhat' }] })
     expect(store.aiBusy).toBe(false)
+  })
+
+  it('shows a checklist created while this trip own list is still loading', async () => {
+    // The create form is live from the moment the page renders, so this is the
+    // ordinary case, not a race: the row belongs to the trip on screen and has
+    // to appear even though the list it joins has not arrived yet.
+    const list = deferred()
+    const create = deferred()
+    fetch.mockImplementationOnce(() => list.promise).mockImplementationOnce(() => create.promise)
+    const store = useChecklistsStore()
+
+    const pList = store.fetchForTrip('t1')
+    const pCreate = store.createChecklist({ kind: 'tasks', name: 'Tasks', trip_id: 't1' })
+    create.respond({ checklist: { id: 'c9', name: 'Tasks', items: [] } }, 201)
+    await pCreate
+    expect(store.checklists).toEqual([{ id: 'c9', name: 'Tasks', items: [] }])
+
+    list.respond({ checklists: [{ id: 'c1', items: [] }] })
+    await pList
+  })
+
+  it('keeps a checklist created for the trip the user left out of the list on screen, without pretending it failed', async () => {
+    const create = deferred()
+    const load = deferred()
+    fetch.mockImplementationOnce(() => create.promise).mockImplementationOnce(() => load.promise)
+    const store = useChecklistsStore()
+    store.lastTripId = 't1'
+
+    const pCreate = store.createChecklist({ kind: 'tasks', name: 'Tasks', trip_id: 't1' })
+    const pLoad = store.fetchForTrip('t2')
+    load.respond({ checklists: [{ id: 'b1', items: [] }] })
+    await pLoad
+    create.respond({ checklist: { id: 'a1', name: 'Tasks', items: [] } }, 201)
+    const created = await pCreate
+
+    expect(store.checklists).toEqual([{ id: 'b1', items: [] }])
+    // the row was really created, so the caller is told so and no error is
+    // raised — it is waiting on trip A the next time trip A is opened.
+    expect(created).toEqual({ id: 'a1', name: 'Tasks', items: [] })
+    expect(store.error).toBe(null)
+  })
+
+  it('keeps a from-template checklist for the trip the user left out of the list on screen', async () => {
+    const create = deferred()
+    const load = deferred()
+    fetch.mockImplementationOnce(() => create.promise).mockImplementationOnce(() => load.promise)
+    const store = useChecklistsStore()
+    store.lastTripId = 't1'
+
+    const pCreate = store.fromTemplate('t1', 'tpl1')
+    const pLoad = store.fetchForTrip('t2')
+    load.respond({ checklists: [{ id: 'b1', items: [] }] })
+    await pLoad
+    create.respond({ checklist: { id: 'a1', name: 'Beach', items: [] } }, 201)
+    const created = await pCreate
+
+    expect(store.checklists).toEqual([{ id: 'b1', items: [] }])
+    expect(created).toEqual({ id: 'a1', name: 'Beach', items: [] })
+    expect(store.error).toBe(null)
+  })
+
+  it('still shows a template created from this page, which belongs to no trip', async () => {
+    fetch.mockImplementation(() => jsonResponse({ checklist: { id: 'tpl2', name: 'Tpl', is_template: 1, items: [] } }, 201))
+    const store = useChecklistsStore()
+    // no trip on screen at all: a template must not be withheld for that.
+    store.lastTripId = null
+    await store.createChecklist({ kind: 'packing', name: 'Tpl', is_template: true })
+    expect(store.templates).toEqual([{ id: 'tpl2', name: 'Tpl', is_template: 1, items: [] }])
   })
 
   it('does not raise an error banner for a request the user has already left behind', async () => {

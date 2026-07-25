@@ -7,6 +7,7 @@ import Message from 'primevue/message'
 import Select from 'primevue/select'
 import { api } from '../../api/client.js'
 import { useChecklistsStore } from '../../stores/checklists.js'
+import { useNotify } from '../../composables/useNotify.js'
 import ChecklistCard from '../../components/ChecklistCard.vue'
 import EmptyState from '../../components/EmptyState.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
@@ -14,6 +15,7 @@ import SectionHeader from '../../components/SectionHeader.vue'
 const route = useRoute()
 const tripId = computed(() => route.params.id)
 const store = useChecklistsStore()
+const notify = useNotify()
 
 const KIND_OPTIONS = [
   { label: 'Packing', value: 'packing' },
@@ -44,20 +46,33 @@ async function load() {
 }
 
 onMounted(load)
-// TripLayout is reused when only :id changes, so this view is never remounted
-// between trips and has to refetch for the new :id itself.
+// Refetches for the new :id whether TripLayout rebuilds this view on a trip
+// change — it does now, since it blanks its trip while the next one loads — or
+// reuses it in place, which is what it used to do.
 watch(tripId, load)
+
+// A create can outlive the page it was started from. The store then withholds
+// the row rather than showing another trip's checklist here, which leaves this
+// screen with nothing to say — so say it: the create worked, and where it went.
+// Silence would read as a create that quietly failed.
+function reportOffScreenCreate(target, what) {
+  if (store.lastTripId !== target) notify.success(`${what} on the trip you started from.`)
+}
 
 async function createChecklist() {
   if (!newName.value.trim()) return
-  await store.createChecklist({ kind: newKind.value, name: newName.value, trip_id: tripId.value })
+  const target = tripId.value
+  await store.createChecklist({ kind: newKind.value, name: newName.value, trip_id: target })
   newName.value = ''
+  reportOffScreenCreate(target, 'Checklist created')
 }
 
 async function addFromTemplate() {
   if (!selectedTemplate.value) return
-  await store.fromTemplate(tripId.value, selectedTemplate.value)
+  const target = tripId.value
+  await store.fromTemplate(target, selectedTemplate.value)
   selectedTemplate.value = ''
+  reportOffScreenCreate(target, 'Checklist added from template')
 }
 </script>
 

@@ -102,17 +102,37 @@ async function pageAndFocus(panel, forward, dayNumber) {
   // — which runs from its own updated() hook, i.e. AFTER we get control back —
   // pulls focus onto the nav button. Focusing and then checking activeElement
   // immediately always "succeeds", because focus() is synchronous; the theft
-  // happens a tick later. So the check has to come a frame after the set, and
-  // we re-assert until it sticks.
-  for (let i = 0; i < 15; i++) {
+  // happens a tick later.
+  //
+  // Checking once a frame later is still not enough, and this was a real
+  // intermittent defect rather than a flaky test: updateFocus() can run again on
+  // a LATER update, so a single post-frame check passes while the theft is still
+  // in flight, and the walk ends with focus parked on the prev/next button — no
+  // day selected, Enter doing nothing. Reproduced roughly one run in three,
+  // always on ArrowLeft across a month boundary.
+  //
+  // So require the focus to SURVIVE a few consecutive frames, re-asserting each
+  // time it is stolen, and only then call it settled.
+  const STABLE_FRAMES = 3
+  let stable = 0
+  for (let i = 0; i < 40 && stable < STABLE_FRAMES; i++) {
     const span = targetSpan()
-    if (span) moveFocus(null, span)
+    if (!span) {
+      stable = 0
+      await nextTick()
+      await frame()
+      continue
+    }
+    if (document.activeElement === span) {
+      stable++
+    } else {
+      moveFocus(null, span)
+      stable = 0
+    }
     await nextTick()
     await frame()
-    const settled = targetSpan()
-    if (settled && document.activeElement === settled) return true
   }
-  return false
+  return stable >= STABLE_FRAMES
 }
 
 export async function handleCalendarArrowKey(event) {

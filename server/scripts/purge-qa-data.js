@@ -37,6 +37,7 @@ const TRIP_PATTERNS = [
   'Iso QA *',       // e2e/qa-template-isolation.mjs
   'Walk QA *',      // e2e/qa-app-walk.mjs
   'Light QA *',     // e2e/qa-light-contrast.mjs
+  'Aesth QA *',     // e2e/qa-aesthetics.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]

@@ -30,19 +30,24 @@ const availablePeople = computed(() => {
 })
 
 async function load() {
-  // a half-picked "Add person" selection and a one-time link reveal both belong
-  // to the trip they were made on; trips.links is shared store state, so leaving
-  // it would list the previous trip's links against these participants.
+  // A half-picked "Add person" selection and a one-time link reveal both belong
+  // to the trip they were made on. Only these two are cleared here: trips.links
+  // used to be emptied by hand as well, but the store now drops another trip's
+  // links itself when asked about this one.
   newParticipantId.value = null
   revealedLink.value = null
-  trips.links = []
   try { await trips.fetchLinks(tripId.value) } catch (e) { notify.error(e.message) }
   try { await people.fetchPeople() } catch { /* select stays empty; non-critical */ }
 }
 
 onMounted(load)
-// TripLayout is reused when only :id changes, so this view is never remounted
-// between trips and has to refetch for the new :id itself.
+// Belt and braces, not the mechanism. Trip-scoped stores now clear themselves
+// when asked about a different trip, which empties trips.current and makes
+// TripLayout fall back to its skeleton — that unmounts this view, so onMounted
+// covers the common path today (verified in a browser: the skeleton really does
+// appear on a param-only switch). Kept because the reuse it guards against is
+// silent when it returns: the sidebar would say one trip and the body show
+// another, with edits written to whichever id the view captured first.
 watch(tripId, load)
 
 async function addParticipant() {

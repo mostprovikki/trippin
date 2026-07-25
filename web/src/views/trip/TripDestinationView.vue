@@ -18,32 +18,36 @@ const loading = ref(true)
 const loadError = ref(null)
 
 async function load() {
+  // Which trip this run is for. The view is reused across :id changes, so a slow
+  // run can still be in progress once the route has moved on, and the banner and
+  // spinner below belong to whichever trip is on screen now — not to this one.
+  const target = tripId.value
   loading.value = true
-  // trips.candidates is shared store state that nothing else clears: leaving it
-  // in place renders the previous trip's candidates under this trip's id, and a
-  // stale error banner would outlive the fetch that produced it.
-  // The trip-scoped stores now drop stale data themselves off a lastTripId, and
-  // this clearing belongs in the trips store for the same reason — but that
-  // store also backs the trip list, the layout header and search, so retagging
-  // it is its own change rather than a rider on this one.
+  // Only this view's own state is cleared here. The candidates list is the
+  // store's, and it drops another trip's rows itself off its lastTripId.
   loadError.value = null
-  trips.candidates = []
   try {
-    await trips.fetchCandidates(tripId.value)
+    await trips.fetchCandidates(target)
   } catch (e) {
+    // A failure for a trip the user has already left would sit here as a
+    // permanent banner over a list that in fact loaded fine.
+    if (target !== tripId.value) return
     // Kept on the page as well as in a toast — a toast fades, and what it left
     // behind was "No destination candidates yet.", which reads as an answer
     // rather than as a failure.
     loadError.value = e.message
     notify.error(e.message)
   } finally {
-    loading.value = false
+    // the newer run owns the spinner; clearing it from here would uncover an
+    // empty list while that run is still fetching.
+    if (target === tripId.value) loading.value = false
   }
 }
 
 onMounted(load)
-// TripLayout is reused when only :id changes, so this view is never remounted
-// between trips and has to refetch for the new :id itself.
+// Refetches for the new :id whether TripLayout rebuilds this view on a trip
+// change — it does now, since it blanks its trip while the next one loads — or
+// reuses it in place, which is what it used to do.
 watch(tripId, load)
 </script>
 

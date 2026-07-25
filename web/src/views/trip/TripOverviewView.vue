@@ -42,8 +42,13 @@ async function load() {
 }
 
 onMounted(load)
-// TripLayout is reused when only :id changes, so this view is never remounted
-// between trips and has to refetch for the new :id itself.
+// Belt and braces, not the mechanism. Trip-scoped stores now clear themselves
+// when asked about a different trip, which empties trips.current and makes
+// TripLayout fall back to its skeleton — that unmounts this view, so onMounted
+// covers the common path today (verified in a browser: the skeleton really does
+// appear on a param-only switch). Kept because the reuse it guards against is
+// silent when it returns: the sidebar would say one trip and the body show
+// another, with edits written to whichever id the view captured first.
 watch(tripId, load)
 </script>
 
@@ -69,7 +74,7 @@ watch(tripId, load)
           :class="{ 'status-step-done': i < statusIndex, 'status-step-current': i === statusIndex }"
         >{{ s }}</li>
       </ol>
-      <Tag v-else value="archived" severity="secondary" />
+      <Tag v-else class="status-tag" value="archived" severity="secondary" />
     </section>
 
     <div class="stat-grid">
@@ -128,7 +133,10 @@ watch(tripId, load)
 .stat-card { display: flex; flex-direction: column; gap: 0.25rem; text-decoration: none; color: inherit; margin-bottom: 0; transition: box-shadow 0.15s ease, transform 0.15s ease; }
 .stat-card:hover { box-shadow: var(--app-shadow-md); transform: translateY(-1px); }
 .stat-label { font-size: 0.8125rem; font-weight: 600; color: var(--app-text-muted); }
-.stat-value { font-size: 1.375rem; font-weight: 650; letter-spacing: -0.01em; }
+/* 1.5rem — the display step the h1 already uses. 1.375rem was a 22px one-off
+   invented for these tiles; the numbers are the loudest thing on the overview,
+   so they belong on the scale's top step rather than half a step below it. */
+.stat-value { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.01em; }
 
 .actions-list { list-style: none; padding: 0; margin: 0; }
 .actions-list li { padding: 0.25rem 0; }

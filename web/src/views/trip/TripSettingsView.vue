@@ -185,7 +185,7 @@ async function cloneTrip() {
     <section class="card">
       <h2>Status</h2>
       <p>
-        Current: <Tag :value="trips.current?.status || '…'" severity="info" />
+        Current: <Tag class="status-tag" :value="trips.current?.status || '…'" severity="info" />
       </p>
       <p class="muted">Lifecycle: idea → planning → confirmed → active → archived. Confirming locks dates for participants; archiving (below) snapshots everything and revokes links.</p>
       <Button v-if="nextTransition" :label="nextTransition.label" outlined @click="advanceStatus" />

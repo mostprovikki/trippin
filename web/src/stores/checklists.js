@@ -43,10 +43,28 @@ export const useChecklistsStore = defineStore('checklists', {
       this.checklists = []
       this.packingDraft = null
       this.aiBusy = false
-      this.lastTripId = null
       // invalidates everything in flight for the old trip. templates survive a
       // trip change, so their token is carried over rather than dropped.
       this.reqTokens = { templates: this.reqTokens.templates }
+      // tagged here rather than when the list lands, because the tag now decides
+      // where a newly created checklist may be shown: the "New checklist" form
+      // is live from the moment the page renders, so a create can easily start
+      // before the list arrives, and a tag left null until then would withhold a
+      // row from the very trip the user is looking at.
+      this.lastTripId = tripId
+    },
+    // A create is not a superseded fetch, so a stale token is the wrong tool for
+    // it: the row exists on the server whatever the client decides, and dropping
+    // it because something newer started would also drop it on a plain refetch
+    // of the same trip. The question is ownership instead — does this row belong
+    // to the list currently on screen? If it does it is appended; if it doesn't
+    // it is withheld, which is not data loss: the caller still receives it and
+    // can report the create as the success it was, and the row is there the next
+    // time its own trip is opened.
+    _pushIfOnScreen(tripId, checklist) {
+      if (this.lastTripId !== tripId) return false
+      this.checklists.push(checklist)
+      return true
     },
     _findChecklist(id) {
       return this.checklists.find((c) => c.id === id) || this.templates.find((c) => c.id === id)
@@ -62,8 +80,10 @@ export const useChecklistsStore = defineStore('checklists', {
       try {
         const res = await api.get(`/api/trips/${tripId}/checklists`)
         if (this._stale('checklists', token)) return
+        // no lastTripId here: _forTrip has already tagged this trip, and it
+        // stays tagged even if this request fails, so a create started on the
+        // page still knows the page is this trip's.
         this.checklists = res.checklists
-        this.lastTripId = tripId
       } catch (e) {
         // a failure belonging to a trip the user has already left would raise an
         // error banner over a page that in fact loaded fine.
@@ -90,8 +110,10 @@ export const useChecklistsStore = defineStore('checklists', {
     async createChecklist(payload) {
       try {
         const checklist = (await api.post('/api/checklists', payload)).checklist
+        // templates are organizer-scoped, so one is never on the wrong trip's
+        // page and always belongs in the dropdown it was created from.
         if (checklist.is_template) this.templates.push(checklist)
-        else this.checklists.push(checklist)
+        else this._pushIfOnScreen(payload.trip_id, checklist)
         return checklist
       } catch (e) { this.error = e.message; throw e }
     },
@@ -131,7 +153,7 @@ export const useChecklistsStore = defineStore('checklists', {
     async fromTemplate(tripId, templateId) {
       try {
         const checklist = (await api.post(`/api/trips/${tripId}/checklists/from-template`, { template_id: templateId })).checklist
-        this.checklists.push(checklist)
+        this._pushIfOnScreen(tripId, checklist)
         return checklist
       } catch (e) { this.error = e.message; throw e }
     },

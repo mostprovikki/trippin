@@ -265,3 +265,14 @@ input[type='file']::file-selector-button:hover {
    the left of the origin never extends the scroll area), so nothing but reading
    the message was broken. */
 .p-toast { width: min(25rem, calc(100vw - 2rem)); }
+
+/* Trip status, shown in three places, was rendered three ways: the trips-list
+   group heading UPPERCASED it, the overview stepper capitalised it, and the Tags
+   in the sidebar and on Settings printed the raw database value — so "Idea" and
+   "idea" appeared within a few hundred pixels of each other on the same screen.
+   The heading is a section label and keeps its own treatment; these are the same
+   role as the stepper step, so they get the same shape and casing. */
+.status-tag {
+  text-transform: capitalize;
+  border-radius: 999px;
+}
