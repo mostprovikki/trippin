@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import DatePicker from 'primevue/datepicker'
 import InputMask from 'primevue/inputmask'
 import { parseIsoDate, toIsoDate } from '../utils/dates.js'
+import { installCalendarArrowNav, uninstallCalendarArrowNav } from '../utils/pickerKeyNav.js'
 
 // One date affordance for the whole app: the API speaks ISO calendar dates
 // ('YYYY-MM-DD'), DatePicker speaks Date. parseIsoDate/toIsoDate keep that
@@ -21,6 +22,13 @@ const props = defineProps({
   typeable: { type: Boolean, default: false }
 })
 const emit = defineEmits(['update:modelValue'])
+
+// PrimeVue's ArrowLeft/ArrowRight only look inside the current week row, so at a
+// row edge they page a whole month instead of stepping a day. The panel is
+// teleported to <body>, so the correction has to be a document-level capture
+// listener rather than a template handler — see utils/pickerKeyNav.js.
+onMounted(installCalendarArrowNav)
+onUnmounted(uninstallCalendarArrowNav)
 
 const value = computed({
   get: () => parseIsoDate(props.modelValue),
