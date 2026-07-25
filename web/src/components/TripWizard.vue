@@ -14,6 +14,7 @@ import { useTripsStore } from '../stores/trips.js'
 import { usePeopleStore } from '../stores/people.js'
 import { useDraft } from '../composables/useDraft.js'
 import { useNotify } from '../composables/useNotify.js'
+import DateField from './DateField.vue'
 import DateWindowsEditor from './DateWindowsEditor.vue'
 
 const router = useRouter()
@@ -40,6 +41,14 @@ const { draft, clear } = useDraft('trip-new', () => ({
 
 const stepErrors = ref([])
 const submitting = ref(false)
+
+// Floor for the end-date picker so it can't offer a day before the start date.
+// Parsed in local time to match DateField. This is a UI hint only — validateStep()
+// remains the authority, since the draft can be rehydrated with any pair of dates.
+const startDate = computed(() => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(draft.start_date || '')
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : undefined
+})
 
 // No route-leave guard on purpose: the draft persists across navigation,
 // which is what makes the "Add new person" round trip safe.
@@ -139,11 +148,11 @@ async function submit() {
         <div class="radio-row"><RadioButton v-model="draft.date_mode" input-id="dm-broad" value="broad" /><label for="dm-broad">Broad</label></div>
       </div>
       <template v-if="draft.date_mode === 'confirmed'">
-        <div class="field"><label for="w-start">Start date</label><input id="w-start" type="date" v-model="draft.start_date" /></div>
-        <div class="field"><label for="w-end">End date</label><input id="w-end" type="date" v-model="draft.end_date" /></div>
+        <div class="field"><label for="w-start">Start date</label><DateField v-model="draft.start_date" input-id="w-start" /></div>
+        <div class="field"><label for="w-end">End date</label><DateField v-model="draft.end_date" input-id="w-end" :min-date="startDate" /></div>
       </template>
       <template v-else-if="draft.date_mode === 'slight'">
-        <div class="field"><label for="w-anchor">Anchor date</label><input id="w-anchor" type="date" v-model="draft.start_date" /></div>
+        <div class="field"><label for="w-anchor">Anchor date</label><DateField v-model="draft.start_date" input-id="w-anchor" /></div>
         <div class="field"><label for="w-flex">Flex days</label><input id="w-flex" type="number" v-model="draft.flex_days" /></div>
       </template>
       <template v-else>

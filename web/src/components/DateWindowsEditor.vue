@@ -2,6 +2,7 @@
 import { reactive, watch } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import DateField from './DateField.vue'
 
 const props = defineProps({
   windows: { type: Array, default: () => [] }
@@ -23,6 +24,13 @@ function addRow() {
 function removeRow(idx) {
   rows.splice(idx, 1)
 }
+// Parse 'YYYY-MM-DD' in *local* time (never `new Date(str)`, which is UTC and
+// can shift the day) so the end date can't be picked before the start date.
+function isoToDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''))
+  if (!m) return undefined
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+}
 function save() {
   emit('save', rows.map((r) => ({ start_date: r.start_date, end_date: r.end_date, note: r.note || undefined })))
 }
@@ -33,11 +41,11 @@ function save() {
     <div v-for="(row, idx) in rows" :key="idx" class="dwe-row">
       <div class="field">
         <label>Start date</label>
-        <InputText type="date" v-model="row.start_date" fluid />
+        <DateField v-model="row.start_date" />
       </div>
       <div class="field">
         <label>End date</label>
-        <InputText type="date" v-model="row.end_date" fluid />
+        <DateField v-model="row.end_date" :min-date="isoToDate(row.start_date)" />
       </div>
       <div class="field">
         <label>Note</label>
@@ -63,7 +71,9 @@ function save() {
 }
 .dwe-row .field {
   margin-bottom: 0;
-  min-width: 8rem;
+  /* Roomier than the old native date input: 'd M yy' text plus the inline
+     calendar icon needs more than 8rem before it starts clipping. */
+  min-width: 11rem;
   flex: 1;
 }
 .date-windows-editor > .p-button {

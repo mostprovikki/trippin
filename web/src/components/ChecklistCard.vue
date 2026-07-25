@@ -4,6 +4,7 @@ import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import DateField from './DateField.vue'
 import { useChecklistsStore } from '../stores/checklists.js'
 import { useAuthStore } from '../stores/auth.js'
 
@@ -103,7 +104,13 @@ function discardDraft() {
             aria-label="Assignee"
             @update:model-value="changeAssignee(item, $event)"
           />
-          <input type="date" :value="item.due_date || ''" @change="changeDueDate(item, $event.target.value)" />
+          <DateField
+            class="due-date"
+            :fluid="false"
+            placeholder="Due date"
+            :model-value="item.due_date || ''"
+            @update:model-value="changeDueDate(item, $event)"
+          />
         </template>
 
         <Button type="button" label="Delete" severity="danger" outlined @click="removeItem(item.id)" />
@@ -114,7 +121,7 @@ function discardDraft() {
       <input v-model="newTitle" placeholder="New item title" />
       <template v-if="isTasks">
         <Select v-model="newAssignee" :options="assigneeOptions" option-label="label" option-value="value" aria-label="Assignee" />
-        <input v-model="newDueDate" type="date" />
+        <DateField v-model="newDueDate" class="due-date" :fluid="false" placeholder="Due date" />
       </template>
       <Button type="submit" label="Add item" />
     </form>
@@ -161,4 +168,27 @@ function discardDraft() {
 .checklist-items li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
 .checklist-add { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .checklist-footer { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+/* DateField is fluid by default; in these flex rows it must keep an intrinsic
+   width so it can't stretch over the assignee Select and Delete button. */
+.due-date { flex: none; }
+/* The add form sits inside `.field`, so main.css styles its inner input; the
+   item row has no `.field` ancestor and would otherwise keep PrimeVue's larger
+   16px/12px type. Match them explicitly, and leave 2.5rem on the right so a
+   full ISO date can't slide under the calendar icon (10rem is ~20px of slack
+   at this size; 9rem clipped the last digit of dates like 2026-09-09). */
+.due-date :deep(.p-datepicker-input) {
+  width: 10rem;
+  font-size: 0.9375rem;
+  padding: 0.5rem 2.5rem 0.5rem 0.625rem;
+}
+/* `.field select` in main.css targets a native <select>, so PrimeVue's
+   div-based Select never inherits it and stands 6px taller than every
+   neighbour. Size the *label* — a min-height on the root can't shrink a box
+   whose 40px content already exceeds it (8 + 18 + 8 + 2px border = 36px). */
+.checklist-items li :deep(.p-select-label),
+.checklist-add :deep(.p-select-label) {
+  padding: 0.5rem 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.125rem;
+}
 </style>
