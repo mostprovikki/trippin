@@ -118,19 +118,15 @@ export default async function routes(app) {
     // Matched on the template name, its tags, or any item inside it — searching
     // for "sunscreen" should find the beach packing template that contains it.
     //
-    // NOTE, and it is a real gap rather than an oversight here: `checklists` has
-    // no organizer_id column, so templates are GLOBAL — every organizer sees
-    // every template. This query therefore cannot scope them, and it is the one
-    // group in this endpoint that is not isolated. Adding the column means a
-    // second migration, and 001_init.sql is currently the only one by contract
-    // (see AGENTS.md §2), so it needs a deliberate decision rather than a
-    // drive-by schema change. Flagged for the owner.
+    // Templates have no trip to scope through, so they carry their own
+    // organizer_id (migration 003) — that column is the isolation boundary here.
     const templates = run(`
       SELECT c.id, c.name AS title, c.kind, c.trip_type_tags,
              (SELECT COUNT(*) FROM checklist_items ci WHERE ci.checklist_id = c.id) AS item_count,
              ${RANK('c.name')} AS rank
       FROM checklists c
       WHERE c.is_template = 1
+        AND c.organizer_id = :org
         AND (c.name LIKE :like ESCAPE '\\' OR c.trip_type_tags LIKE :like ESCAPE '\\'
              OR EXISTS (SELECT 1 FROM checklist_items ci
                         WHERE ci.checklist_id = c.id AND ci.title LIKE :like ESCAPE '\\'))

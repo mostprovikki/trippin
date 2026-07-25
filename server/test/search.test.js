@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { randomUUID } from 'node:crypto'
 import {
-  makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer
+  makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer, defaultOrganizer
 } from './helpers.js'
 
 function groupOf(body, kind) {
@@ -33,10 +33,10 @@ function addItineraryItem(db, tripId, fields = {}) {
     fields.category || 'activity', fields.notes ?? null)
   return id
 }
-function addTemplate(db, { name = 'Beach packing', kind = 'packing', tags = '[]', items = [] } = {}) {
+function addTemplate(db, { name = 'Beach packing', kind = 'packing', tags = '[]', items = [], organizerId } = {}) {
   const id = randomUUID()
-  db.prepare('INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags) VALUES (?,NULL,1,?,?,?)')
-    .run(id, kind, name, tags)
+  db.prepare('INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id) VALUES (?,NULL,1,?,?,?,?)')
+    .run(id, kind, name, tags, organizerId ?? defaultOrganizer(db).id)
   items.forEach((title, i) => {
     db.prepare('INSERT INTO checklist_items (id, checklist_id, title, position) VALUES (?,?,?,?)')
       .run(randomUUID(), id, title, i)

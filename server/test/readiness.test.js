@@ -38,7 +38,8 @@ describe('readiness', () => {
     }
 
     const checklistId = randomUUID()
-    db.prepare('INSERT INTO checklists (id,trip_id,kind,name) VALUES (?,?,?,?)').run(checklistId, t.id, 'tasks', 'Trip tasks')
+    db.prepare('INSERT INTO checklists (id,trip_id,kind,name,organizer_id) VALUES (?,?,?,?,?)')
+      .run(checklistId, t.id, 'tasks', 'Trip tasks', t.organizer_id)
     const insItem = db.prepare(`INSERT INTO checklist_items (id,checklist_id,title,assignee_person_id,due_date,done,position)
       VALUES (?,?,?,?,?,?,?)`)
     insItem.run(randomUUID(), checklistId, 'Book bus', asha.id, '2020-01-01', 0, 0)   // overdue

@@ -34,6 +34,7 @@ const TRIP_PATTERNS = [
   'QA Upload Trip *', // e2e/qa-upload-reselect.mjs
   'Dark QA *',      // e2e/qa-dark-mode.mjs
   'SRCHQA *',       // e2e/qa-search.mjs
+  'Iso QA *',       // e2e/qa-template-isolation.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]

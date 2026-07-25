@@ -136,12 +136,12 @@ export default async function routes(app) {
       for (const l of budgetLines) insBudget.run(randomUUID(), newId, l.category, l.estimate, l.basis)
 
       const checklists = db.prepare('SELECT id, kind, name, trip_type_tags FROM checklists WHERE trip_id = ?').all(trip.id)
-      const insChecklist = db.prepare('INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags) VALUES (?, ?, 0, ?, ?, ?)')
+      const insChecklist = db.prepare('INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id) VALUES (?, ?, 0, ?, ?, ?, ?)')
       const insItem = db.prepare(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
         VALUES (?, ?, ?, NULL, NULL, 0, ?)`)
       for (const c of checklists) {
         const newChecklistId = randomUUID()
-        insChecklist.run(newChecklistId, newId, c.kind, c.name, c.trip_type_tags)
+        insChecklist.run(newChecklistId, newId, c.kind, c.name, c.trip_type_tags, req.organizer.id)
         const items = db.prepare('SELECT title, position FROM checklist_items WHERE checklist_id = ? ORDER BY position').all(c.id)
         for (const it of items) insItem.run(randomUUID(), newChecklistId, it.title, it.position)
       }

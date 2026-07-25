@@ -36,18 +36,17 @@ function itemToJson(db, itemId) {
 export default async function routes(app) {
   const db = app.db
   // Unscoped re-reads for rows whose ownership the handler already verified.
-  // Templates (is_template=1, trip_id NULL) are shared across organizers.
+  // Every checklist carries its own organizer_id (003), so templates — which
+  // have no trip to inherit ownership from — scope the same way as the rest.
   const getChecklist = (id) => db.prepare('SELECT * FROM checklists WHERE id = ?').get(id)
   const getTrip = (id) => db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
   const getItem = (id) => db.prepare('SELECT * FROM checklist_items WHERE id = ?').get(id)
   const ownedChecklist = (req, id) => db.prepare(
-    `SELECT c.* FROM checklists c LEFT JOIN trips t ON t.id = c.trip_id
-     WHERE c.id = ? AND (c.is_template = 1 OR t.organizer_id = ?)`
+    'SELECT * FROM checklists WHERE id = ? AND organizer_id = ?'
   ).get(id, req.organizer.id)
   const ownedItem = (req) => db.prepare(
     `SELECT ci.* FROM checklist_items ci JOIN checklists c ON c.id = ci.checklist_id
-     LEFT JOIN trips t ON t.id = c.trip_id
-     WHERE ci.id = ? AND (c.is_template = 1 OR t.organizer_id = ?)`
+     WHERE ci.id = ? AND c.organizer_id = ?`
   ).get(req.params.itemId, req.organizer.id)
   const nextPosition = (checklistId) =>
     db.prepare('SELECT COALESCE(MAX(position), -1) AS maxPos FROM checklist_items WHERE checklist_id = ?')
@@ -57,10 +56,9 @@ export default async function routes(app) {
   app.get('/checklists', { preHandler: app.requireOrganizer }, async (req) => {
     const templateOnly = req.query?.template === '1' || req.query?.template === 1
     const rows = templateOnly
-      ? db.prepare('SELECT * FROM checklists WHERE is_template = 1 ORDER BY name').all()
-      : db.prepare(`SELECT * FROM checklists
-          WHERE is_template = 1 OR trip_id IN (SELECT id FROM trips WHERE organizer_id = ?)
-          ORDER BY name`).all(req.organizer.id)
+      ? db.prepare('SELECT * FROM checklists WHERE is_template = 1 AND organizer_id = ? ORDER BY name')
+          .all(req.organizer.id)
+      : db.prepare('SELECT * FROM checklists WHERE organizer_id = ? ORDER BY name').all(req.organizer.id)
     return { checklists: rows.map((r) => checklistToJson(db, r)) }
   })
 
@@ -96,9 +94,10 @@ export default async function routes(app) {
       if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     }
     const id = randomUUID()
-    db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags)
-      VALUES (?, ?, ?, ?, ?, ?)`)
-      .run(id, isTemplate ? null : b.trip_id, isTemplate ? 1 : 0, b.kind, b.name, JSON.stringify(b.trip_type_tags ?? []))
+    db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`)
+      .run(id, isTemplate ? null : b.trip_id, isTemplate ? 1 : 0, b.kind, b.name,
+        JSON.stringify(b.trip_type_tags ?? []), req.organizer.id)
     reply.code(201)
     return { checklist: checklistToJson(db, getChecklist(id)) }
   })
@@ -184,14 +183,14 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = app.ownedTrip(req, req.params.tripId)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
-    const template = getChecklist(req.body.template_id)
+    const template = ownedChecklist(req, req.body.template_id)
     if (!template || !template.is_template) return httpError(reply, 404, 'NOT_FOUND', 'No such template')
 
     const newId = randomUUID()
     const tx = db.transaction(() => {
-      db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags)
-        VALUES (?, ?, 0, ?, ?, ?)`)
-        .run(newId, trip.id, template.kind, template.name, template.trip_type_tags)
+      db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
+        VALUES (?, ?, 0, ?, ?, ?, ?)`)
+        .run(newId, trip.id, template.kind, template.name, template.trip_type_tags, req.organizer.id)
       const items = itemsForChecklist(db, template.id)
       const ins = db.prepare(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
         VALUES (?, ?, ?, NULL, ?, 0, ?)`)
@@ -211,9 +210,9 @@ export default async function routes(app) {
 
     const newId = randomUUID()
     const tx = db.transaction(() => {
-      db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags)
-        VALUES (?, NULL, 1, ?, ?, ?)`)
-        .run(newId, source.kind, req.body.name, source.trip_type_tags)
+      db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
+        VALUES (?, NULL, 1, ?, ?, ?, ?)`)
+        .run(newId, source.kind, req.body.name, source.trip_type_tags, req.organizer.id)
       const items = itemsForChecklist(db, source.id)
       const ins = db.prepare(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
         VALUES (?, ?, ?, NULL, NULL, 0, ?)`)

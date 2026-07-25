@@ -122,8 +122,8 @@ describe('archive routes', () => {
     db.prepare('INSERT INTO budget_lines (id, trip_id, category, estimate, basis) VALUES (?, ?, ?, ?, ?)')
       .run(randomUUID(), trip.id, 'stay', 5000, '4n')
     const checklistId = randomUUID()
-    db.prepare('INSERT INTO checklists (id, trip_id, is_template, kind, name) VALUES (?, ?, 0, ?, ?)')
-      .run(checklistId, trip.id, 'packing', 'Packing')
+    db.prepare('INSERT INTO checklists (id, trip_id, is_template, kind, name, organizer_id) VALUES (?, ?, 0, ?, ?, ?)')
+      .run(checklistId, trip.id, 'packing', 'Packing', trip.organizer_id)
     db.prepare('INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position) VALUES (?, ?, ?, ?, ?, 1, 0)')
       .run(randomUUID(), checklistId, 'Pack sunscreen', person.id, '2025-12-31')
 

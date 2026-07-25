@@ -27,7 +27,11 @@ These are created once and depended on by everything. Editing them breaks other 
 - Root & workspace: `package.json`, `package-lock.json` (no new deps, ever)
 - `server/src/app.js`, `server/src/db.js`, `server/src/config.js`
 - `server/src/plugins/auth.js`, `server/src/lib/errors.js`
-- `server/src/migrations/001_init.sql` (the **only** migration — schema changes are a plan bug)
+- `server/src/migrations/*.sql` — **any already-applied migration.** Editing one is a no-op on
+  every database that already ran it, so the schema silently diverges per environment. Schema
+  changes during the original 22-task build were a plan bug; post-build, add a **new** numbered
+  migration (`004_*.sql`, …) — `migrate.js` applies them in filename order and records each in
+  `_migrations`. Existing rows must be backfilled by that same migration (see `002`/`003`).
 - `web/src/router.js`, `web/src/api/client.js`, `web/src/App.vue`, `web/src/assets/main.css`
 
 If you think you need to touch one, you're almost certainly misreading your task. Stop and escalate via `.agent-coordination/NOTES.md`.
