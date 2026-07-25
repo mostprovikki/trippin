@@ -258,3 +258,10 @@ input[type='file']::file-selector-button:hover {
 
 /* Keep toasts clear of the sticky AppNav */
 .p-toast.p-toast-top-right { top: 4rem; }
+/* Aura fixes the toast at 25rem, which is wider than a phone: pinned to the
+   right edge on a 375px screen it started 45px off the LEFT side, clipping the
+   beginning of every line — and toasts are where error messages land. Cap it to
+   the viewport instead. Does not cause horizontal scroll either way (content to
+   the left of the origin never extends the scroll area), so nothing but reading
+   the message was broken. */
+.p-toast { width: min(25rem, calc(100vw - 2rem)); }

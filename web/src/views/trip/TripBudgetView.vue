@@ -44,11 +44,10 @@ function resetNewOverride() {
 
 async function load() {
   loading.value = true
-  // Nothing here survives a trip change: the half-typed override row, the
-  // error banner and the untagged AI draft all belong to the trip we came from,
-  // and applying that draft would write its numbers against the new trip.
+  // Only the half-typed override row is cleared here — it is this view's own
+  // state. The store's numbers, error and AI draft are cleared by the store
+  // itself, which knows from its lastTripId whether what it holds is ours.
   resetNewOverride()
-  store.$reset()
   try {
     const trip = (await api.get(`/api/trips/${tripId.value}`)).trip
     participants.value = trip?.participants || []

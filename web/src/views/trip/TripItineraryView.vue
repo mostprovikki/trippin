@@ -29,13 +29,11 @@ watch(() => store.draft, (d) => { aiDraftStore.draft.ai = d ?? null })
 
 async function load() {
   loading.value = true
-  // Read the stored draft before resetting: clearing store.draft feeds a null
-  // back through the mirror watcher above. useDraft has already re-keyed by the
-  // time this runs on a trip change, so this is the *new* trip's stored draft.
+  // Read the stored draft before fetching: fetchItinerary clears store.draft on
+  // a trip change, which feeds a null back through the mirror watcher above.
+  // useDraft has already re-keyed by the time this runs, so this is the *new*
+  // trip's stored draft.
   const stored = aiDraftStore.draft.ai
-  // Days, per-day drafts and the error banner all belong to the trip we came
-  // from; an unapplied draft applied here would write to the wrong trip.
-  store.$reset()
   try {
     await store.fetchItinerary(tripId.value)
   } catch (e) {

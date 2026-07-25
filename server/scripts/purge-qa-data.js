@@ -35,6 +35,7 @@ const TRIP_PATTERNS = [
   'Dark QA *',      // e2e/qa-dark-mode.mjs
   'SRCHQA *',       // e2e/qa-search.mjs
   'Iso QA *',       // e2e/qa-template-isolation.mjs
+  'Walk QA *',      // e2e/qa-app-walk.mjs
   'Light QA *',     // e2e/qa-light-contrast.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs

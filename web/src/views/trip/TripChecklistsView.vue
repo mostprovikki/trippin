@@ -26,10 +26,9 @@ const newName = ref('')
 const selectedTemplate = ref('')
 
 async function load() {
-  // The lists, the error banner and the two forms all belong to the trip we
-  // came from; a checklist created from a leftover form would land elsewhere.
-  store.error = null
-  store.checklists = []
+  // Only this view's own state is cleared here — the participant list and the
+  // two forms, whose leftovers would otherwise create a checklist against the
+  // wrong trip. The store drops its own trip-scoped lists off lastTripId.
   participants.value = []
   newKind.value = 'packing'
   newName.value = ''

@@ -6,6 +6,15 @@ function jsonResponse(body, status = 200) {
   return Promise.resolve(new Response(JSON.stringify(body), { status }))
 }
 
+// Lets a test hold a request open and choose when — and in which order — each
+// one answers, which is the only way to reproduce a slow response landing after
+// a newer one.
+function deferred() {
+  let settle
+  const promise = new Promise((resolve) => { settle = resolve })
+  return { promise, respond: (body, status = 200) => settle(new Response(JSON.stringify(body), { status })) }
+}
+
 describe('checklists store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -149,5 +158,133 @@ describe('checklists store', () => {
     const store = useChecklistsStore()
     await expect(store.fetchForTrip('bad')).rejects.toThrow('No such trip')
     expect(store.error).toBe('No such trip')
+  })
+})
+
+describe('checklists store trip tagging', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    global.fetch = vi.fn()
+  })
+
+  it('tags the lists it loaded with the trip they came from', async () => {
+    fetch.mockImplementation(() => jsonResponse({ checklists: [{ id: 'c1', items: [] }] }))
+    const store = useChecklistsStore()
+    await store.fetchForTrip('t1')
+    expect(store.lastTripId).toBe('t1')
+  })
+
+  it('drops another trip lists before its own request goes out, but keeps templates', async () => {
+    const pending = deferred()
+    fetch.mockImplementation(() => pending.promise)
+    const store = useChecklistsStore()
+    store.$patch({
+      checklists: [{ id: 'c1', items: [] }],
+      templates: [{ id: 'tpl1', items: [] }],
+      packingDraft: { checklistId: 'c1', items: [{ title: 'Hat' }] },
+      lastTripId: 't1'
+    })
+
+    const p = store.fetchForTrip('t2')
+    expect(store.checklists).toEqual([])
+    expect(store.packingDraft).toBe(null)
+    expect(store.lastTripId).toBe(null)
+    // templates are organizer-scoped, not trip-scoped: blanking the dropdown on
+    // every trip change would be a regression, not a fix.
+    expect(store.templates).toEqual([{ id: 'tpl1', items: [] }])
+
+    pending.respond({ checklists: [{ id: 'c2', items: [] }] })
+    await p
+    expect(store.lastTripId).toBe('t2')
+  })
+
+  it('lets the trip fetch and the template fetch run together without cancelling each other', async () => {
+    // The view fires both at once; a single store-wide token would make the
+    // first one to start look superseded and silently drop its list.
+    const lists = deferred()
+    const templates = deferred()
+    fetch.mockImplementationOnce(() => lists.promise).mockImplementationOnce(() => templates.promise)
+    const store = useChecklistsStore()
+
+    const both = Promise.allSettled([store.fetchForTrip('t1'), store.fetchTemplates()])
+    templates.respond({ checklists: [{ id: 'tpl1', items: [] }] })
+    lists.respond({ checklists: [{ id: 'c1', items: [] }] })
+    await both
+
+    expect(store.checklists).toEqual([{ id: 'c1', items: [] }])
+    expect(store.templates).toEqual([{ id: 'tpl1', items: [] }])
+  })
+})
+
+describe('checklists store stale responses', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    global.fetch = vi.fn()
+  })
+
+  it('keeps trip B lists when trip A response arrives after them', async () => {
+    const a = deferred()
+    const b = deferred()
+    fetch.mockImplementationOnce(() => a.promise).mockImplementationOnce(() => b.promise)
+    const store = useChecklistsStore()
+
+    const pa = store.fetchForTrip('t1')
+    const pb = store.fetchForTrip('t2')
+    b.respond({ checklists: [{ id: 'b1', items: [] }] })
+    await pb
+    a.respond({ checklists: [{ id: 'a1', items: [] }] })
+    await pa
+
+    expect(store.checklists).toEqual([{ id: 'b1', items: [] }])
+    expect(store.lastTripId).toBe('t2')
+  })
+
+  it('keeps the newer template list when two template fetches answer out of order', async () => {
+    const first = deferred()
+    const second = deferred()
+    fetch.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise)
+    const store = useChecklistsStore()
+
+    const p1 = store.fetchTemplates()
+    const p2 = store.fetchTemplates()
+    second.respond({ checklists: [{ id: 'new', items: [] }] })
+    await p2
+    first.respond({ checklists: [{ id: 'old', items: [] }] })
+    await p1
+
+    expect(store.templates).toEqual([{ id: 'new', items: [] }])
+  })
+
+  it('keeps the newer packing suggestion when an older one answers late', async () => {
+    const a = deferred()
+    const b = deferred()
+    fetch.mockImplementationOnce(() => a.promise).mockImplementationOnce(() => b.promise)
+    const store = useChecklistsStore()
+
+    const pa = store.aiPackingSuggest('c1')
+    const pb = store.aiPackingSuggest('c2')
+    b.respond({ items: [{ title: 'Sunhat' }] })
+    await pb
+    a.respond({ items: [{ title: 'Umbrella' }] })
+    await pa
+
+    expect(store.packingDraft).toEqual({ checklistId: 'c2', items: [{ title: 'Sunhat' }] })
+    expect(store.aiBusy).toBe(false)
+  })
+
+  it('does not raise an error banner for a request the user has already left behind', async () => {
+    const a = deferred()
+    const b = deferred()
+    fetch.mockImplementationOnce(() => a.promise).mockImplementationOnce(() => b.promise)
+    const store = useChecklistsStore()
+
+    const pa = store.fetchForTrip('t1')
+    const pb = store.fetchForTrip('t2')
+    b.respond({ checklists: [] })
+    await pb
+    a.respond({ error: { code: 'NOT_FOUND', message: 'No such trip' } }, 404)
+    await expect(pa).rejects.toThrow('No such trip')
+
+    expect(store.error).toBe(null)
   })
 })

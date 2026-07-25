@@ -84,7 +84,20 @@ async function onLogout() {
         data-test="theme-toggle"
         @click="toggleThemeMode"
       />
-      <Button label="Logout" severity="secondary" text size="small" @click="onLogout" />
+      <!-- Carries an icon as well as the label so the label can be dropped on a
+           phone without the control becoming unidentifiable; aria-label keeps
+           the accessible name once the text is hidden. -->
+      <Button
+        label="Logout"
+        icon="pi pi-sign-out"
+        aria-label="Logout"
+        title="Logout"
+        severity="secondary"
+        text
+        size="small"
+        class="app-logout"
+        @click="onLogout"
+      />
     </div>
   </header>
 </template>
@@ -179,7 +192,20 @@ async function onLogout() {
     min-height: 2.75rem;
     justify-content: center;
   }
-  .app-nav { gap: 0.5rem; }
+  /* Logout drops to its icon here. Holding the search trigger and theme toggle
+     open at 44px pushed the row to 397px against a 375px viewport — the whole
+     page scrolled sideways. The label is the cheapest 68px to reclaim: it is
+     the least-used control in the bar, and the icon plus aria-label keeps it
+     identifiable. Same min-* pair so it stays a legal touch target. */
+  .app-logout :deep(.p-button-label) { display: none; }
+  .app-logout {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    justify-content: center;
+  }
+  .app-logout :deep(.p-button-icon) { margin: 0; }
+
+  .app-nav { gap: 0.5rem; padding: 0.5rem 0.75rem; }
   .app-nav-right { margin-left: auto; }
 }
 </style>

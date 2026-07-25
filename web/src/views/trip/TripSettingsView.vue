@@ -90,15 +90,25 @@ function syncDraftsFromStore() {
 }
 
 async function loadArchive() {
+  const trip = trips.current
+  // The layout owns the fetch for the trip itself, so hold until it has arrived
+  // and is the one in the URL — status is what decides the branch below.
+  if (!trip || trip.id !== tripId.value) return
   archiveLoading.value = true
   try {
+    // Archiving is what sets status='archived' (server: archive.routes.js), so
+    // the status already answers "is there an archive". Asking anyway returns
+    // 404 NOT_ARCHIVED for every live trip — handled correctly, but logged by
+    // the browser as an error on a page that is working perfectly.
+    if (trip.status !== 'archived') {
+      archiveStore.markUnarchived(tripId.value)
+      syncDraftsFromStore()
+      return
+    }
     await archiveStore.fetchArchive(tripId.value)
     syncDraftsFromStore()
   } catch (e) {
     if (e.code !== 'NOT_ARCHIVED') notify.error(e.message)
-    // NOT_ARCHIVED is the normal case for a live trip and stays quiet, but the
-    // drafts still have to be re-synced: fetchArchive() clears the store first,
-    // so this is what pulls the emptied state through to the form.
     syncDraftsFromStore()
   } finally {
     archiveLoading.value = false
@@ -108,8 +118,9 @@ async function loadArchive() {
 onMounted(loadArchive)
 // Settings is reused when only :id changes, and the archive store is a
 // singleton — without refetching, trip B's Settings keeps showing trip A's
-// archive and hides B's own Archive action.
-watch(tripId, loadArchive)
+// archive and hides B's own Archive action. The status is watched too, so
+// archiving in this very view flips the page over without a reload.
+watch([tripId, () => trips.current?.id, () => trips.current?.status], loadArchive)
 
 function doArchive() {
   confirm.require({
@@ -120,6 +131,11 @@ function doArchive() {
       try {
         await archiveStore.archive(tripId.value, { notes: notesDraft.value || null, photo_links: [] })
         syncDraftsFromStore()
+        // The server flips status to 'archived' as part of this; refetch so the
+        // local trip agrees. loadArchive() now branches on that status, and a
+        // stale 'planning' here would make a later run clear the archive we
+        // just created. Also keeps the layout's status chip honest.
+        await trips.fetchTrip(tripId.value)
         notify.success('Trip archived')
       } catch (e) { notify.error(e.message) }
     }

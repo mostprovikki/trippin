@@ -27,14 +27,18 @@ const dateRange = computed(() =>
 const statusIndex = computed(() => STATUSES.indexOf(trip.value?.status))
 
 async function load() {
-  // both stores are shared across trips, so without clearing them the stat cards
-  // quote the previous trip's total and readiness under the new trip's name.
-  budget.$reset()
-  if (readiness.lastTripId !== tripId.value) readiness.data = null
+  // Both stores are shared across trips and drop another trip's data themselves
+  // as soon as they are asked for this one, so the stat cards can't go on
+  // quoting the previous trip's total and readiness under this trip's name.
+  // Readiness is still guarded: TripLayout fetches it for the sidebar badges,
+  // and refetching what the store already holds would blank a card it filled.
+  // It is started before the budget is awaited so the guard's answer — and the
+  // clearing that goes with it — doesn't wait on an unrelated request.
+  const pendingReadiness = readiness.lastTripId === tripId.value
+    ? null
+    : readiness.fetch(tripId.value).catch(() => { /* layout badge already reported */ })
   try { await budget.fetchBudget(tripId.value) } catch { /* stat shows — */ }
-  if (readiness.lastTripId !== tripId.value) {
-    try { await readiness.fetch(tripId.value) } catch { /* layout badge already reported */ }
-  }
+  await pendingReadiness
 }
 
 onMounted(load)

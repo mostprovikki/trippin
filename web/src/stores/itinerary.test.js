@@ -6,6 +6,15 @@ function jsonRes(body, status = 200) {
   return Promise.resolve(new Response(JSON.stringify(body), { status }))
 }
 
+// Lets a test hold a request open and choose when — and in which order — each
+// one answers, which is the only way to reproduce a slow response landing after
+// a newer one.
+function deferred() {
+  let settle
+  const promise = new Promise((resolve) => { settle = resolve })
+  return { promise, respond: (body, status = 200) => settle(new Response(JSON.stringify(body), { status })) }
+}
+
 describe('itinerary store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -153,5 +162,131 @@ describe('itinerary store', () => {
     await store.applyDay('d1')
     expect(store.days[0]).toEqual(day)
     expect(store.dayDrafts.d1).toBeUndefined()
+  })
+})
+
+describe('itinerary store trip tagging', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    global.fetch = vi.fn()
+  })
+
+  it('tags the days it loaded with the trip they came from', async () => {
+    fetch.mockImplementation(() => jsonRes({ days: [{ id: 'd1', items: [] }] }))
+    const store = useItineraryStore()
+    await store.fetchItinerary('t1')
+    expect(store.lastTripId).toBe('t1')
+  })
+
+  it('drops another trip days and drafts before its own request goes out', async () => {
+    const pending = deferred()
+    fetch.mockImplementation(() => pending.promise)
+    const store = useItineraryStore()
+    store.$patch({
+      days: [{ id: 'd1', day_date: '2026-01-01', items: [] }],
+      draft: [{ day_date: '2026-01-01', items: [] }],
+      dayDrafts: { d1: [{ title: 'X' }] },
+      lastTripId: 't1'
+    })
+
+    const p = store.fetchItinerary('t2')
+    // not awaited on purpose: an unapplied draft left here would be written into
+    // t2 the moment Apply is pressed.
+    expect(store.days).toEqual([])
+    expect(store.draft).toBe(null)
+    expect(store.dayDrafts).toEqual({})
+    expect(store.lastTripId).toBe(null)
+
+    pending.respond({ days: [{ id: 'd9', items: [] }] })
+    await p
+    expect(store.lastTripId).toBe('t2')
+  })
+
+  it('leaves days in place when the same trip is refetched', async () => {
+    const pending = deferred()
+    fetch.mockImplementation(() => pending.promise)
+    const store = useItineraryStore()
+    store.$patch({ days: [{ id: 'd1', items: [] }], lastTripId: 't1' })
+
+    const p = store.fetchItinerary('t1')
+    expect(store.days).toEqual([{ id: 'd1', items: [] }])
+
+    pending.respond({ days: [{ id: 'd1', items: [{ id: 'i1' }] }] })
+    await p
+    expect(store.days[0].items).toEqual([{ id: 'i1' }])
+  })
+})
+
+describe('itinerary store stale responses', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    global.fetch = vi.fn()
+  })
+
+  it('keeps trip B days when trip A response arrives after them', async () => {
+    const a = deferred()
+    const b = deferred()
+    fetch.mockImplementationOnce(() => a.promise).mockImplementationOnce(() => b.promise)
+    const store = useItineraryStore()
+
+    const pa = store.fetchItinerary('t1')
+    const pb = store.fetchItinerary('t2')
+    b.respond({ days: [{ id: 'b1', items: [] }] })
+    await pb
+    a.respond({ days: [{ id: 'a1', items: [] }] })
+    await pa
+
+    expect(store.days).toEqual([{ id: 'b1', items: [] }])
+    expect(store.lastTripId).toBe('t2')
+  })
+
+  it('keeps the newer day list when init and a refetch of one trip answer out of order', async () => {
+    const first = deferred()
+    const second = deferred()
+    fetch.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise)
+    const store = useItineraryStore()
+    store.lastTripId = 't1'
+
+    const p1 = store.fetchItinerary('t1')
+    const p2 = store.init('t1')
+    second.respond({ days: [{ id: 'new', items: [] }] })
+    await p2
+    first.respond({ days: [], error: null })
+    await p1
+
+    expect(store.days).toEqual([{ id: 'new', items: [] }])
+  })
+
+  it('keeps the newer AI draft when an older draft request answers late', async () => {
+    const a = deferred()
+    const b = deferred()
+    fetch.mockImplementationOnce(() => a.promise).mockImplementationOnce(() => b.promise)
+    const store = useItineraryStore()
+
+    const pa = store.aiDraft('t1')
+    const pb = store.aiDraft('t2')
+    b.respond({ days: [{ day_date: '2026-02-02', items: [] }] })
+    await pb
+    a.respond({ days: [{ day_date: '2026-01-01', items: [] }] })
+    await pa
+
+    expect(store.draft).toEqual([{ day_date: '2026-02-02', items: [] }])
+    expect(store.aiBusy).toBe(false)
+  })
+
+  it('does not raise an error banner for a request the user has already left behind', async () => {
+    const a = deferred()
+    const b = deferred()
+    fetch.mockImplementationOnce(() => a.promise).mockImplementationOnce(() => b.promise)
+    const store = useItineraryStore()
+
+    const pa = store.fetchItinerary('t1')
+    const pb = store.fetchItinerary('t2')
+    b.respond({ days: [] })
+    await pb
+    a.respond({ error: { code: 'NOT_FOUND', message: 'No such trip' } }, 404)
+    await expect(pa).rejects.toThrow('No such trip')
+
+    expect(store.error).toBe(null)
   })
 })

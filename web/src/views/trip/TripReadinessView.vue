@@ -14,11 +14,8 @@ const tripId = computed(() => route.params.id)
 const store = useReadinessStore()
 
 async function load() {
-  store.error = null
-  // The response carries no trip id, so anything already loaded for another
-  // trip has to go before the fetch — but data for this trip is left alone so
-  // the sidebar badges reading the same store don't blink on every visit.
-  if (store.lastTripId !== tripId.value) store.data = null
+  // Nothing to clear: fetch() drops another trip's data itself, and keeps this
+  // trip's in place so the sidebar badges reading the same store don't blink.
   try { await store.fetch(tripId.value) } catch { /* store.error drives the banner */ }
 }
 

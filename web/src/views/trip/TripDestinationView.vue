@@ -22,6 +22,10 @@ async function load() {
   // trips.candidates is shared store state that nothing else clears: leaving it
   // in place renders the previous trip's candidates under this trip's id, and a
   // stale error banner would outlive the fetch that produced it.
+  // The trip-scoped stores now drop stale data themselves off a lastTripId, and
+  // this clearing belongs in the trips store for the same reason — but that
+  // store also backs the trip list, the layout header and search, so retagging
+  // it is its own change rather than a rider on this one.
   loadError.value = null
   trips.candidates = []
   try {
