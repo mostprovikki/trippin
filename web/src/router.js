@@ -22,6 +22,7 @@ const routes = [
       { path: 'settings', name: 'trip-settings', component: () => import('./views/trip/TripSettingsView.vue') }
     ]
   },
+  { path: '/search', name: 'search', component: () => import('./views/SearchView.vue'), meta: { auth: true } },
   { path: '/people', name: 'people', component: () => import('./views/PeopleListView.vue'), meta: { auth: true } },
   { path: '/people/:id', name: 'person', component: () => import('./views/PersonDetailView.vue'), meta: { auth: true } },
   { path: '/p/:token', name: 'participant', component: () => import('./views/ParticipantView.vue'), meta: { public: true, bare: true } },

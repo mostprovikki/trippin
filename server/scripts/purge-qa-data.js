@@ -33,10 +33,20 @@ const TRIP_PATTERNS = [
   'Keynav QA *',    // e2e/qa-picker-keynav.mjs
   'QA Upload Trip *', // e2e/qa-upload-reselect.mjs
   'Dark QA *',      // e2e/qa-dark-mode.mjs
+  'SRCHQA *',       // e2e/qa-search.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]
+// Checklist TEMPLATES need their own list: they carry trip_id IS NULL, so unlike
+// a trip's own checklists nothing cascades them when a QA trip is deleted, and
+// they were quietly accumulating one row per gate run.
+const TEMPLATE_PATTERNS = [
+  'SRCHQA *',       // e2e/qa-search.mjs
+  'QA Template *',
+  'DP QA *'
+]
 const PERSON_PATTERNS = [
+  'SRCHQA *',       // e2e/qa-search.mjs
   'QA DP Person *',
   'QA Person *',
   'UI Walk Person *',
@@ -58,6 +68,10 @@ const trips = db.prepare(
 const persons = db.prepare(
   `SELECT id, name FROM persons WHERE ${globClause('name', PERSON_PATTERNS)} ORDER BY name`
 ).all(...PERSON_PATTERNS)
+
+const templates = db.prepare(
+  `SELECT id, name FROM checklists WHERE is_template = 1 AND ${globClause('name', TEMPLATE_PATTERNS)} ORDER BY name`
+).all(...TEMPLATE_PATTERNS)
 
 const personIds = new Set(persons.map((p) => p.id))
 const docsOfPersons = personIds.size
@@ -118,6 +132,7 @@ if (trips.length > 8) log(`  … and ${trips.length - 8} more`)
 log(`QA persons            ${persons.length}`)
 for (const p of persons) log(`  - ${p.name} (${docsOfPersons.filter((d) => d.person_id === p.id).length} documents)`)
 log(`Document rows         ${docsOfPersons.length} (cascade from the persons above)`)
+log(`QA checklist templates ${templates.length} (trip_id IS NULL, so nothing cascades them)`)
 log(`Orphaned upload dirs  ${orphanDirs.length} (${mb(orphanDirs.reduce((n, o) => n + o.bytes, 0))})`)
 log(`Orphaned upload files ${orphanFiles.length} (${mb(orphanFiles.reduce((n, o) => n + o.bytes, 0))})`)
 log(`Disk reclaimed        ${mb(totalOrphanBytes)}`)
@@ -153,7 +168,10 @@ const purge = db.transaction(() => {
   const clearAssignees = db.prepare(
     'UPDATE checklist_items SET assignee_person_id = NULL WHERE assignee_person_id = ?'
   )
+  const delTemplate = db.prepare('DELETE FROM checklists WHERE id = ?')
   for (const t of trips) delTrip.run(t.id)
+  // checklist_items cascade from checklists, so the template row is enough.
+  for (const c of templates) delTemplate.run(c.id)
   for (const p of persons) {
     delParticipation.run(p.id)
     delLinks.run(p.id)
@@ -174,6 +192,7 @@ db.exec('VACUUM')
 const after = {
   trips: db.prepare('SELECT count(*) c FROM trips').get().c,
   persons: db.prepare('SELECT count(*) c FROM persons').get().c,
-  documents: db.prepare('SELECT count(*) c FROM documents').get().c
+  documents: db.prepare('SELECT count(*) c FROM documents').get().c,
+  templates: db.prepare('SELECT count(*) c FROM checklists WHERE is_template = 1').get().c
 }
-log(`\nDone. Now: ${after.trips} trips, ${after.persons} persons, ${after.documents} documents.`)
+log(`\nDone. Now: ${after.trips} trips, ${after.persons} persons, ${after.documents} documents, ${after.templates} templates.`)

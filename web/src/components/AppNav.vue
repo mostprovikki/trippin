@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth.js'
 import { useTripsStore } from '../stores/trips.js'
 import { TRIP_SECTIONS } from '../utils/tripNav.js'
 import { isDark, toggleThemeMode } from '../composables/useThemeMode.js'
+import { openPalette, shortcutLabel } from '../composables/useSearchPalette.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,6 +17,7 @@ const crumbs = computed(() => {
   const name = route.name
   if (name === 'trips') return [{ label: 'Trips' }]
   if (name === 'trip-new') return [{ label: 'Trips', to: '/' }, { label: 'New trip' }]
+  if (name === 'search') return [{ label: 'Search' }]
   if (name === 'people') return [{ label: 'People' }]
   if (name === 'person') return [{ label: 'People', to: '/people' }, { label: 'Person' }]
   const section = TRIP_SECTIONS.find((s) => s.name === name)
@@ -30,6 +32,9 @@ const crumbs = computed(() => {
   }
   return []
 })
+
+const shortcutHint = shortcutLabel()
+const openSearch = openPalette
 
 async function onLogout() {
   await auth.logout()
@@ -50,6 +55,21 @@ async function onLogout() {
     </nav>
 
     <div class="app-nav-right">
+      <!-- "Out of the way until you need it" still has to be discoverable, so the
+           shortcut is advertised rather than left for people to guess. Clicking
+           opens the same palette the keyboard does. -->
+      <button
+        type="button"
+        class="app-search-trigger"
+        aria-label="Search"
+        title="Search"
+        data-test="search-trigger"
+        @click="openSearch"
+      >
+        <i class="pi pi-search" aria-hidden="true" />
+        <span class="app-search-label">Search</span>
+        <kbd class="app-search-kbd">{{ shortcutHint }}</kbd>
+      </button>
       <RouterLink to="/" class="app-nav-link" :class="{ 'app-nav-link-active': route.name === 'trips' || String(route.name).startsWith('trip') }">Trips</RouterLink>
       <RouterLink to="/people" class="app-nav-link" :class="{ 'app-nav-link-active': route.name === 'people' || route.name === 'person' }">People</RouterLink>
       <Button
@@ -99,6 +119,33 @@ async function onLogout() {
 .app-crumb-current { color: var(--app-text); font-weight: 600; }
 .app-crumb-sep { font-size: 0.75rem; color: var(--app-text-subtle); }
 .app-nav-right { display: flex; align-items: center; gap: 0.25rem; }
+.app-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.5rem 0.3125rem 0.625rem;
+  margin-right: 0.25rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  background: var(--app-surface-alt);
+  color: var(--app-text-muted);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.app-search-trigger:hover { background: var(--app-hover); color: var(--app-text); }
+.app-search-kbd {
+  font-family: inherit;
+  font-size: 0.6875rem;
+  /* Full text colour, not a muted one: measured 3.16:1 against --app-surface-alt
+     in dark with --app-text-subtle, and --app-text-muted only reaches 4.33:1 on
+     the light surface. The border and 11px size keep it visually quiet without
+     making it hard to read. */
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+  border-radius: 4px;
+  padding: 0 0.25rem;
+}
 .app-nav-link {
   color: var(--app-text);
   text-decoration: none;
@@ -112,6 +159,10 @@ async function onLogout() {
 
 @media (max-width: 640px) {
   .app-crumbs { display: none; }
+  /* The label and the shortcut hint are the first things to go on a phone —
+     there is no physical keyboard to press ⌘K on anyway. */
+  .app-search-label, .app-search-kbd { display: none; }
+  .app-search-trigger { padding: 0.3125rem 0.5rem; }
   .app-nav { gap: 0.5rem; }
   .app-nav-right { margin-left: auto; }
 }

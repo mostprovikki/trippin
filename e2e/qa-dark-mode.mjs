@@ -345,6 +345,11 @@ if (ids.personId) {
 }
 await page.goto(`${BASE}/trips/new`, { waitUntil: 'networkidle' })
 await audit('trip wizard')
+// Global Search is new, so both of its surfaces need the same scrutiny as the
+// rest: the results page, and the teleported palette overlay.
+await page.goto(`${BASE}/search?q=a`, { waitUntil: 'networkidle' })
+await page.waitForTimeout(700)
+await audit('search results page')
 await page.goto(`${BASE}/this-route-does-not-exist`, { waitUntil: 'networkidle' })
 await audit('404')
 
@@ -396,6 +401,20 @@ if (ids.tripId) {
       fail('select overlay in dark', 'overlay did not open')
     }
   }
+}
+
+// ---------- 3b. the search palette, another teleported overlay ----------
+await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+await page.keyboard.press('Meta+k')
+if (await page.locator('[data-test="search-palette"]')
+  .waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false)) {
+  await page.locator('[data-test="search-palette-input"]').fill('a')
+  await page.waitForTimeout(700)
+  await audit('search palette open')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(200)
+} else {
+  fail('search palette in dark', 'palette did not open on Meta+K')
 }
 
 // ---------- 4. the toggle, and persistence ----------
