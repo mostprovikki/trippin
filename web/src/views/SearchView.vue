@@ -41,7 +41,11 @@ watch(() => route.query.q, (q) => {
 
 <template>
   <div class="page">
-    <h1>Search</h1>
+    <!-- .list-head rather than a bare h1: this is the same page-header role as
+         the other list views, and the bare h1 was inheriting a different gap. -->
+    <div class="list-head">
+      <h1>Search</h1>
+    </div>
 
     <div class="search-box">
       <i class="pi pi-search search-box-icon" aria-hidden="true" />

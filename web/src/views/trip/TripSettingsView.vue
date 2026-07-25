@@ -23,7 +23,9 @@ const notify = useNotify()
 const tripId = computed(() => route.params.id)
 
 // --- Basics (draft key unchanged from the old TripDetailView) ---
-const basicsDraft = useDraft(`trip:${route.params.id}:basics`, () => ({ name: '', description: '', origin_city: '', vibe_tags: '' }))
+// Settings is reused when only :id changes, so the key has to be a getter —
+// a string would pin the draft to whichever trip happened to be open at setup.
+const basicsDraft = useDraft(() => `trip:${tripId.value}:basics`, () => ({ name: '', description: '', origin_city: '', vibe_tags: '' }))
 const basics = basicsDraft.draft
 
 function loadBasics(trip) {

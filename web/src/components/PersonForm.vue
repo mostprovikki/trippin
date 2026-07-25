@@ -54,8 +54,11 @@ const router = useRouter()
 const route = useRoute()
 
 // Draft-backed when draftKey given; plain reactive otherwise.
+// The key is passed as a getter, not the string: PersonDetailView reuses this
+// view across :id changes, so a key captured once would persist person B's
+// edits into person A's storage slot.
 const draftApi = props.draftKey
-  ? useDraft(props.draftKey, blank, { router, route })
+  ? useDraft(() => props.draftKey, blank, { router, route })
   : null
 const form = draftApi ? draftApi.draft : reactive(blank())
 

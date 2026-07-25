@@ -1,5 +1,5 @@
 <script setup>
-import { ref, shallowRef, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
@@ -20,30 +20,19 @@ const notify = useNotify()
 
 const loading = ref(true)
 
-// useDraft resolves its storage key once, so the stored draft is rebuilt
-// whenever the trip changes — otherwise trip B's AI draft is persisted under
-// trip A's key.
-let draftTripId = tripId.value
-const aiDraftStore = shallowRef(useDraft(`trip:${draftTripId}:itinerary-ai`, () => ({ ai: null })))
-
-function rekeyAiDraft() {
-  if (draftTripId === tripId.value) return
-  aiDraftStore.value.teardown()
-  draftTripId = tripId.value
-  aiDraftStore.value = useDraft(`trip:${draftTripId}:itinerary-ai`, () => ({ ai: null }))
-}
-// A draft rebuilt outside setup doesn't get useDraft's own unmount hook.
-onBeforeUnmount(() => aiDraftStore.value.teardown())
+// Getter key: this view is reused across :id changes, so the AI draft has to
+// follow the trip rather than freeze on whichever one was open at setup.
+const aiDraftStore = useDraft(() => `trip:${tripId.value}:itinerary-ai`, () => ({ ai: null }))
 
 // Mirror the Pinia draft into persistent storage both ways.
-watch(() => store.draft, (d) => { aiDraftStore.value.draft.ai = d ?? null })
+watch(() => store.draft, (d) => { aiDraftStore.draft.ai = d ?? null })
 
 async function load() {
   loading.value = true
-  rekeyAiDraft()
   // Read the stored draft before resetting: clearing store.draft feeds a null
-  // back through the mirror watcher above.
-  const stored = aiDraftStore.value.draft.ai
+  // back through the mirror watcher above. useDraft has already re-keyed by the
+  // time this runs on a trip change, so this is the *new* trip's stored draft.
+  const stored = aiDraftStore.draft.ai
   // Days, per-day drafts and the error banner all belong to the trip we came
   // from; an unapplied draft applied here would write to the wrong trip.
   store.$reset()
@@ -73,8 +62,8 @@ async function draftWholeTrip() {
 async function applyWholeDraft() {
   try {
     await store.applyDraft(tripId.value)
-    aiDraftStore.value.draft.ai = null
-    aiDraftStore.value.clear()
+    aiDraftStore.draft.ai = null
+    aiDraftStore.clear()
     notify.success('AI draft applied')
   } catch (e) {
     notify.error(e.message)
@@ -83,8 +72,8 @@ async function applyWholeDraft() {
 
 function discardWholeDraft() {
   store.draft = null
-  aiDraftStore.value.draft.ai = null
-  aiDraftStore.value.clear()
+  aiDraftStore.draft.ai = null
+  aiDraftStore.clear()
 }
 </script>
 
@@ -96,7 +85,7 @@ function discardWholeDraft() {
       <strong>Error:</strong> {{ store.error }}
     </div>
 
-    <div v-if="loading" class="card"><Skeleton v-for="i in 3" :key="i" height="1.5rem" style="margin-bottom: 0.5rem" /></div>
+    <div v-if="loading" class="card"><Skeleton v-for="i in 3" :key="i" class="skeleton-row" /></div>
 
     <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
 

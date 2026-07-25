@@ -48,8 +48,20 @@
   /* The sticky nav is translucent over scrolling content, so it needs the page
      colour at partial alpha rather than a flat surface token. */
   --app-nav-bg: rgba(255, 255, 255, 0.85);
+  /* Key caps and the datepicker's month/year buttons are ~17–28px tall and sit
+     INSIDE controls that already carry --app-radius-sm; at 8px they read as
+     lozenges and their corners fight the parent's. A smaller step keeps the
+     nesting legible instead of each small cap hardcoding its own 4px. */
+  --app-radius-xs: 4px;
   --app-radius-sm: 8px;
   --app-radius: 12px;
+  /* The gap under a page header (SectionHeader on /trip/*, .list-head on the
+     list views). One token because the three call sites had drifted to 1.25rem
+     / 1rem / 0.5rem for the same structural role, so content visibly jumped as
+     you moved between sections. 1.25rem is the value the /trip/* sections
+     already used — the widest reach, and the only one that clears the 1rem
+     .card rhythm so the header reads as above the content, not part of it. */
+  --app-header-gap: 1.25rem;
   --app-shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05);
   --app-shadow-md: 0 4px 12px rgba(28, 25, 23, 0.08);
 }
@@ -129,6 +141,32 @@ a { color: var(--app-primary); }
    enter or leave a trip — the same page, two different gutters. */
 @media (max-width: 767px) {
   .page { padding: 1rem 1rem 3rem; }
+}
+
+/* Page header for the list views — the flat counterpart of SectionHeader, which
+   the /trip/* section pages use. Lives here rather than in three scoped copies
+   because that is how the three drifted apart in the first place.
+   flex-wrap + gap are load-bearing: the h1 can be a user-supplied person name
+   sitting next to a Delete button, and at 375px it overflows the row without
+   them. */
+.list-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--app-header-gap);
+}
+.list-head h1 { margin: 0; }
+
+/* One "a list is loading" row for every skeleton stack in the app; they had
+   drifted to three heights and two gaps. !important because PrimeVue's Skeleton
+   writes its `height` prop (default 1rem) as an INLINE style, which a class
+   cannot otherwise beat — the alternative is repeating the height as a prop at
+   every call site, i.e. the drift this rule exists to stop. */
+.skeleton-row {
+  height: 1.5rem !important;
+  margin-bottom: 0.5rem;
 }
 
 .card {

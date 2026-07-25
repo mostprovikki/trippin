@@ -142,7 +142,9 @@ async function onLogout() {
      making it hard to read. */
   color: var(--app-text);
   border: 1px solid var(--app-border);
-  border-radius: 4px;
+  /* -xs, not -sm: the cap is nested inside the trigger's 8px corner, so it needs
+     the smaller step to avoid reading as a lozenge glued to the parent radius. */
+  border-radius: var(--app-radius-xs);
   padding: 0 0.25rem;
 }
 .app-nav-link {

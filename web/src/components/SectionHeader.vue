@@ -22,7 +22,9 @@ defineProps({
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 1.25rem;
+  /* shared with .list-head on the list views: one value for the page-header
+     role, so content starts at the same height everywhere. */
+  margin-bottom: var(--app-header-gap);
 }
 .section-title { margin: 0; }
 .section-desc { margin: 0.25rem 0 0; color: var(--app-text-muted); font-size: 0.875rem; }

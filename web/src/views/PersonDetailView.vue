@@ -99,16 +99,7 @@ function onDelete() {
 </template>
 
 <style scoped>
-/* wraps because the h1 is a user-supplied name sitting next to the Delete
-   button — a long name overflows the row at 375px otherwise. */
-.list-head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-.list-head h1 { margin: 0; }
+/* .list-head itself now lives in main.css — including the wrapping this copy
+   introduced, which the other two lacked. */
 .person-error-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
 </style>

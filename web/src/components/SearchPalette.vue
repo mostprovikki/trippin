@@ -260,7 +260,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   color: var(--app-text);
   background: var(--app-surface-alt);
   border: 1px solid var(--app-border);
-  border-radius: 4px;
+  /* same nested-corner reasoning as AppNav's .app-search-kbd. */
+  border-radius: var(--app-radius-xs);
   padding: 0.0625rem 0.3125rem;
 }
 .sp-results { overflow-y: auto; padding: 0.375rem; }

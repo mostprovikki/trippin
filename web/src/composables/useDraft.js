@@ -1,4 +1,4 @@
-import { reactive, ref, watch, onBeforeUnmount, getCurrentInstance } from 'vue'
+import { computed, reactive, ref, unref, watch, onBeforeUnmount, getCurrentInstance } from 'vue'
 
 const PREFIX = 'tripper:draft:'
 
@@ -8,33 +8,53 @@ function bulkSnapshot(obj, urlFields) {
   return out
 }
 
+// `key` may be a plain string, a ref, or a getter. Views mounted under a layout
+// that is reused across :id changes are never re-created, so a key baked in at
+// setup time would keep pointing at the trip the user has already left; a getter
+// lets the draft follow the route instead.
 export function useDraft(key, factory, { urlFields = [], router = null, route = null, debounceMs = 400 } = {}) {
-  const storageKey = PREFIX + key
-  const base = factory()
+  const storageKey = computed(() => PREFIX + (typeof key === 'function' ? key() : unref(key)))
 
-  let stored = null
-  try { stored = JSON.parse(localStorage.getItem(storageKey) ?? 'null') } catch { stored = null }
+  const draft = reactive({})
+  const baseline = ref('')
+  const isDirty = ref(false)
 
-  const initial = { ...base, ...(stored || {}) }
-  if (route) {
-    for (const f of urlFields) {
-      if (route.query[f] !== undefined) {
-        initial[f] = typeof base[f] === 'number' ? Number(route.query[f]) : route.query[f]
+  // The key the current draft contents belong to. Every read/write goes through
+  // this rather than storageKey.value, so a write scheduled before a key change
+  // can never land in the new key's slot no matter which watcher flushes first.
+  let activeKey = storageKey.value
+
+  function hydrate() {
+    activeKey = storageKey.value
+    const base = factory()
+    let stored = null
+    try { stored = JSON.parse(localStorage.getItem(activeKey) ?? 'null') } catch { stored = null }
+
+    const initial = { ...base, ...(stored || {}) }
+    if (route) {
+      for (const f of urlFields) {
+        if (route.query[f] !== undefined) {
+          initial[f] = typeof base[f] === 'number' ? Number(route.query[f]) : route.query[f]
+        }
       }
     }
-  }
 
-  const draft = reactive(initial)
-  // baseline = pristine factory output, so a restored stored draft counts as dirty
-  const baseline = ref(JSON.stringify(bulkSnapshot(base, urlFields)))
-  const isDirty = ref(JSON.stringify(bulkSnapshot(initial, urlFields)) !== baseline.value)
+    // mutate the same reactive object instead of replacing it, so v-model
+    // bindings and `const x = draft.thing` aliases survive a re-key
+    for (const k of Object.keys(draft)) if (!(k in initial)) delete draft[k]
+    Object.assign(draft, initial)
+    // baseline = pristine factory output, so a restored stored draft counts as dirty
+    baseline.value = JSON.stringify(bulkSnapshot(base, urlFields))
+    isDirty.value = JSON.stringify(bulkSnapshot(initial, urlFields)) !== baseline.value
+  }
+  hydrate()
 
   let timer = null
   function persistNow() {
-    try { localStorage.setItem(storageKey, JSON.stringify(bulkSnapshot(draft, urlFields))) } catch { /* quota/private mode: draft persistence is best-effort */ }
+    try { localStorage.setItem(activeKey, JSON.stringify(bulkSnapshot(draft, urlFields))) } catch { /* quota/private mode: draft persistence is best-effort */ }
   }
 
-  watch(draft, () => {
+  const stopDraftWatch = watch(draft, () => {
     isDirty.value = JSON.stringify(bulkSnapshot(draft, urlFields)) !== baseline.value
     if (isDirty.value) {
       clearTimeout(timer)
@@ -42,7 +62,7 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
     } else {
       clearTimeout(timer)
       timer = null
-      try { localStorage.removeItem(storageKey) } catch { /* ignore */ }
+      try { localStorage.removeItem(activeKey) } catch { /* ignore */ }
     }
     if (router && route && urlFields.length) {
       const q = { ...route.query }
@@ -54,6 +74,23 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
       if (changed) router.replace({ query: q })
     }
   }, { deep: true })
+
+  const stopKeyWatch = watch(storageKey, () => {
+    // Flush rather than discard: the pending write holds edits the user made to
+    // the entity we are leaving, and they can navigate straight back to it —
+    // silently dropping them would be the same data loss the unmount teardown
+    // already promises not to cause. persistNow() still targets the *old*
+    // activeKey, so the flush cannot contaminate the incoming key.
+    clearTimeout(timer)
+    timer = null
+    // recompute from draft/baseline instead of trusting isDirty.value: if the
+    // key and the draft changed in the same tick, this watcher may run before
+    // the deep watcher has updated the ref or even scheduled a timer
+    if (JSON.stringify(bulkSnapshot(draft, urlFields)) !== baseline.value) persistNow()
+    // re-reads storage under the new key and resets baseline/isDirty, so the
+    // incoming entity never inherits the outgoing one's values or dirty flag
+    hydrate()
+  })
 
   function onBeforeUnload(e) {
     if (!isDirty.value) return
@@ -70,13 +107,17 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
     clearTimeout(timer)
     timer = null
     if (hadPendingWrite) persistNow()
+    // useDraft can be called outside a component (tests, plain modules), where
+    // there is no scope to auto-stop these for us
+    stopDraftWatch()
+    stopKeyWatch()
   }
   if (getCurrentInstance()) onBeforeUnmount(teardown)
 
   function clear() {
     clearTimeout(timer)
     timer = null
-    try { localStorage.removeItem(storageKey) } catch { /* ignore */ }
+    try { localStorage.removeItem(activeKey) } catch { /* ignore */ }
     if (router && route && urlFields.length) {
       const q = { ...route.query }
       for (const f of urlFields) delete q[f]

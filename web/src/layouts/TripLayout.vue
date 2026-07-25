@@ -117,7 +117,7 @@ async function advanceStatus() {
 
     <div class="trip-main">
       <div v-if="loading && !trips.current" class="card">
-        <Skeleton v-for="i in 4" :key="i" height="1.75rem" style="margin-bottom: 0.625rem" />
+        <Skeleton v-for="i in 4" :key="i" class="skeleton-row" />
       </div>
       <RouterView v-else />
     </div>
@@ -210,6 +210,16 @@ async function advanceStatus() {
   }
   .trip-sidebar-nav::-webkit-scrollbar { display: none; }
   .trip-nav-group { display: none; }
-  .trip-nav-item { white-space: nowrap; flex: 0 0 auto; }
+  /* On desktop these are sidebar rows a mouse points at, and ~35px is fine.
+     Here the same rule IS the primary section navigation and is only ever
+     tapped, so it has to clear the 44px touch minimum the app already holds
+     itself to (see ParticipantDocs.vue). 2.75rem is 44px at the default root
+     size; the base rule's align-items: center keeps the label centred in the
+     extra height. */
+  .trip-nav-item {
+    white-space: nowrap;
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+  }
 }
 </style>

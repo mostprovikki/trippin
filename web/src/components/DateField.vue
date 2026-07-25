@@ -174,11 +174,16 @@ input.p-invalid:focus {
   font-size: 1rem;
   font-weight: 600;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  color: var(--p-primary-color);
+  border-radius: var(--app-radius-xs);
+  color: var(--app-primary);
 }
+/* --app-primary/-soft rather than PrimeVue's --p-primary-color/--p-primary-50:
+   the -50 step is one fixed ramp value in BOTH schemes (see theme.js — only
+   primary.color is redefined per scheme), so in dark it painted a near-white
+   teal wash behind teal-400 text at about 1.8:1. The app tokens invert with the
+   scheme, keeping the hover at 5.2:1 in light and 7.2:1 in dark. */
 .p-datepicker-panel.date-field-panel .p-datepicker-select-month:hover,
 .p-datepicker-panel.date-field-panel .p-datepicker-select-year:hover {
-  background: var(--p-primary-50);
+  background: var(--app-primary-soft);
 }
 </style>

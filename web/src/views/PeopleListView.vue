@@ -56,7 +56,7 @@ async function onCreate(fields) {
     <PersonForm v-if="showForm" ref="formRef" submit-label="Create" draft-key="person-new" @submit="onCreate" @cancel="showForm = false" />
 
     <div v-if="loading" class="card">
-      <Skeleton v-for="i in 4" :key="i" height="1.5rem" class="skeleton-row" />
+      <Skeleton v-for="i in 4" :key="i" class="skeleton-row" />
     </div>
 
     <EmptyState v-else-if="!store.people.length" icon="pi pi-users" message="No people yet — add travel companions here." cta-label="Add person" @cta="showForm = true" />
@@ -81,9 +81,6 @@ async function onCreate(fields) {
 </template>
 
 <style scoped>
-.skeleton-row { margin-bottom: 0.5rem; }
 .person-row { cursor: pointer; transition: background-color 0.15s ease; }
 .person-row:hover { background: var(--app-hover); }
-.list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-.list-head h1 { margin: 0; }
 </style>

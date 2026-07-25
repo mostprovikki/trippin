@@ -52,7 +52,7 @@ onMounted(load)
     </div>
 
     <div v-if="loading" class="card">
-      <Skeleton v-for="i in 3" :key="i" height="2rem" style="margin-bottom: 0.5rem" />
+      <Skeleton v-for="i in 3" :key="i" class="skeleton-row" />
     </div>
 
     <div v-else-if="loadError" class="trips-error">
@@ -84,8 +84,6 @@ onMounted(load)
 
 <style scoped>
 .page-wide { max-width: 80rem; }
-.list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-.list-head h1 { margin: 0; }
 .trips-error { margin-top: 0.5rem; }
 .trips-error :deep(.p-message) { margin-bottom: 0.75rem; }
 .trips-group { margin-top: 1.5rem; }
