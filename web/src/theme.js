@@ -41,6 +41,7 @@ export const TripperPreset = definePreset(Aura, {
           focusColor: '{primary.900}'
         }
       },
+
       dark: {
         // Aura's dark ramp is `zinc` — a neutral grey, cooler than the warm
         // identity and inconsistent with the stone used in light. Same reasoning
@@ -69,6 +70,24 @@ export const TripperPreset = definePreset(Aura, {
           focusBackground: 'color-mix(in srgb, {primary.400}, transparent 76%)',
           color: '{primary.100}',
           focusColor: '{primary.50}'
+        }
+      }
+    }
+  },
+  components: {
+    button: {
+      colorScheme: {
+        light: {
+          // Aura paints text/outlined danger buttons in {red.500} (#ef4444),
+          // which is 3.76:1 on white and 3.58:1 on --app-bg — both under AA for
+          // the 14–16px labels these buttons carry ("Remove", "Delete person",
+          // "Archive trip"). red.600 takes them to 4.83:1 / 4.59:1.
+          //
+          // Light only, deliberately: in dark the same #ef4444 sits on a near
+          // black surface where it already passes comfortably, and darkening it
+          // there would push it the wrong way.
+          outlined: { danger: { color: '{red.600}' } },
+          text: { danger: { color: '{red.600}' } }
         }
       }
     }

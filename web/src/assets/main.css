@@ -21,8 +21,14 @@
   --app-primary-contrast: #ffffff;
   --app-accent: #d97706;
   --app-accent-soft: #fef3c7;
-  /* Text sitting ON --app-accent; inverts with the scheme for the same reason
-     --app-primary-contrast does. */
+  /* --app-accent is amber-600, which is right for borders, dots and washes but
+     only reaches 3.19:1 under white text — so anything that puts TEXT on the
+     accent uses this darkened amber-700 instead (5.02:1). Decorative uses keep
+     the lighter one; this exists so fixing the badge did not have to cool the
+     whole accent. */
+  --app-accent-strong: #b45309;
+  /* Text sitting ON --app-accent/-strong; inverts with the scheme for the same
+     reason --app-primary-contrast does. */
   --app-accent-contrast: #ffffff;
   --app-success: #16a34a;
   /* Hover wash for nav rows and list items. */
@@ -63,6 +69,9 @@
   --app-primary-contrast: #0c0a09;
   --app-accent: #fbbf24;
   --app-accent-soft: rgba(251, 191, 36, 0.16);
+  /* No darkening needed here: dark-mode accent text is near-black ON the amber,
+     which already clears AA. Kept as its own token so usages stay scheme-agnostic. */
+  --app-accent-strong: #fbbf24;
   --app-accent-contrast: #0c0a09;
   --app-success: #4ade80;
   --app-hover: #292524;

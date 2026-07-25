@@ -171,7 +171,9 @@ async function advanceStatus() {
 .trip-nav-active i:first-child { color: var(--app-primary); }
 .trip-nav-label { flex: 1; }
 .trip-nav-badge {
-  background: var(--app-accent);
+  /* -strong, not -accent: this is 11px text on the accent, so it needs the
+     darkened amber to clear AA (3.19:1 → 5.02:1). */
+  background: var(--app-accent-strong);
   color: var(--app-accent-contrast);
   border-radius: 999px;
   font-size: 0.6875rem;
