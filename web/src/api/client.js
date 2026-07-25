@@ -17,7 +17,10 @@ async function request(path, { method = 'GET', body, headers = {}, redirectOn401
   return data
 }
 export const api = {
-  get: (p) => request(p),
+  // Takes options so callers can opt out of the 401 redirect. The session probe
+  // must: it asks "am I logged in?", and a 401 is a valid ANSWER to that, not an
+  // event that should kick off a redirect.
+  get: (p, o) => request(p, o),
   post: (p, b) => request(p, { method: 'POST', body: b }),
   put: (p, b) => request(p, { method: 'PUT', body: b }),
   del: (p) => request(p, { method: 'DELETE' }),

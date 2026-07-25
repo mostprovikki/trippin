@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
+import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import { usePeopleStore } from '../stores/people.js'
 import { useNotify } from '../composables/useNotify.js'
@@ -16,15 +17,35 @@ const confirm = useConfirm()
 const notify = useNotify()
 
 const loading = ref(true)
+const loadError = ref(null)
 const formRef = ref(null)
+const personId = computed(() => route.params.id)
 
-onMounted(async () => {
-  try { await store.fetchPerson(route.params.id) } catch (e) { notify.error(e.message) } finally { loading.value = false }
-})
+async function load() {
+  loading.value = true
+  loadError.value = null
+  try {
+    await store.fetchPerson(personId.value)
+  } catch (e) {
+    // Kept on the page as well as in a toast. A toast fades, and what it used to
+    // leave behind was a bare "Person" heading over an empty body — which reads
+    // as "this person has no details" rather than "this failed to load".
+    loadError.value = e.message
+    notify.error(e.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(load)
+// This view is reused when only :id changes (a search-palette jump between two
+// people), so mounting once is not enough — without this the previous person
+// stays on screen under the new id.
+watch(personId, load)
 
 async function onSave(fields) {
   try {
-    await store.updatePerson(route.params.id, fields)
+    await store.updatePerson(personId.value, fields)
     formRef.value?.clearDraft()
     notify.success('Person saved')
   } catch (e) {
@@ -42,7 +63,7 @@ function onDelete() {
     rejectLabel: 'Cancel',
     accept: async () => {
       try {
-        await store.deletePerson(route.params.id)
+        await store.deletePerson(personId.value)
         notify.success('Person deleted')
         router.push({ name: 'people' })
       } catch (e) {
@@ -62,14 +83,32 @@ function onDelete() {
 
     <ProgressSpinner v-if="loading" style="width: 2.5rem; height: 2.5rem" />
 
+    <div v-else-if="loadError" class="person-error">
+      <Message severity="error" :closable="false">{{ loadError }}</Message>
+      <div class="person-error-actions">
+        <Button label="Try again" icon="pi pi-refresh" outlined @click="load" />
+        <Button label="Back to people" icon="pi pi-arrow-left" text @click="router.push({ name: 'people' })" />
+      </div>
+    </div>
+
     <template v-else-if="store.current">
-      <PersonForm ref="formRef" :initial="store.current" submit-label="Save" :draft-key="`person:${route.params.id}:edit`" @submit="onSave" @cancel="() => {}" />
-      <DocumentList :person-id="route.params.id" />
+      <PersonForm ref="formRef" :initial="store.current" submit-label="Save" :draft-key="`person:${personId}:edit`" @submit="onSave" @cancel="() => {}" />
+      <DocumentList :person-id="personId" />
     </template>
   </main>
 </template>
 
 <style scoped>
-.list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+/* wraps because the h1 is a user-supplied name sitting next to the Delete
+   button — a long name overflows the row at 375px otherwise. */
+.list-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
 .list-head h1 { margin: 0; }
+.person-error-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
 </style>

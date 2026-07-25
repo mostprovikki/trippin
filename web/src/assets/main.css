@@ -31,10 +31,20 @@
      reason --app-primary-contrast does. */
   --app-accent-contrast: #ffffff;
   --app-success: #16a34a;
+  /* Error text and invalid borders. Red-600 rather than the red-500 that error
+     copy had drifted to: measured 4.83:1 on white, so it clears AA as TEXT,
+     which red-500 (#ef4444) does not at 3.76:1. */
+  --app-danger: #dc2626;
   /* Hover wash for nav rows and list items. */
   --app-hover: #f5f4f1;
   /* Focus ring on the plain .field inputs, tinted from --app-primary. */
   --app-focus-ring: rgba(15, 118, 110, 0.15);
+  /* The invalid-state counterpart of --app-focus-ring, tinted from
+     --app-danger and carrying the same alpha for the same reason. */
+  --app-danger-ring: rgba(220, 38, 38, 0.15);
+  /* Modal scrim. Not a flat colour: it is the page's own darkest stone at
+     partial alpha, so it dims content rather than tinting it. */
+  --app-scrim: rgba(28, 25, 23, 0.45);
   /* The sticky nav is translucent over scrolling content, so it needs the page
      colour at partial alpha rather than a flat surface token. */
   --app-nav-bg: rgba(255, 255, 255, 0.85);
@@ -74,10 +84,17 @@
   --app-accent-strong: #fbbf24;
   --app-accent-contrast: #0c0a09;
   --app-success: #4ade80;
+  /* Red-400, not the light-mode red-600, which reads as a dark smudge on
+     #1c1917 (about 2.5:1) — the same inversion --app-primary makes. */
+  --app-danger: #f87171;
   --app-hover: #292524;
   /* Carries more alpha than light: a 15% wash disappears against #0c0a09. */
   --app-focus-ring: rgba(45, 212, 191, 0.28);
+  --app-danger-ring: rgba(248, 113, 113, 0.28);
   --app-nav-bg: rgba(12, 10, 9, 0.85);
+  /* A stone-tinted scrim is invisible over a near-black page, so dark leans on
+     plain black at higher alpha to separate the dialog from what's behind it. */
+  --app-scrim: rgba(0, 0, 0, 0.6);
   /* Shadows read as depth against light, not dark, so they lean on darkness
      rather than opacity here. */
   --app-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -105,6 +122,13 @@ a { color: var(--app-primary); }
   max-width: 64rem;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 3rem;
+}
+
+/* TripLayout already steps its own padding down to 1rem under 767px. Without a
+   matching step here the content column jumps sideways by 4px the moment you
+   enter or leave a trip — the same page, two different gutters. */
+@media (max-width: 767px) {
+  .page { padding: 1rem 1rem 3rem; }
 }
 
 .card {
@@ -182,6 +206,16 @@ input[type='file']::file-selector-button:hover {
   .table thead { display: none; }
   .table tr { margin-bottom: 0.75rem; border: 1px solid var(--app-border); border-radius: var(--app-radius-sm); }
   .table td { border-bottom: none; }
+  /* Dropping thead strands every cell with no idea which column it came from —
+     a stack of bare values. Each cell carries its own header instead, from a
+     data-label the markup supplies; cells without one are unlabelled by
+     choice (action buttons) and get nothing rather than an empty prefix. */
+  .table td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--app-text-muted);
+    margin-right: 0.5rem;
+  }
 }
 
 /* Keep toasts clear of the sticky AppNav */

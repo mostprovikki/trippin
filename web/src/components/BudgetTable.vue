@@ -27,7 +27,10 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
 </script>
 
 <template>
-  <DataTable :value="modelValue" data-key="category">
+  <!-- scrollable is what makes PrimeVue v4 wrap the table in an overflow:auto
+       wrapper. Without it, four columns of inputs simply exceed the viewport at
+       375px and the page scrolls sideways instead of the table. -->
+  <DataTable :value="modelValue" data-key="category" scrollable>
     <Column header="Category">
       <template #body="{ data }">{{ label(data.category) }}</template>
       <template #footer><strong>Total</strong></template>

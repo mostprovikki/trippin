@@ -114,7 +114,11 @@ function discardDayDraft() {
 
 <style scoped>
 .day-items { list-style: none; padding: 0; margin: 0; }
-.day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--app-border); }
+/* Icon, time, title, location, cost and four action buttons on one line cannot
+   fit 375px; unwrapped they widen the page itself instead of the row. Wrapping
+   lets .day-item-actions drop to its own line, which is where its margin-left:
+   auto was already trying to put it. */
+.day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--app-border); flex-wrap: wrap; }
 .day-item-actions { margin-left: auto; display: flex; gap: 0.25rem; }
 .day-ai { margin-top: 1rem; }
 .day-draft { background: var(--app-surface-alt); }

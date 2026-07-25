@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
@@ -12,7 +12,7 @@ import EmptyState from '../../components/EmptyState.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
-const tripId = route.params.id
+const tripId = computed(() => route.params.id)
 const store = useChecklistsStore()
 
 const KIND_OPTIONS = [
@@ -25,24 +25,39 @@ const newKind = ref('packing')
 const newName = ref('')
 const selectedTemplate = ref('')
 
-onMounted(async () => {
+async function load() {
+  // The lists, the error banner and the two forms all belong to the trip we
+  // came from; a checklist created from a leftover form would land elsewhere.
+  store.error = null
+  store.checklists = []
+  participants.value = []
+  newKind.value = 'packing'
+  newName.value = ''
+  selectedTemplate.value = ''
   try {
-    const trip = (await api.get(`/api/trips/${tripId}`)).trip
+    const trip = (await api.get(`/api/trips/${tripId.value}`)).trip
     participants.value = trip?.participants || []
-  } catch { participants.value = [] }
-  await store.fetchForTrip(tripId)
-  await store.fetchTemplates()
-})
+  } catch { /* participants stay empty; assignee pickers degrade gracefully */ }
+  // Templates aren't trip-scoped, so their fetch must not hang off the
+  // checklist fetch succeeding — a failure there would leave the template
+  // dropdown empty for as long as the view stays open.
+  await Promise.allSettled([store.fetchForTrip(tripId.value), store.fetchTemplates()])
+}
+
+onMounted(load)
+// TripLayout is reused when only :id changes, so this view is never remounted
+// between trips and has to refetch for the new :id itself.
+watch(tripId, load)
 
 async function createChecklist() {
   if (!newName.value.trim()) return
-  await store.createChecklist({ kind: newKind.value, name: newName.value, trip_id: tripId })
+  await store.createChecklist({ kind: newKind.value, name: newName.value, trip_id: tripId.value })
   newName.value = ''
 }
 
 async function addFromTemplate() {
   if (!selectedTemplate.value) return
-  await store.fromTemplate(tripId, selectedTemplate.value)
+  await store.fromTemplate(tripId.value, selectedTemplate.value)
   selectedTemplate.value = ''
 }
 </script>

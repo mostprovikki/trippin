@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, shallowRef, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
@@ -13,41 +13,68 @@ import DayCard from '../../components/DayCard.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
-const tripId = route.params.id
+const tripId = computed(() => route.params.id)
 const store = useItineraryStore()
 const auth = useAuthStore()
 const notify = useNotify()
 
 const loading = ref(true)
-const aiDraftStore = useDraft(`trip:${tripId}:itinerary-ai`, () => ({ ai: null }))
+
+// useDraft resolves its storage key once, so the stored draft is rebuilt
+// whenever the trip changes — otherwise trip B's AI draft is persisted under
+// trip A's key.
+let draftTripId = tripId.value
+const aiDraftStore = shallowRef(useDraft(`trip:${draftTripId}:itinerary-ai`, () => ({ ai: null })))
+
+function rekeyAiDraft() {
+  if (draftTripId === tripId.value) return
+  aiDraftStore.value.teardown()
+  draftTripId = tripId.value
+  aiDraftStore.value = useDraft(`trip:${draftTripId}:itinerary-ai`, () => ({ ai: null }))
+}
+// A draft rebuilt outside setup doesn't get useDraft's own unmount hook.
+onBeforeUnmount(() => aiDraftStore.value.teardown())
 
 // Mirror the Pinia draft into persistent storage both ways.
-watch(() => store.draft, (d) => { aiDraftStore.draft.ai = d ?? null })
+watch(() => store.draft, (d) => { aiDraftStore.value.draft.ai = d ?? null })
 
-onMounted(async () => {
+async function load() {
+  loading.value = true
+  rekeyAiDraft()
+  // Read the stored draft before resetting: clearing store.draft feeds a null
+  // back through the mirror watcher above.
+  const stored = aiDraftStore.value.draft.ai
+  // Days, per-day drafts and the error banner all belong to the trip we came
+  // from; an unapplied draft applied here would write to the wrong trip.
+  store.$reset()
   try {
-    await store.fetchItinerary(tripId)
-    if (aiDraftStore.draft.ai && !store.draft) store.draft = aiDraftStore.draft.ai
+    await store.fetchItinerary(tripId.value)
   } catch (e) {
     notify.error(e.message)
   } finally {
+    if (stored && !store.draft) store.draft = stored
     loading.value = false
   }
-})
+}
+
+onMounted(load)
+// TripLayout is reused when only :id changes, so this view is never remounted
+// between trips and has to refetch for the new :id itself.
+watch(tripId, load)
 
 async function initDays() {
-  try { await store.init(tripId) } catch (e) { notify.error(e.message) }
+  try { await store.init(tripId.value) } catch (e) { notify.error(e.message) }
 }
 
 async function draftWholeTrip() {
-  try { await store.aiDraft(tripId) } catch (e) { notify.error(e.message) }
+  try { await store.aiDraft(tripId.value) } catch (e) { notify.error(e.message) }
 }
 
 async function applyWholeDraft() {
   try {
-    await store.applyDraft(tripId)
-    aiDraftStore.draft.ai = null
-    aiDraftStore.clear()
+    await store.applyDraft(tripId.value)
+    aiDraftStore.value.draft.ai = null
+    aiDraftStore.value.clear()
     notify.success('AI draft applied')
   } catch (e) {
     notify.error(e.message)
@@ -56,8 +83,8 @@ async function applyWholeDraft() {
 
 function discardWholeDraft() {
   store.draft = null
-  aiDraftStore.draft.ai = null
-  aiDraftStore.clear()
+  aiDraftStore.value.draft.ai = null
+  aiDraftStore.value.clear()
 }
 </script>
 

@@ -165,7 +165,10 @@ function discardDraft() {
 
 <style scoped>
 .checklist-items { list-style: none; padding: 0; }
-.checklist-items li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+/* Wraps like .checklist-add below it: a task row is checkbox + label + assignee
+   Select + 10rem date + Delete, which is far past 375px, and without wrap the
+   overflow pushes the whole page into sideways scroll rather than the row. */
+.checklist-items li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; flex-wrap: wrap; }
 .checklist-add { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .checklist-footer { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
 /* DateField is fluid by default; in these flex rows it must keep an intrinsic

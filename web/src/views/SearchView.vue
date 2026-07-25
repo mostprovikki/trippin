@@ -122,7 +122,7 @@ watch(() => route.query.q, (q) => {
 }
 .search-box-input::placeholder { color: var(--app-text-subtle); }
 .search-note { margin: 0 0 1rem; color: var(--app-text-muted); font-size: 0.875rem; }
-.search-error { color: var(--p-red-500, #ef4444); }
+.search-error { color: var(--app-danger); }
 .search-group h2 { margin-bottom: 0.5rem; }
 .search-list { list-style: none; margin: 0; padding: 0; }
 .search-item {
@@ -139,10 +139,19 @@ watch(() => route.query.q, (q) => {
 .search-item-flat:hover { background: transparent; }
 .search-item-icon { color: var(--app-text-muted); width: 1rem; text-align: center; }
 .search-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.search-item-title { font-weight: 500; }
+/* text-overflow only fires on a line that cannot wrap, so without nowrap these
+   grew to two and three lines instead of truncating and the rows came out
+   ragged. The palette's .sp-row-title/.sp-row-sub already carry all three. */
+.search-item-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .search-item-sub {
   font-size: 0.8125rem;
   color: var(--app-text-muted);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }

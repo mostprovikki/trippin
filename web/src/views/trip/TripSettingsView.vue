@@ -87,16 +87,27 @@ function syncDraftsFromStore() {
   actualsDraft.value = categories.map((category) => ({ category, amount: byCategory[category] ?? 0 }))
 }
 
-onMounted(async () => {
+async function loadArchive() {
+  archiveLoading.value = true
   try {
     await archiveStore.fetchArchive(tripId.value)
     syncDraftsFromStore()
   } catch (e) {
     if (e.code !== 'NOT_ARCHIVED') notify.error(e.message)
+    // NOT_ARCHIVED is the normal case for a live trip and stays quiet, but the
+    // drafts still have to be re-synced: fetchArchive() clears the store first,
+    // so this is what pulls the emptied state through to the form.
+    syncDraftsFromStore()
   } finally {
     archiveLoading.value = false
   }
-})
+}
+
+onMounted(loadArchive)
+// Settings is reused when only :id changes, and the archive store is a
+// singleton — without refetching, trip B's Settings keeps showing trip A's
+// archive and hides B's own Archive action.
+watch(tripId, loadArchive)
 
 function doArchive() {
   confirm.require({

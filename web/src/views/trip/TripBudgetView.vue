@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, shallowRef, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
@@ -18,7 +18,7 @@ import BudgetTable from '../../components/BudgetTable.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
-const tripId = route.params.id
+const tripId = computed(() => route.params.id)
 const auth = useAuthStore()
 const store = useBudgetStore()
 const confirm = useConfirm()
@@ -28,24 +28,56 @@ const loading = ref(true)
 const participants = ref([])
 const newOverride = reactive({ person_id: '', amount: 0, note: '' })
 
-const linesDraft = useDraft(`trip:${tripId}:budget-lines`, () => ({ lines: [] }))
-const overridesDraft = useDraft(`trip:${tripId}:budget-overrides`, () => ({ overrides: [] }))
+// useDraft resolves its storage key once, so the drafts are rebuilt whenever the
+// trip changes — otherwise trip B's edits get persisted under trip A's key.
+let draftTripId = tripId.value
+const linesDraft = shallowRef(useDraft(`trip:${draftTripId}:budget-lines`, () => ({ lines: [] })))
+const overridesDraft = shallowRef(useDraft(`trip:${draftTripId}:budget-overrides`, () => ({ overrides: [] })))
 
-watch(() => store.lines, (lines) => { linesDraft.load({ lines: lines.map((l) => ({ ...l })) }) }, { immediate: true })
-watch(() => store.overrides, (overrides) => { overridesDraft.load({ overrides: overrides.map((o) => ({ ...o })) }) }, { immediate: true })
+function rekeyDrafts() {
+  if (draftTripId === tripId.value) return
+  linesDraft.value.teardown()
+  overridesDraft.value.teardown()
+  draftTripId = tripId.value
+  linesDraft.value = useDraft(`trip:${draftTripId}:budget-lines`, () => ({ lines: [] }))
+  overridesDraft.value = useDraft(`trip:${draftTripId}:budget-overrides`, () => ({ overrides: [] }))
+}
+// Drafts rebuilt outside setup don't get useDraft's own unmount hook.
+onBeforeUnmount(() => { linesDraft.value.teardown(); overridesDraft.value.teardown() })
 
-onMounted(async () => {
+watch(() => store.lines, (lines) => { linesDraft.value.load({ lines: lines.map((l) => ({ ...l })) }) }, { immediate: true })
+watch(() => store.overrides, (overrides) => { overridesDraft.value.load({ overrides: overrides.map((o) => ({ ...o })) }) }, { immediate: true })
+
+function resetNewOverride() {
+  newOverride.person_id = ''
+  newOverride.amount = 0
+  newOverride.note = ''
+}
+
+async function load() {
+  loading.value = true
+  // Nothing here survives a trip change: the half-typed override row, the
+  // error banner and the untagged AI draft all belong to the trip we came from,
+  // and applying that draft would write its numbers against the new trip.
+  resetNewOverride()
+  rekeyDrafts()
+  store.$reset()
   try {
-    const trip = (await api.get(`/api/trips/${tripId}`)).trip
+    const trip = (await api.get(`/api/trips/${tripId.value}`)).trip
     participants.value = trip?.participants || []
   } catch { participants.value = [] }
-  try { await store.fetchBudget(tripId) } catch (e) { notify.error(e.message) } finally { loading.value = false }
-})
+  try { await store.fetchBudget(tripId.value) } catch (e) { notify.error(e.message) } finally { loading.value = false }
+}
+
+onMounted(load)
+// TripLayout is reused when only :id changes, so this view is never remounted
+// between trips and has to refetch for the new :id itself.
+watch(tripId, load)
 
 async function saveLines() {
   try {
-    await store.saveLines(tripId, linesDraft.draft.lines)
-    linesDraft.clear()
+    await store.saveLines(tripId.value, linesDraft.value.draft.lines)
+    linesDraft.value.clear()
     notify.success('Budget saved')
   } catch (e) { notify.error(e.message) }
 }
@@ -53,36 +85,34 @@ async function saveLines() {
 function addOverrideRow() {
   if (!newOverride.person_id) return
   const person = participants.value.find((p) => p.id === newOverride.person_id)
-  overridesDraft.draft.overrides.push({
+  overridesDraft.value.draft.overrides.push({
     person_id: newOverride.person_id,
     person_name: person?.name || '',
     amount: Number(newOverride.amount) || 0,
     note: newOverride.note
   })
-  newOverride.person_id = ''
-  newOverride.amount = 0
-  newOverride.note = ''
+  resetNewOverride()
 }
 
 function removeOverrideRow(personId) {
-  overridesDraft.draft.overrides = overridesDraft.draft.overrides.filter((o) => o.person_id !== personId)
+  overridesDraft.value.draft.overrides = overridesDraft.value.draft.overrides.filter((o) => o.person_id !== personId)
 }
 
 async function saveOverrides() {
   try {
-    const overrides = overridesDraft.draft.overrides.map((o) => ({ person_id: o.person_id, amount: Number(o.amount) || 0, note: o.note }))
-    await store.saveOverrides(tripId, overrides)
-    overridesDraft.clear()
+    const overrides = overridesDraft.value.draft.overrides.map((o) => ({ person_id: o.person_id, amount: Number(o.amount) || 0, note: o.note }))
+    await store.saveOverrides(tripId.value, overrides)
+    overridesDraft.value.clear()
     notify.success('Overrides saved')
   } catch (e) { notify.error(e.message) }
 }
 
 async function runAiDraft() {
-  try { await store.aiDraft(tripId) } catch (e) { notify.error(e.message) }
+  try { await store.aiDraft(tripId.value) } catch (e) { notify.error(e.message) }
 }
 
 async function applyDraft() {
-  try { await store.applyDraft(tripId); notify.success('AI draft applied') } catch (e) { notify.error(e.message) }
+  try { await store.applyDraft(tripId.value); notify.success('AI draft applied') } catch (e) { notify.error(e.message) }
 }
 
 function discardDraft() {
@@ -90,9 +120,9 @@ function discardDraft() {
 }
 
 onBeforeRouteLeave(async () => {
-  if (!linesDraft.isDirty.value && !overridesDraft.isDirty.value) return true
+  if (!linesDraft.value.isDirty.value && !overridesDraft.value.isDirty.value) return true
   const ok = await confirmDiscard(confirm)
-  if (ok) { linesDraft.clear(); overridesDraft.clear() }
+  if (ok) { linesDraft.value.clear(); overridesDraft.value.clear() }
   return ok
 })
 </script>

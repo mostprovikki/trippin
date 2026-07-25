@@ -77,7 +77,6 @@ async function onLogout() {
         severity="secondary"
         text
         rounded
-        size="small"
         class="app-theme-toggle"
         :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'"
         :aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
@@ -156,13 +155,28 @@ async function onLogout() {
 }
 .app-nav-link:hover { background: var(--app-hover); }
 .app-nav-link-active { color: var(--app-primary); font-weight: 600; }
+/* Icon-only and in the nav on every screen, so it has to clear the 44px minimum
+   touch target on its own — the icon gives it no text to grow on, and at
+   size="small" it measured 32x32. 2.75rem is 44px at the default root size. */
+.app-theme-toggle {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
 
 @media (max-width: 640px) {
   .app-crumbs { display: none; }
   /* The label and the shortcut hint are the first things to go on a phone —
      there is no physical keyboard to press ⌘K on anyway. */
   .app-search-label, .app-search-kbd { display: none; }
-  .app-search-trigger { padding: 0.3125rem 0.5rem; }
+  /* Losing the label leaves a bare icon that shrank to about 34x30 — under the
+     44px touch minimum on precisely the device where it is only ever tapped.
+     The min-* pair holds the target open and centring keeps the icon in it. */
+  .app-search-trigger {
+    padding: 0.3125rem 0.5rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    justify-content: center;
+  }
   .app-nav { gap: 0.5rem; }
   .app-nav-right { margin-left: auto; }
 }

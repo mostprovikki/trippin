@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
@@ -10,10 +10,22 @@ import { useReadinessStore } from '../../stores/readiness.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
-const tripId = route.params.id
+const tripId = computed(() => route.params.id)
 const store = useReadinessStore()
 
-onMounted(() => store.fetch(tripId))
+async function load() {
+  store.error = null
+  // The response carries no trip id, so anything already loaded for another
+  // trip has to go before the fetch — but data for this trip is left alone so
+  // the sidebar badges reading the same store don't blink on every visit.
+  if (store.lastTripId !== tripId.value) store.data = null
+  try { await store.fetch(tripId.value) } catch { /* store.error drives the banner */ }
+}
+
+onMounted(load)
+// TripLayout is reused when only :id changes, so this view is never remounted
+// between trips and has to refetch for the new :id itself.
+watch(tripId, load)
 
 const decisionChips = computed(() => {
   const d = store.data?.decisions

@@ -146,7 +146,7 @@ function onMaskInput(next) {
 }
 .date-field-error {
   display: block;
-  color: var(--p-red-600, #dc2626);
+  color: var(--app-danger);
   font-size: 0.8125rem;
   line-height: 1.25rem;
 }
@@ -154,8 +154,8 @@ function onMaskInput(next) {
    PrimeVue's invalid border exactly while someone is fixing the date — the one
    moment the error must stay visible. Keep red while focused and invalid. */
 input.p-invalid:focus {
-  border-color: var(--p-red-400, #f87171);
-  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2);
+  border-color: var(--app-danger);
+  box-shadow: 0 0 0 3px var(--app-danger-ring);
 }
 </style>
 

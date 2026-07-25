@@ -9,7 +9,15 @@ export const usePeopleStore = defineStore('people', {
         this.people = (await api.get('/api/people')).people
       } catch (e) { this.error = e.message; throw e }
     },
+    // `current` is cleared BEFORE the request, not just on success: this store
+    // outlives the route, so a failed load used to leave the previously viewed
+    // person rendered under the new id — and PersonDetailView's save then PUT
+    // that person's field values to the id in the URL, writing one person's
+    // details over another's.
     async fetchPerson(id) {
+      this.current = null
+      this.documents = []
+      this.error = null
       try {
         this.current = (await api.get(`/api/people/${id}`)).person
         await this.fetchDocuments(id)

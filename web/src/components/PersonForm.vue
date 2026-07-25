@@ -94,6 +94,14 @@ function submit() {
 }
 
 function onCancel() {
+  // Restore BEFORE clearing, and assign the draft directly rather than going
+  // through draftApi.load(): load() deliberately refuses to overwrite a dirty
+  // draft (it only re-baselines), which is right when `initial` changes under a
+  // half-typed form and wrong here. Without this, Cancel dropped the stored
+  // draft and re-baselined isDirty to the EDITED values — so the fields kept the
+  // edits, the form reported itself clean, and the unsaved-changes guard no
+  // longer fired, silently discarding the changes on the next navigation.
+  Object.assign(form, mapped(props.initial))
   clearDraft()
   emit('cancel')
 }

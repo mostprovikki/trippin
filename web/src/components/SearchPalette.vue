@@ -203,7 +203,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   position: fixed;
   inset: 0;
   z-index: 1100;
-  background: rgba(12, 10, 9, 0.45);
+  background: var(--app-scrim);
   backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
@@ -233,6 +233,13 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   gap: 0.625rem;
   padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--app-border);
+}
+/* .sp-input drops its own border and outline so the row reads as one field, so
+   the row has to carry the focus indicator or there is none at all — and this
+   is the palette's only input. Mirrors SearchView's .search-box:focus-within. */
+.sp-input-row:focus-within {
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 3px var(--app-focus-ring);
 }
 .sp-input-icon { color: var(--app-text-muted); }
 .sp-input {
@@ -264,7 +271,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   font-size: 0.875rem;
   text-align: center;
 }
-.sp-error { color: var(--p-red-500, #ef4444); }
+.sp-error { color: var(--app-danger); }
 .sp-group {
   margin: 0.5rem 0 0.25rem;
   padding: 0 0.625rem;
