@@ -4,6 +4,8 @@ import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import DateField from './DateField.vue'
+import { isExpiredIso } from '../utils/dates.js'
 import { useParticipantStore } from '../stores/participant.js'
 import { useNotify } from '../composables/useNotify.js'
 
@@ -17,6 +19,7 @@ const docType = ref('passport')
 const docNumber = ref('')
 const expiryDate = ref('')
 const file = ref(null)
+const fileInput = ref(null)
 const uploading = ref(false)
 
 function onFileChange(e) {
@@ -36,6 +39,10 @@ async function upload() {
     docNumber.value = ''
     expiryDate.value = ''
     file.value = null
+    // Clear the DOM input too: it otherwise keeps showing the uploaded
+    // filename, and re-picking that same file fires no change event, so the
+    // next Upload silently does nothing.
+    if (fileInput.value) fileInput.value.value = ''
   } catch {
     /* store.error surfaced by parent view */
   } finally {
@@ -58,7 +65,9 @@ function remove(doc) {
 }
 
 function isExpired(doc) {
-  return !!doc.expiry_date && new Date(doc.expiry_date) < new Date()
+  // Was `new Date(doc.expiry_date)` — a UTC-midnight parse, so a document
+  // expiring today showed as expired for anyone west of Greenwich.
+  return isExpiredIso(doc.expiry_date)
 }
 
 async function download(doc) {
@@ -102,7 +111,7 @@ async function download(doc) {
     <form @submit.prevent="upload">
       <div class="field">
         <label for="doc-file">File</label>
-        <input id="doc-file" type="file" @change="onFileChange" required />
+        <input id="doc-file" ref="fileInput" type="file" @change="onFileChange" required />
       </div>
       <div class="field">
         <label for="doc-type">Type</label>
@@ -114,9 +123,22 @@ async function download(doc) {
       </div>
       <div class="field">
         <label for="doc-expiry">Expiry (optional)</label>
-        <input id="doc-expiry" type="date" v-model="expiryDate" />
+        <!-- typeable: you read this off the passport in your hand, so typing
+             beats 6 clicks through a calendar to 2035. -->
+        <DateField v-model="expiryDate" input-id="doc-expiry" typeable />
       </div>
       <Button type="submit" :label="uploading ? 'Uploading…' : 'Upload'" :disabled="uploading" />
     </form>
   </section>
 </template>
+
+<style scoped>
+/* This page is used one-handed on a phone, so every control here gets a 44px
+   tap target — not just the date field. (The global `.field input` rule in
+   main.css re-pads inputs inside `.field` down to ~36px; a lone 44px date
+   field beside 36px siblings reads as a mistake rather than as care.) */
+.field :deep(input),
+.field :deep(.p-select) {
+  min-height: 2.75rem;
+}
+</style>

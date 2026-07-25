@@ -5,6 +5,8 @@ import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
+import DateField from './DateField.vue'
+import { isExpiredIso } from '../utils/dates.js'
 import { usePeopleStore } from '../stores/people.js'
 import { useNotify } from '../composables/useNotify.js'
 
@@ -19,6 +21,7 @@ const docType = ref('passport')
 const docNumber = ref('')
 const expiryDate = ref('')
 const file = ref(null)
+const fileInput = ref(null)
 const uploading = ref(false)
 
 function onFileChange(e) {
@@ -38,6 +41,14 @@ async function upload() {
     docNumber.value = ''
     expiryDate.value = ''
     file.value = null
+    // Clear the DOM input too: it otherwise keeps showing the uploaded
+    // filename, and re-picking that same file fires no change event, so the
+    // next Upload silently does nothing.
+    if (fileInput.value) fileInput.value.value = ''
+  } catch (e) {
+    // Without this the rejection escaped as an unhandled pageerror and the
+    // upload just appeared to do nothing. Matches remove() below.
+    notify.error(e.message)
   } finally {
     uploading.value = false
   }
@@ -52,7 +63,9 @@ function remove(doc) {
 }
 
 function isExpired(doc) {
-  return !!doc.expiry_date && new Date(doc.expiry_date) < new Date()
+  // Was `new Date(doc.expiry_date)` — a UTC-midnight parse, so a document
+  // expiring today showed as expired for anyone west of Greenwich.
+  return isExpiredIso(doc.expiry_date)
 }
 </script>
 
@@ -80,7 +93,7 @@ function isExpired(doc) {
     <form @submit.prevent="upload">
       <div class="field">
         <label for="doc-file">File</label>
-        <input id="doc-file" type="file" @change="onFileChange" required />
+        <input id="doc-file" ref="fileInput" type="file" @change="onFileChange" required />
       </div>
       <div class="field">
         <label for="doc-type">Type</label>
@@ -92,7 +105,9 @@ function isExpired(doc) {
       </div>
       <div class="field">
         <label for="doc-expiry">Expiry (optional)</label>
-        <InputText id="doc-expiry" type="date" v-model="expiryDate" fluid />
+        <!-- typeable: you read this off the passport in your hand, so typing
+             beats 6 clicks through a calendar to 2035. -->
+        <DateField v-model="expiryDate" input-id="doc-expiry" typeable />
       </div>
       <Button type="submit" :loading="uploading" :label="uploading ? 'Uploading…' : 'Upload'" />
     </form>
