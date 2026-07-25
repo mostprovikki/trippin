@@ -2,9 +2,12 @@
 // date surfaces, EXERCISES the picker (open panel, click a day, type a date), and
 // proves the ISO value round-trips through a save + reload with no day shift.
 //
-// Requires: dev servers already up. Web binds IPv6-only on 5174 and a corporate
-// http_proxy hijacks `localhost`, so the base URL must be http://[::1]:5174 and
-// Chromium is launched with --no-proxy-server.
+// Requires: dev servers already up. Web binds IPv6-only and a corporate
+// http_proxy hijacks `localhost`, so the base URL must be http://[::1]:<port>
+// and Chromium is launched with --no-proxy-server. The port is 5173 (vite's
+// default, and what every other gate uses) — this gate used to default to 5174,
+// which on this machine is a *different project's* dev server, so it timed out
+// against an app that has no login form rather than reporting a real failure.
 // Run: node e2e/qa-datepicker.mjs
 import { mkdirSync, existsSync, readdirSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
@@ -32,7 +35,7 @@ function findExecutable() {
   throw new Error('No chromium headless shell in the playwright cache and no system Chrome found')
 }
 
-const BASE = process.env.BASE_URL || 'http://[::1]:5174'
+const BASE = process.env.BASE_URL || 'http://[::1]:5173'
 // A document row needs a file, so expiry persistence needs something to upload.
 const UPLOAD_FILE = path.join(shots, 'qa-upload.txt')
 if (!existsSync(UPLOAD_FILE)) writeFileSync(UPLOAD_FILE, 'QA document placeholder for expiry-date persistence\n')

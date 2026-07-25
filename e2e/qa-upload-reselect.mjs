@@ -5,9 +5,12 @@
 // the participant ParticipantDocs) and asserts a FAILED upload keeps the
 // selection, since the reset lives in the success path only.
 //
-// Requires: dev servers already up. Web binds IPv6-only on 5174 and a corporate
-// http_proxy hijacks `localhost`, so the base URL must be http://[::1]:5174 and
-// Chromium is launched with --no-proxy-server.
+// Requires: dev servers already up. Web binds IPv6-only and a corporate
+// http_proxy hijacks `localhost`, so the base URL must be http://[::1]:<port>
+// and Chromium is launched with --no-proxy-server. The port is 5173 (vite's
+// default, and what every other gate uses) — this gate used to default to 5174,
+// which on this machine is a *different project's* dev server, so it timed out
+// against an app that has no login form rather than reporting a real failure.
 // Run: node e2e/qa-upload-reselect.mjs
 import { mkdirSync, existsSync, readdirSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
@@ -34,7 +37,7 @@ function findExecutable() {
   throw new Error('No chromium headless shell in the playwright cache and no system Chrome found')
 }
 
-const BASE = process.env.BASE_URL || 'http://[::1]:5174'
+const BASE = process.env.BASE_URL || 'http://[::1]:5173'
 const FILE_A = path.join(shots, 'qa-reselect-a.txt')
 const FILE_B = path.join(shots, 'qa-reselect-b.txt')
 if (!existsSync(FILE_A)) writeFileSync(FILE_A, 'reselect fixture A\n')
