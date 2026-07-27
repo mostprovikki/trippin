@@ -32,7 +32,10 @@ function findExecutable() {
   throw new Error('No chromium headless shell in the playwright cache and no system Chrome found')
 }
 
-const BASE = process.env.BASE_URL || 'http://localhost:43100'
+// [::1] rather than localhost: this machine proxies localhost via http_proxy, and no_proxy
+// lists 127.0.0.1/::1 but not the name, so a `localhost` default returns a proxy 503 instead
+// of a connection error when the dev server is down. Matches the other 12 gates.
+const BASE = process.env.BASE_URL || 'http://[::1]:43100'
 const consoleErrors = []
 let failures = 0
 
