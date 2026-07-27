@@ -1,5 +1,8 @@
 # Nav + UX Overhaul Implementation Plan
 
+> **STATUS (audited 2026-07-28): Tasks 1–14 all implemented.** Task 8's router cutover completed cleanly (TripDetailView.vue, TripArchiveView.vue, TripTabs.vue deleted as prescribed); Task 12's legacy CSS purge done (zero `class="btn"` remains). Baseline at audit: web 270/270, server 114/114 tests green.
+> **The checkboxes below are stale — unchecked ≠ undone.** They were never ticked during implementation. Do not read them as a progress signal; treat this doc as historical task spec, not a live tracker.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Rebuild the trip UI around a persistent nested-route shell (sidebar + breadcrumb), a dashboard Overview, and a warm-travel theme, per `docs/superpowers/specs/2026-07-19-nav-ux-overhaul-design.md`.

@@ -1,5 +1,8 @@
 # Tripper Usability & PrimeVue Implementation Plan
 
+> **STATUS (audited 2026-07-28): U1–U14 all done, except U8 and U13 which are SUPERSEDED, not incomplete** — see notes at their section headings below for replacement files. Baseline at audit: web 270/270, server 114/114 tests green.
+> **The checkboxes below are stale — unchecked ≠ undone.** They were never ticked during implementation. Do not read them as a progress signal; treat this doc as historical task spec, not a live tracker.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
 > **MULTI-SESSION:** Multiple agents from *different Claude sessions* may execute this plan concurrently. You MUST follow §Coordination Protocol below and the repo's `AGENTS.md` contract before touching any file.
@@ -1428,6 +1431,8 @@ git commit -m "feat(U7): person create/edit drafts, new=1/return round trip, con
 
 ### Task U8: TripDetailView — basics draft, wayfinding, confirm, copy feedback
 
+> **SUPERSEDED (audited 2026-07-28):** TripDetailView.vue was deleted in the nested-trip-shell refactor. This behaviour now lives in `web/src/views/trip/TripSettingsView.vue` (basics draft, confirm, copy feedback) and `web/src/views/trip/TripOverviewView.vue` (wayfinding).
+
 **Files:**
 - Modify: `web/src/views/TripDetailView.vue`
 - Create: `web/src/views/TripDetailView.test.js`
@@ -2333,6 +2338,8 @@ git commit -m "feat(U12): trips list loading/empty states + polish"
 **Gate:** all wave-2 claims (U6–U12) `status: done` + commits present.
 
 ### Task U13: AppNav → PrimeVue Menubar
+
+> **SUPERSEDED (audited 2026-07-28):** the Menubar-based AppNav was later replaced by a custom breadcrumb, `web/src/components/AppNav.vue`. Zero `Menubar` usage remains in `web/src`.
 
 **Files:**
 - Modify: `web/src/components/AppNav.vue`

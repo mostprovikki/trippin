@@ -1,5 +1,8 @@
 # Trip Planner Implementation Plan — Part 1 of 3 (Overview + Foundation + Wave 1)
 
+> **STATUS (audited 2026-07-28): Tasks 1–6 all implemented.** Server routes under `server/src/routes/` and `web/src/views/` map 1:1 onto the task split. Baseline at audit: web 270/270, server 114/114 tests green.
+> **The checkboxes below are stale — unchecked ≠ undone.** They were never ticked during implementation. Do not read them as a progress signal; treat this doc as historical task spec, not a live tracker.
+
 > **This plan spans three files** (same directory):
 > - **Part 1 (this file):** overview, global constraints, parallel execution guide, Tasks 1–6
 > - **Part 2** `2026-07-18-trip-planner-part2-domain-apis.md`: Tasks 7–12 (Wave-2 server APIs)
