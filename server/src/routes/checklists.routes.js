@@ -79,7 +79,7 @@ export default async function routes(app) {
           kind: { type: 'string', enum: ['packing', 'tasks'] },
           name: { type: 'string', minLength: 1 },
           trip_id: { type: ['string', 'null'] },
-          is_template: { type: ['boolean', 'integer'] },
+          is_template: { type: 'boolean' },
           trip_type_tags: { type: 'array', items: { type: 'string' } },
         },
       },
