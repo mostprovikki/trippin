@@ -75,3 +75,16 @@ _Add a brief overview of your project architecture_
 ## Conventions & Patterns
 
 _Add your project-specific conventions here_
+
+## Local overrides to the generated Beads block
+
+The block above is rewritten by `bd` (content-hashed), so corrections live here, outside it.
+Two of its rules do not apply on this machine:
+
+- **`bd remember` does NOT replace memory files.** Cross-session memory lives in
+  `~/.claude/projects/<slug>/memory/`. Keep using it.
+- **`bd` does not retire this repo's narrative docs** (`docs/plan-part*.md`,
+  `docs/superpowers/plans/*`, `.agent-coordination/NOTES.md`) — they hold reasoning a bead
+  title cannot.
+
+Finished work is recorded in git history and `NOTES.md`, not as closed beads.

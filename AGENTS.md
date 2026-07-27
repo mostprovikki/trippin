@@ -226,3 +226,19 @@ bd prime                # Refresh Beads context
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
 <!-- END BEADS CODEX SETUP -->
+
+## Local overrides to the generated Beads blocks
+
+The `BEADS INTEGRATION` / `BEADS CODEX SETUP` blocks above are rewritten by `bd` (they carry a
+content hash), so corrections live here, outside them. Two of their rules do not apply on this
+machine:
+
+- **`bd remember` does NOT replace memory files.** Cross-session, cross-repo memory lives in
+  `~/.claude/projects/<slug>/memory/` and is not beads' job. Keep using it.
+- **`bd` does not retire this repo's narrative docs.** `docs/plan-part*.md`,
+  `docs/superpowers/plans/*`, and `.agent-coordination/NOTES.md` hold the *reasoning* a bead
+  title cannot. Beads tracks what is actionable; those docs record why. Don't delete them in
+  favour of beads.
+
+Finished work is recorded in git history and `NOTES.md`, not as closed beads — beads holds open
+work only, so `bd ready` stays signal.
