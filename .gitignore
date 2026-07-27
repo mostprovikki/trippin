@@ -5,6 +5,9 @@ dist/
 *.log
 e2e/shots/
 
+# macOS Finder metadata — regenerated constantly, never wanted in git
+.DS_Store
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
