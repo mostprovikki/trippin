@@ -5,6 +5,11 @@ dist/
 *.log
 e2e/shots/
 
+# Design-baseline captures (e2e/capture-screenshots.mjs): 25 MB of PNGs that are
+# regenerable output, so they stay out of git — but baseline/*/README.md records the
+# capture conditions and IS tracked, since a baseline you can't reproduce is worthless.
+e2e/baseline/**/*.png
+
 # macOS Finder metadata — regenerated constantly, never wanted in git
 .DS_Store
 

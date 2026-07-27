@@ -16,10 +16,15 @@
 // --no-proxy-server.
 //
 // Run: node e2e/capture-screenshots.mjs [outDir]
+// Default outDir is e2e/baseline/v0. Pass an explicit dir to capture a new baseline
+// (e.g. e2e/baseline/v1) rather than overwriting v0 — see e2e/baseline/v0/README.md.
 import { existsSync, readdirSync, mkdirSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
+
+const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 function findExecutable() {
   const cache = path.join(os.homedir(), 'Library/Caches/ms-playwright')
@@ -38,7 +43,10 @@ function findExecutable() {
 const BASE = process.env.BASE_URL || 'http://[::1]:43100'
 const EMAIL = process.env.QA_EMAIL || 'demo@tripper.dev'
 const PASSWORD = process.env.QA_PASSWORD || 'tripper1234'
-const OUT = process.argv[2] || path.resolve('../working_prototype_screenshots/v0')
+// Resolved against this file, not the cwd: the old default was a cwd-relative
+// '../working_prototype_screenshots/v0', so it wrote outside the repo and landed
+// somewhere different depending on where you ran it from.
+const OUT = process.argv[2] || path.resolve(HERE, 'baseline/v0')
 
 // A maximised Chrome window on this 3024x1964 Retina display is ~1512x945
 // logical points. deviceScaleFactor 2 captures at native density so text is
