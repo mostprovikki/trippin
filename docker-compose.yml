@@ -1,9 +1,17 @@
 services:
   app:
     build: .
+    # Host side honours this repo's allocated dev block (see ~/.claude/docs/port-allocation.md)
+    # so `docker compose up` cannot collide with another project's compose. Container side is
+    # a fixed 3000 — an internal port collides with nothing, so it needs no allocation.
     ports:
-      - "3000:3000"
+      - "${API_PORT:-43101}:3000"
     env_file: .env
+    environment:
+      # Pins the in-container port. Without this, .env's PORT_BASE=43100 makes config.js
+      # derive 43101 *inside* the container while this mapping targets 3000, so nothing
+      # answers. PORT is the documented override for exactly this case.
+      - PORT=3000
     volumes:
       - ./data:/app/data
     restart: unless-stopped

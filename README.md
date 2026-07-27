@@ -19,8 +19,10 @@ mkdir -p data
 docker compose up --build
 ```
 
-The app is served on **http://localhost:3000** — API and the built SPA share
-one port, no separate frontend server.
+The app is served on **http://localhost:43101** — API and the built SPA share
+one port, no separate frontend server. Compose maps host `43101` (this repo's
+allocated block) to a fixed `3000` inside the container; override the host side
+with `API_PORT` if it is taken.
 
 Seed the first organizer account (run once, inside the container):
 
@@ -41,7 +43,8 @@ node server/scripts/seed-organizer.js --email=you@example.com --name="Your Name"
 node server/src/server.js
 ```
 
-Visit **http://localhost:3000**.
+Visit **http://localhost:43101** — `PORT_BASE` in `.env` defaults to `43100`, and
+the server listens on `PORT_BASE + 1`. Set `PORT` to pin it somewhere else.
 
 ### Local development (hot reload)
 
@@ -78,7 +81,9 @@ environment-specific values belong anywhere else.
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `3000` | Port the Node server listens on. |
+| `PORT_BASE` | `43100` | Base of this repo's allocated local port block. The Vite dev server binds `PORT_BASE`, the Node server `PORT_BASE + 1`. Single source of truth for local dev ports. |
+| `PORT` | *(derived: `PORT_BASE + 1`)* | Explicit override for the Node server's port. Takes precedence over `PORT_BASE`. Docker Compose sets it to `3000` so the in-container port is fixed regardless of the host block. |
+| `API_PORT` | `43101` | **Compose only** — host port mapped to the container's `3000`. Not read by the app itself. |
 | `DB_PATH` | `./data/tripplanner.db` | Path to the SQLite database file. Lives under `data/` so it survives container restarts when volume-mounted. |
 | `UPLOADS_DIR` | `./data/uploads` | Directory where uploaded documents (passports, tickets, etc.) are stored. Never served as static files — only through authenticated API routes. |
 | `JWT_SECRET` | *(none — must be set)* | Secret used to sign organizer sessions / participant tokens. Set to a random string ≥32 characters; never reuse the placeholder in production. |
@@ -92,7 +97,9 @@ environment-specific values belong anywhere else.
 
 The app never terminates TLS itself — it always runs plain HTTP on `PORT`.
 Put it behind a reverse proxy (nginx, Caddy, Traefik, your cloud load
-balancer, etc.) that handles HTTPS and forwards to `http://<host>:3000`.
+balancer, etc.) that handles HTTPS and forwards to whichever port the server is
+listening on — `PORT` if set, otherwise `PORT_BASE + 1`, and `3000` inside the
+Compose container.
 
 ## Backups
 
