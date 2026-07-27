@@ -12,7 +12,7 @@
 // this drives both sides through the real UI — A's template dropdown and search
 // must contain it, B's must not.
 //
-// Requires: dev servers up (server on :3000, web on :5173) and both seeded
+// Requires: dev servers up (server on :43101, web on :43100) and both seeded
 // organizers. Vite binds IPv6-only and a corporate http_proxy hijacks
 // `localhost`, so BASE must be http://[::1]:<port> and Chromium needs
 // --no-proxy-server.
@@ -38,7 +38,7 @@ function findExecutable() {
   throw new Error('No chromium headless shell in the playwright cache and no system Chrome found')
 }
 
-const BASE = process.env.BASE_URL || 'http://[::1]:5173'
+const BASE = process.env.BASE_URL || 'http://[::1]:43100'
 // The two seeded organizers. Isolation is only testable with a real second one.
 const ORG_A = { email: process.env.QA_EMAIL || 'demo@example.com', password: process.env.QA_PASSWORD || 'demo-pass-123' }
 const ORG_B = { email: process.env.QA_EMAIL_B || 'demo@tripper.dev', password: process.env.QA_PASSWORD_B || 'demo-pass-1234' }

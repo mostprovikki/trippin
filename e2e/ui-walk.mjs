@@ -1,6 +1,6 @@
 // UI click-through gate: drives the real app through every trip section via
 // the sidebar, breadcrumb back, and the participant page at mobile width.
-// Requires: dev servers up (server PORT=3100, web 5173→API_PROXY=3100),
+// Requires: dev servers up (server PORT=43101, web 43100→API_PROXY=43101),
 // organizer demo@example.com / demo-pass-123 seeded.
 // Run: node e2e/ui-walk.mjs   (install playwright-core next to this file or
 // globally; browser binary comes from the playwright cache, falling back to
@@ -32,7 +32,7 @@ function findExecutable() {
   throw new Error('No chromium headless shell in the playwright cache and no system Chrome found')
 }
 
-const BASE = process.env.BASE_URL || 'http://localhost:5173'
+const BASE = process.env.BASE_URL || 'http://localhost:43100'
 const consoleErrors = []
 let failures = 0
 

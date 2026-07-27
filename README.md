@@ -50,6 +50,11 @@ npm ci
 npm run dev   # runs server (nodemon-style --watch) + Vite dev server together
 ```
 
+Ports are derived from `PORT_BASE` (default `43100`, set in `.env` — see
+`.env.example`): Vite binds `PORT_BASE` (**http://localhost:43100**, `strictPort`
+so it fails instead of drifting to the next free port) and the API server
+binds `PORT_BASE + 1` (**43101**). Vite proxies `/api` through to the API port.
+
 In dev mode `web/dist` doesn't exist, so the server's static plugin steps aside
 and Vite serves the SPA with hot module reload; API calls proxy through to the
 server.

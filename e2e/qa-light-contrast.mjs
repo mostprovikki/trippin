@@ -42,7 +42,7 @@ function findExecutable() {
   throw new Error('No chromium headless shell in the playwright cache and no system Chrome found')
 }
 
-const BASE = process.env.BASE_URL || 'http://[::1]:5173'
+const BASE = process.env.BASE_URL || 'http://[::1]:43100'
 const EMAIL = process.env.QA_EMAIL || 'demo@example.com'
 const PASSWORD = process.env.QA_PASSWORD || 'demo-pass-123'
 const SHOOT = process.env.QA_SHOTS === '1'
