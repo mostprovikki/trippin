@@ -146,8 +146,8 @@
 
   <!-- ═══════════════════════════════════════════════════════════ failed ═══ -->
   <div data-when="failed">
-    <div class="blank blank--bad">
-      <span class="blank__icon">
+    <div class="blank" style="border-color:#EBC6C2;background:var(--bad-wash)">
+      <span class="blank__icon" style="background:#F7DCD8;color:var(--bad)">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
       </span>
       <div>
@@ -225,7 +225,7 @@
 
   <!-- ═══════════════════════════════════════════════════════════ discard ══ -->
   <div data-when="discard">
-    <div class="card" style="border-color:var(--bad-line)">
+    <div class="card" style="border-color:#EBC6C2">
       <div class="card__head">
         <span class="modal__ic modal__ic--bad" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
         <h2>Discard this draft?</h2>
@@ -249,7 +249,7 @@
 
   <!-- ══════════════════════════════════════════════════════════ overwrite ═ -->
   <div data-when="overwrite">
-    <div class="card" style="border-color:var(--warn-line)">
+    <div class="card" style="border-color:#F0D9AE">
       <div class="card__head">
         <span class="modal__ic modal__ic--warn" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg></span>
         <h2>Applying will overwrite Stay, hand-edited two days ago</h2>
@@ -263,7 +263,8 @@
             <span class="cmp__was"><span class="cmp__k">Stay</span>
               <span class="money" data-m data-inr="₹1,08,000" data-eur="≈ €990" data-vnd="">₹1,08,000</span>
               <span class="cmp__basis">Adjusted 27 Jul after the guesthouse changed its rate</span></span>
-            <span class="cmp__new"><span class="cmp__was-inline">Stay</span><span class="money" data-m data-inr="₹96,000" data-eur="≈ €880" data-vnd="">₹96,000</span>
+            <span class="cmp__new"><span class="cmp__was-inline">Stay</span>
+              <span class="money" data-m data-inr="₹96,000" data-eur="≈ €880" data-vnd="">₹96,000</span>
               <span class="cmp__basis">Assumes the cheaper guesthouse option in Hue — doesn't know
                 about the rate change Meera found</span></span>
             <span class="cmp__delta cmp__delta--down">−₹12,000</span>
@@ -392,14 +393,14 @@
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 1 · Fri 6 Nov · Hanoi</span><span class="cmp__basis">4 items</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 1 · Fri 6 Nov · Hanoi</span><span class="cmp__basis">4 items · no changes proposed</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 1</span><span class="cmp__basis">4 items · no changes proposed</span></span>
         <span class="cmp__delta cmp__delta--same">Same</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 1"></span>
       </div>
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 2 · Sat 7 Nov · Hanoi</span><span class="cmp__basis">5 items</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 2 · Sat 7 Nov · Hanoi</span><span class="cmp__basis">6 items</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 2</span><span class="cmp__basis">6 items</span>
           <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
             <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: Coffee break, Hoan Kiem
               lake shore (12:45–13:15)</p></details></span>
@@ -409,21 +410,21 @@
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 3 · Sun 8 Nov · Ha Long Bay</span><span class="cmp__basis">4 items · anchored to a goal</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 3 · Sun 8 Nov · Ha Long Bay</span><span class="cmp__basis">4 items · anchor untouched</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 3</span><span class="cmp__basis">4 items · anchor untouched</span></span>
         <span class="cmp__delta cmp__delta--same">Same</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 3"></span>
       </div>
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 4 · Mon 9 Nov · Hanoi → Hue</span><span class="cmp__basis">5 items</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 4 · Mon 9 Nov · Hanoi → Hue</span><span class="cmp__basis">5 items · no changes proposed</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 4</span><span class="cmp__basis">5 items · no changes proposed</span></span>
         <span class="cmp__delta cmp__delta--same">Same</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 4"></span>
       </div>
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 5 · Tue 10 Nov · Hue</span><span class="cmp__basis">5 items</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 5 · Tue 10 Nov · Hue</span><span class="cmp__basis">7 items</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 5</span><span class="cmp__basis">7 items</span>
           <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
             <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: Cyclo tour (17:00) ·
               Spa evening (19:30)</p></details></span>
@@ -434,7 +435,7 @@
       <div class="cmp__row" data-skip>
         <span class="cmp__was"><span class="cmp__k">Day 6 · Wed 11 Nov · Hue</span><span class="cmp__basis">Deliberately empty</span>
           <span class="cmp__flag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>Conflicts with "keep two half-days unplanned"</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 6 · Wed 11 Nov · Hue</span><span class="cmp__basis">2 items</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 6</span><span class="cmp__basis">2 items</span>
           <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
             <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: Cooking demo (10:00) ·
               Local market visit (15:00) — the AI doesn't know this day is meant to stay open</p></details></span>
@@ -444,7 +445,7 @@
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 7 · Thu 12 Nov · Hue → Hoi An</span><span class="cmp__basis">5 items</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 7 · Thu 12 Nov · Hue → Hoi An</span><span class="cmp__basis">4 items</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 7</span><span class="cmp__basis">4 items</span>
           <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
             <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">− Removed: Stop at Hai Van Pass
               viewpoint (folded into the drive)</p></details></span>
@@ -454,14 +455,14 @@
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 8 · Fri 13 Nov · Hoi An</span><span class="cmp__basis">5 items · 2 goals land here</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 8 · Fri 13 Nov · Hoi An</span><span class="cmp__basis">5 items · goals untouched</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 8</span><span class="cmp__basis">5 items · goals untouched</span></span>
         <span class="cmp__delta cmp__delta--same">Same</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 8"></span>
       </div>
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 9 · Sat 14 Nov · Hoi An → Siem Reap</span><span class="cmp__basis">Nothing planned — looked like an oversight</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 9 · Sat 14 Nov · Hoi An → Siem Reap</span><span class="cmp__basis">3 items</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 9</span><span class="cmp__basis">3 items</span>
           <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
             <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: transfer to Da Nang
               airport · flight DAD → REP · transfer to hotel</p></details></span>
@@ -471,7 +472,7 @@
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Day 10 · Sun 15 Nov · Siem Reap</span><span class="cmp__basis">8 items · anchored to a goal</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Day 10 · Sun 15 Nov · Siem Reap</span><span class="cmp__basis">8 items · anchor untouched</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 10</span><span class="cmp__basis">8 items · anchor untouched</span></span>
         <span class="cmp__delta cmp__delta--same">Same</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 10"></span>
       </div>
@@ -499,7 +500,8 @@
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Transfer Hanoi → Ha Long pier</span>
           <span class="mono" style="font-size:12.5px">08:00–11:30</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Transfer Hanoi → Ha Long pier</span><span class="mono" style="font-size:12.5px;font-weight:600">09:30–12:30</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Transfer Hanoi → Ha Long pier</span>
+          <span class="mono" style="font-size:12.5px;font-weight:600">09:30–12:30</span>
           <span class="cmp__basis">Starts 90 minutes later — no more pre-dawn wake-up</span></span>
         <span class="cmp__delta cmp__delta--up">Shifted</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the new time for the transfer"></span>
@@ -508,7 +510,8 @@
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Board the junk, cruise into Bai Tu Long</span>
           <span class="mono" style="font-size:12.5px">12:00–15:30</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Board the junk, cruise into Bai Tu Long</span><span class="mono" style="font-size:12.5px;font-weight:600">13:00–16:00</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Board the junk</span>
+          <span class="mono" style="font-size:12.5px;font-weight:600">13:00–16:00</span>
           <span class="cmp__basis">Follows the later transfer</span></span>
         <span class="cmp__delta cmp__delta--up">Shifted</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the new time for boarding the junk"></span>
@@ -517,7 +520,8 @@
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Kayak among the limestone karsts</span>
           <span class="mono" style="font-size:12.5px">16:00–17:30</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Kayak among the limestone karsts</span><span class="money money--none">Removed from this draft</span>
+        <span class="cmp__new"><span class="cmp__was-inline">Kayak among the limestone karsts</span>
+          <span class="money money--none">Removed from this draft</span>
           <span class="cmp__basis">Swapped for something slower, per "more relaxed"</span></span>
         <span class="cmp__delta cmp__delta--down">Dropped</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the AI's removal of the kayak item"></span>
@@ -526,14 +530,14 @@
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">Dinner on deck, then overnight at anchor</span>
           <span class="mono" style="font-size:12.5px">18:00–09:00 +1</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Dinner on deck, then overnight at anchor</span><span class="cmp__basis">Unchanged</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Dinner on deck</span><span class="cmp__basis">Unchanged</span></span>
         <span class="cmp__delta cmp__delta--same">Same</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep dinner and overnight unchanged"></span>
       </div>
 
       <div class="cmp__row">
         <span class="cmp__was"><span class="cmp__k">—</span><span class="cmp__basis">Nothing here currently</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">—</span><span class="cmp__k">Spa treatment on board</span>
+        <span class="cmp__new"><span class="cmp__k">Spa treatment on board</span>
           <span class="mono" style="font-size:12.5px;font-weight:600">17:30–18:30</span>
           <span class="cmp__basis">Fills the slot the kayak left</span></span>
         <span class="cmp__delta cmp__delta--new">New</span>
@@ -563,12 +567,7 @@
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add mosquito repellent"></span></div>
 
       <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Mosquito repellent</span>
-          <span class="cmp__basis">For the Ha Long and Siem Reap evenings</span></span>
-        <span class="cmp__delta cmp__delta--new">New</span>
-        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add mosquito repellent"></span></div>
-
-      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span><span class="cmp__k">Reef-safe sunscreen</span>
+        <span class="cmp__new"><span class="cmp__k">Reef-safe sunscreen</span>
           <span class="cmp__basis">For the day on the junk</span></span>
         <span class="cmp__delta cmp__delta--new">New</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add reef-safe sunscreen"></span></div>
@@ -580,12 +579,7 @@
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a rain poncho"></span></div>
 
       <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">A light rain poncho</span>
-          <span class="cmp__basis">November showers are common in Hue</span></span>
-        <span class="cmp__delta cmp__delta--new">New</span>
-        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a rain poncho"></span></div>
-
-      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span><span class="cmp__k">Photocopies of everyone's passport</span>
+        <span class="cmp__new"><span class="cmp__k">Photocopies of everyone's passport</span>
           <span class="cmp__basis">Kept separately from the originals</span></span>
         <span class="cmp__delta cmp__delta--new">New</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add passport photocopies"></span></div>
@@ -597,12 +591,7 @@
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a power adapter"></span></div>
 
       <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">A universal power adapter</span>
-          <span class="cmp__basis">Vietnam and Cambodia both use type A/C/G sockets</span></span>
-        <span class="cmp__delta cmp__delta--new">New</span>
-        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a power adapter"></span></div>
-
-      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span><span class="cmp__k">An offline phrase list</span>
+        <span class="cmp__new"><span class="cmp__k">An offline phrase list</span>
           <span class="cmp__basis">Vietnamese and Khmer basics, no signal needed</span></span>
         <span class="cmp__delta cmp__delta--new">New</span>
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add an offline phrase list"></span></div>
@@ -642,13 +631,7 @@
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Alleppey as a candidate"></span></div>
 
       <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Alleppey</span>
-          <span class="cmp__basis">Houseboat backwaters. Best Oct–Feb, monsoon risk before that.
-            Est. <span class="money" data-m data-inr="₹18,000" data-eur="≈ €170" data-vnd="">₹18,000</span> each.</span></span>
-        <span class="cmp__delta cmp__delta--new">New</span>
-        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Alleppey as a candidate"></span></div>
-
-      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span><span class="cmp__k">Kumarakom</span>
+        <span class="cmp__new"><span class="cmp__k">Kumarakom</span>
           <span class="cmp__basis">Quieter backwaters, a bird sanctuary. Same season as Alleppey.
             Est. <span class="money" data-m data-inr="₹16,500" data-eur="≈ €150" data-vnd="">₹16,500</span> each.</span></span>
         <span class="cmp__delta cmp__delta--new">New</span>
@@ -662,13 +645,7 @@
         <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Munnar as a candidate"></span></div>
 
       <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span></span>
-        <span class="cmp__new"><span class="cmp__was-inline">Munnar</span>
-          <span class="cmp__basis">Tea hills, cooler nights. Landslide risk in heavy rain.
-            Est. <span class="money" data-m data-inr="₹15,000" data-eur="≈ €140" data-vnd="">₹15,000</span> each.</span></span>
-        <span class="cmp__delta cmp__delta--new">New</span>
-        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Munnar as a candidate"></span></div>
-
-      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span><span class="cmp__k">Wayanad</span>
+        <span class="cmp__new"><span class="cmp__k">Wayanad</span>
           <span class="cmp__basis">Forests and waterfalls. A long drive from Kochi airport.
             Est. <span class="money" data-m data-inr="₹14,000" data-eur="≈ €130" data-vnd="">₹14,000</span> each.</span></span>
         <span class="cmp__delta cmp__delta--new">New</span>

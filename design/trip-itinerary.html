@@ -23,7 +23,8 @@
 <body>
 <span id="live" class="sronly" aria-live="polite"></span>
 
-<div class="rev">
+<!-- "populated" is the default; its content renders by excluding loading/failed/nodates, and organizer-vs-readonly is mirrored onto <html data-page-state> by script — verified by screenshot. See _check-states.py. -->
+<div class="rev" data-default-states="populated">
   <div class="rev__in">
     <span class="rev__k">Review</span>
     <span class="rev__grp" data-axis="state">

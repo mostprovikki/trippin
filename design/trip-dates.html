@@ -173,21 +173,6 @@
           </div>
         </div>
 
-        <!-- cross-field validation -->
-        <div class="card" data-when="invalid" style="margin-top:14px">
-          <div class="card__head"><h2>Add another window</h2></div>
-          <div class="card__body">
-            <div class="fgrid">
-              <div class="fg" data-invalid><span class="fg__l">First day</span><input type="date" value="2026-10-22">
-                <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
-                  This window would end before it starts — 22 Oct is after 18 Oct.</span></div>
-              <div class="fg" data-invalid><span class="fg__l">Last day</span><input type="date" value="2026-10-18"></div>
-            </div>
-            <button class="btn" disabled>Add this window</button>
-            <p class="fg__h" style="margin-top:9px">The button stays visibly unavailable rather than
-              accepting the window and failing later.</p>
-          </div>
-        </div>
       </div>
 
       <aside class="side">
@@ -207,6 +192,23 @@
             the point. Once one wins, promoting it is what creates the ten days the itinerary hangs off.</p>
         </div>
       </aside>
+    </div>
+  </div>
+
+  <!-- cross-field validation. Top level: nesting it under the broad-window
+ wrapper meant state=invalid hid the very card it selects. -->
+  <div class="card" data-when="invalid" style="max-width:680px">
+    <div class="card__head"><h2>Add another window</h2></div>
+    <div class="card__body">
+      <div class="fgrid">
+        <div class="fg" data-invalid><span class="fg__l">First day</span><input type="date" value="2026-10-22">
+          <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+            This window would end before it starts — 22 Oct is after 18 Oct.</span></div>
+        <div class="fg" data-invalid><span class="fg__l">Last day</span><input type="date" value="2026-10-18"></div>
+      </div>
+      <button class="btn" disabled>Add this window</button>
+      <p class="fg__h" style="margin-top:9px">The button stays visibly unavailable rather than
+        accepting the window and failing later.</p>
     </div>
   </div>
 
@@ -386,7 +388,7 @@
 </main>
 
 <!-- ══════════ PROMOTE: the moment of decision the product didn't have (§8.1) -->
-<div class="modal" id="promote" role="dialog" aria-modal="true" aria-labelledby="pr-t" hidden>
+<div class="modal" id="promote" data-when="promote" role="dialog" aria-modal="true" aria-labelledby="pr-t" hidden>
   <div class="modal__panel">
     <div class="modal__head">
       <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
@@ -424,7 +426,7 @@
 </div>
 
 <!-- ═══ SHIFT vs RE-DATE: two different intents, deliberately two actions (§3.4.3) -->
-<div class="modal" id="shiftm" role="dialog" aria-modal="true" aria-labelledby="sh-t" hidden>
+<div class="modal" id="shiftm" data-when="shift" role="dialog" aria-modal="true" aria-labelledby="sh-t" hidden>
   <div class="modal__panel modal__panel--wide">
     <div class="modal__head">
       <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
@@ -505,7 +507,7 @@
 </div>
 
 <!-- ══════════════════ REOPEN: undoing the decision itself, not editing it ═══ -->
-<div class="modal" id="reopen" role="dialog" aria-modal="true" aria-labelledby="ro-t" hidden>
+<div class="modal" id="reopen" data-when="reopen" role="dialog" aria-modal="true" aria-labelledby="ro-t" hidden>
   <div class="modal__panel">
     <div class="modal__head">
       <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg></span>

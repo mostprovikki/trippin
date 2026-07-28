@@ -60,7 +60,10 @@ b, strong { font-weight: 600; }
 .rev {
   position: sticky;
   top: 0;
-  z-index: 60;
+  /* Above .modal (70) and .scrim (60) on purpose: when the strip renders a
+     consequence dialog as a state, the strip itself must stay reachable —
+     otherwise selecting that state is a trap with no way back. */
+  z-index: 80;
   background: var(--ink);
   color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, .14);
