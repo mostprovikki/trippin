@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklists · Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Dependency-blocked</span>
+      <button class="rev__b" data-v="notemplate">No templates</button>
+      <button class="rev__b" data-v="noassignee">No participants</button>
+      <button class="rev__b" data-v="packingonly">AI is packing-only</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Templates</span>
+      <button class="rev__b" data-v="templates">The library</button>
+      <button class="rev__b" data-v="promote">Promote to template</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">AI packing</span>
+      <button class="rev__b" data-v="aioff">Off</button>
+      <button class="rev__b" data-v="aigen">Generating</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Empty &amp; load</span>
+      <button class="rev__b" data-v="empty">Empty</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="failed">Load failed</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Checklist</span>
+      <button class="rev__b" data-v="populated" aria-pressed="true">Populated</button>
+      <button class="rev__b" data-v="overdue">Overdue</button>
+      <button class="rev__b" data-v="forty">40 items</button>
+      <button class="rev__b" data-v="deleteitem">Delete an item</button>
+      <button class="rev__b" data-v="deletelist">Delete a checklist</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <!-- ─────────────────────────────────────────────────────── trip head -->
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <a href="trip.html">Vietnam &amp; Cambodia 2026</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span>Checklists</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>Tasks and packing</h1>
+        <div class="thead__meta">
+          <span data-when="overdue">Three tasks are past their due date — oldest first.</span>
+          <span data-when="forty">A bigger trip's worth of packing — forty items, still readable.</span>
+          <span data-when-not="overdue forty empty loading failed templates promote">Trip-level tasks with an
+            optional assignee and due date, plus each person's own packing list.</span>
+          <span data-when="templates">Templates belong to you, the organizer — not to any one trip.</span>
+          <span data-when="promote">Turning this trip's edited checklist into something you can reuse.</span>
+        </div>
+      </div>
+      <div class="thead__acts" data-when-not="loading failed templates promote">
+        <a class="btn" href="trip.html">Back to the board</a>
+        <a class="btn" href="trip-checklists.html#state=templates">Templates</a>
+      </div>
+      <div class="thead__acts" data-when="templates promote">
+        <a class="btn" href="trip-checklists.html">Back to this trip's checklists</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── trip nav -->
+  <nav class="tnav" aria-label="This trip">
+    <a href="trip.html">Board</a>
+    <a href="trip-itinerary.html">Itinerary <span class="tnav__n">10 days</span></a>
+    <a href="trip-budget.html">Budget <span class="tnav__n">₹4,80,000</span></a>
+    <a href="trip-people.html">People <span class="tnav__n">6</span></a>
+    <a href="trip-checklists.html" aria-current="page">Checklists <span class="tnav__n tnav__n--warn">3 overdue</span></a>
+  </nav>
+
+  <!-- ══════════════════════════════ populated / overdue / a-deleted-item demo ═ -->
+  <div class="split" data-when="populated overdue deleteitem noassignee packingonly">
+    <div class="stack">
+
+      <div class="banner banner--bad" data-when="overdue">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+        <div><b>Three tasks are past their due date.</b> Oldest: <b>Book the Ha Long junk</b>, due
+          <span class="mono">15 Jul</span> and it's yours — 14 days late. Then Ravi's e-visas (9 days),
+          then the Hoi An tailor, unassigned (4 days).</div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><div class="metric__k">Overall</div>
+          <div class="metric__v">18 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400">of 31 done</span></div></div>
+        <div class="metric"><div class="metric__k">Tasks</div>
+          <div class="metric__v" style="color:var(--warn)">3 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-2)">overdue</span></div>
+          <div class="metric__d">6 of 9 done</div></div>
+        <div class="metric"><div class="metric__k">Packing</div>
+          <div class="metric__v">15 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400">of 22 done</span></div>
+          <div class="metric__d">across 6 people</div></div>
+        <div class="metric"><div class="metric__k">Templates</div>
+          <div class="metric__v">4</div>
+          <div class="metric__d">saved, from past trips</div></div>
+      </div>
+
+      <!-- ──────────────────────────────────────────────────────── tasks -->
+      <div class="card">
+        <div class="card__head">
+          <h2>Tasks</h2>
+          <span style="flex:1"></span>
+          <span class="t-eyebrow">trip-level · 9</span>
+        </div>
+        <div data-tick-scope>
+          <div class="tick" data-done>
+            <input class="check" type="checkbox" checked aria-label="Book Hanoi–Siem Reap flights, done">
+            <span><span class="tick__n">Book Hanoi–Siem Reap flights</span>
+              <span class="tick__d">Done · yours</span></span>
+            <span class="tick__r"><button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+          <div class="tick" data-done>
+            <input class="check" type="checkbox" checked aria-label="Reserve the cooking class, done">
+            <span><span class="tick__n">Reserve the cooking class</span>
+              <span class="tick__d">Done · Asha</span></span>
+            <span class="tick__r"><button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+
+          <!-- the ONE delete that gets no confirmation — swapped in place for a
+               few seconds by .undo. Modelled here via the review switcher. -->
+          <div class="tick" data-when-not="deleteitem" data-done>
+            <input class="check" type="checkbox" checked aria-label="Arrange airport pickup in Hanoi, done">
+            <span><span class="tick__n">Arrange airport pickup in Hanoi</span>
+              <span class="tick__d">Done · yours</span></span>
+            <span class="tick__r"><button class="iconbtn" aria-label="Delete this task" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+          <div class="undo" data-when="deleteitem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg>
+            <span>"Arrange airport pickup in Hanoi" deleted</span>
+            <span class="undo__sp"></span>
+            <button class="linkish" data-set="state:populated">Undo</button>
+          </div>
+
+          <div class="tick">
+            <input class="check" type="checkbox" aria-label="Book the Ha Long junk, not done, overdue">
+            <span><span class="tick__n">Book the Ha Long junk</span>
+              <span class="tick__d">Due <span class="mono">15 Jul</span> · yours</span></span>
+            <span class="tick__r"><span class="pill pill--3">14 days</span>
+              <button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+          <div class="tick">
+            <input class="check" type="checkbox" aria-label="Get Cambodia e-visas, not done, overdue">
+            <span><span class="tick__n">Get Cambodia e-visas</span>
+              <span class="tick__d">Due <span class="mono">20 Jul</span> · Ravi</span></span>
+            <span class="tick__r"><span class="pill pill--3">9 days</span>
+              <button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+          <div class="tick">
+            <input class="check" type="checkbox" aria-label="Confirm the Hoi An tailor, not done, overdue">
+            <span><span class="tick__n">Confirm the Hoi An tailor</span>
+              <span class="tick__d">Due <span class="mono">25 Jul</span> · <i>unassigned</i></span></span>
+            <span class="tick__r"><span class="pill pill--2">4 days</span>
+              <button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+          <div class="tick">
+            <input class="check" type="checkbox" aria-label="Buy travel insurance for everyone, not done">
+            <span><span class="tick__n">Buy travel insurance for everyone</span>
+              <span class="tick__d">Due <span class="mono">5 Aug</span> · yours</span></span>
+            <span class="tick__r"><button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+          <div class="tick">
+            <input class="check" type="checkbox" aria-label="Check Cambodia visa photo requirements, not done">
+            <span><span class="tick__n">Check Cambodia visa photo requirements</span>
+              <span class="tick__d">Due <span class="mono">8 Aug</span> · Meera</span></span>
+            <span class="tick__r"><button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+          <div class="tick">
+            <input class="check" type="checkbox" aria-label="Confirm Grab works for the group, not done">
+            <span><span class="tick__n">Confirm Grab/GrabPay works for the group</span>
+              <span class="tick__d">Due <span class="mono">20 Aug</span> · <i>unassigned</i></span></span>
+            <span class="tick__r"><button class="iconbtn" aria-label="Delete this task"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+          </div>
+        </div>
+
+        <!-- add a task, and the participant-dependency it carries -->
+        <div class="card__body" style="border-top:1px solid var(--line);background:var(--surface-2)">
+          <div class="t-eyebrow" style="margin-bottom:11px">Add a task</div>
+          <div class="fgrid">
+            <label class="fg"><span class="fg__l">Task <span class="fg__req">Required</span></span>
+              <input class="field" type="text" placeholder="Reconfirm the houseboat booking"></label>
+            <label class="fg" data-when-not="noassignee"><span class="fg__l">Assignee <span class="fg__opt">optional</span></span>
+              <select><option>Unassigned</option><option>You</option><option>Asha Kumar</option>
+                <option>Meera Iyer</option><option>Daniel Weiss</option><option>Lena Hoffmann</option>
+                <option>Ravi Menon</option><option>Nikhil Rao</option></select></label>
+            <div class="fg" data-when="noassignee"><span class="fg__l">Assignee <span class="fg__opt">optional</span></span>
+              <div class="blank" style="padding:10px 12px;margin:0">
+                <div><p style="margin:0;font-size:12px">This trip has no participants yet, so there's
+                  nobody to assign — <a href="trip-people.html#state=empty">add people first</a>, or
+                  leave it unassigned for now.</p></div>
+              </div>
+            </div>
+            <label class="fg"><span class="fg__l">Due date <span class="fg__opt">optional</span></span>
+              <input type="date"></label>
+          </div>
+          <button class="btn">Add this task</button>
+        </div>
+      </div>
+
+      <!-- ─────────────────────────────────────────────────────── packing -->
+      <div class="card">
+        <div class="card__head">
+          <h2>Packing</h2>
+          <span style="flex:1"></span>
+          <span class="t-eyebrow">per person · 22</span>
+        </div>
+        <p class="t-meta" style="margin:0;padding:11px 18px 0;font-size:12px">Each person ticks their
+          own items. Nothing here has a due date — packing is done or it isn't.</p>
+
+        <details open style="border-top:1px solid var(--line-2)" id="pk-asha">
+          <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+            <span class="row__n">Asha Kumar <span class="dim" style="font-weight:400">· vegan</span></span>
+            <span class="rowline"><span class="mono dim" style="font-size:11.5px">3 of 4</span>
+              <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Vegan snacks, done"><span><span class="tick__n">Vegan snacks</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Reusable water bottle, done"><span><span class="tick__n">Reusable water bottle</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Rain shell, done"><span><span class="tick__n">Rain shell</span></span></div>
+            <div class="tick"><input class="check" type="checkbox" aria-label="Power bank, not done"><span><span class="tick__n">Power bank</span></span></div>
+          </div>
+        </details>
+        <details style="border-top:1px solid var(--line-2)" id="pk-meera">
+          <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+            <span class="row__n">Meera Iyer</span>
+            <span class="rowline"><span class="mono dim" style="font-size:11.5px">3 of 4</span>
+              <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Sunscreen, done"><span><span class="tick__n">Sunscreen</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Universal adapter, done"><span><span class="tick__n">Universal adapter</span></span></div>
+            <div class="tick"><input class="check" type="checkbox" aria-label="Light jacket, not done"><span><span class="tick__n">Light jacket</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Passport photocopies, done"><span><span class="tick__n">Passport photocopies</span></span></div>
+          </div>
+        </details>
+        <details style="border-top:1px solid var(--line-2)" id="pk-daniel">
+          <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+            <span class="row__n">Daniel Weiss</span>
+            <span class="rowline"><span class="mono dim" style="font-size:11.5px">3 of 4</span>
+              <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Malaria tablets, done"><span><span class="tick__n">Malaria tablets</span></span></div>
+            <div class="tick"><input class="check" type="checkbox" aria-label="Waterproof bag, not done"><span><span class="tick__n">Waterproof bag</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Hiking sandals, done"><span><span class="tick__n">Hiking sandals</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Local eSIM, done"><span><span class="tick__n">Local eSIM</span></span></div>
+          </div>
+        </details>
+        <details style="border-top:1px solid var(--line-2)" id="pk-lena">
+          <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+            <span class="row__n">Lena Hoffmann</span>
+            <span class="rowline"><span class="mono dim" style="font-size:11.5px">2 of 3</span>
+              <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Earplugs, done"><span><span class="tick__n">Earplugs</span></span></div>
+            <div class="tick"><input class="check" type="checkbox" aria-label="Travel pillow, not done"><span><span class="tick__n">Travel pillow</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Basic first-aid kit, done"><span><span class="tick__n">Basic first-aid kit</span></span></div>
+          </div>
+        </details>
+        <details style="border-top:1px solid var(--line-2)" id="pk-ravi">
+          <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+            <span class="row__n">Ravi Menon</span>
+            <span class="rowline"><span class="mono dim" style="font-size:11.5px">2 of 4</span>
+              <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div>
+            <div class="tick"><input class="check" type="checkbox" aria-label="Passport photocopies, not done"><span><span class="tick__n">Passport photocopies</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Sunscreen, done"><span><span class="tick__n">Sunscreen</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Daypack, done"><span><span class="tick__n">Daypack</span></span></div>
+            <div class="tick"><input class="check" type="checkbox" aria-label="Insect repellent, not done"><span><span class="tick__n">Insect repellent</span></span></div>
+          </div>
+        </details>
+        <details style="border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)" id="pk-nikhil">
+          <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+            <span class="row__n">Nikhil Rao</span>
+            <span class="rowline"><span class="mono dim" style="font-size:11.5px">2 of 3</span>
+              <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div>
+            <div class="tick"><input class="check" type="checkbox" aria-label="Comfortable shoes, not done"><span><span class="tick__n">Comfortable shoes</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Rain jacket, done"><span><span class="tick__n">Rain jacket</span></span></div>
+            <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Portable charger, done"><span><span class="tick__n">Portable charger</span></span></div>
+          </div>
+        </details>
+
+        <div class="card__body" style="border-top:0;padding-top:12px">
+          <button class="btn" data-open-modal="deletelist">Delete Nikhil's packing list</button>
+          <span class="t-meta" style="font-size:11.5px;margin-left:10px">Demo of the confirm-first delete — different from the task/item delete above.</span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="side__card">
+        <h3 class="side__t">Templates</h3>
+        <p class="t-meta" style="margin:0 0 10px;font-size:12px;line-height:1.6"><span class="mono" style="font-weight:600;color:var(--ink)">4</span> saved, from past trips. They belong to you, not this one.</p>
+        <div class="side__actions">
+          <a class="btn" href="trip-checklists.html#state=templates">Use one on this trip</a>
+          <button class="btn" data-open-modal="promote">Save this trip's checklist as a template</button>
+        </div>
+      </div>
+      <div class="side__card">
+        <h3 class="side__t">AI packing suggestions</h3>
+        <p class="t-meta" style="margin:0 0 10px;font-size:12px;line-height:1.6">Suggests items to add
+          to a person's packing list from the trip's dates, destination and their own preferences.
+          <b>Packing only</b> — tasks aren't eligible.</p>
+        <button class="btn btn--primary" style="width:100%;justify-content:center">Suggest for Asha</button>
+      </div>
+      <div class="aioff" data-when="packingonly" style="margin:0">
+        <span class="aioff__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h9M8 12h9M8 18h6"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+        <div>
+          <h4>Tasks can't be AI-suggested</h4>
+          <p>The suggester only knows how to reason about what to <b>pack</b> — climate, activities,
+            trip length. A task like "confirm the Hoi An tailor" isn't a packing decision, so there's
+            nothing to route it to. Add tasks by hand; the button above still works for packing.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ 40 items -->
+  <div data-when="forty">
+    <div class="metrics" style="margin-bottom:16px">
+      <div class="metric"><div class="metric__k">Packing</div>
+        <div class="metric__v">27 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400">of 40 done</span></div></div>
+      <div class="metric"><div class="metric__k">People</div><div class="metric__v">6</div><div class="metric__d">6–7 items each</div></div>
+      <div class="metric"><div class="metric__k">Heaviest</div><div class="metric__v" style="font-family:var(--sans);font-size:13.5px;font-weight:600">Asha Kumar</div><div class="metric__d">7 items</div></div>
+      <div class="metric"><div class="metric__k">Lightest</div><div class="metric__v" style="font-family:var(--sans);font-size:13.5px;font-weight:600">Lena Hoffmann</div><div class="metric__d">6 items</div></div>
+    </div>
+    <div class="card">
+      <div class="card__head"><h2>Packing</h2><span style="flex:1"></span><span class="t-eyebrow">a bigger trip · 40 items</span></div>
+
+      <details style="border-top:1px solid var(--line-2)">
+        <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+          <span class="row__n">Asha Kumar <span class="dim" style="font-weight:400">· vegan</span></span>
+          <span class="rowline"><span class="mono dim" style="font-size:11.5px">5 of 7</span>
+            <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </summary>
+        <div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Vegan snacks, done"><span class="tick__n">Vegan snacks</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Reusable water bottle, done"><span class="tick__n">Reusable water bottle</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Rain shell, done"><span class="tick__n">Rain shell</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Sunglasses, done"><span class="tick__n">Sunglasses</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Camera charger, done"><span class="tick__n">Camera charger</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Power bank, not done"><span class="tick__n">Power bank</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Vitamin supplements, not done"><span class="tick__n">Vitamin supplements</span></div>
+        </div>
+      </details>
+      <details style="border-top:1px solid var(--line-2)">
+        <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+          <span class="row__n">Meera Iyer</span>
+          <span class="rowline"><span class="mono dim" style="font-size:11.5px">4 of 7</span>
+            <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </summary>
+        <div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Sunscreen, done"><span class="tick__n">Sunscreen</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Universal adapter, done"><span class="tick__n">Universal adapter</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Passport photocopies, done"><span class="tick__n">Passport photocopies</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Swimsuit, done"><span class="tick__n">Swimsuit</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Light jacket, not done"><span class="tick__n">Light jacket</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Travel-size toiletries, not done"><span class="tick__n">Travel-size toiletries</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Flip-flops, not done"><span class="tick__n">Flip-flops</span></div>
+        </div>
+      </details>
+      <details style="border-top:1px solid var(--line-2)">
+        <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+          <span class="row__n">Daniel Weiss</span>
+          <span class="rowline"><span class="mono dim" style="font-size:11.5px">5 of 7</span>
+            <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </summary>
+        <div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Malaria tablets, done"><span class="tick__n">Malaria tablets</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Hiking sandals, done"><span class="tick__n">Hiking sandals</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Local eSIM, done"><span class="tick__n">Local eSIM</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Padlock, done"><span class="tick__n">Padlock</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Dry bag, done"><span class="tick__n">Dry bag</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Waterproof phone pouch, not done"><span class="tick__n">Waterproof phone pouch</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Spare glasses, not done"><span class="tick__n">Spare glasses</span></div>
+        </div>
+      </details>
+      <details style="border-top:1px solid var(--line-2)">
+        <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+          <span class="row__n">Lena Hoffmann</span>
+          <span class="rowline"><span class="mono dim" style="font-size:11.5px">4 of 6</span>
+            <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </summary>
+        <div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Earplugs, done"><span class="tick__n">Earplugs</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Basic first-aid kit, done"><span class="tick__n">Basic first-aid kit</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Neck pillow, done"><span class="tick__n">Neck pillow</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Motion sickness tablets, done"><span class="tick__n">Motion sickness tablets</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Spare SD card, not done"><span class="tick__n">Spare SD card</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Sarong, not done"><span class="tick__n">Sarong</span></div>
+        </div>
+      </details>
+      <details style="border-top:1px solid var(--line-2)">
+        <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+          <span class="row__n">Ravi Menon</span>
+          <span class="rowline"><span class="mono dim" style="font-size:11.5px">3 of 7</span>
+            <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </summary>
+        <div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Sunscreen, done"><span class="tick__n">Sunscreen</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Daypack, done"><span class="tick__n">Daypack</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Insect repellent, done"><span class="tick__n">Insect repellent</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Passport photocopies, not done"><span class="tick__n">Passport photocopies</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Power adapter, not done"><span class="tick__n">Power adapter</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Hat, not done"><span class="tick__n">Hat</span></div>
+          <div class="tick"><input class="check" type="checkbox" aria-label="Swim shorts, not done"><span class="tick__n">Swim shorts</span></div>
+        </div>
+      </details>
+      <details style="border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)">
+        <summary class="row" style="grid-template-columns:minmax(0,1fr) auto;list-style:none;cursor:pointer;align-items:center">
+          <span class="row__n">Nikhil Rao</span>
+          <span class="rowline"><span class="mono dim" style="font-size:11.5px">6 of 6</span>
+            <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </summary>
+        <div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Comfortable shoes, done"><span class="tick__n">Comfortable shoes</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Rain jacket, done"><span class="tick__n">Rain jacket</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Portable charger, done"><span class="tick__n">Portable charger</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Earphones, done"><span class="tick__n">Earphones</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Notebook, done"><span class="tick__n">Notebook</span></div>
+          <div class="tick" data-done><input class="check" type="checkbox" checked aria-label="Spare face masks, done"><span class="tick__n">Spare face masks</span></div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ template library -->
+  <div data-when="templates">
+    <div class="card">
+      <div class="card__head"><h2>Your templates</h2><span style="flex:1"></span><span class="t-eyebrow">4 saved</span></div>
+      <div class="subcard dtable__scroll">
+        <table class="dtable">
+          <thead><tr><th>Template</th><th style="width:90px">Items</th><th style="width:150px">Last used</th><th style="width:280px"></th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:500">Boat trip — overnight <span class="defrow__d">Ha Long, houseboats</span></td>
+              <td class="mono">15</td><td>Vietnam &amp; Cambodia 2026</td>
+              <td><div class="rowline" style="flex-wrap:nowrap"><button class="btn" style="height:30px;padding:0 11px;font-size:12px">Use on this trip</button> <button class="iconbtn" style="width:30px;height:30px" aria-label="Delete this template"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></div></td></tr>
+            <tr><td style="font-weight:500">SE Asia packing basics</td>
+              <td class="mono">12</td><td>5 trips</td>
+              <td><div class="rowline" style="flex-wrap:nowrap"><button class="btn" style="height:30px;padding:0 11px;font-size:12px">Use on this trip</button> <button class="iconbtn" style="width:30px;height:30px" aria-label="Delete this template"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></div></td></tr>
+            <tr><td style="font-weight:500">Passport &amp; visa checklist</td>
+              <td class="mono">6</td><td>8 trips</td>
+              <td><div class="rowline" style="flex-wrap:nowrap"><button class="btn" style="height:30px;padding:0 11px;font-size:12px">Use on this trip</button> <button class="iconbtn" style="width:30px;height:30px" aria-label="Delete this template"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></div></td></tr>
+            <tr><td style="font-weight:500">Beach weekend</td>
+              <td class="mono">9</td><td>Goa New Year</td>
+              <td><div class="rowline" style="flex-wrap:nowrap"><button class="btn" style="height:30px;padding:0 11px;font-size:12px">Use on this trip</button> <button class="iconbtn" style="width:30px;height:30px" aria-label="Delete this template"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card__body" style="border-top:1px solid var(--line);background:var(--surface-2)">
+        <p class="t-meta" style="margin:0;font-size:12px">A template is structure only — items and
+          their order. Assignees, due dates and done-state are trip-specific and never travel with it.
+          <button class="linkish" data-open-modal="promote" style="margin-left:2px">Save this trip's checklist as a new template</button></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ dependency: no templates -->
+  <div data-when="notemplate">
+    <div class="blank">
+      <span class="blank__icon" style="background:var(--hatch-off);border:1px dashed var(--dash-line)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h9M8 12h9M8 18h6"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+      <div>
+        <h4>You don't have any templates yet</h4>
+        <p>"Use a template" needs at least one saved template to instantiate — this account hasn't
+          saved one from any past trip. The other way in is starting from scratch here and promoting
+          the result once it's worth reusing.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:populated">Start this trip's checklist from scratch</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ empty -->
+  <div data-when="empty">
+    <div class="split">
+      <div class="blank">
+        <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+        <div>
+          <h4>No tasks and no packing lists yet</h4>
+          <p>A brand-new trip starts with nothing here — that's not a problem to fix on day one. Use
+            one of your 4 saved templates to seed it in one step, or add the first task or item by
+            hand.</p>
+          <div class="blank__act">
+            <a class="btn btn--primary" href="trip-checklists.html#state=templates">Use a template</a>
+            <button class="btn" data-set="state:populated">Add the first task by hand</button>
+          </div>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="side__card">
+          <h3 class="side__t">What's still there</h3>
+          <p class="t-meta" style="margin:0;font-size:12px;line-height:1.6">Six confirmed participants
+            and a drafted budget don't depend on this — checklists are the one thing genuinely empty
+            right now.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ loading -->
+  <div data-when="loading">
+    <div class="metrics" style="margin-bottom:16px">
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+    </div>
+    <div class="card">
+      <div class="skrow" style="grid-template-columns:16px minmax(0,1fr) 90px"><span class="sk" style="width:15px;height:15px;border-radius:3px"></span><span class="sk sk--l1"></span><span class="sk sk--num"></span></div>
+      <div class="skrow" style="grid-template-columns:16px minmax(0,1fr) 90px"><span class="sk" style="width:15px;height:15px;border-radius:3px"></span><span class="sk sk--l1"></span><span class="sk sk--num"></span></div>
+      <div class="skrow" style="grid-template-columns:16px minmax(0,1fr) 90px"><span class="sk" style="width:15px;height:15px;border-radius:3px"></span><span class="sk sk--l1"></span><span class="sk sk--num"></span></div>
+      <div class="skrow" style="grid-template-columns:16px minmax(0,1fr) 90px"><span class="sk" style="width:15px;height:15px;border-radius:3px"></span><span class="sk sk--l1"></span><span class="sk sk--num"></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ load failed -->
+  <div data-when="failed">
+    <div class="blank blank--bad">
+      <span class="blank__icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <div>
+        <h4>Checklists didn't load</h4>
+        <p>The server answered, but not with any tasks or packing items — <span class="mono">502</span>
+          from the API at <span class="mono">07:03</span>. Nothing has been ticked, deleted or changed;
+          this is a read that failed, not an empty trip.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:loading">Try loading it again</button>
+          <a class="btn" href="trip.html">Back to the board</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ AI: off (permanent) -->
+  <div data-when="aioff">
+    <div class="aioff">
+      <span class="aioff__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h9M8 12h9M8 18h6"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+      <div>
+        <h4>AI packing suggestions aren't available on this deployment</h4>
+        <p>This is expected on some installs, not an error — nothing is broken and nothing is
+          retrying in the background. Add packing items by hand, or start from one of your 4 saved
+          templates instead.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ AI: generating -->
+  <div data-when="aigen">
+    <div class="gen">
+      <div class="spin" style="width:22px;height:22px;border-width:2.4px"></div>
+      <h3>Working out what Asha might be missing</h3>
+      <p>Reading the trip's ten days, Vietnam &amp; Cambodia's climate in November, the planned
+        activities, and Asha's own preferences (vegan, moderate pace). This usually takes under a
+        minute — nothing is added until you review and keep what's useful.</p>
+      <div class="gen__bar"><i></i></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════ DELETE A CHECKLIST — confirms, names the item count -->
+<div class="modal" id="deletelist" role="dialog" aria-modal="true" aria-labelledby="dl-t" data-when="deletelist" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+      <h2 id="dl-t">Delete Nikhil's packing list?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>Unlike a single item, a whole checklist asks first — this is enough to lose in one click that
+        an inline undo isn't a fair substitute.</p>
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span><span class="mono">3</span> items go with it
+            <span class="damage__d">Comfortable shoes, Rain jacket (done), Portable charger (done) — all three, including the two he's already ticked.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Everyone else's packing lists and all 9 tasks are untouched</span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>He can get a fresh, empty list any time — from a template or added by hand</span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep it</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--danger" data-close>Delete Nikhil's packing list</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PROMOTE — this trip's checklist becomes a reusable template -->
+<div class="modal" id="promote" role="dialog" aria-modal="true" aria-labelledby="pr-t" data-when="promote" hidden>
+  <div class="modal__panel modal__panel--wide">
+    <div class="modal__head">
+      <h2 id="pr-t">Save this trip's checklist as a template</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>Templates belong to you, not to a trip — this one will show up for every future trip, not
+        just the next Vietnam one.</p>
+      <div class="fgrid">
+        <label class="fg"><span class="fg__l">Which list? <span class="fg__req">Required</span></span>
+          <div class="rowline" style="height:34px">
+            <label class="rowline" style="gap:6px"><input class="check" type="radio" name="which" checked style="border-radius:50%">Packing</label>
+            <label class="rowline" style="gap:6px"><input class="check" type="radio" name="which" style="border-radius:50%">Tasks</label>
+          </div>
+        </label>
+        <label class="fg"><span class="fg__l">Template name <span class="fg__req">Required</span></span>
+          <input class="field" type="text" value="Vietnam &amp; Cambodia — packing"></label>
+      </div>
+      <div class="hr hr--tight"></div>
+      <ul class="damage">
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Item names and their order are carried over
+            <span class="damage__d">All 22 packing items, grouped the same way.</span></span></li>
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>Who they belong to and their done-state are stripped
+            <span class="damage__d">A template is structure, not this trip's people — using it on a
+              future trip starts every item unticked and unassigned.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>This trip's own checklist is untouched
+            <span class="damage__d">Promoting copies it into a template — it doesn't move or lock the original.</span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Cancel</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close>Save as a template</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

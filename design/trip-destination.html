@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Destination · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Trip</span>
+      <button class="rev__b" data-v="open" aria-pressed="true">Comparing (open)</button>
+      <button class="rev__b" data-v="sparse">One candidate is sparse</button>
+      <button class="rev__b" data-v="decided">Decided</button>
+      <button class="rev__b" data-v="empty">No candidates</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Deciding</span>
+      <button class="rev__b" data-v="undecide">Un-decide</button>
+      <button class="rev__b" data-v="deletecandidate">Delete a candidate</button>
+      <button class="rev__b" data-v="deleteblocked">Delete blocked</button>
+      <button class="rev__b" data-v="invalid">Bad input</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">AI</span>
+      <button class="rev__b" data-v="aioff">AI off</button>
+      <button class="rev__b" data-v="aigen">Generating</button>
+      <button class="rev__b" data-v="aisuggest">Suggestions ready</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Other</span>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="failed">Load failed</button>
+    </span>
+    <span class="rev__grp" data-axis="lens">
+      <span class="rev__lbl">Money in</span>
+      <button class="rev__b" data-v="inr" aria-pressed="true">INR base</button>
+      <button class="rev__b" data-v="eur">EUR</button>
+      <button class="rev__b" data-v="vnd">VND</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html" aria-current="page">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in">
+    <span class="lens__eyebrow">View in</span>
+    <span data-lens-label>INR</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <!-- ─────────────────────────────────────────────────────── trip head -->
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <a href="trip.html#state=idea" data-when="open sparse empty invalid aioff aigen aisuggest">Kerala backwaters</a>
+      <a href="trip.html" data-when="decided undecide deletecandidate deleteblocked">Vietnam &amp; Cambodia 2026</a>
+      <span data-when="loading failed">This trip</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span>Destination</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>Where are we going?</h1>
+        <div class="thead__meta">
+          <span data-when="open sparse empty invalid aioff aigen aisuggest">Somewhere warm and slow —
+            the group is comparing candidates, none marked yet.</span>
+          <span data-when="decided undecide deletecandidate deleteblocked">Chosen from 3 candidates on
+            <span class="mono">12 Jun</span>. Still reopenable.</span>
+        </div>
+      </div>
+      <div class="thead__acts" data-when-not="loading failed">
+        <a class="btn" href="trip.html#state=idea" data-when="open sparse empty invalid aioff aigen aisuggest">Back to the board</a>
+        <a class="btn" href="trip.html" data-when="decided undecide deletecandidate deleteblocked">Back to the board</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ lens notices ═════════════════════════ -->
+  <div class="stack" style="margin-bottom:16px" data-when-not="loading failed">
+    <div class="banner" data-when="lens:vnd">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div>Converted with a broader 161-currency source, not the European Central Bank feed used
+        elsewhere in the app — that one has no dong. <button class="linkish" data-set="lens:inr">Read in rupees instead</button></div>
+    </div>
+  </div>
+
+  <div data-when-not="loading failed">
+    <div class="split">
+      <div style="min-width:0">
+
+        <!-- ═══════════════════════════════════ OPEN / SPARSE — comparing ═══ -->
+        <div class="card" data-when="open sparse">
+          <div class="card__head">
+            <h2>Candidates being compared</h2>
+            <span style="flex:1"></span>
+            <span class="t-eyebrow" data-when="open">3 on the table</span>
+            <span class="t-eyebrow" data-when="sparse">4 on the table</span>
+          </div>
+          <div class="card__body" style="padding-bottom:12px">
+            <p class="t-meta" style="margin:0 0 12px;font-size:12px">Deciding one clears any other
+              mark — only one candidate can ever be the answer. Nobody is decided yet.</p>
+            <div class="subcard dtable__scroll">
+              <table class="dtable" style="min-width:760px">
+                <thead><tr>
+                  <th style="min-width:170px">Candidate</th>
+                  <th style="min-width:150px">Best dates</th>
+                  <th style="width:110px" class="right">Per person</th>
+                  <th style="min-width:190px">Caveats</th>
+                  <th style="width:84px">Source</th>
+                  <th style="width:150px"></th>
+                </tr></thead>
+                <tbody>
+                  <tr>
+                    <td><span style="font-weight:500">Alleppey</span>
+                      <span class="defrow__d">Backwater houseboat, calm pace — easiest reach from Kochi airport.</span></td>
+                    <td>
+                      <span class="dc__d--sans" style="display:block">Oct–Feb, after the monsoon</span>
+                      <span class="state state--ok" style="font-size:11px;margin-top:3px"><span class="state__dot"></span>Inside the trip's Oct window</span>
+                    </td>
+                    <td class="right"><span class="money" data-m data-inr="₹18,500" data-eur="≈ €170" data-vnd="≈ ₫5,480,000">₹18,500</span></td>
+                    <td class="dc__d dc__d--sans">Houseboat rates roughly double the last week of Dec. No permit needed.</td>
+                    <td><span class="tag">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:3px;vertical-align:-1px"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg>
+                      AI</span></td>
+                    <td>
+                      <button class="btn btn--primary" data-open-modal="decide" style="width:100%">Decide</button>
+                      <button class="iconbtn" aria-label="Delete Alleppey" data-open-modal="deletecandidate" style="margin-top:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span style="font-weight:500">Kumarakom</span>
+                      <span class="defrow__d">Quieter backwaters than Alleppey, better birdwatching on Vembanad Lake.</span></td>
+                    <td>
+                      <span class="dc__d--sans" style="display:block">Nov–Feb, cool and dry</span>
+                      <span class="state state--warn" style="font-size:11px;margin-top:3px"><span class="state__dot"></span>Outside the trip's Oct window</span>
+                    </td>
+                    <td class="right"><span class="money" data-m data-inr="₹21,000" data-eur="≈ €190" data-vnd="≈ ₫6,230,000">₹21,000</span></td>
+                    <td class="dc__d dc__d--sans">Fewer budget stays, mostly resorts. 40 min further from the airport than Alleppey.</td>
+                    <td><span class="tag">Manual</span></td>
+                    <td>
+                      <button class="btn" data-open-modal="decide" style="width:100%">Decide</button>
+                      <button class="iconbtn" aria-label="Delete Kumarakom" data-open-modal="deletecandidate" style="margin-top:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span style="font-weight:500">Munnar</span>
+                      <span class="defrow__d">Tea plantations and hill air — a change of pace from the coast.</span></td>
+                    <td>
+                      <span class="dc__d--sans" style="display:block">Sep–Mar, before the New Year crowds</span>
+                      <span class="state state--ok" style="font-size:11px;margin-top:3px"><span class="state__dot"></span>Inside the trip's Oct window</span>
+                    </td>
+                    <td class="right"><span class="money" data-m data-inr="₹16,800" data-eur="≈ €150" data-vnd="≈ ₫4,980,000">₹16,800</span></td>
+                    <td class="dc__d dc__d--sans">4-hour ghat road from Kochi, landslide-prone in heavy rain. No permit needed.</td>
+                    <td><span class="tag">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:3px;vertical-align:-1px"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg>
+                      AI</span></td>
+                    <td>
+                      <button class="btn" data-open-modal="decide" style="width:100%">Decide</button>
+                      <button class="iconbtn" aria-label="Delete Munnar" data-open-modal="deletecandidate" style="margin-top:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr data-when="sparse">
+                    <td><span style="font-weight:500">Wayanad</span>
+                      <span class="defrow__d dc__v--none">Added in a hurry — nothing else filled in yet</span></td>
+                    <td class="dc__v--none">Not set</td>
+                    <td class="right dash">—</td>
+                    <td class="dc__v--none">Not set</td>
+                    <td><span class="tag">Manual</span></td>
+                    <td>
+                      <button class="btn" disabled style="width:100%" title="Add a best-dates guess and a per-person figure before deciding">Decide</button>
+                      <button class="iconbtn" aria-label="Delete Wayanad" data-open-modal="deletecandidate" style="margin-top:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- add a candidate -->
+          <div class="card__body" style="border-top:1px solid var(--line);background:var(--surface-2)" data-section="addcand">
+            <div class="t-eyebrow" style="margin-bottom:11px">Add a candidate by hand</div>
+            <div class="fgrid">
+              <label class="fg"><span class="fg__l">Name <span class="fg__req">Required</span></span>
+                <input class="field" type="text" placeholder="Wayanad"></label>
+              <label class="fg"><span class="fg__l">Best dates <span class="fg__opt">free text</span></span>
+                <input class="field" type="text" placeholder="Oct–Mar, cooler in the hills"></label>
+              <label class="fg"><span class="fg__l">Per person <span class="fg__opt">optional</span></span>
+                <span class="inp"><span class="inp__pre">₹</span><input type="text" placeholder="19,000"></span></label>
+              <label class="fg"><span class="fg__l">Caveats <span class="fg__opt">optional</span></span>
+                <input class="field" type="text" placeholder="Weather, permits, travel time"></label>
+            </div>
+            <button class="btn">Add this candidate</button>
+          </div>
+        </div>
+
+        <!-- cross-field validation: name missing -->
+        <div class="card" data-when="invalid" style="margin-top:14px">
+          <div class="card__head"><h2>Add a candidate by hand</h2></div>
+          <div class="card__body">
+            <div class="fgrid">
+              <div class="fg" data-invalid><span class="fg__l">Name</span><input class="field" type="text" value="">
+                <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+                  A candidate needs a name. Everything else can wait.</span></div>
+              <label class="fg"><span class="fg__l">Best dates</span><input class="field" type="text" placeholder="Oct–Mar"></label>
+            </div>
+            <button class="btn" disabled>Add this candidate</button>
+            <p class="fg__h" style="margin-top:9px">The button stays visibly unavailable rather than
+              accepting a nameless row and failing later.</p>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ EMPTY ═══════════════ -->
+        <div class="blank" data-when="empty">
+          <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+          <div>
+            <h4>Nothing to compare yet</h4>
+            <p>Add a couple of places by hand, or let the assistant suggest a few from the trip's vibe
+              tags and rough dates. Either way, nothing is decided until you mark one.</p>
+            <div class="blank__act">
+              <button class="btn btn--primary">Add the first candidate</button>
+              <button class="btn" data-set="state:aigen">Suggest with AI</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ AI OFF ══════════════ -->
+        <div class="aioff" data-when="aioff">
+          <span class="aioff__ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg></span>
+          <div>
+            <h4>Suggestions aren't available on this deployment</h4>
+            <p>That's an expected, permanent setting here, not an error — there's nothing to retry and
+              nothing for you to fix. Add candidates by hand below; the comparison table works exactly
+              the same either way.</p>
+          </div>
+        </div>
+        <div class="card" data-when="aioff" style="margin-top:14px">
+          <div class="card__head"><h2>Add a candidate by hand</h2></div>
+          <div class="card__body">
+            <div class="fgrid">
+              <label class="fg"><span class="fg__l">Name <span class="fg__req">Required</span></span>
+                <input class="field" type="text" placeholder="Wayanad"></label>
+              <label class="fg"><span class="fg__l">Best dates</span>
+                <input class="field" type="text" placeholder="Oct–Mar, cooler in the hills"></label>
+            </div>
+            <button class="btn">Add this candidate</button>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ AI GENERATING ═══════ -->
+        <div class="gen" data-when="aigen">
+          <div class="gen__bar"><i></i></div>
+          <h3>Suggesting a few places to compare</h3>
+          <p>Working from this trip's vibe tags — <span class="tag">warm</span> <span class="tag">slow</span> <span class="tag">houseboat</span> — the rough October
+            window, an origin of Bengaluru, and no fixed budget yet. Usually takes under a minute.</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ AI SUGGESTIONS READY ═ -->
+        <div data-when="aisuggest">
+          <div class="banner banner--ok">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <div><b>5 candidates suggested</b> — Alleppey, Kumarakom, Munnar, Wayanad and Kovalam, each
+              with a rationale, a best-dates guess and a rough per-person figure. Review them side by
+              side before anything is added to this table.</div>
+          </div>
+          <a class="btn btn--primary" href="ai-review.html#state=destinations" style="margin-top:12px">Review the 5 suggestions</a>
+        </div>
+
+        <!-- ═══════════════════════════════════ DECIDED — Vietnam & Cambodia ═ -->
+        <div class="card" data-when="decided undecide deletecandidate deleteblocked">
+          <div class="card__head">
+            <h2>Candidates compared</h2>
+            <span style="flex:1"></span>
+            <span class="t-eyebrow">3 considered · 1 decided</span>
+          </div>
+          <div class="card__body" style="padding-bottom:12px">
+            <div class="subcard dtable__scroll">
+              <table class="dtable" style="min-width:800px">
+                <thead><tr>
+                  <th style="min-width:180px">Candidate</th>
+                  <th style="min-width:150px">Best dates</th>
+                  <th style="width:110px" class="right">Per person</th>
+                  <th style="min-width:190px">Caveats</th>
+                  <th style="width:84px">Source</th>
+                  <th style="width:170px"></th>
+                </tr></thead>
+                <tbody>
+                  <tr style="background:var(--ok-wash)">
+                    <td><span class="state state--ok" style="font-size:11px;margin-bottom:3px"><span class="state__dot"></span>Decided</span>
+                      <span style="font-weight:600;display:block">Vietnam &amp; Cambodia</span>
+                      <span class="defrow__d">Street food, temples, boats, first-time SE Asia — covers everyone's top asks.</span></td>
+                    <td>
+                      <span class="dc__d--sans" style="display:block">Nov–Feb, dry and cooler up north; shoulder season keeps Angkor less crowded</span>
+                      <span class="state state--ok" style="font-size:11px;margin-top:3px"><span class="state__dot"></span>Trip dates 6–15 Nov sit inside this</span>
+                    </td>
+                    <td class="right"><span class="money" data-m data-inr="₹80,000" data-eur="≈ €730" data-vnd="≈ ₫23,700,000">₹80,000</span></td>
+                    <td class="dc__d dc__d--sans">Cambodia e-visa needed, ~$30 each, apply 2+ weeks ahead. Ha Long Bay weather is unreliable Dec–Feb.</td>
+                    <td><span class="tag">Manual</span></td>
+                    <td>
+                      <button class="btn" data-open-modal="undecide" data-set="state:undecide" style="width:100%">Un-decide</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span style="font-weight:500">Thailand &amp; Laos</span>
+                      <span class="defrow__d">Cheaper flights from Bengaluru, easier visas.</span></td>
+                    <td><span class="dc__d--sans" style="display:block">Nov–Mar, dry season</span></td>
+                    <td class="right"><span class="money" data-m data-inr="₹62,000" data-eur="≈ €570" data-vnd="≈ ₫18,380,000">₹62,000</span></td>
+                    <td class="dc__d dc__d--sans">Laos internal travel is slow, mostly by road. Less iconic for a first SE Asia trip.</td>
+                    <td><span class="tag">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="margin-right:3px;vertical-align:-1px"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2L12 2z"/></svg>
+                      AI</span></td>
+                    <td>
+                      <button class="btn" disabled title="Decide clears the current choice — pick this one from the un-decided state">Decide</button>
+                      <button class="iconbtn" aria-label="Delete Thailand and Laos" data-open-modal="deletecandidate" style="margin-top:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span style="font-weight:500">Malaysia &amp; Singapore</span>
+                      <span class="defrow__d">Very easy logistics, direct flights, no visas for most.</span></td>
+                    <td><span class="dc__d--sans" style="display:block">Any time — least seasonal of the three</span></td>
+                    <td class="right"><span class="money" data-m data-inr="₹95,000" data-eur="≈ €870" data-vnd="≈ ₫28,160,000">₹95,000</span></td>
+                    <td class="dc__d dc__d--sans">Least "first adventure" feel — closer to a city trip than the group wanted.</td>
+                    <td><span class="tag">Manual</span></td>
+                    <td>
+                      <button class="btn" disabled title="Decide clears the current choice — pick this one from the un-decided state">Decide</button>
+                      <button class="iconbtn" aria-label="Delete Malaysia and Singapore" data-open-modal="deletecandidate" style="margin-top:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rowline" style="margin-top:10px">
+              <button class="iconbtn" aria-label="Try deleting the decided candidate" data-open-modal="deleteblocked" data-set="state:deleteblocked" style="width:auto;height:auto;padding:4px 8px;gap:5px;display:inline-flex;border:1px dashed var(--dash-line);border-radius:var(--r)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg>
+                <span class="t-meta" style="font-size:11px">Try deleting the decided one</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ LOADING ══════════════════════════ -->
+        <div class="card" data-when="loading">
+          <div class="card__head"><h2>Candidates being compared</h2></div>
+          <div class="card__body">
+            <div class="skrow" style="grid-template-columns:minmax(0,1fr) 120px 90px">
+              <span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span>
+              <span class="sk" style="height:11px"></span><span class="sk" style="height:11px"></span>
+            </div>
+            <div class="skrow" style="grid-template-columns:minmax(0,1fr) 120px 90px">
+              <span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span>
+              <span class="sk" style="height:11px"></span><span class="sk" style="height:11px"></span>
+            </div>
+            <div class="skrow" style="grid-template-columns:minmax(0,1fr) 120px 90px">
+              <span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span>
+              <span class="sk" style="height:11px"></span><span class="sk" style="height:11px"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════ FAILED ═══════════════════════════ -->
+        <div data-when="failed">
+          <div class="blank blank--bad">
+            <span class="blank__icon">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <div>
+              <h4>The candidates didn't load</h4>
+              <p>The server answered, but not with the comparison — <span class="mono">502</span> from
+                the API at <span class="mono">14:02</span>. Nothing has been changed or lost; this is a
+                read that failed, not an empty comparison.</p>
+              <div class="blank__act">
+                <button class="btn btn--primary" data-set="state:loading">Try loading it again</button>
+                <a class="btn" href="trip.html">Back to the board</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /main column -->
+
+      <!-- ═══════════════════════════════════════════════════════════ aside ═ -->
+      <aside class="side" data-when-not="loading failed empty aioff aigen aisuggest">
+        <div class="side__card">
+          <h3 class="side__t">Three different notions of "when"</h3>
+          <p class="t-meta" style="margin:0 0 10px;font-size:12px;line-height:1.6">A candidate's best
+            dates, the trip's actual dates, and a goal pinned to a fixed date are three separate things
+            that all happen to be about time. They don't reconcile themselves.</p>
+          <dl class="kv" style="grid-template-columns:118px minmax(0,1fr);font-size:12.5px" data-when="open sparse invalid">
+            <dt>Candidate says</dt><dd>Each row's own free-text guess — see the table</dd>
+            <dt>Trip says</dt><dd><span class="mono">Sometime in October</span>, not chosen yet</dd>
+            <dt>Goals say</dt><dd>Nothing pinned to a date yet — too early</dd>
+          </dl>
+          <dl class="kv" style="grid-template-columns:118px minmax(0,1fr);font-size:12.5px" data-when="decided undecide deletecandidate deleteblocked">
+            <dt>Candidate said</dt><dd>Nov–Feb, dry season</dd>
+            <dt>Trip's dates are</dt><dd><span class="mono">6–15 Nov 2026</span>, confirmed</dd>
+            <dt>Goals pinned inside</dt><dd>Ha Long junk (<span class="mono">8 Nov</span>) ·
+              Angkor sunrise (<span class="mono">15 Nov</span>)</dd>
+          </dl>
+        </div>
+        <div class="side__card" data-when="open sparse invalid">
+          <h3 class="side__t">Reading the flags in the table</h3>
+          <p class="t-meta" style="margin:0;font-size:12px;line-height:1.6">Kumarakom's own best-dates
+            guess is Nov–Feb — it doesn't actually cover the October window this trip is aiming for. The
+            table says so next to the date, before anyone decides on it by accident.</p>
+        </div>
+        <div class="reassure" data-when="decided">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+          <div><b>Decided isn't sealed.</b> Un-deciding is always available and destroys nothing by
+            itself — it just says the question is open again.</div>
+        </div>
+      </aside>
+
+    </div><!-- /split -->
+  </div><!-- /data-when-not loading failed -->
+
+</main>
+
+<!-- ═══════════════════════ DECIDE — exclusive, and it clears any other mark ═ -->
+<div class="modal" id="decide" role="dialog" aria-modal="true" aria-labelledby="dec-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+      <h2 id="dec-t">Make Alleppey the destination?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>Deciding is exclusive — this clears any other candidate's mark, though none is set yet here.</p>
+      <ul class="damage">
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Kumarakom and Munnar stay on record, just no longer marked
+            <span class="damage__d">Nothing about them is deleted — un-deciding brings the comparison back exactly as it is now.</span></span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>This trip can now move toward <b>Confirmed</b>
+            <span class="damage__d">Destination decided is one of the two things Confirmed needs — dates are still a window, so it isn't there yet.</span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep comparing</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close>Decide on Alleppey</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ UN-DECIDE — names what was built on this choice ═══════ -->
+<div class="modal" id="undecide" role="dialog" aria-modal="true" aria-labelledby="und-t" data-when="undecide" hidden>
+  <div class="modal__panel modal__panel--wide">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg></span>
+      <h2 id="und-t">Un-decide Vietnam &amp; Cambodia?</h2>
+      <button class="iconbtn" data-close data-set="state:decided" aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>This isn't a small edit. A <b>₹4,80,000 budget</b> and a <b>10-day, 41-item itinerary</b> were
+        built around this exact choice. Here is exactly what happens and what doesn't:</p>
+      <ul class="damage">
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Nothing is deleted automatically
+            <span class="damage__d">The itinerary's 10 days, the budget's 8 categories and the
+              checklists all stay exactly as they are — un-deciding a destination never cascades into
+              deleting content, unlike reopening the date decision does.</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>Everything downstream keeps talking about a place that's no longer decided
+            <span class="damage__d">Day 3's "Overnight on a Ha Long junk", the budget's "Cambodia e-visa
+              fees" line, the checklist task "Get Cambodia e-visas" — all of it stays worded for Vietnam
+              &amp; Cambodia until you either pick a new destination or edit these by hand.</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>The trip can no longer stay <b>Confirmed</b>
+            <span class="damage__d">Confirmed needs both dates and a decided destination. Without a
+              destination it drops to <b>Planning</b> until you decide again — you're told this before
+              the click, not after.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>All 3 candidates come back into the comparison, none of them marked
+            <span class="damage__d">Including Vietnam &amp; Cambodia itself — re-deciding it is one click.</span></span></li>
+      </ul>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+        <div><b>Nothing is destroyed here.</b> This reopens a decision — it doesn't erase the work built on it.</div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close data-set="state:decided">Keep it decided</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close data-set="state:open">Un-decide the destination</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DELETE a non-decided candidate ═══════════════════════ -->
+<div class="modal" id="deletecandidate" role="dialog" aria-modal="true" aria-labelledby="delc-t" data-when="deletecandidate" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+      <h2 id="delc-t">Delete "Malaysia &amp; Singapore" from the comparison?</h2>
+      <button class="iconbtn" data-close data-set="state:decided" aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>The candidate and its rationale, dates guess, budget figure and caveats — gone
+            <span class="damage__d">Nothing else on the trip refers to it, so nothing else is affected.</span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close data-set="state:decided">Keep it</button><span class="modal__sp"></span>
+      <button class="btn btn--danger" data-close data-set="state:decided">Delete the candidate</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DELETE blocked — it's the decided one ═══════════════════ -->
+<div class="modal" id="deleteblocked" role="dialog" aria-modal="true" aria-labelledby="delb-t" data-when="deleteblocked" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+      <h2 id="delb-t">Vietnam &amp; Cambodia can't be deleted while it's decided</h2>
+      <button class="iconbtn" data-close data-set="state:decided" aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>A decided candidate is the trip's actual destination — a ₹4,80,000 budget and a 10-day
+        itinerary already assume it. Deleting it out from under that would leave both pointing at
+        nothing, so it's not offered.</p>
+      <ul class="damage">
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>Un-decide it first
+            <span class="damage__d">That reopens the comparison without deleting anything. Once it's no longer marked, deleting it works like any other candidate.</span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn--primary" data-close data-set="state:decided">Got it</button>
+      <span class="modal__sp"></span>
+      <button class="btn" data-close data-set="state:undecide" data-open-modal="undecide">Un-decide it first</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ the currency lens — a view control, nothing more -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:430px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">Changes what you see, nothing else. These are rough per-person
+        figures for comparing candidates — not a drafted budget yet.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">This trip's own currency — the authoritative figures</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+      </button>
+      <button class="pal__r" data-set="lens:vnd" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">VND</span>
+        <span><span class="pal__n">Vietnamese dong</span><span class="pal__d">161-currency source · rates as of 29 Jul 2026</span></span>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">A guide for comparing
+        candidates — not what a card issuer or a money changer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

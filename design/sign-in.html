@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">State</span>
+      <button class="rev__b" data-v="idle" aria-pressed="true">Idle</button>
+      <button class="rev__b" data-v="submitting">Submitting</button>
+      <button class="rev__b" data-v="wrong">Wrong credentials</button>
+      <button class="rev__b" data-v="expired">Session expired mid-work</button>
+      <button class="rev__b" data-v="signedout">Signed out</button>
+      <button class="rev__b" data-v="failed">Server unreachable</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- No app bar on this page — there is nothing to navigate to until you're in,
+     and no currency lens because there is nothing to read amounts of. A small
+     wordmark is kept only so the page doesn't feel stranded. -->
+<main style="min-height:calc(100vh - 40px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;background:var(--page)">
+  <div style="width:100%;max-width:408px">
+
+    <div style="text-align:center;margin-bottom:22px">
+      <a href="trips.html" style="font-size:14.5px;font-weight:600;color:var(--ink);text-decoration:none;letter-spacing:-.01em">Tripper</a>
+    </div>
+
+    <div class="card">
+      <div class="card__body" style="padding:24px 24px 22px">
+
+        <!-- ══════════════════════════ session expired mid-work — the state that matters -->
+        <div data-when="expired" style="margin-bottom:16px">
+          <div class="banner">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+            <div><b>You were signed out after 40 minutes idle</b> while adding a per-person budget
+              override for Lena Hoffmann on <b>Vietnam &amp; Cambodia 2026</b>.</div>
+          </div>
+          <div class="reassure" style="margin-top:10px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+            <div><b>What you typed is not lost.</b> It was never sent to the server, but it's still
+              sitting safely in this browser. Sign in and you'll land back on that override, filled
+              in exactly as you left it — not on the trip list.</div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ a deliberate, calm sign-out -->
+        <div class="banner banner--info" data-when="signedout" style="margin-bottom:16px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <div><b>You're signed out.</b> Nothing was in progress when you signed out, so there's
+            nothing to pick back up — sign in again whenever you like.</div>
+        </div>
+
+        <!-- ══════════════════════════════════════════ wrong credentials, one message -->
+        <div class="banner banner--bad" data-when="wrong" style="margin-bottom:16px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <div><b>The email or password is incorrect.</b> That's all this can tell you — not which
+            one, since saying that would help someone guessing a password.</div>
+        </div>
+
+        <!-- ═══════════════════════════════════ server unreachable, distinct from "wrong" -->
+        <div class="banner banner--bad" data-when="failed" style="margin-bottom:16px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <div><b>We can't reach the sign-in server right now.</b> Your email and password haven't
+            been checked at all — this isn't a wrong-credentials answer, it's no answer.
+            <button class="linkish linkish--bad" data-set="state:idle" style="margin-left:2px">Try again</button></div>
+        </div>
+
+        <h1 class="t-page" style="font-size:22px;margin:0 0 5px">Sign in</h1>
+        <p class="t-meta" style="margin:0 0 20px;font-size:12.5px;color:var(--ink-2)" data-when-not="expired">
+          Use the email and password your organizer set up for you.
+        </p>
+        <p class="t-meta" style="margin:0 0 20px;font-size:12.5px;color:var(--ink-2)" data-when="expired">
+          Sign in again with the same account to continue.
+        </p>
+
+        <form onsubmit="return false" data-section="signin">
+
+          <!-- fresh visit, or a clean retry after a server failure: nothing typed yet -->
+          <div data-when="idle failed">
+            <label class="fg"><span class="fg__l">Email</span>
+              <input class="field" type="email" autocomplete="username" placeholder="you@example.com"></label>
+            <label class="fg"><span class="fg__l">Password</span>
+              <input class="field" type="password" autocomplete="current-password" placeholder="••••••••"></label>
+          </div>
+
+          <!-- returning to a known account: the browser remembers who this device is -->
+          <div data-when="expired signedout wrong">
+            <label class="fg"><span class="fg__l">Email</span>
+              <input class="field" type="email" autocomplete="username" value="vignesh@tripper-demo.example"></label>
+            <label class="fg"><span class="fg__l">Password</span>
+              <input class="field" type="password" autocomplete="current-password" placeholder="••••••••" data-autofocus></label>
+          </div>
+
+          <!-- in flight: disabled, but the values stay legible rather than fading to nothing -->
+          <div data-when="submitting">
+            <label class="fg"><span class="fg__l">Email</span>
+              <input class="field" type="email" autocomplete="username" value="vignesh@tripper-demo.example" disabled></label>
+            <label class="fg"><span class="fg__l">Password</span>
+              <input class="field" type="password" autocomplete="current-password" value="••••••••" disabled></label>
+          </div>
+
+          <button class="btn btn--primary" type="submit" style="width:100%;justify-content:center;margin-top:4px" data-when-not="submitting">
+            <span data-when="expired">Sign in and return to the budget</span>
+            <span data-when-not="expired">Sign in</span>
+          </button>
+          <button class="btn btn--primary" type="submit" style="width:100%;justify-content:center;margin-top:4px" disabled data-when="submitting">
+            <span class="spin"></span>
+            Signing in…
+          </button>
+        </form>
+
+      </div>
+    </div>
+
+    <p class="t-meta" style="margin:16px 4px 0;font-size:11.5px;line-height:1.6;text-align:center;color:var(--ink-3)">
+      Accounts are set up by whoever runs your organization's Tripper. There's no self-serve sign-up
+      and no password reset here — ask them if you're locked out.
+    </p>
+
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

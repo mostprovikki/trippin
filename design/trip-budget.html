@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Budget · Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Saving</span>
+      <button class="rev__b" data-v="dirty">Unsaved edit</button>
+      <button class="rev__b" data-v="saving">Saving</button>
+      <button class="rev__b" data-v="savefailed">Save failed</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Override</span>
+      <button class="rev__b" data-v="override">Adding one</button>
+      <button class="rev__b" data-v="overrideblocked">Blocked</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">AI draft</span>
+      <button class="rev__b" data-v="aioff">Off</button>
+      <button class="rev__b" data-v="aigen">Generating</button>
+      <button class="rev__b" data-v="aifailed">Failed</button>
+    </span>
+    <!-- Kept last among the "state" groups on purpose: app.js seeds one shared
+         axis by walking every .rev__grp in DOM order and taking each group's
+         pressed-or-first button, so with several groups on one axis the LAST
+         group decides the no-hash default. This is the group that should win. -->
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Budget</span>
+      <button class="rev__b" data-v="populated" aria-pressed="true">Populated</button>
+      <button class="rev__b" data-v="never">Never drafted</button>
+      <button class="rev__b" data-v="zeros">Genuinely ₹0</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+    </span>
+    <span class="rev__grp" data-axis="lens">
+      <span class="rev__lbl">Money in</span>
+      <button class="rev__b" data-v="inr" aria-pressed="true">INR base</button>
+      <button class="rev__b" data-v="eur">EUR</button>
+      <button class="rev__b" data-v="vnd">VND · no rate</button>
+      <button class="rev__b" data-v="vndlive">VND · live source</button>
+      <button class="rev__b" data-v="zero">Converted zero</button>
+      <button class="rev__b" data-v="stale">Stale</button>
+      <button class="rev__b" data-v="failed">Rates failed</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html" aria-current="page">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in">
+    <span class="lens__eyebrow">View in</span>
+    <span data-lens-label>INR</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <!-- ─────────────────────────────────────────────────────── trip head -->
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <a href="trip.html">Vietnam &amp; Cambodia 2026</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span>Budget</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>What this trip will cost</h1>
+        <div class="thead__meta">
+          <span>Eight fixed categories, one trip total, an equal split with room for
+            someone to pay differently.</span>
+        </div>
+      </div>
+      <div class="thead__acts">
+        <a class="btn" href="trip.html">Back to the board</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── trip nav -->
+  <nav class="tnav" aria-label="This trip">
+    <a href="trip.html">Board</a>
+    <a href="trip-itinerary.html">Itinerary <span class="tnav__n">10 days</span></a>
+    <a href="trip-budget.html" aria-current="page">Budget <span class="tnav__n" data-m data-inr="₹4,80,000" data-eur="≈ €4,400" data-vnd="" data-vndlive="≈ ₫142,300,000" data-zero="≈ €0" style="color:var(--ink);font-weight:600">₹4,80,000</span></a>
+    <a href="trip-people.html">People <span class="tnav__n">6</span></a>
+    <a href="trip-checklists.html">Checklists <span class="tnav__n tnav__n--warn">3 overdue</span></a>
+  </nav>
+
+  <!-- ───────────────────────────────────────────── lens-level notices -->
+  <div class="stack" style="margin-bottom:16px">
+    <div class="banner" data-when="lens:vnd">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>We can't convert to Vietnamese dong from this rate source.</b> The European
+        Central Bank feed covers 31 currencies and the dong isn't one — every figure below is
+        still the trip's own rupee amount, unconverted. <b>Money in → VND · live source</b> in the
+        review strip shows what a source that does carry the dong would render, for comparison.
+        <button class="linkish" data-set="lens:eur" style="margin-left:4px">Read in euro instead</button>
+        or <button class="linkish" data-set="lens:inr">stay in rupees</button>.</div>
+    </div>
+    <div class="banner" data-when="lens:vndlive">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>A second, 161-currency source does carry the dong.</b> Its figures run nine digits —
+        the trip total alone is <span class="mono">₫142,300,000</span>. Every table below keeps
+        full digits so the column still lines up; only card-sized slots abbreviate to
+        <span class="mono">≈ ₫142.3M</span>.</div>
+    </div>
+    <div class="banner" data-when="lens:zero">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>Review-only lens: simulates a rate that has collapsed to zero.</b> Every amount on
+        the page should read <span class="mono">≈ €0</span> — plainly, in the muted converted
+        treatment — never a blank cell and never the bare rupee figure pretending nothing changed.</div>
+    </div>
+    <div class="banner banner--bad" data-when="lens:failed">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>Today's rates couldn't be fetched, so every amount below is showing in rupees.</b>
+        We won't show yesterday's rate as if it were today's.
+        <button class="linkish linkish--bad" data-set="lens:eur">Try again</button></div>
+    </div>
+    <div class="banner" data-when="lens:stale">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+      <div><b>These rates are from 09:12 this morning and the source has published a new set since.</b>
+        The difference is usually a fraction of a percent, but figures below aren't today's closing
+        rate. <button class="linkish" data-set="lens:eur">Refresh the rates</button></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ save-state notices (product, not lens) -->
+  <div class="banner banner--info" data-when="saving" style="margin-bottom:16px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+    <div><b>Saving 1 change — Leisure <span class="mono">₹12,000 → ₹15,000</span>.</b> The total and
+      everyone's share still reflect the saved <span class="mono">₹4,80,000</span> until this lands.</div>
+  </div>
+  <div class="banner banner--bad" data-when="savefailed" style="margin-bottom:16px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+    <div><b>That save didn't go through.</b> Nothing is lost — Leisure still shows your typed
+      <span class="mono">₹15,000</span> below, and the saved total is unchanged at
+      <span class="mono">₹4,80,000</span> until you retry.
+      <button class="linkish linkish--bad" data-set="state:saving">Try saving again</button>
+      or <button class="linkish" data-set="state:populated">discard the change</button>.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════ NEVER / AIOFF / AIGEN / AIFAILED ═ -->
+  <div data-when="never aioff aigen aifailed">
+    <div class="card">
+      <div class="card__head">
+        <h2>Budget by category</h2>
+        <span style="flex:1"></span>
+        <span class="t-eyebrow">8 fixed categories</span>
+      </div>
+      <div class="card__body">
+        <p class="t-meta" style="margin:0 0 14px;max-width:78ch">There is no "add a category" here
+          — every trip in Tripper carries the same eight, so budgets stay comparable across trips.
+          A category this trip doesn't need is left blank (below) or set to a real
+          <span class="mono">₹0</span> — those two read very differently on purpose.</p>
+        <div class="metrics">
+          <div class="metric metric--off"><div class="metric__k">Primary transport</div><div class="metric__v">Not drafted</div></div>
+          <div class="metric metric--off"><div class="metric__k">Secondary transport</div><div class="metric__v">Not drafted</div></div>
+          <div class="metric metric--off"><div class="metric__k">Stay</div><div class="metric__v">Not drafted</div></div>
+          <div class="metric metric--off"><div class="metric__k">Food</div><div class="metric__v">Not drafted</div></div>
+          <div class="metric metric--off"><div class="metric__k">Activities</div><div class="metric__v">Not drafted</div></div>
+          <div class="metric metric--off"><div class="metric__k">Shopping</div><div class="metric__v">Not drafted</div></div>
+          <div class="metric metric--off"><div class="metric__k">Leisure</div><div class="metric__v">Not drafted</div></div>
+          <div class="metric metric--off"><div class="metric__k">Misc</div><div class="metric__v">Not drafted</div></div>
+        </div>
+        <p class="t-meta" style="margin:12px 0 0;font-size:12px">Nobody has drafted this budget
+          yet. That is <b>not</b> the same as a budget where every category was drafted and really
+          does come to zero — compare with <b>Budget → Genuinely ₹0</b> in the review strip.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px" data-when="never">
+      <div class="card__head"><h2>Get a first draft</h2></div>
+      <div class="card__body">
+        <p>Two ways to start, neither required before the other:</p>
+        <div class="blank__act" style="margin:0 0 10px">
+          <a class="btn btn--primary" href="ai-review.html#state=budget">Draft this budget with AI</a>
+        </div>
+        <p class="t-meta" style="margin:0;font-size:12px">Suggests all eight categories from the
+          trip's dates, the six people and Vietnam &amp; Cambodia's typical costs — you review and
+          keep or drop every line before anything saves. Or open any category above and type a
+          number yourself; there's no wizard forcing an order.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px" data-when="aioff">
+      <div class="card__body">
+        <div class="aioff">
+          <span class="aioff__ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.8 2.8M17.2 6.8L20 4M17.2 17.2L20 20M6.8 17.2L4 20"/></svg></span>
+          <div>
+            <h4>AI drafting is off for this workspace</h4>
+            <p>An administrator turned this off for everyone here — it isn't something that failed
+              and it isn't specific to this trip. Filling in the eight categories by hand works
+              exactly the same either way; open any category above and type what you know.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px" data-when="aigen">
+      <div class="card__body">
+        <div class="gen">
+          <div class="gen__bar"><i></i></div>
+          <h3>Drafting your budget…</h3>
+          <p>Reading the dates, the six people on this trip, and typical costs for a 10-day
+            Vietnam &amp; Cambodia trip. Usually well under a minute. You'll review every line —
+            nothing saves until you say so.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px" data-when="aifailed">
+      <div class="card__body">
+        <div class="banner banner--bad">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <div><b>The draft didn't come back.</b> None of the eight categories were touched and
+            nothing was saved — this is exactly the same "not drafted" state you started from.
+            <button class="linkish linkish--bad" data-set="state:aigen">Try again</button></div>
+        </div>
+        <p class="t-meta" style="margin:12px 0 0">Or skip it and open any category above to type a
+          number yourself.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ ZEROS ═══════════ -->
+  <div data-when="zeros">
+    <div class="banner banner--info" style="margin-bottom:14px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>Every category was drafted, and every one of them really is ₹0.</b> This trip is
+        being tracked by actual spend only, not a forecast — a deliberate choice someone made, not
+        an empty form. Compare with <b>Budget → Never drafted</b> in the review strip.</div>
+    </div>
+    <div class="card">
+      <div class="card__head">
+        <h2>Budget by category</h2>
+        <span style="flex:1"></span>
+        <span class="t-eyebrow">8 of 8 drafted</span>
+      </div>
+      <div class="card__body">
+        <div class="metrics">
+          <div class="metric"><div class="metric__k">Primary transport</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">Flights on airline miles</div></div>
+          <div class="metric"><div class="metric__k">Secondary transport</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">Folded into the daily float</div></div>
+          <div class="metric"><div class="metric__k">Stay</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">Comped, staying with family</div></div>
+          <div class="metric"><div class="metric__k">Food</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">One shared kitty, not pre-estimated</div></div>
+          <div class="metric"><div class="metric__k">Activities</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">Free walking tours and beach days</div></div>
+          <div class="metric"><div class="metric__k">Shopping</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">Nobody's planning to buy anything</div></div>
+          <div class="metric"><div class="metric__k">Leisure</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">No spa or bar budget set aside</div></div>
+          <div class="metric"><div class="metric__k">Misc</div>
+            <div class="metric__v"><span class="money" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span></div>
+            <div class="metric__d metric__d--sans">No buffer — watched closely instead</div></div>
+        </div>
+      </div>
+      <div class="card__body" style="border-top:1px solid var(--line);background:var(--surface-2)">
+        <div class="rowline" style="justify-content:space-between">
+          <span class="t-eyebrow" style="font-size:11px">Trip total</span>
+          <span class="money money--big" data-m data-inr="₹0" data-eur="≈ €0" data-vnd="" data-vndlive="≈ ₫0" data-zero="≈ €0">₹0</span>
+        </div>
+        <p class="t-meta" style="margin:8px 0 0;font-size:12px">Split six ways, that's
+          <span class="mono">₹0</span> each too. Nobody is overridden — there's nothing to
+          override.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ LOADING ═════════ -->
+  <div data-when="loading" class="split">
+    <div>
+      <div class="card">
+        <div class="card__head"><span class="sk sk--l1" style="width:140px"></span></div>
+        <div class="card__body">
+          <div class="metrics">
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+            <div class="metric"><span class="sk sk--l2" style="display:block;width:70%"></span><span class="sk sk--l1" style="display:block;margin-top:8px;width:50%"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="side__card">
+        <span class="sk sk--l1" style="display:block;width:60%"></span>
+        <span class="sk sk--l2" style="display:block;margin-top:10px;width:80%"></span>
+        <span class="sk sk--l2" style="display:block;margin-top:6px;width:40%"></span>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ══════════════ POPULATED / DIRTY / SAVING / SAVEFAILED / OVERRIDE(±) ═══ -->
+  <div data-when="populated dirty saving savefailed override overrideblocked" class="split">
+    <div>
+
+      <div class="card">
+        <div class="card__head">
+          <h2>Budget by category</h2>
+          <span style="flex:1"></span>
+          <span class="state state--ok" style="font-size:12px" data-when-not="dirty saving savefailed"><span class="state__dot"></span>All 8 drafted</span>
+          <span class="dirty" data-when="dirty saving savefailed">1 unsaved change</span>
+        </div>
+        <div class="card__body">
+          <p class="t-meta" style="margin:0 0 14px;max-width:78ch">Fixed at eight — there's no "add
+            a category" for this trip or any other, so every budget in Tripper stays comparable.
+            A category this trip doesn't need can sit at a real <span class="mono">₹0</span>
+            rather than being forced to carry an estimate.</p>
+          <div class="subcard dtable__scroll">
+            <table class="dtable">
+              <thead><tr>
+                <th style="min-width:150px">Category</th>
+                <th>Basis</th>
+                <th style="width:170px" class="right">Estimate</th>
+                <th style="width:36px"></th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:500">Primary transport</td>
+                  <td class="t-meta" style="font-size:12px">6 × return BLR–HAN and REP–BLR, Nov fares</td>
+                  <td class="right"><span class="money" data-m data-inr="₹1,68,000" data-eur="≈ €1,540" data-vnd="" data-vndlive="≈ ₫49,800,000" data-zero="≈ €0">₹1,68,000</span></td>
+                  <td><button class="iconbtn" aria-label="Edit primary transport" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500">Secondary transport</td>
+                  <td class="t-meta" style="font-size:12px">2 internal flights, 1 sleeper train, Grab everywhere</td>
+                  <td class="right"><span class="money" data-m data-inr="₹39,000" data-eur="≈ €360" data-vnd="" data-vndlive="≈ ₫11,600,000" data-zero="≈ €0">₹39,000</span></td>
+                  <td><button class="iconbtn" aria-label="Edit secondary transport" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500">Stay</td>
+                  <td class="t-meta" style="font-size:12px">9 nights × 3 twin rooms × ₹4,000</td>
+                  <td class="right"><span class="money" data-m data-inr="₹1,08,000" data-eur="≈ €990" data-vnd="" data-vndlive="≈ ₫32,000,000" data-zero="≈ €0">₹1,08,000</span></td>
+                  <td><button class="iconbtn" aria-label="Edit stay" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500">Food</td>
+                  <td class="t-meta" style="font-size:12px">10 days × 6 people × ₹960, street food led</td>
+                  <td class="right"><span class="money" data-m data-inr="₹57,600" data-eur="≈ €530" data-vnd="" data-vndlive="≈ ₫17,100,000" data-zero="≈ €0">₹57,600</span></td>
+                  <td><button class="iconbtn" aria-label="Edit food" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500">Activities</td>
+                  <td class="t-meta" style="font-size:12px">Ha Long junk, Angkor 3-day pass, cooking class</td>
+                  <td class="right"><span class="money" data-m data-inr="₹50,400" data-eur="≈ €460" data-vnd="" data-vndlive="≈ ₫14,900,000" data-zero="≈ €0">₹50,400</span></td>
+                  <td><button class="iconbtn" aria-label="Edit activities" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500">Shopping</td>
+                  <td class="t-meta" style="font-size:12px">Hoi An tailoring, about ₹6,000 each</td>
+                  <td class="right"><span class="money" data-m data-inr="₹36,000" data-eur="≈ €330" data-vnd="" data-vndlive="≈ ₫10,700,000" data-zero="≈ €0">₹36,000</span></td>
+                  <td><button class="iconbtn" aria-label="Edit shopping" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500">Leisure<span data-when="dirty saving savefailed" style="display:block;font-family:var(--sans);font-size:11.5px;font-weight:400;color:var(--info);margin-top:2px">Being edited below</span></td>
+                  <td class="t-meta" style="font-size:12px">one beach afternoon, one spa evening</td>
+                  <td class="right">
+                    <span class="money" data-when-not="dirty saving savefailed" data-m data-inr="₹12,000" data-eur="≈ €110" data-vnd="" data-vndlive="≈ ₫3,560,000" data-zero="≈ €0">₹12,000</span>
+                    <span data-when="dirty saving savefailed" class="mono" style="font-weight:600">
+                      <span class="money" data-m data-inr="₹15,000" data-eur="≈ €140" data-vnd="" data-vndlive="≈ ₫4,450,000" data-zero="≈ €0">₹15,000</span>
+                    </span>
+                  </td>
+                  <td><button class="iconbtn" aria-label="Edit leisure" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:500">Misc</td>
+                  <td class="t-meta" style="font-size:12px">buffer and visa-on-arrival fees</td>
+                  <td class="right"><span class="money" data-m data-inr="₹9,000" data-eur="≈ €83" data-vnd="" data-vndlive="≈ ₫2,670,000" data-zero="≈ €0">₹9,000</span></td>
+                  <td><button class="iconbtn" aria-label="Edit misc" data-when-not="saving"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="rowline" style="justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+            <span class="t-eyebrow" style="font-size:11px">Trip total</span>
+            <span class="money money--big" data-m data-inr="₹4,80,000" data-eur="≈ €4,400" data-vnd="" data-vndlive="≈ ₫142,300,000" data-zero="≈ €0">₹4,80,000</span>
+          </div>
+          <div class="prov" data-when="lens:eur lens:vndlive" style="margin-top:6px"><span class="prov__d"></span>rates as of 29 Jul 2026</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ the load-bearing state: editing while converted ═ -->
+      <div class="card" style="margin-top:14px" data-when="dirty saving savefailed">
+        <div class="card__head"><h2>Editing "Leisure" while reading in <span data-lens-label style="text-transform:none;font-family:var(--mono)">INR</span></h2></div>
+        <div class="card__body" data-section="leisureedit">
+          <label class="fg" style="margin-bottom:8px">
+            <span class="fg__l">Estimate <span class="fg__opt">always entered in the trip's own currency — rupees</span></span>
+            <span class="inp" style="max-width:340px">
+              <span class="inp__pre">₹</span>
+              <input type="number" value="15000" aria-label="Leisure estimate in rupees, the trip's base currency" data-when-not="saving">
+              <input type="number" value="15000" aria-label="Leisure estimate in rupees, the trip's base currency" disabled data-when="saving">
+              <span class="inp__aside" data-when-not="lens:inr" aria-label="Read-only conversion, for reference only">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+                <span class="money" data-m data-inr="₹15,000" data-eur="≈ €140" data-vnd="" data-vndlive="≈ ₫4,450,000" data-zero="≈ €0">₹15,000</span>
+              </span>
+            </span>
+            <span class="fg__h" data-when-not="lens:inr">Read-only, for reference only. Whatever
+              currency you're reading in above, this box always saves rupees — typing into it can
+              never accidentally save a euro or dong figure as if it were rupees.</span>
+            <span class="fg__h" data-when="lens:inr">You're already reading in rupees, so there's
+              nothing extra to show. Open <b>View in</b> above and pick EUR or dong to see the
+              read-only conversion appear beside the field.</span>
+          </label>
+          <div class="rowline" style="justify-content:space-between">
+            <span class="dirty" data-when="dirty">Changed from <span class="mono">₹12,000</span></span>
+            <span class="t-meta" style="font-size:12px" data-when="saving">Saving…</span>
+            <span class="t-meta" style="font-size:12px;color:var(--bad)" data-when="savefailed">Not saved — still <span class="mono">₹15,000</span> here, unsent</span>
+            <span data-when="dirty">
+              <button class="btn" data-set="state:populated">Discard</button>
+              <button class="btn btn--primary" data-set="state:saving">Save</button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════ adding / blocking an override ═ -->
+      <div class="card" style="margin-top:14px" data-when="override">
+        <div class="card__head"><h2>Override Lena Hoffmann's share</h2></div>
+        <div class="card__body">
+          <p>The standard split is <span class="mono">₹80,000</span> each. Lena skips the Cambodia
+            leg, so her share is smaller — nobody else's share changes because of this.</p>
+          <div class="fgrid">
+            <label class="fg"><span class="fg__l">Person <span class="fg__req">Required</span></span>
+              <select>
+                <option selected>Lena Hoffmann — Munich, confirmed</option>
+                <option>Asha Kumar — Chennai, confirmed</option>
+                <option>Meera Iyer — Bengaluru, confirmed</option>
+                <option>Daniel Weiss — Berlin, confirmed</option>
+                <option>Ravi Menon — Bengaluru, not confirmed</option>
+                <option>Nikhil Rao — Mumbai, not confirmed</option>
+              </select>
+              <span class="fg__h">Only this trip's 6 participants can be picked.</span>
+            </label>
+            <label class="fg"><span class="fg__l">Her share <span class="fg__req">Required</span></span>
+              <span class="inp">
+                <span class="inp__pre">₹</span>
+                <input type="number" value="64000" aria-label="Lena's overridden share, in rupees">
+                <span class="inp__aside" data-when-not="lens:inr" aria-label="Read-only conversion, for reference only">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+                  <span class="money" data-m data-inr="₹64,000" data-eur="≈ €590" data-vnd="" data-vndlive="≈ ₫19,000,000" data-zero="≈ €0">₹64,000</span>
+                </span>
+              </span>
+            </label>
+            <label class="fg"><span class="fg__l">Why <span class="fg__opt">optional, visible to the group</span></span>
+              <input class="field" type="text" value="Skips the Cambodia leg — Vietnam only">
+            </label>
+          </div>
+          <div class="banner banner--info">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+            <div>Saving this recomputes the other five shares: <span class="mono">₹4,80,000 − ₹64,000 = ₹4,16,000</span>,
+              then <span class="mono">÷ 5 = ₹83,200</span> each. Nobody but Lena is asked to confirm anything again.</div>
+          </div>
+        </div>
+        <div class="modal__foot" style="border-radius:0 0 var(--r-lg) var(--r-lg)">
+          <button class="btn" data-set="state:populated">Cancel</button>
+          <span class="modal__sp"></span>
+          <button class="btn btn--primary" data-set="state:populated">Save the override</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px" data-when="overrideblocked">
+        <div class="card__head"><h2>Override someone's share</h2></div>
+        <div class="card__body">
+          <div class="fg" data-invalid style="margin-bottom:10px">
+            <span class="fg__l">Person <span class="fg__req">Required</span></span>
+            <input class="field" type="text" value="Priya">
+            <span class="fg__err">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+              Priya isn't on this trip. Overrides only apply to this trip's 6 participants —
+              Asha, Meera, Daniel, Lena, Ravi and Nikhil.
+            </span>
+          </div>
+          <div class="blank" style="padding:14px 15px">
+            <span class="blank__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+            <div>
+              <h4>Add Priya to this trip first</h4>
+              <p>She's in your directory from Rajasthan in February. Adding her to Vietnam &amp;
+                Cambodia 2026 doesn't touch that other trip, and her share defaults to the standard
+                split until you override it.</p>
+              <div class="blank__act">
+                <a class="btn btn--primary" href="trip-people.html#state=empty">Add Priya to this trip</a>
+                <button class="btn" data-set="state:populated">Never mind</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left column -->
+
+    <aside class="side" data-when-not="overrideblocked">
+      <div class="side__card">
+        <h3 class="side__t">How the split works</h3>
+        <div class="mono" style="font-size:13px;line-height:2.1">
+          <div class="rowline" style="justify-content:space-between">
+            <span class="t-body">Trip total</span>
+            <span class="money" data-m data-inr="₹4,80,000" data-eur="≈ €4,400" data-vnd="" data-vndlive="≈ ₫142,300,000" data-zero="≈ €0">₹4,80,000</span>
+          </div>
+          <div class="rowline" style="justify-content:space-between;color:var(--ink-2)">
+            <span class="t-body">− Lena Hoffmann, overridden</span>
+            <span class="money" data-m data-inr="₹64,000" data-eur="≈ €590" data-vnd="" data-vndlive="≈ ₫19,000,000" data-zero="≈ €0">₹64,000</span>
+          </div>
+          <div class="hr hr--tight"></div>
+          <div class="rowline" style="justify-content:space-between">
+            <span class="t-body">= Remaining, 5 people</span>
+            <span class="money" data-m data-inr="₹4,16,000" data-eur="≈ €3,820" data-vnd="" data-vndlive="≈ ₫123,400,000" data-zero="≈ €0">₹4,16,000</span>
+          </div>
+          <div class="rowline" style="justify-content:space-between;font-weight:600">
+            <span class="t-body">÷ 5 = each of the 5 pays</span>
+            <span class="money money--big" data-m data-inr="₹83,200" data-eur="≈ €760" data-vnd="" data-vndlive="≈ ₫24,700,000" data-zero="≈ €0">₹83,200</span>
+          </div>
+        </div>
+        <p class="t-meta" style="margin:12px 0 0;font-size:12px;line-height:1.6">Lena pays
+          <span class="mono">₹64,000</span> instead. Everyone else pays
+          <span class="mono">₹80,000</span> more than Lena, not less than the standard split —
+          the other five absorb the gap her smaller share leaves.</p>
+        <div class="prov" data-when="lens:eur lens:vndlive" style="margin-top:10px"><span class="prov__d"></span>rates as of 29 Jul 2026</div>
+      </div>
+      <div class="side__card">
+        <h3 class="side__t">Why eight, always</h3>
+        <p class="t-meta" style="margin:0;font-size:12px;line-height:1.6">Every trip in Tripper
+          carries the same eight categories so budgets are comparable across trips — there is no
+          "add a category" control anywhere in the product. A category this trip has no cost for
+          isn't forced to invent one: leave it undrafted (hatched, italic, "Not drafted") or
+          set it to a real <span class="mono">₹0</span> if you've actually confirmed it costs
+          nothing. The two must never look the same.</p>
+      </div>
+    </aside>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════ the currency lens — a view control -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:430px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">Changes what you see, nothing else. Amounts are still entered
+        and stored in the trip's own currency, and this choice follows you across every trip and
+        screen.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">This trip's own currency — the authoritative figures</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+        <span class="mono dim" style="font-size:11px">≈ €4,400</span>
+      </button>
+      <button class="pal__r" data-set="lens:vnd" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">VND</span>
+        <span><span class="pal__n">Vietnamese dong</span><span class="pal__d" style="color:var(--warn)">No rate available from our source — amounts stay in rupees</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">Daily reference rates from
+        the European Central Bank. They are a guide for reading a budget — <b>not</b> what a card
+        issuer or a money changer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches
+        trips, people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

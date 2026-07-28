@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link unavailable · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">State</span>
+      <button class="rev__b" data-v="bad" aria-pressed="true">Expired / revoked / never existed</button>
+      <button class="rev__b" data-v="temporary">Temporary server failure</button>
+      <button class="rev__b" data-v="ratelimited">Rate limited</button>
+      <button class="rev__b" data-v="loading">Checking the link</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<div class="revnote">
+  <span class="revnote__k">Note</span>
+  <div><b>Expired, revoked and never-existed all render as this one message, on purpose.</b> Telling
+    them apart would let someone guess which trip codes are real by watching which error they get back —
+    an enumeration leak. There is also deliberately no "try again" here: retrying a dead link forever is
+    a worse experience than one honest sentence and a next step. <b>Temporary failure</b> and
+    <b>rate limited</b> are the two cases that genuinely are worth a retry, so they look and read
+    differently on purpose.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<main class="pshell">
+
+  <!-- ═══════════════════════════════════════════════════════════════ loading -->
+  <div data-when="loading" style="padding:70px 22px;display:grid;justify-items:center;gap:12px;text-align:center">
+    <span class="thumb" style="width:46px;height:46px;border-radius:50%;background:var(--surface-3);border:0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" opacity=".3"/><path d="M12 3a9 9 0 019 9"/></svg>
+    </span>
+    <p class="t-meta" style="margin:0">Checking your link…</p>
+  </div>
+
+  <!-- ══════════════════════════════ bad: expired, revoked, never existed — one message -->
+  <div class="pblock" data-when="bad">
+    <span class="pblock__ic">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/><path d="M4 4l16 16" stroke-linecap="round"/></svg>
+    </span>
+    <h1>This link doesn't work anymore</h1>
+    <p>It may have expired, been replaced by a newer one, or the address might just be typed wrong.
+      There's nothing broken on your end — links like this are only meant to work for a while.</p>
+    <div class="reassure" style="text-align:left;margin-top:6px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>What to do:</b> message whoever invited you to the trip and ask them to send a fresh link.
+        It only takes them a moment to make a new one.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ temporary: our fault, and visibly not a bad link -->
+  <div class="pblock" data-when="temporary">
+    <span class="pblock__ic" style="background:var(--warn-wash);color:var(--warn)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <h1>Something went wrong for a moment</h1>
+    <p>This isn't the "link doesn't work" message — your link is fine. Our server just didn't answer in
+      time. It's usually back within a few seconds.</p>
+    <button class="btn btn--primary" data-set="state:loading">Try again</button>
+    <p class="t-meta" style="margin-top:2px;font-size:11.5px">If this keeps happening after a couple of
+      tries, the problem is on our side, not with your invitation.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════ rate limited: says exactly when -->
+  <div class="pblock" data-when="ratelimited">
+    <span class="pblock__ic" style="background:var(--warn-wash);color:var(--warn)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+    </span>
+    <h1>Too many tries, too fast</h1>
+    <p>You've opened this link more than our limit allows in one minute — <span class="mono">30</span>
+      requests. That's a safety limit, not a sign anything is wrong with your invitation.</p>
+    <div class="fact fact--warn" style="text-align:left;width:100%">
+      <div class="fact__k">Try again in</div>
+      <div class="fact__v"><span class="mono">0:30</span></div>
+      <div class="fact__d">no need to keep refreshing — it won't work any sooner</div>
+    </div>
+  </div>
+
+</main>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

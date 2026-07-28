@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripper redesign — every screen and every state</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+<style>
+  /* Index-only: this page is the review map, not part of the product. */
+  .mapgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .mapcard { display: flex; flex-direction: column; background: var(--surface);
+             border: 1px solid var(--line); border-radius: var(--r-lg);
+             box-shadow: var(--shadow-1); overflow: hidden; }
+  .mapcard__h { display: flex; align-items: baseline; gap: 9px; padding: 13px 15px 11px;
+                border-bottom: 1px solid var(--line-2); }
+  .mapcard__h a { font-size: 13.5px; font-weight: 600; }
+  .mapcard__f { font: 400 11px/1 var(--mono); color: var(--ink-3); margin-left: auto; }
+  .mapcard__d { padding: 0 15px 11px; font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+  .mapcard__s { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 15px 14px; }
+  .st { display: inline-flex; align-items: center; height: 21px; padding: 0 7px;
+        border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2);
+        font: 400 11.5px/1 var(--mono); color: var(--ink-2); white-space: nowrap; }
+  .st:hover { background: var(--info-wash); border-color: var(--info-line); color: var(--info-ink);
+              text-decoration: none; }
+  .st--key { border-color: var(--info-line); background: var(--info-wash); color: var(--info-ink); font-weight: 500; }
+  .st--lens { border-style: dashed; }
+  .grouphead { display: flex; align-items: baseline; gap: 10px; margin: 30px 0 13px; }
+  .grouphead h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .grouphead p { margin: 0; font-size: 12px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<header class="appbar">
+  <h1 class="appbar__brand">Tripper redesign</h1>
+  <span class="appbar__spacer"></span>
+  <a class="btn" href="ia.md">ia.md — the architecture</a>
+  <a class="btn" href="states.md">states.md — coverage</a>
+</header>
+
+<main class="shell">
+
+  <div class="pagehead">
+    <div>
+      <h1>Every screen, and every state within it</h1>
+      <div class="pagehead__sub">22 pages. Each one carries a dark <b>Review</b> strip at the top that
+        swaps its states in place — the strip is a review tool, never product UI. The links below jump
+        straight to a state.</div>
+    </div>
+  </div>
+
+  <div class="banner banner--info" style="margin-bottom:16px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+    <div><b>Light mode only, deliberately.</b> The style system is light-only, so these mockups are
+      too — but every colour is a token and no meaning is carried by the background, so a dark theme
+      remains buildable. Dark mode and follow-the-OS are flagged as an <b>open product decision</b> in
+      <a href="ia.md">ia.md §9</a>, not quietly dropped.</div>
+  </div>
+
+  <div class="facts" style="margin-bottom:6px">
+    <div class="fact"><div class="fact__k">Pages</div><div class="fact__v"><span class="mono">22</span></div><div class="fact__d">no build step</div></div>
+    <div class="fact"><div class="fact__k">Trip surfaces</div><div class="fact__v"><span class="mono">1</span> board + <span class="mono">4</span> deep</div><div class="fact__d">was 10 sections</div></div>
+    <div class="fact"><div class="fact__k">AI review</div><div class="fact__v"><span class="mono">1</span> pattern</div><div class="fact__d">was 5</div></div>
+    <div class="fact"><div class="fact__k">Save buttons</div><div class="fact__v"><span class="mono">1</span> per surface</div><div class="fact__d">was up to 3</div></div>
+    <div class="fact"><div class="fact__k">Currency</div><div class="fact__v">A view lens</div><div class="fact__d">new feature</div></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ start here -->
+  <div class="grouphead">
+    <h2>Start here</h2>
+    <p>The three pages that carry most of the thinking.</p>
+  </div>
+  <div class="mapgrid">
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip.html">The trip board</a><span class="mapcard__f">trip.html</span></div>
+      <p class="mapcard__d">A trip is a set of decisions, some made and some open. This replaces ten
+        peer sections. Every signal in the waiting column is a link to the thing that fixes it, and
+        there is no readiness percentage anywhere.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip.html#state=active">active · mixed readiness</a>
+        <a class="st" href="trip.html#state=ready">all ready</a>
+        <a class="st" href="trip.html#state=planning">planning · mid-chase</a>
+        <a class="st" href="trip.html#state=idea">idea</a>
+        <a class="st st--key" href="trip.html#state=empty">nothing known at all</a>
+        <a class="st" href="trip.html#state=loading">loading</a>
+        <a class="st" href="trip.html#state=failed">load failed</a>
+        <a class="st st--lens" href="trip.html#state=active&lens=eur">lens · EUR</a>
+        <a class="st st--lens" href="trip.html#state=active&lens=vnd">lens · VND no rate</a>
+        <a class="st st--lens" href="trip.html#state=active&lens=stale">lens · stale</a>
+        <a class="st st--lens" href="trip.html#state=active&lens=failed">lens · fetch failed</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-dates.html">Dates</a><span class="mapcard__f">trip-dates.html</span></div>
+      <p class="mapcard__d">The most broken surface in the current build, in both directions at once:
+        no way to promote a window into the real dates, and a window editor that stays live after the
+        dates are locked. Three genuinely different modes plus the moments between them.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-dates.html#state=broad">broad window</a>
+        <a class="st" href="trip-dates.html#state=slight">a date, give or take</a>
+        <a class="st st--key" href="trip-dates.html#state=confirmed">confirmed · windows demoted</a>
+        <a class="st st--key" href="trip-dates.html#state=promote">promoting a window</a>
+        <a class="st st--key" href="trip-dates.html#state=shift">shift vs re-date</a>
+        <a class="st st--key" href="trip-dates.html#state=reopen">reopening the decision</a>
+        <a class="st" href="trip-dates.html#state=invalid">end before start</a>
+        <a class="st" href="trip-dates.html#state=empty">no windows yet</a>
+        <a class="st" href="trip-dates.html#state=readonly">as a participant</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="patterns.html">Consequences &amp; reversals</a><span class="mapcard__f">patterns.html</span></div>
+      <p class="mapcard__d">Every one-way action in the product, with its path back, rendered inline
+        side by side so you can see that eleven warnings are one system. Split into
+        <b>genuinely destructive</b> versus <b>merely decided</b> — only the first deserves finality.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="patterns.html#state=all">the whole catalogue</a>
+        <a class="st" href="patterns.html#state=destructive">destructive</a>
+        <a class="st" href="patterns.html#state=decided">merely decided</a>
+        <a class="st st--key" href="patterns.html#state=rollback">status rollback</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ the trip -->
+  <div class="grouphead">
+    <h2>The rest of a trip</h2>
+    <p>Four deep surfaces, plus the two sheets that open over the board.</p>
+  </div>
+  <div class="mapgrid">
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-itinerary.html">Itinerary</a><span class="mapcard__f">trip-itinerary.html</span></div>
+      <p class="mapcard__d">Days are derived from the trip's dates and cannot be added by hand. Times
+        are structured rather than free text, so a day can detect its own conflicts. Per-day
+        regeneration is the distinctive interaction.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-itinerary.html#state=populated">10 days · 41 items</a>
+        <a class="st st--key" href="trip-itinerary.html#state=nodates">blocked · no dates</a>
+        <a class="st" href="trip-itinerary.html#state=gaps">two empty days</a>
+        <a class="st" href="trip-itinerary.html#state=packed">a day with twelve</a>
+        <a class="st st--key" href="trip-itinerary.html#state=dayregen">regenerate one day</a>
+        <a class="st" href="trip-itinerary.html#state=deleteitem">delete an item</a>
+        <a class="st" href="trip-itinerary.html#state=readonly">read-only</a>
+        <a class="st" href="trip-itinerary.html#state=aioff">AI off</a>
+        <a class="st" href="trip-itinerary.html#state=loading">loading</a>
+        <a class="st" href="trip-itinerary.html#state=failed">failed</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-budget.html">Budget</a><span class="mapcard__f">trip-budget.html</span></div>
+      <p class="mapcard__d">Eight fixed categories, the equal split, per-person overrides — and the
+        currency lens under real stress, including the nine-digit dong conversion and an editable
+        rupee field while a euro view is active.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-budget.html#state=populated">drafted</a>
+        <a class="st st--key" href="trip-budget.html#state=never">never drafted</a>
+        <a class="st st--key" href="trip-budget.html#state=zeros">all zeros · not the same thing</a>
+        <a class="st st--key" href="trip-budget.html#state=override">per-person override</a>
+        <a class="st" href="trip-budget.html#state=overrideblocked">override blocked</a>
+        <a class="st" href="trip-budget.html#state=dirty">unsaved</a>
+        <a class="st" href="trip-budget.html#state=saving">saving</a>
+        <a class="st" href="trip-budget.html#state=savefailed">save failed</a>
+        <a class="st" href="trip-budget.html#state=aioff">AI off</a>
+        <a class="st" href="trip-budget.html#state=aigen">generating</a>
+        <a class="st" href="trip-budget.html#state=aifailed">generation failed</a>
+        <a class="st" href="trip-budget.html#state=loading">loading</a>
+        <a class="st st--lens" href="trip-budget.html#state=populated&lens=eur">lens · EUR</a>
+        <a class="st st--lens" href="trip-budget.html#state=populated&lens=vnd">lens · VND no rate</a>
+        <a class="st st--lens" href="trip-budget.html#state=populated&lens=vndlive">lens · nine digits</a>
+        <a class="st st--lens" href="trip-budget.html#state=populated&lens=zero">lens · converted zero</a>
+        <a class="st st--lens" href="trip-budget.html#state=populated&lens=stale">lens · stale</a>
+        <a class="st st--lens" href="trip-budget.html#state=populated&lens=failed">lens · failed</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-people.html">People &amp; access</a><span class="mapcard__f">trip-people.html</span></div>
+      <p class="mapcard__d">"Who am I waiting on right now", per-person readiness, and the access
+        links — the sharpest edges in the product. A link is shown once and never again, and creating
+        one silently kills the previous one.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-people.html#state=waiting">who am I waiting on</a>
+        <a class="st" href="trip-people.html#state=populated">all six</a>
+        <a class="st" href="trip-people.html#state=twenty">20 participants</a>
+        <a class="st st--key" href="trip-people.html#state=newlink">the one-time link</a>
+        <a class="st st--key" href="trip-people.html#state=relink">re-issue kills the old one</a>
+        <a class="st st--key" href="trip-people.html#state=revoke">revoke</a>
+        <a class="st" href="trip-people.html#state=expiry">link expiry</a>
+        <a class="st" href="trip-people.html#state=noclipboard">clipboard denied</a>
+        <a class="st" href="trip-people.html#state=remove">remove from trip</a>
+        <a class="st" href="trip-people.html#state=docs">document warnings</a>
+        <a class="st" href="trip-people.html#state=links">link history</a>
+        <a class="st" href="trip-people.html#state=empty">nobody yet</a>
+        <a class="st" href="trip-people.html#state=loading">loading</a>
+        <a class="st" href="trip-people.html#state=failed">failed</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-checklists.html">Checklists</a><span class="mapcard__f">trip-checklists.html</span></div>
+      <p class="mapcard__d">Packing per person, tasks per trip, and templates flowing both ways.
+        Deleting an item gets an undo instead of a confirm — deliberately inconsistent with the other
+        deletes, and argued for in <a href="ia.md">ia.md §4.8</a>.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-checklists.html#state=overdue">what's overdue, and whose</a>
+        <a class="st" href="trip-checklists.html#state=populated">populated</a>
+        <a class="st" href="trip-checklists.html#state=forty">40 items</a>
+        <a class="st st--key" href="trip-checklists.html#state=notemplate">blocked · no templates</a>
+        <a class="st st--key" href="trip-checklists.html#state=noassignee">blocked · nobody to assign</a>
+        <a class="st st--key" href="trip-checklists.html#state=packingonly">blocked · packing only</a>
+        <a class="st" href="trip-checklists.html#state=templates">the template library</a>
+        <a class="st" href="trip-checklists.html#state=promote">promote to a template</a>
+        <a class="st" href="trip-checklists.html#state=deletelist">delete a checklist</a>
+        <a class="st" href="trip-checklists.html#state=deleteitem">delete an item · undo</a>
+        <a class="st" href="trip-checklists.html#state=empty">empty</a>
+        <a class="st" href="trip-checklists.html#state=loading">loading</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-destination.html">Destination</a><span class="mapcard__f">trip-destination.html</span></div>
+      <p class="mapcard__d">Candidates compared side by side with their own per-person figures and
+        caveats — a decision-support surface, not a list of cards. Exactly one can be decided, and
+        un-deciding is designed rather than absent.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-destination.html#state=open">3 candidates compared</a>
+        <a class="st" href="trip-destination.html#state=decided">decided</a>
+        <a class="st st--key" href="trip-destination.html#state=undecide">un-decide</a>
+        <a class="st" href="trip-destination.html#state=sparse">a name and nothing else</a>
+        <a class="st" href="trip-destination.html#state=deletecandidate">delete a candidate</a>
+        <a class="st" href="trip-destination.html#state=deleteblocked">blocked · it's the decided one</a>
+        <a class="st" href="trip-destination.html#state=aisuggest">AI suggestions</a>
+        <a class="st" href="trip-destination.html#state=aioff">AI off</a>
+        <a class="st" href="trip-destination.html#state=empty">no candidates</a>
+        <a class="st" href="trip-destination.html#state=invalid">name missing</a>
+        <a class="st st--lens" href="trip-destination.html#state=open&lens=eur">lens · EUR</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-archive.html">The retrospective</a><span class="mapcard__f">trip-archive.html</span></div>
+      <p class="mapcard__d">An archived trip as a document worth revisiting, not a greyed-out corpse.
+        The frozen/editable boundary is made visible, and un-archiving has to answer what happened to
+        the six links archiving killed.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-archive.html#state=populated">actuals vs estimates</a>
+        <a class="st st--key" href="trip-archive.html#state=unarchive">un-archive</a>
+        <a class="st" href="trip-archive.html#state=noactuals">nothing recorded yet</a>
+        <a class="st" href="trip-archive.html#state=partialactuals">partly recorded</a>
+        <a class="st" href="trip-archive.html#state=rearchive">blocked · already archived</a>
+        <a class="st" href="trip-archive.html#state=editnotes">retrospective notes</a>
+        <a class="st" href="trip-archive.html#state=addalbum">photo album links</a>
+        <a class="st st--lens" href="trip-archive.html#state=populated&lens=eur">lens · EUR + rate caveat</a>
+        <a class="st st--lens" href="trip-archive.html#state=populated&lens=stale">lens · stale</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="ai-review.html">The AI review moment</a><span class="mapcard__f">ai-review.html</span></div>
+      <p class="mapcard__d">One pattern replacing five. Current on the left, draft on the right, each
+        row individually keepable, and a bar counting exactly what applying will do. Includes the
+        itemised account of what does and does not leave the deployment.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="ai-review.html#state=budget">budget draft</a>
+        <a class="st st--key" href="ai-review.html#state=itinerary">whole itinerary</a>
+        <a class="st st--key" href="ai-review.html#state=day">one day, redrafted</a>
+        <a class="st" href="ai-review.html#state=packing">packing suggestions</a>
+        <a class="st" href="ai-review.html#state=destinations">destination candidates</a>
+        <a class="st st--key" href="ai-review.html#state=partial">partial acceptance</a>
+        <a class="st st--key" href="ai-review.html#state=overwrite">over hand-edited work</a>
+        <a class="st" href="ai-review.html#state=idle">idle · the invitation</a>
+        <a class="st" href="ai-review.html#state=generating">generating</a>
+        <a class="st" href="ai-review.html#state=failed">generation failed</a>
+        <a class="st st--key" href="ai-review.html#state=aioff">no provider configured</a>
+        <a class="st" href="ai-review.html#state=applied">applied · with undo</a>
+        <a class="st" href="ai-review.html#state=discard">discard a draft</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ portfolio and reuse -->
+  <div class="grouphead">
+    <h2>Portfolio, and the reuse backbone</h2>
+    <p>Reuse is the whole point of the product, so these are not secondary screens.</p>
+  </div>
+  <div class="mapgrid">
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trips.html">All trips</a><span class="mapcard__f">trips.html</span></div>
+      <p class="mapcard__d">Six trips across five statuses, sorted by <b>who needs you</b> rather than
+        by date. A load failure is visibly not the same thing as having no trips.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trips.html#state=populated">six trips, five statuses</a>
+        <a class="st" href="trips.html#state=archivedmixed">archived among live</a>
+        <a class="st" href="trips.html#state=empty">first run</a>
+        <a class="st st--key" href="trips.html#state=failed">load failed ≠ empty</a>
+        <a class="st" href="trips.html#state=loading">loading</a>
+        <a class="st st--lens" href="trips.html#state=populated&lens=eur">lens · EUR</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="trip-new.html">Start a trip</a><span class="mapcard__f">trip-new.html</span></div>
+      <p class="mapcard__d">Tolerates knowing almost nothing — only the name is required. Also where a
+        clone happens, because the output of a clone is a new trip, and the carry-over/reset split is
+        stated concretely before the click.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="trip-new.html#state=blank">almost nothing known</a>
+        <a class="st st--key" href="trip-new.html#state=clone">clone · what carries, what resets</a>
+        <a class="st st--key" href="trip-new.html#state=newperson">person not in the directory</a>
+        <a class="st st--key" href="trip-new.html#state=restored">a draft was restored</a>
+        <a class="st" href="trip-new.html#state=nopeople">directory is empty</a>
+        <a class="st" href="trip-new.html#state=invalid">name missing</a>
+        <a class="st" href="trip-new.html#state=filling">partly filled</a>
+        <a class="st" href="trip-new.html#state=saving">saving</a>
+        <a class="st" href="trip-new.html#state=savefailed">save failed · input kept</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="people.html">People directory</a><span class="mapcard__f">people.html</span></div>
+      <p class="mapcard__d">20 travellers who persist across every trip. Nobody should ever type the
+        same thing twice.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="people.html#state=populated">20 people</a>
+        <a class="st st--key" href="people.html#state=deleteblocked">blocked · on a live trip</a>
+        <a class="st" href="people.html#state=deleteok">delete a person</a>
+        <a class="st" href="people.html#state=empty">first run</a>
+        <a class="st" href="people.html#state=loading">loading</a>
+        <a class="st" href="people.html#state=failed">failed</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="person.html">One traveller</a><span class="mapcard__f">person.html</span></div>
+      <p class="mapcard__d">Profile, documents, and <b>which trips they're on</b> — which does not
+        exist anywhere in the current build. Document thumbnails are obscured by default here, because
+        an organizer opens this in public.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="person.html#state=populated">Asha Kumar · on 4 trips</a>
+        <a class="st st--key" href="person.html#state=manydocs">8 documents, half problematic</a>
+        <a class="st st--key" href="person.html#state=noprefs">every preference unset</a>
+        <a class="st st--key" href="person.html#state=editdoc">metadata-only edit</a>
+        <a class="st" href="person.html#state=nodocs">no documents</a>
+        <a class="st" href="person.html#state=saving">saving</a>
+        <a class="st" href="person.html#state=savefailed">save failed</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="documents.html">Documents &amp; previews</a><span class="mapcard__f">documents.html</span></div>
+      <p class="mapcard__d">Almost always a phone photo of a passport or a PDF. The current build shows
+        no preview at all and accepts any file type, so a <span class="mono">.zip</span> can be filed
+        as a passport. Eighteen states here, including the ones that break naive layouts.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="documents.html#state=mixed">images, PDFs, one unpreviewable</a>
+        <a class="st st--key" href="documents.html#state=previewpdf">paged PDF preview</a>
+        <a class="st" href="documents.html#state=previewimage">image preview</a>
+        <a class="st st--key" href="documents.html#state=previewnone">no preview possible</a>
+        <a class="st st--key" href="documents.html#state=obscured">sensitive · obscured</a>
+        <a class="st" href="documents.html#state=revealed">revealed on intent</a>
+        <a class="st" href="documents.html#state=pending">thumbnail generating</a>
+        <a class="st" href="documents.html#state=thumbfailed">thumbnail failed later</a>
+        <a class="st st--key" href="documents.html#state=tall">a very tall scan</a>
+        <a class="st" href="documents.html#state=wide">a very wide scan</a>
+        <a class="st" href="documents.html#state=lowquality">a bad phone photo</a>
+        <a class="st st--key" href="documents.html#state=toobig">rejected · over 10 MB</a>
+        <a class="st st--key" href="documents.html#state=badtype">rejected · a .zip</a>
+        <a class="st" href="documents.html#state=upload">uploading</a>
+        <a class="st" href="documents.html#state=editmeta">edit metadata only</a>
+        <a class="st" href="documents.html#state=delete">delete</a>
+        <a class="st" href="documents.html#state=empty">empty</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ participant -->
+  <div class="grouphead">
+    <h2>The participant</h2>
+    <p>No account, one link, a phone, two minutes — and possibly the only time they'll ever open it.
+      Designed phone-first by construction rather than by media query.</p>
+  </div>
+  <div class="mapgrid">
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="participant.html">Their one page</a><span class="mapcard__f">participant.html</span></div>
+      <p class="mapcard__d">Trip facts, confirm your details, your documents, your checklist, done.
+        The pre-filled moment is where the product's whole reuse promise either pays off or doesn't.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="participant.html#state=prefilled">pre-filled from last year</a>
+        <a class="st st--key" href="participant.html#state=done">you're done</a>
+        <a class="st st--key" href="participant.html#state=saved">already confirmed · persists</a>
+        <a class="st st--key" href="participant.html#state=tbd">trip still undecided</a>
+        <a class="st" href="participant.html#state=newperson">brand-new person</a>
+        <a class="st" href="participant.html#state=docsnone">no documents</a>
+        <a class="st st--key" href="participant.html#state=docsproblem">a problem for this trip</a>
+        <a class="st" href="participant.html#state=upload">uploading</a>
+        <a class="st" href="participant.html#state=uploadbig">rejected · over 10 MB</a>
+        <a class="st" href="participant.html#state=uploadtype">rejected · wrong type</a>
+        <a class="st" href="participant.html#state=checklistempty">nothing on their list</a>
+        <a class="st" href="participant.html#state=checklistpartial">partly ticked</a>
+        <a class="st" href="participant.html#state=checklistdone">all ticked</a>
+        <a class="st" href="participant.html#state=invalid">name missing</a>
+        <a class="st" href="participant.html#state=savefailed">save failed · input kept</a>
+        <a class="st" href="participant.html#state=loading">loading</a>
+        <a class="st st--lens" href="participant.html#state=prefilled&lens=eur">lens · EUR</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="participant-itinerary.html">Reading it during the trip</a><span class="mapcard__f">participant-itinerary.html</span></div>
+      <p class="mapcard__d">One-handed, on a phone, possibly on bad hotel wifi. Today's day comes
+        first. A deliberately unplanned half-day must read as intentional, not as an oversight.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="participant-itinerary.html#state=today">mid-trip · today first</a>
+        <a class="st" href="participant-itinerary.html#state=beforetrip">before departure</a>
+        <a class="st" href="participant-itinerary.html#state=daydetail">one day</a>
+        <a class="st st--key" href="participant-itinerary.html#state=emptyday">deliberately unplanned</a>
+        <a class="st" href="participant-itinerary.html#state=notbuilt">not built yet</a>
+        <a class="st" href="participant-itinerary.html#state=stale">loaded a while ago</a>
+        <a class="st" href="participant-itinerary.html#state=loading">loading</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="participant-blocked.html">The link doesn't work</a><span class="mapcard__f">participant-blocked.html</span></div>
+      <p class="mapcard__d">Expired, revoked and never-existed are <b>deliberately
+        indistinguishable</b> — one message for all three, so the URL can't be used to discover
+        whether a trip exists. A temporary failure is a different message.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="participant-blocked.html#state=bad">bad link · one message</a>
+        <a class="st st--key" href="participant-blocked.html#state=temporary">temporary ≠ bad link</a>
+        <a class="st" href="participant-blocked.html#state=ratelimited">rate-limited</a>
+        <a class="st" href="participant-blocked.html#state=loading">loading</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ shell and session -->
+  <div class="grouphead">
+    <h2>Session, search, and the edges</h2>
+  </div>
+  <div class="mapgrid">
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="sign-in.html">Sign in</a><span class="mapcard__f">sign-in.html</span></div>
+      <p class="mapcard__d">Email and password, and nothing else — no signup, no reset, no account
+        management, because organizer accounts are provisioned outside the app. The state that matters
+        is the session expiring mid-work.</p>
+      <div class="mapcard__s">
+        <a class="st" href="sign-in.html#state=idle">idle</a>
+        <a class="st" href="sign-in.html#state=submitting">submitting</a>
+        <a class="st" href="sign-in.html#state=wrong">wrong credentials</a>
+        <a class="st st--key" href="sign-in.html#state=expired">session expired mid-work</a>
+        <a class="st" href="sign-in.html#state=signedout">signed out</a>
+        <a class="st" href="sign-in.html#state=failed">server unreachable</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="search.html">Search</a><span class="mapcard__f">search.html</span></div>
+      <p class="mapcard__d">Six kinds of thing, grouped. Checklist templates are the one kind that
+        isn't independently navigable, so they get different treatment rather than being a dead row.
+        The ⌘K palette lives on every organizer page.</p>
+      <div class="mapcard__s">
+        <a class="st st--key" href="search.html#state=results">grouped across six kinds</a>
+        <a class="st st--key" href="search.html#state=keyboard">the ⌘K palette</a>
+        <a class="st" href="search.html#state=noquery">nothing typed yet</a>
+        <a class="st" href="search.html#state=tooshort">under two characters</a>
+        <a class="st st--key" href="search.html#state=nomatch">no matches · what was searched</a>
+        <a class="st" href="search.html#state=loading">loading</a>
+        <a class="st" href="search.html#state=failed">failed</a>
+      </div>
+    </div>
+    <div class="mapcard">
+      <div class="mapcard__h"><a href="not-found.html">Not found</a><span class="mapcard__f">not-found.html</span></div>
+      <p class="mapcard__d">A trip that doesn't exist and a trip that isn't yours are the same message,
+        on purpose — distinguishing them would leak whether a trip exists.</p>
+      <div class="mapcard__s">
+        <a class="st" href="not-found.html#state=url">unknown URL</a>
+        <a class="st st--key" href="not-found.html#state=trip">not found, or not yours</a>
+        <a class="st" href="not-found.html#state=person">same, for a person</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════ the files -->
+  <div class="grouphead">
+    <h2>The written deliverables</h2>
+  </div>
+  <div class="card">
+    <div class="deflist">
+      <div class="defrow"><span><span class="defrow__n"><a href="ia.md">ia.md</a></span>
+        <span class="defrow__d">The architecture and why. What was merged, split, added and removed,
+          argued against the twelve intentions — plus every decision the brief left open, with its
+          trade-off stated, and the theme question flagged rather than quietly resolved.</span></span>
+        <span class="defrow__v">markdown</span></div>
+      <div class="defrow"><span><span class="defrow__n"><a href="states.md">states.md</a></span>
+        <span class="defrow__d">The coverage checklist. Every row of §5 mapped to the file and state
+          where it can be seen, and an explicit line for anything deliberately not designed.</span></span>
+        <span class="defrow__v">markdown</span></div>
+      <div class="defrow"><span><span class="defrow__n">system.css</span>
+        <span class="defrow__d">Copied verbatim from the house style system and left unmodified.</span></span>
+        <span class="defrow__v">unchanged</span></div>
+      <div class="defrow"><span><span class="defrow__n">overrides.css</span>
+        <span class="defrow__d">Everything added, kept separate so it stays obvious what is new. No hex
+          in any page's markup, so a dark theme remains possible.</span></span>
+        <span class="defrow__v">additions</span></div>
+      <div class="defrow"><span><span class="defrow__n">app.js</span>
+        <span class="defrow__d">The state switcher, the currency lens, focus-trapped overlays, and a
+          handful of product behaviours. Vanilla, no framework, no build step.</span></span>
+        <span class="defrow__v">one file</span></div>
+      <div class="defrow"><span><span class="defrow__n">_snippets.md · _agent-brief.md</span>
+        <span class="defrow__d">Build notes: the shared page skeleton, the sample data every page holds
+          identical, and the rules each page was written against. Not product documentation.</span></span>
+        <span class="defrow__v">notes</span></div>
+    </div>
+  </div>
+
+  <p class="t-meta" style="margin:26px 0 0;max-width:80ch">
+    No build step, no framework, no bundler, no network. Every page opens by double-clicking the file.
+  </p>
+
+</main>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consequences &amp; reversals · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Show</span>
+      <button class="rev__b" data-v="all" aria-pressed="true">Whole catalogue</button>
+      <button class="rev__b" data-v="destructive">Genuinely destructive</button>
+      <button class="rev__b" data-v="decided">Merely decided</button>
+      <button class="rev__b" data-v="rollback">Status rollback</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell" style="max-width:1160px">
+
+  <div class="pagehead">
+    <div>
+      <h1>Consequences &amp; reversals</h1>
+      <p class="pagehead__sub">Every one-way-feeling action in Tripper, in one place, so it's
+        checkable as a system rather than twenty separate inventions.</p>
+    </div>
+  </div>
+
+  <p style="max-width:82ch;font-size:13px;color:var(--ink-2);line-height:1.65;margin:0 0 22px">
+    Nothing on this page is a real control — every dialog below is rendered <b>inline, in the page,
+    not as an overlay</b>, using the exact <code class="mono" style="font-size:12px">.modal__panel</code>,
+    <code class="mono" style="font-size:12px">.damage</code> and
+    <code class="mono" style="font-size:12px">.reassure</code> markup that appears for real on
+    <a href="trip.html">trip.html</a> and <a href="trip-dates.html">trip-dates.html</a>. Every entry
+    names <b>where it actually lives</b> so you can go open the real, clickable version. The reason
+    this page exists at all: read in isolation, each warning looks like its own little invention.
+    Read together, they're one small set of rules, applied consistently.
+  </p>
+
+  <!-- ══════════════════════════════ the two groups, and why they differ ═══════ -->
+  <div class="card" style="margin-bottom:26px;background:var(--surface-2)">
+    <div class="card__body" style="padding:18px 20px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px">
+        <div>
+          <h2 style="margin:0 0 6px;font-size:14.5px;font-weight:600;color:var(--bad)">Genuinely destructive</h2>
+          <p style="margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.6">Something concrete is
+            gone afterwards and nothing in the product brings it back on its own — a link, a file, a
+            row, 41 itinerary items. These earn a hard stop: an itemised <code class="mono" style="font-size:11.5px">.damage</code>
+            list, and the worst of them a typed phrase before the button even lights up.</p>
+        </div>
+        <div>
+          <h2 style="margin:0 0 6px;font-size:14.5px;font-weight:600;color:var(--ok)">Merely decided</h2>
+          <p style="margin:0;font-size:12.5px;color:var(--ink-2);line-height:1.6">A choice that can be
+            re-opened — a status, a date, a destination, an applied draft. <b>Big consequence is not
+            the same thing as destructive.</b> Un-deciding a destination touches a whole itinerary and
+            budget, and still belongs here, because nothing is deleted — the trip just goes back to
+            describing something that isn't settled yet. These get a plain explanation and, where the
+            reversal is genuinely free, a <code class="mono" style="font-size:11.5px">.reassure</code>
+            note instead of a warning.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ the reassuring inverse, carried prominently ═══ -->
+  <section class="sect" data-when="all decided">
+    <h2 class="sect__t">The reassuring inverse <span class="dim">· the same visual family, pointed the other way</span></h2>
+    <p style="max-width:82ch;font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:0 0 12px">
+      Half the point of warning loudly about the eleven things below is that everything <b>not</b> on
+      that list can be committed to without flinching. A <code class="mono" style="font-size:11.5px">.reassure</code>
+      note that over-dramatises a safe change is its own kind of failure — so it's built to look like
+      calm, not like a smaller warning.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+        <div><b>Settled is not sealed.</b> Dates, destination and every applied draft can still be
+          changed — each one will tell you what it costs first.
+          <span style="display:block;margin-top:4px;font-size:11px"><a href="trip.html#state=ready">trip.html — a fully-ready trip</a></span></div>
+      </div>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        <div><b>An idea is allowed to be vague.</b> Nothing is overdue, missing or wrong — this is what
+          a trip looks like six weeks before anyone commits.
+          <span style="display:block;margin-top:4px;font-size:11px"><a href="trip.html#state=idea">trip.html — an idea-stage trip</a></span></div>
+      </div>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+        <div><b>Confirmed isn't a one-way door.</b> Plenty of trips move twice before they happen.
+          <span style="display:block;margin-top:4px;font-size:11px"><a href="trip-dates.html#state=confirmed">trip-dates.html — confirmed dates</a></span></div>
+      </div>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        <div><b>This is fully reversible and destroys nothing.</b> Move it forward again whenever you like.
+          <span style="display:block;margin-top:4px;font-size:11px"><a href="trip.html#state=active">trip.html — stepping back</a></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════════════ GROUP 1 · DESTRUCTIVE ═══════ -->
+  <section class="sect" data-when="all destructive" style="margin-top:28px">
+    <h2 class="sect__t" style="font-size:14.5px">Genuinely destructive <span class="dim">· data is gone, so these earn finality</span></h2>
+
+    <!-- delete a trip -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Delete "Bhutan someday" for good?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip.html#state=empty">trip.html → an empty trip's lifecycle</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>Deleting is only offered because <b>nothing has been attached to this trip</b>. Everything
+          that would go:</p>
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>The name, and nothing else
+              <span class="damage__d"><span class="mono">0</span> participants · <span class="mono">0</span> dates · <span class="mono">0</span> destination candidates · <span class="mono">0</span> budget figures · <span class="mono">0</span> itinerary days · <span class="mono">0</span> links ever issued.</span></span></li>
+        </ul>
+        <p style="margin:0;font-size:12px;color:var(--ink-2)">The moment any of those counts stops
+          being zero, this button disappears and <b>archive</b> becomes the way to put a trip away —
+          deliberately, so a trip somebody has put work into is never one click from gone.</p>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep it</button>
+        <span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Delete the trip</button>
+      </div>
+    </div>
+
+    <!-- delete a goal -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Delete "Angkor Wat at sunrise"?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip.html#state=active">trip.html → What this trip is for → delete a goal</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>The goal and its note go
+              <span class="damage__d">Fixed to <span class="mono">15 Nov 2026</span> in Siem Reap. "The whole reason for the Cambodia leg."</span></span></li>
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>Day 10 stops being anchored
+              <span class="damage__d">Its three items stay, but a redraft of that day would no longer be told to keep the 05:00 start.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep it</button><span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Delete the goal</button>
+      </div>
+    </div>
+
+    <!-- revoke a link -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/><path d="M4 4l16 16" stroke-linecap="round"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Revoke Lena Hoffmann's link?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-people.html#state=revoke">trip-people.html → access links → revoke</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>Her link is <b>active, and expires on its own in 12 days</b> anyway — this ends it now instead.</p>
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>It stops working immediately, for her specifically
+              <span class="damage__d">Not the trip, not everyone else — just Lena's one link.</span></span></li>
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>It cannot be un-revoked
+              <span class="damage__d">Tokens are stored hashed, not in plain text, so there is nothing to restore — re-issuing is the only way back, and it's a new secret, shown once.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Leave it active</button><span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Revoke the link</button>
+      </div>
+    </div>
+
+    <!-- create a link over an existing one -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Daniel Weiss already has a link — make a new one anyway?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-people.html#state=relink">trip-people.html → access links → new link over an existing one</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>His current link dies the instant the new one is created
+              <span class="damage__d">Silently, from his side — if he still has the old URL open, it just stops working. He needs the new one to get back in.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Everything he already entered on the old link stays
+              <span class="damage__d">The link is how he gets in, not where his profile and documents live.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Don't make a new one</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Make a new link, kill the old one</button>
+      </div>
+    </div>
+
+    <!-- delete a person -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Delete Kavya Reddy from the directory?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="people.html#state=deleteok">people.html → the directory → delete</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>Allowed because Kavya's only trip, <b>Sri Lanka 2025, is archived</b> — she isn't on anything
+          live. Naming what goes:</p>
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>Her profile and 2 documents
+              <span class="damage__d">Passport and a yellow fever certificate, both on file.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Sri Lanka 2025's frozen record is untouched
+              <span class="damage__d">The archive kept her name in the snapshot; removing her from the directory doesn't rewrite history.</span></span></li>
+        </ul>
+        <div class="banner banner--info" style="margin-top:2px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <div>Contrast: deleting <b>Ravi Menon</b> is refused outright, not warned about — he's on
+            Vietnam &amp; Cambodia 2026, which is active. The button opens Ravi's trip instead of a
+            confirm dialog. <a href="people.html#state=deleteblocked">See that state</a>.</div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep her</button><span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Delete Kavya Reddy</button>
+      </div>
+    </div>
+
+    <!-- delete a document -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Delete Nikhil Rao's passport scan?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="documents.html#state=delete">documents.html → the vault → delete</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>The file and its record are removed, not archived
+              <span class="damage__d">Passport, expired <span class="mono">2 Nov 2026</span>. There's no trash folder — a new scan means a fresh upload.</span></span></li>
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>Nikhil goes back to having zero documents on file
+              <span class="damage__d">Which is worse than an expired one for a passport-required trip, not better — consider replacing it instead of deleting it.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep it</button><span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Delete the document</button>
+      </div>
+    </div>
+
+    <!-- delete an itinerary item -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Delete "Overnight bus Hoi An → Nha Trang"?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-itinerary.html#state=deleteitem">trip-itinerary.html → Day 8 → delete item</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>Everything about this item
+              <span class="damage__d"><span class="mono">22:00–06:00</span> · sleeper berth, <span class="mono">₹1,200</span> each ·
+              "Confirmed with the operator, non-refundable after 24 Oct."</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Day 8 itself doesn't disappear
+              <span class="damage__d">Days come from the trip's dates, not from having items in them — an empty day is a fact, not a hole.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep it</button><span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Delete the item</button>
+      </div>
+    </div>
+
+    <!-- delete a checklist (whole) -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="17" rx="2"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Delete Lena Hoffmann's packing checklist?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-checklists.html#state=deletelist">trip-checklists.html → packing → delete a whole list</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>Deleting the <b>whole list</b> asks for a confirm — unlike a single item on it, which
+          doesn't. That inconsistency is deliberate; see the contrasting entry in "Merely decided" below.</p>
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span><span class="mono">5</span> items go with it
+              <span class="damage__d">Including the 2 already ticked. There is no undo at this size — that's reserved for single items.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep the list</button><span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Delete all 5 items</button>
+      </div>
+    </div>
+
+    <!-- archive a trip -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Archive Vietnam &amp; Cambodia 2026?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip.html#state=ready">trip.html → lifecycle → archive</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>Belongs here for one reason out of four — the links. The rest of archiving is a freeze,
+          reversible by un-archiving (see "Merely decided").</p>
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>All 5 working links stop working, immediately
+              <span class="damage__d">Stored hashed, so un-archiving cannot bring them back — you would re-issue five new ones by hand.</span></span></li>
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>The itinerary, budget and checklists freeze as a snapshot
+              <span class="damage__d">10 days · 41 items · 8 categories · 31 checklist items — this part comes back on un-archiving.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep it active</button><span class="modal__sp"></span>
+        <a class="btn btn--primary" href="trip.html">Archive and start the retrospective</a>
+      </div>
+    </div>
+
+    <!-- reopen the date decision -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Reopen the date decision?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-dates.html#state=confirmed">trip-dates.html → confirmed → reopen</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>The one dated-decision action that <b>is</b> destructive — not moving the dates, but taking
+          back the decision itself. Confusingly named the same way "un-decide" is for a destination,
+          but the two behave differently: see the rollback comparison further down.</p>
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>All 10 itinerary days and the 41 items in them are removed
+              <span class="damage__d">This is the expensive part — <b>it cannot be undone by re-confirming the same dates.</b> Copy anything you want to keep first.</span></span></li>
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>The trip drops from <b>Confirmed</b> back to <b>Planning</b>
+              <span class="damage__d">Status is worked out from the facts, so it follows automatically — see the rollback section below.</span></span></li>
+        </ul>
+        <div class="typeconfirm">
+          <label class="typeconfirm__l" for="pt-ro">Because 41 itinerary items go, type
+            <code>reopen dates</code> to continue:</label>
+          <input class="field" id="pt-ro" type="text" placeholder="reopen dates" style="font-family:var(--mono)" disabled>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep the dates confirmed</button><span class="modal__sp"></span>
+        <button class="btn btn--danger" disabled>Reopen and remove 10 days</button>
+      </div>
+    </div>
+
+    <!-- shift vs re-date, and the extra weight when the trip is active -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Move the dates of a trip that already has ten days of plan</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-dates.html#state=confirmed">trip-dates.html → confirmed → move the dates</a> · covers both "shift vs re-date" and "shift an active trip"</p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <div class="banner banner--bad">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <div><b>This extra banner only appears when the trip is Active.</b> Five people are already
+            reading the itinerary on their phones — whatever you choose, they'll see it on their next
+            refresh with no warning and no message from the app.</div>
+        </div>
+        <p style="margin-top:14px">One dialog, two completely different intents — pick the one you mean:</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+          <div class="prefill" style="border-left-color:var(--info)">
+            <span class="defrow__n" style="font-size:13.5px">Slide the whole trip <span class="tag" style="margin-left:6px">Merely decided</span></span>
+            <span class="defrow__d" style="display:block;margin:6px 0 8px">Day 3 stays Day 3, it just falls on a different date.</span>
+            <ul class="damage" style="margin:0">
+              <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg><span>All 41 items survive, on all 10 days</span></li>
+              <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg><span>Stays <b>Confirmed</b> — still exact dates</span></li>
+            </ul>
+          </div>
+          <div class="prefill" style="border-left-color:var(--bad)">
+            <span class="defrow__n" style="font-size:13.5px">Re-date it <span class="tag" style="margin-left:6px">Destructive</span></span>
+            <span class="defrow__d" style="display:block;margin:6px 0 8px">Days are rebuilt from the new dates — for when the shape changes, not just the timing.</span>
+            <ul class="damage" style="margin:0">
+              <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Days 8–10 and their 11 items stop existing</span></li>
+              <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg><span>The 15 Nov goal falls outside the trip entirely</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Leave the dates alone</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Slide the trip to 8–17 Nov</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════ GROUP 2 · MERELY DECIDED ══ -->
+  <section class="sect" data-when="all decided" style="margin-top:28px">
+    <h2 class="sect__t" style="font-size:14.5px">Merely decided <span class="dim">· a choice that can be re-opened, so it earns reversibility, not guarding</span></h2>
+
+    <!-- advance status — zero friction, no dialog at all -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card__body" style="padding:16px 18px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <h3 style="margin:0 0 3px;font-size:15px;font-weight:600">Advance the trip's status</h3>
+            <p style="margin:0 0 10px;font-size:11px;color:var(--ink-3)">Lives at <a href="trip.html#state=idea">trip.html → lifecycle → move forward</a> — and it has <b>no dialog at all</b></p>
+            <p style="margin:0 0 8px">Moving a trip <b>forward</b> — Idea → Planning, or the automatic Confirmed → Active
+              on departure day — asks nothing of you, because nothing is lost by admitting a trip is
+              further along than it was:</p>
+            <div class="deflist" style="border:1px solid var(--line);border-radius:var(--r)">
+              <div class="defrow" style="grid-template-columns:minmax(0,1fr)">
+                <span><span class="defrow__n">Idea → Planning</span>
+                  <span class="defrow__d">"Moving to Planning asks nothing of you — it just says out loud that this is happening."</span></span></div>
+              <div class="defrow" style="grid-template-columns:minmax(0,1fr)">
+                <span><span class="defrow__n">Confirmed → Active</span>
+                  <span class="defrow__d">"It becomes Active on its own on 6 Nov — you don't have to do anything."</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- step back -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Push the departure back to Confirmed?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip.html#state=active">trip.html → lifecycle → step back</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>For when departure slipped — not the same as editing the dates.</p>
+        <ul class="damage">
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>The itinerary, budget and checklists are untouched
+              <span class="damage__d">Status is a label on the trip, not on its contents.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>All five access links keep working
+              <span class="damage__d">Only archiving revokes links.</span></span></li>
+        </ul>
+        <div class="reassure">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+          <div><b>This is fully reversible and destroys nothing.</b> Move it forward again whenever you like.</div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Leave it Active</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Step back to Confirmed</button>
+      </div>
+    </div>
+
+    <!-- promote a window / confirm dates -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Make 10–14 Oct 2026 the trip's dates?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-dates.html#state=broad">trip-dates.html → promoting a window</a> · same dialog reached from "Confirm these ten days" in the slight-variation mode</p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>This is the answer, not another option — here's what it starts:</p>
+        <ul class="damage">
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Five itinerary days appear, empty to begin with
+              <span class="damage__d">Days can't be added or removed by hand — they are these dates.</span></span></li>
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>The other two windows become read-only history
+              <span class="damage__d">They come back if you reopen the decision.</span></span></li>
+        </ul>
+        <div class="reassure">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+          <div><b>Nothing here is permanent.</b> You can move these dates or reopen the whole decision
+            later — while the days are still empty it costs you nothing at all.</div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep comparing</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Confirm 10–14 Oct</button>
+      </div>
+    </div>
+
+    <!-- mark a destination decided -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card__body" style="padding:16px 18px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <h3 style="margin:0 0 3px;font-size:15px;font-weight:600">Mark Alleppey as the decided destination</h3>
+            <p style="margin:0 0 8px;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-destination.html#state=open">trip-destination.html → comparing candidates → decide</a></p>
+            <p style="margin:0">Deciding is exclusive — marking one candidate un-marks any other — but
+              it isn't guarded, because <a href="#un-decide">un-deciding</a> is always one click away.
+              The only rule with teeth: a decided candidate can't be <b>deleted</b> without first
+              un-deciding it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- un-decide -->
+    <div class="modal__panel" id="un-decide" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Un-decide Vietnam &amp; Cambodia as the destination?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-destination.html#state=decided">trip-destination.html → decided → un-decide</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>The reference case for "big consequence isn't the same as destructive": a lot depends on
+          this, and nothing gets deleted.</p>
+        <ul class="damage">
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>The 10-day itinerary and the 8-category budget were built around this place
+              <span class="damage__d">They stay exactly as they are — "9 nights × 3 twin rooms" doesn't rewrite itself — but they now describe a destination the trip no longer claims to have decided.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Vietnam &amp; Cambodia goes back into the comparison, not into a bin
+              <span class="damage__d">Re-deciding it is one click, identical to how it was chosen the first time.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep it decided</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Un-decide and reopen comparison</button>
+      </div>
+    </div>
+
+    <!-- un-archive -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Un-archive Sri Lanka 2025?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-archive.html#state=unarchive">trip-archive.html → un-archive</a> — the hardest reversal in the product</p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>"Reversal" undersells it: three different things happen, and only two of them actually reverse.</p>
+        <ul class="damage">
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>The frozen snapshot becomes editable again
+              <span class="damage__d">Itinerary, budget estimates and checklists — exactly as they were frozen, back to Active.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Recorded actuals and retrospective notes are untouched
+              <span class="damage__d">They were editable before un-archiving and stay that way after — archiving never locked them.</span></span></li>
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>The six links archiving killed do <b>not</b> come back
+              <span class="damage__d">That residue belongs to "archive," in the destructive group above — un-archiving reopens the trip, not the hashed tokens. Re-issuing is per person, one at a time.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep it archived</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Un-archive, re-issue links separately</button>
+      </div>
+    </div>
+
+    <!-- change the trip's base currency -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2h5M9.5 12h5M11 15.5c2.4 0 3.6-1.2 3.6-3.2S13.4 9 11 9"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Change the trip's currency from INR to EUR?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="trip.html#state=active">trip.html → trip details → change base currency</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p><b>34 amounts are already entered.</b> Two honest options, no default that pretends this is free:</p>
+        <div class="prefill" style="border-left-color:var(--info);margin-bottom:8px">
+          <span class="defrow__n">Keep the numbers, change the label <span class="tag" style="margin-left:6px">Recommended</span></span>
+          <span class="defrow__d">Every figure stays as typed. The total reads €4,80,000 instead of ₹4,80,000 — obviously wrong where it's wrong, so it's findable.</span>
+        </div>
+        <div class="prefill" style="border-left-color:var(--dash-line)">
+          <span class="defrow__n">Convert them at today's rate</span>
+          <span class="defrow__d">The total becomes €4,403 at 1 EUR = 109.01 INR — but reasoning notes like "9 nights × 3 twin rooms × ₹4,000" don't convert, so a note and a euro figure stop matching.</span>
+        </div>
+        <div class="banner" style="margin-top:12px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <div>If you only want to <b>read</b> the trip in euro, you don't need this — the "View in"
+            lens changes nothing and can't corrupt a figure.</div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Leave it in INR</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Change to EUR, keeping the numbers</button>
+      </div>
+    </div>
+
+    <!-- edit a document -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card__body" style="padding:16px 18px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <span class="modal__ic modal__ic--info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <h3 style="margin:0 0 3px;font-size:15px;font-weight:600">Edit Daniel Weiss's Cambodia e-visa</h3>
+            <p style="margin:0 0 10px;font-size:11px;color:var(--ink-3)">Lives at <a href="documents.html#state=editmeta">documents.html → the vault → edit metadata</a></p>
+            <p style="margin:0 0 8px">Type, number and expiry are editable in place — no confirm, because
+              correcting a typo in an expiry date shouldn't feel like surgery.</p>
+            <div class="reassure">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <div><b>The file itself never changes here.</b> If the real e-visa was reissued, that's
+                an upload, which replaces the scan — a metadata edit alone touches only the fields
+                around it.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- apply an AI draft over hand-edited content -->
+    <div class="modal__panel" style="max-width:100%;margin-bottom:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></span>
+        <div style="flex:1;min-width:0">
+          <h3 style="margin:0;font-size:15px;font-weight:600">Apply the AI budget draft over Stay, hand-edited 2 days ago?</h3>
+          <p style="margin:3px 0 0;font-size:11px;color:var(--ink-3)">Lives at <a href="ai-review.html#state=overwrite">ai-review.html → applying a draft → overwrite</a></p>
+        </div>
+      </div>
+      <div class="modal__body">
+        <p>Said <b>before</b> the click, not discovered after — the whole point of this row:</p>
+        <ul class="damage">
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>Your note on Stay, entered 2 days ago, is replaced
+              <span class="damage__d">Along with its estimate — the assistant's new figure and reasoning take its place.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>The other 7 categories are untouched
+              <span class="damage__d">Each row applies independently — this is the one you kept hand-edited.</span></span></li>
+        </ul>
+        <div class="reassure">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <div><b>Undo puts your exact note and figure back</b>, right after applying — this looks
+            destructive and isn't, which is exactly why it lives here and not above.</div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" disabled>Keep my note on Stay</button><span class="modal__sp"></span>
+        <button class="btn btn--primary" disabled>Apply, replacing Stay</button>
+      </div>
+    </div>
+
+    <!-- delete a checklist item — the deliberate exception, no dialog, silent undo -->
+    <div class="card" style="margin-bottom:6px">
+      <div class="card__body" style="padding:16px 18px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <h3 style="margin:0 0 3px;font-size:15px;font-weight:600">Delete "Sunscreen SPF50" from Meera's packing list</h3>
+            <p style="margin:0 0 10px;font-size:11px;color:var(--ink-3)">Lives at <a href="trip-checklists.html#state=deleteitem">trip-checklists.html → packing → delete a single item</a> — deliberately the one delete with <b>no confirmation at all</b></p>
+            <p style="margin:0 0 10px">A single checklist item is the cheapest thing in the product to
+              re-create — a name and a tick. Confirming it would train people to click through
+              confirmations without reading them, which makes the ones that matter (above) less safe,
+              not more. So instead of asking first, it acts immediately and stays undoable for a few
+              seconds:</p>
+            <div class="subcard" style="margin-bottom:0">
+              <div class="tick">
+                <input class="check" type="checkbox" aria-label="Sunscreen SPF50, not packed">
+                <span><span class="tick__n">Sunscreen SPF50</span>
+                  <span class="tick__d">Meera Iyer · packing</span></span>
+                <span class="tick__r"><button class="iconbtn" aria-label="Delete this item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+              </div>
+              <div class="undo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+                <span>Deleted "Sunscreen SPF50"</span>
+                <span class="undo__sp"></span>
+                <button class="linkish">Undo</button>
+              </div>
+            </div>
+            <p style="margin:10px 0 0;font-size:11.5px;color:var(--ink-3)">A moment after the click, the
+              row above is what's left in its place — not a dialog you had to get past first.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═════════════════════════════════════ STATUS ROLLBACK: edited vs invalidated -->
+  <section class="sect" data-when="all rollback" style="margin-top:28px" id="rollback">
+    <h2 class="sect__t" style="font-size:14.5px">Status rollback <span class="dim">· the rule that decides whether editing dates costs you Confirmed</span></h2>
+    <p style="max-width:82ch;font-size:12.5px;color:var(--ink-2);line-height:1.65;margin:0 0 14px">
+      Status is never a label you set — it's worked out from whether its requirements still hold.
+      <b>Confirmed</b> means "the group has final dates." The rule that decides what survives an edit
+      is precise, and — this is the part that matters — <b>announced inside the action's own warning,
+      before you click it, never discovered afterward.</b>
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:16px">
+
+      <div class="modal__panel" style="max-width:100%">
+        <div class="modal__head" style="background:var(--ok-wash)">
+          <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <h3 style="margin:0;font-size:15px;font-weight:600">Edited</h3>
+            <p style="margin:2px 0 0;font-size:11.5px;color:var(--ink-2)">6–15 Nov 2026 → 8–17 Nov 2026</p>
+          </div>
+        </div>
+        <div class="modal__body">
+          <p>Both endpoints move, but they're still <b>exact calendar dates</b> — the precondition for
+            Confirmed never stopped being true.</p>
+          <div class="facts">
+            <div class="fact fact--ok"><div class="fact__k">Before</div><div class="fact__v"><span class="mono">6–15 Nov</span></div><div class="fact__d">exact · Confirmed</div></div>
+            <div class="fact fact--ok"><div class="fact__k">After</div><div class="fact__v"><span class="mono">8–17 Nov</span></div><div class="fact__d">exact · Confirmed</div></div>
+          </div>
+          <div class="reassure" style="margin-top:12px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <div>Shown inside "Slide the whole trip," before the click: <b>"Stays Confirmed — still
+              exact dates."</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal__panel" style="max-width:100%">
+        <div class="modal__head" style="background:var(--warn-wash)">
+          <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg></span>
+          <div style="flex:1;min-width:0">
+            <h3 style="margin:0;font-size:15px;font-weight:600">Invalidated</h3>
+            <p style="margin:2px 0 0;font-size:11.5px;color:var(--ink-2)">6–15 Nov 2026 → "sometime in December"</p>
+          </div>
+        </div>
+        <div class="modal__body">
+          <p>The dates aren't moved, they're <b>ungiven</b> — a window has no exact days, so the thing
+            Confirmed asserts is no longer true.</p>
+          <div class="facts">
+            <div class="fact fact--ok"><div class="fact__k">Before</div><div class="fact__v"><span class="mono">6–15 Nov</span></div><div class="fact__d">exact · Confirmed</div></div>
+            <div class="fact fact--warn"><div class="fact__k">After</div><div class="fact__v">A window</div><div class="fact__d">not exact · Planning</div></div>
+          </div>
+          <div class="banner" style="margin-top:12px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <div>Shown inside "Reopen the date decision," before the click: <b>"The trip drops from
+              Confirmed back to Planning — not a punishment, status follows the facts."</b></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="revnote">
+      <span class="revnote__k">Note</span>
+      <div>Same starting point, same-looking action ("change the dates"), opposite effect on status —
+        and the product uses two <b>different buttons</b> for them (<a href="trip-dates.html#state=confirmed">Move the dates</a>
+        vs <a href="trip-dates.html#state=confirmed">Reopen the date decision</a>) specifically so the
+        distinction is a choice you make going in, not a surprise you get told about after.</div>
+    </div>
+  </section>
+
+</main>
+
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches
+        trips, people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

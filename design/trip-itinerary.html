@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Itinerary · Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+<style>
+  /* Scoped to this page only: mirrors the review-strip's "state" axis onto
+     <html> so a handful of organizer-only controls (reorder, delete, per-day
+     regenerate) can be hidden as a group when state=readonly, instead of
+     repeating data-when-not="readonly" on every one of ~47 rows. */
+  /* visibility, not display: these sit in CSS grids (.it, .day__head) whose
+     column tracks are keyed to fixed positions; display:none would remove a
+     cell and shove its siblings into the wrong column. */
+  html[data-page-state="readonly"] [data-orgonly] { visibility: hidden !important; }
+</style>
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">State</span>
+      <button class="rev__b" data-v="populated" aria-pressed="true">Populated</button>
+      <button class="rev__b" data-v="gaps">Gaps</button>
+      <button class="rev__b" data-v="packed">Packed day</button>
+      <button class="rev__b" data-v="dayregen">Regenerating a day</button>
+      <button class="rev__b" data-v="deleteitem">Delete item</button>
+      <button class="rev__b" data-v="readonly">Read-only</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">AI</span>
+      <button class="rev__b" data-v="aioff">AI off</button>
+      <button class="rev__b" data-v="aigen">Generating</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Loading</span>
+      <button class="rev__b" data-v="nodates">No dates</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="failed">Load failed</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html" aria-current="page">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in">
+    <span class="lens__eyebrow">View in</span>
+    <span data-lens-label>INR</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <a href="trip.html">Vietnam &amp; Cambodia 2026</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span>Itinerary</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>Itinerary</h1>
+        <div class="thead__meta">
+          <span data-when-not="nodates readonly">Days come from the trip's dates, not a button —
+            there's no "add day" because there's nothing to add a day to. Every time below is a real
+            start and end, not a typed sentence.</span>
+          <span data-when="nodates">Blocked on the trip having dates at all.</span>
+          <span data-when="readonly">Read-only, the way a participant sees it on their phone.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tnav" aria-label="This trip">
+    <a href="trip.html">Board</a>
+    <a href="trip-itinerary.html" aria-current="page">Itinerary <span class="tnav__n">10 days</span></a>
+    <a href="trip-budget.html">Budget <span class="tnav__n">₹4,80,000</span></a>
+    <a href="trip-people.html">People <span class="tnav__n">6</span></a>
+    <a href="trip-checklists.html">Checklists <span class="tnav__n tnav__n--warn">3 overdue</span></a>
+  </nav>
+
+  <!-- ══════════════════════════════════════════ trip-level roll-up ═════════ -->
+  <div class="card" data-when-not="nodates loading failed" style="margin-bottom:16px">
+    <div class="card__body" style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:13px 16px">
+      <span class="mono" style="font-weight:600;font-size:14.5px">6–15 Nov 2026</span>
+      <span class="dash">·</span>
+      <span><span class="mono" style="font-weight:600">10</span> days</span>
+      <span class="dash">·</span>
+      <span data-when-not="gaps"><span class="mono" style="font-weight:600">47</span> items</span>
+      <span data-when="gaps"><span class="mono" style="font-weight:600">41</span> items</span>
+      <span class="dash">·</span>
+      <span class="money money--big" data-when-not="gaps" data-m data-inr="₹56,400" data-eur="≈ €520" data-vnd="">₹56,400</span>
+      <span class="money money--big" data-when="gaps" data-m data-inr="₹46,000" data-eur="≈ €420" data-vnd="">₹46,000</span>
+      <span style="flex:1"></span>
+      <span class="pill pill--3" data-when="gaps">2 empty days</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ AI panel ═══ -->
+  <div class="aioff" data-when="aioff" style="margin-bottom:16px">
+    <span class="aioff__ic">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>
+    </span>
+    <div>
+      <h4>AI drafting is off for this deployment</h4>
+      <p>That's expected, not broken — some deployments never turn it on. Build a day by hand, or
+        duplicate a day that's close and edit it; nothing here depends on AI being available.</p>
+    </div>
+  </div>
+  <div class="gen" data-when="aigen" style="margin-bottom:16px">
+    <div class="gen__bar"><i></i></div>
+    <h3>Redrafting the whole itinerary…</h3>
+    <p>Working from your 6 goals, the 8 budgeted categories and Vietnam &amp; Cambodia's typical pace.
+      This can take up to a minute — your current 10 days stay exactly as they are until you choose to
+      apply anything.</p>
+  </div>
+  <div data-when-not="aioff aigen readonly nodates loading failed" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>
+    <span class="t-meta" style="font-size:12.5px">Redraft the whole trip with AI, or use the
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>
+      icon on any single day.</span>
+    <a class="linkish" href="ai-review.html#state=itinerary">Redraft the whole itinerary</a>
+  </div>
+
+  <!-- ═══════════════════════════════ deleting one item, named precisely ════ -->
+  <div class="card" data-when="deleteitem" style="margin-bottom:16px;border-color:var(--bad-line)">
+    <div class="card__head">
+      <span class="modal__ic modal__ic--bad" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+      <h2 style="font-size:14.5px;font-weight:600">Delete "Second fitting, collect the order"?</h2>
+    </div>
+    <div class="card__body">
+      <p class="t-meta" style="margin:0 0 10px">On Day 8 · 15:00–16:00 · Hoi An. Cost
+        <span class="money" data-m data-inr="₹5,400" data-eur="≈ €50" data-vnd="">₹5,400</span>.
+        Note on file: "Final collection — bring the deposit receipt."</p>
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>The item, its time and its note all go
+            <span class="damage__d">Nothing keeps a copy — re-adding it means retyping it.</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>Day 8's total drops from ₹9,000 to ₹3,600, and the trip's from ₹56,400 to ₹51,000</span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Nothing else on Day 8 moves or changes</span></li>
+      </ul>
+    </div>
+    <div class="card__body" style="padding-top:0;display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn" data-set="state:populated">Keep it</button>
+      <button class="btn btn--danger" data-set="state:populated">Delete this item</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ dependency-blocked: no dates ══ -->
+  <div class="blank" data-when="nodates">
+    <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+    <div>
+      <h4>There's no itinerary because there are no dates</h4>
+      <p>Days aren't typed in by hand — they're made from the trip's dates, one per calendar day. This
+        trip doesn't have dates yet, broad or exact, so there's nothing for a day to be. Adding an "add
+        day" button here would just be lying about what's missing.</p>
+      <div class="blank__act">
+        <a class="btn btn--primary" href="trip-dates.html#state=broad">Add or choose dates</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ loading ═══ -->
+  <div data-when="loading">
+    <div class="day" style="margin-bottom:12px">
+      <div class="day__head">
+        <span class="sk sk--pill" style="width:74px"></span>
+        <span class="sk sk--l1" style="width:120px;margin:0"></span>
+        <span class="day__sp"></span>
+        <span class="sk sk--num"></span>
+      </div>
+      <div class="skrow"><span class="sk" style="width:22px;height:22px;border-radius:50%"></span>
+        <span><span class="sk sk--l1"></span><span class="sk sk--l2"></span></span>
+        <span class="sk sk--num" style="margin-left:0"></span></div>
+      <div class="skrow"><span class="sk" style="width:22px;height:22px;border-radius:50%"></span>
+        <span><span class="sk sk--l1"></span><span class="sk sk--l2"></span></span>
+        <span class="sk sk--num" style="margin-left:0"></span></div>
+    </div>
+    <div class="day" style="margin-bottom:12px">
+      <div class="day__head">
+        <span class="sk sk--pill" style="width:74px"></span>
+        <span class="sk sk--l1" style="width:120px;margin:0"></span>
+        <span class="day__sp"></span>
+        <span class="sk sk--num"></span>
+      </div>
+      <div class="skrow"><span class="sk" style="width:22px;height:22px;border-radius:50%"></span>
+        <span><span class="sk sk--l1"></span><span class="sk sk--l2"></span></span>
+        <span class="sk sk--num" style="margin-left:0"></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ load failed ══ -->
+  <div data-when="failed">
+    <div class="blank blank--bad">
+      <span class="blank__icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <div>
+        <h4>The itinerary didn't load</h4>
+        <p>The server answered, but not with the days — <span class="mono">502</span> from the API.
+          Nothing has been changed or lost; this is a read that failed, not an empty trip.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:loading">Try loading it again</button>
+          <a class="btn" href="trip.html">Back to the board</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════ the days ═══ -->
+  <div data-when-not="nodates loading failed">
+
+    <!-- Day 1 -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 1</span><span class="day__date">Fri 6 Nov</span></span>
+        <span class="day__where">Hanoi</span>
+        <span class="day__sp"></span>
+        <span class="day__meta"><span class="mono">4 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹1,400" data-eur="≈ €13" data-vnd="">₹1,400</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 1 with AI" data-orgonly>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>
+        </button>
+      </div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly>
+          <svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg>
+        </button>
+        <span class="it__t">14:20–15:10</span>
+        <span><span class="it__n">Flight lands, BLR → HAN</span>
+          <span class="it__d"><span class="catm">TR</span> Noi Bai International</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly>
+          <button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button>
+          <button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+        </span>
+      </div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly>
+          <svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg>
+        </button>
+        <span class="it__t">15:10–16:20</span>
+        <span><span class="it__n">Immigration, bags, then a Grab to town</span>
+          <span class="it__d"><span class="catm">TR</span> Arrivals hall</span></span>
+        <span class="it__cost money" data-m data-inr="₹1,400" data-eur="≈ €13" data-vnd="">₹1,400</span>
+        <span class="it__acts" data-orgonly>
+          <button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button>
+          <button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+        </span>
+      </div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly>
+          <svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg>
+        </button>
+        <span class="it__t">17:00–18:00</span>
+        <span><span class="it__n">Check in, Old Quarter hotel</span>
+          <span class="it__d"><span class="catm">LG</span> Hang Bac Street</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly>
+          <button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button>
+          <button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+        </span>
+      </div>
+      <div style="padding:7px 16px 3px 41px;font:600 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)">No fixed time</div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly>
+          <svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg>
+        </button>
+        <span class="it__t it__t--none">No fixed time</span>
+        <span><span class="it__n">Settle in — a SIM card and some cash</span>
+          <span class="it__d"><span class="catm">LG</span> Whenever there's a gap</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly>
+          <button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button>
+          <button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+        </span>
+      </div>
+    </div>
+
+    <!-- Day 2 — packed variant swaps in 12 items, same day total either way -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 2</span><span class="day__date">Sat 7 Nov</span></span>
+        <span class="day__where">Hanoi</span>
+        <span class="day__sp"></span>
+        <span class="day__meta">
+          <span class="mono" data-when-not="packed">5 items</span>
+          <span class="mono" data-when="packed">12 items</span>
+          <span class="dash">·</span>
+          <span class="money" data-m data-inr="₹5,300" data-eur="≈ €49" data-vnd="">₹5,300</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 2 with AI" data-orgonly>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>
+        </button>
+      </div>
+
+      <div data-when-not="packed">
+        <div class="it">
+          <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">07:30–08:30</span>
+          <span><span class="it__n">Egg coffee at Giảng Café</span><span class="it__d"><span class="catm">FD</span> 39 Nguyen Huu Huan</span></span>
+          <span class="it__cost money" data-m data-inr="₹300" data-eur="≈ €3" data-vnd="">₹300</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+        </div>
+        <div class="it">
+          <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">09:00–12:30</span>
+          <span><span class="it__n">Old Quarter walking food crawl</span><span class="it__d"><span class="catm">FD</span> Pho, bun cha, ca phe trung</span></span>
+          <span class="it__cost money" data-m data-inr="₹2,200" data-eur="≈ €20" data-vnd="">₹2,200</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+        </div>
+        <div class="it">
+          <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">13:30–14:30</span>
+          <span><span class="it__n">Ngoc Son Temple and the lake</span><span class="it__d"><span class="catm">AC</span> Hoan Kiem Lake</span></span>
+          <span class="it__cost money" data-m data-inr="₹100" data-eur="≈ €1" data-vnd="">₹100</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+        </div>
+        <div class="it">
+          <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">16:00–17:30</span>
+          <span><span class="it__n">Water puppet show</span><span class="it__d"><span class="catm">AC</span> Thang Long Theatre</span></span>
+          <span class="it__cost money" data-m data-inr="₹1,800" data-eur="≈ €17" data-vnd="">₹1,800</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+        </div>
+        <div class="it">
+          <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">19:00–20:30</span>
+          <span><span class="it__n">Bun cha dinner</span><span class="it__d"><span class="catm">FD</span> Bun Cha Huong Lien</span></span>
+          <span class="it__cost money" data-m data-inr="₹900" data-eur="≈ €8" data-vnd="">₹900</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+        </div>
+      </div>
+
+      <div data-when="packed">
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">07:00–07:30</span><span><span class="it__n">Egg coffee at Giảng Café</span><span class="it__d"><span class="catm">FD</span> 39 Nguyen Huu Huan</span></span>
+          <span class="it__cost money" data-m data-inr="₹300" data-eur="≈ €3" data-vnd="">₹300</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">08:00–08:20</span><span><span class="it__n">Bánh cuốn breakfast stop</span><span class="it__d"><span class="catm">FD</span> A cart, not a restaurant</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">09:00–12:00</span><span><span class="it__n">Old Quarter walking food crawl</span><span class="it__d"><span class="catm">FD</span> Pho, bun cha, ca phe trung</span></span>
+          <span class="it__cost money" data-m data-inr="₹2,200" data-eur="≈ €20" data-vnd="">₹2,200</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">12:15–12:30</span><span><span class="it__n">Cross the road, properly this time</span><span class="it__d"><span class="catm">AC</span> A running joke by now</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">12:45–13:15</span><span><span class="it__n">Coffee break, Hoan Kiem shore</span><span class="it__d"><span class="catm">FD</span> Cafe Pho Co, up the stairs</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">13:30–14:15</span><span><span class="it__n">Ngoc Son Temple and the lake</span><span class="it__d"><span class="catm">AC</span> Hoan Kiem Lake</span></span>
+          <span class="it__cost money" data-m data-inr="₹100" data-eur="≈ €1" data-vnd="">₹100</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">14:30–15:00</span><span><span class="it__n">Temple of Literature, quick stop</span><span class="it__d"><span class="catm">AC</span> Van Mieu</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">15:15–15:45</span><span><span class="it__n">Haggle for a conical hat</span><span class="it__d"><span class="catm">LG</span> Hang Gai silk street</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">16:00–17:30</span><span><span class="it__n">Water puppet show</span><span class="it__d"><span class="catm">AC</span> Thang Long Theatre</span></span>
+          <span class="it__cost money" data-m data-inr="₹1,800" data-eur="≈ €17" data-vnd="">₹1,800</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">17:45–18:15</span><span><span class="it__n">Rest at the hotel, AC blasting</span><span class="it__d"><span class="catm catm--rest">RS</span> Everyone needs one of these</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">19:00–20:30</span><span><span class="it__n">Bun cha dinner</span><span class="it__d"><span class="catm">FD</span> Bun Cha Huong Lien</span></span>
+          <span class="it__cost money" data-m data-inr="₹900" data-eur="≈ €8" data-vnd="">₹900</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">21:00–21:20</span><span><span class="it__n">Late snack, banh mi cart</span><span class="it__d"><span class="catm">FD</span> Outside the hotel</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      </div>
+    </div>
+
+    <!-- Day 3 — anchor: Ha Long junk (fixed 8 Nov) + the dayregen example -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 3</span><span class="day__date">Sun 8 Nov</span></span>
+        <span class="day__where">Ha Long Bay</span>
+        <span class="day__sp"></span>
+        <span class="day__meta"><span class="mono">4 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹10,800" data-eur="≈ €99" data-vnd="">₹10,800</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 3 with AI" data-orgonly data-set="state:dayregen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>
+        </button>
+      </div>
+      <div class="card__body" data-when="dayregen" data-orgonly style="border-bottom:1px solid var(--line);background:var(--surface-2);padding:13px 16px">
+        <div class="t-eyebrow" style="margin-bottom:8px">Redo this day with AI</div>
+        <label class="fg" style="margin-bottom:8px">
+          <span class="fg__l">What should change?</span>
+          <textarea class="field" style="min-height:56px;font-family:var(--sans);font-size:12.5px">redo day 3, more relaxed</textarea>
+        </label>
+        <p class="t-meta" style="margin:0 0 10px;font-size:12px">Only Day 3 is touched — the other nine
+          days, the anchored goal below and the trip's cost so far are given as context, not overwritten.</p>
+        <a class="btn btn--primary" href="ai-review.html#state=day">Preview the redraft</a>
+      </div>
+      <div class="anchor">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+        <span><b>Goal, fixed to this date:</b> one night on a Ha Long Bay junk — Bai Tu Long Bay, the
+          quieter side. The planner may not move this off 8 Nov.</span>
+      </div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">08:00–11:30</span>
+        <span><span class="it__n">Transfer Hanoi → Ha Long pier</span><span class="it__d"><span class="catm">TR</span> Shared minivan</span></span>
+        <span class="it__cost money" data-m data-inr="₹1,200" data-eur="≈ €11" data-vnd="">₹1,200</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+      </div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">12:00–15:30</span>
+        <span><span class="it__n">Board the junk, cruise into Bai Tu Long</span><span class="it__d"><span class="catm">TR</span> Cabin + all meals aboard</span></span>
+        <span class="it__cost money" data-m data-inr="₹9,600" data-eur="≈ €88" data-vnd="">₹9,600</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+      </div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">16:00–17:30</span>
+        <span><span class="it__n">Kayak among the limestone karsts</span><span class="it__d"><span class="catm">AC</span> Bai Tu Long Bay</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+      </div>
+      <div class="it">
+        <button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">18:00–09:00 +1</span>
+        <span><span class="it__n">Dinner on deck, then overnight at anchor</span><span class="it__d"><span class="catm">FD</span> Included in the junk booking</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span>
+      </div>
+    </div>
+
+    <!-- Day 4 -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 4</span><span class="day__date">Mon 9 Nov</span></span>
+        <span class="day__where">Hanoi → Hue</span>
+        <span class="day__sp"></span>
+        <span class="day__meta"><span class="mono">5 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹6,600" data-eur="≈ €61" data-vnd="">₹6,600</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 4 with AI" data-orgonly><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></button>
+      </div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">09:00–10:00</span><span><span class="it__n">Disembark the junk, transfer to pier</span><span class="it__d"><span class="catm">TR</span> Bai Tu Long Bay</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">10:30–13:30</span><span><span class="it__n">Drive back to Hanoi</span><span class="it__d"><span class="catm">TR</span> Shared minivan</span></span>
+        <span class="it__cost money" data-m data-inr="₹1,200" data-eur="≈ €11" data-vnd="">₹1,200</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">15:20–16:45</span><span><span class="it__n">Flight HAN → HUE</span><span class="it__d"><span class="catm">TR</span> Noi Bai → Phu Bai</span></span>
+        <span class="it__cost money" data-m data-inr="₹3,800" data-eur="≈ €35" data-vnd="">₹3,800</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">17:15–18:00</span><span><span class="it__n">Transfer to hotel, Hue</span><span class="it__d"><span class="catm">TR</span> Perfume River side</span></span>
+        <span class="it__cost money" data-m data-inr="₹500" data-eur="≈ €5" data-vnd="">₹500</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">19:30–21:00</span><span><span class="it__n">Riverside dinner, Perfume River</span><span class="it__d"><span class="catm">FD</span> Hue-style set menu</span></span>
+        <span class="it__cost money" data-m data-inr="₹1,100" data-eur="≈ €10" data-vnd="">₹1,100</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+    </div>
+
+    <!-- Day 5 -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 5</span><span class="day__date">Tue 10 Nov</span></span>
+        <span class="day__where">Hue</span>
+        <span class="day__sp"></span>
+        <span class="day__meta"><span class="mono">5 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹3,600" data-eur="≈ €33" data-vnd="">₹3,600</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 5 with AI" data-orgonly><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></button>
+      </div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">08:00–08:45</span><span><span class="it__n">Breakfast at the hotel</span><span class="it__d"><span class="catm">FD</span> Included</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">09:00–12:00</span><span><span class="it__n">Imperial City and the citadel</span><span class="it__d"><span class="catm">AC</span> Full loop, a guide included</span></span>
+        <span class="it__cost money" data-m data-inr="₹600" data-eur="≈ €6" data-vnd="">₹600</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">12:30–13:30</span><span><span class="it__n">Bun bo Hue lunch</span><span class="it__d"><span class="catm">FD</span> A stall by the citadel gate</span></span>
+        <span class="it__cost money" data-m data-inr="₹500" data-eur="≈ €5" data-vnd="">₹500</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">14:30–17:00</span><span><span class="it__n">Boat to Thien Mu Pagoda, Perfume River</span><span class="it__d"><span class="catm">AC</span> Dragon boat, round trip</span></span>
+        <span class="it__cost money" data-m data-inr="₹900" data-eur="≈ €8" data-vnd="">₹900</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">19:00–20:30</span><span><span class="it__n">Royal-style dinner, imperial recipes</span><span class="it__d"><span class="catm">FD</span> Set menu, live nha nhac music</span></span>
+        <span class="it__cost money" data-m data-inr="₹1,600" data-eur="≈ €15" data-vnd="">₹1,600</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+    </div>
+
+    <!-- Day 6 — the DELIBERATELY empty half-day -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 6</span><span class="day__date">Wed 11 Nov</span></span>
+        <span class="day__where">Hue</span>
+        <span class="day__sp"></span>
+        <span class="day__meta" data-when-not="gaps"><span class="mono">3 items</span></span>
+        <span class="day__meta" data-when="gaps"><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Deliberately empty</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 6 with AI" data-orgonly><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></button>
+      </div>
+      <div data-when-not="gaps">
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">09:00–10:00</span><span><span class="it__n">Slow breakfast, no plan after</span><span class="it__d"><span class="catm catm--rest">RS</span> Hotel terrace</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t it__t--none">No fixed time</span><span><span class="it__n">Free — nothing booked, on purpose</span><span class="it__d"><span class="catm catm--rest">RS</span> The goal is "keep two half-days completely unplanned"</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">18:00–19:00</span><span><span class="it__n">Dinner somewhere nearby, decide on the day</span><span class="it__d"><span class="catm">FD</span> Not booked</span></span>
+          <span class="it__cost dash">—</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      </div>
+      <div data-when="gaps" style="display:flex;gap:10px;padding:16px;align-items:flex-start">
+        <span class="wait__ic" style="background:var(--ok-wash);color:var(--ok)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        </span>
+        <div>
+          <div style="font-size:13px;font-weight:500">Left empty on purpose</div>
+          <p class="t-meta" style="margin:3px 0 8px;font-size:12px">One of the trip's own goals is
+            "keep two half-days completely unplanned" — this is one of them. It reads as a choice, not
+            a gap that needs chasing.</p>
+          <button class="linkish" data-orgonly>Add something anyway</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 7 -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 7</span><span class="day__date">Thu 12 Nov</span></span>
+        <span class="day__where">Hue → Hoi An</span>
+        <span class="day__sp"></span>
+        <span class="day__meta"><span class="mono">5 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹3,100" data-eur="≈ €28" data-vnd="">₹3,100</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 7 with AI" data-orgonly><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></button>
+      </div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">08:30–09:15</span><span><span class="it__n">Check out, transfer to Hoi An</span><span class="it__d"><span class="catm">TR</span> Over the Hai Van Pass</span></span>
+        <span class="it__cost money" data-m data-inr="₹2,400" data-eur="≈ €22" data-vnd="">₹2,400</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">09:15–11:00</span><span><span class="it__n">Stop at Hai Van Pass viewpoint</span><span class="it__d"><span class="catm">AC</span> The coast on both sides</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">11:30–12:15</span><span><span class="it__n">Cao lau lunch, Hoi An Old Town</span><span class="it__d"><span class="catm">FD</span> A stall near the covered bridge</span></span>
+        <span class="it__cost money" data-m data-inr="₹400" data-eur="≈ €4" data-vnd="">₹400</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">14:00–15:30</span><span><span class="it__n">Check in, walk the Ancient Town</span><span class="it__d"><span class="catm">LG</span> Riverside, near the market</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">19:00–21:00</span><span><span class="it__n">Lantern-lit river, Full Moon Bridge</span><span class="it__d"><span class="catm">AC</span> Paper lantern boats</span></span>
+        <span class="it__cost money" data-m data-inr="₹300" data-eur="≈ €3" data-vnd="">₹300</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+    </div>
+
+    <!-- Day 8 — the Hoi An tailoring goal + an overlap -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 8</span><span class="day__date">Fri 13 Nov</span></span>
+        <span class="day__where">Hoi An</span>
+        <span class="day__sp"></span>
+        <span class="day__meta"><span class="mono">5 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹9,000" data-eur="≈ €83" data-vnd="">₹9,000</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 8 with AI" data-orgonly><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></button>
+      </div>
+      <div class="anchor" style="background:var(--surface-2);color:var(--ink-2)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+        <span><b>Goal, pinned to this place, no fixed date:</b> Hoi An tailoring with time for two
+          fittings, and a vegan-friendly cooking class in Tra Que herb village. Both land today.</span>
+      </div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">09:00–13:00</span><span><span class="it__n">Cooking class, Tra Que herb village</span><span class="it__d"><span class="catm">AC</span> Vegan-friendly, per the goal</span></span>
+        <span class="it__cost money" data-m data-inr="₹1,800" data-eur="≈ €17" data-vnd="">₹1,800</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">12:00–13:00</span><span><span class="it__n">First fitting at the tailor</span><span class="it__d"><span class="catm">LG</span> Yaly Couture</span></span>
+        <span class="it__cost money" data-m data-inr="₹600" data-eur="≈ €6" data-vnd="">₹600</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="overlap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+        <span><b>These two overlap:</b> "Cooking class" (09:00–13:00) and "First fitting" (12:00–13:00).
+          Nothing stops you booking it this way — this just says so before you find out the hard way.</span>
+      </div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">15:00–16:00</span><span><span class="it__n">Second fitting, collect the order</span><span class="it__d"><span class="catm">LG</span> Final collection — bring the deposit receipt</span></span>
+        <span class="it__cost money" data-m data-inr="₹5,400" data-eur="≈ €50" data-vnd="">₹5,400</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">17:00–18:00</span><span><span class="it__n">Basket-boat ride, Cam Thanh coconut village</span><span class="it__d"><span class="catm">AC</span> Round trip by tuk-tuk</span></span>
+        <span class="it__cost money" data-m data-inr="₹700" data-eur="≈ €6" data-vnd="">₹700</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">20:00–21:30</span><span><span class="it__n">Street food night market</span><span class="it__d"><span class="catm">FD</span> Nguyen Hoang Street</span></span>
+        <span class="it__cost money" data-m data-inr="₹500" data-eur="≈ €5" data-vnd="">₹500</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+    </div>
+
+    <!-- Day 9 — the OVERSIGHT empty day (a real transit day when populated) -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 9</span><span class="day__date">Sat 14 Nov</span></span>
+        <span class="day__where">Hoi An → Siem Reap</span>
+        <span class="day__sp"></span>
+        <span class="day__meta" data-when-not="gaps"><span class="mono">3 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹10,400" data-eur="≈ €95" data-vnd="">₹10,400</span></span>
+        <span class="day__meta" data-when="gaps"><span class="state state--warn" style="font-size:11.5px"><span class="state__dot"></span>Empty — looks like an oversight</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 9 with AI" data-orgonly><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></button>
+      </div>
+      <div data-when-not="gaps">
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">07:00–08:00</span><span><span class="it__n">Check out, transfer to Da Nang airport</span><span class="it__d"><span class="catm">TR</span> Private car</span></span>
+          <span class="it__cost money" data-m data-inr="₹1,200" data-eur="≈ €11" data-vnd="">₹1,200</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">10:35–12:50</span><span><span class="it__n">Flight DAD → REP, via SGN</span><span class="it__d"><span class="catm">TR</span> Two legs, one ticket</span></span>
+          <span class="it__cost money" data-m data-inr="₹8,600" data-eur="≈ €79" data-vnd="">₹8,600</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+        <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+          <span class="it__t">13:30–14:15</span><span><span class="it__n">Transfer to hotel, Siem Reap</span><span class="it__d"><span class="catm">TR</span> Airport pickup</span></span>
+          <span class="it__cost money" data-m data-inr="₹600" data-eur="≈ €6" data-vnd="">₹600</span>
+          <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      </div>
+      <div data-when="gaps" style="display:flex;gap:10px;padding:16px;align-items:flex-start;background:var(--warn-wash)">
+        <span class="wait__ic wait__ic--warn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+        </span>
+        <div>
+          <div style="font-size:13px;font-weight:500">Nothing planned — and unlike Day 6, nothing says this one is meant to be</div>
+          <p class="t-meta" style="margin:3px 0 8px;font-size:12px">This is the border-crossing day into
+            Cambodia. The flight and transfer that should be here haven't been added. Worth chasing.</p>
+          <button class="linkish" data-orgonly>Add the transfer and flight</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Day 10 — anchor: Angkor Wat at sunrise (fixed 15 Nov) -->
+    <div class="day">
+      <div class="day__head">
+        <span class="day__n"><span class="day__num">Day 10</span><span class="day__date">Sun 15 Nov</span></span>
+        <span class="day__where">Siem Reap</span>
+        <span class="day__sp"></span>
+        <span class="day__meta"><span class="mono">8 items</span><span class="dash">·</span>
+          <span class="money" data-m data-inr="₹6,200" data-eur="≈ €57" data-vnd="">₹6,200</span></span>
+        <button class="iconbtn" aria-label="Regenerate Day 10 with AI" data-orgonly><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg></button>
+      </div>
+      <div class="anchor">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+        <span><b>Goal, fixed to this date:</b> Angkor Wat at sunrise — Siem Reap. "The whole reason for
+          the Cambodia leg." The planner may not move this off 15 Nov.</span>
+      </div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">04:45–05:00</span><span><span class="it__n">Tuk-tuk pickup, still dark</span><span class="it__d"><span class="catm">TR</span> Hotel lobby</span></span>
+        <span class="it__cost money" data-m data-inr="₹300" data-eur="≈ €3" data-vnd="">₹300</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">05:00–07:00</span><span><span class="it__n">Angkor Wat at sunrise</span><span class="it__d"><span class="catm">AC</span> Covered by the 3-day Angkor pass</span></span>
+        <span class="it__cost money" data-m data-inr="₹3,000" data-eur="≈ €28" data-vnd="">₹3,000</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">07:30–08:15</span><span><span class="it__n">Breakfast, market stall coffee</span><span class="it__d"><span class="catm">FD</span> Outside the east gate</span></span>
+        <span class="it__cost money" data-m data-inr="₹200" data-eur="≈ €2" data-vnd="">₹200</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">08:30–10:00</span><span><span class="it__n">Ta Prohm, the jungle temple</span><span class="it__d"><span class="catm">AC</span> Roots through the stones</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">10:30–12:00</span><span><span class="it__n">Bayon and the Terrace of Elephants</span><span class="it__d"><span class="catm">AC</span> Angkor Thom</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">12:30–13:30</span><span><span class="it__n">Khmer lunch, riverside</span><span class="it__d"><span class="catm">FD</span> Set menu, amok included</span></span>
+        <span class="it__cost money" data-m data-inr="₹500" data-eur="≈ €5" data-vnd="">₹500</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">15:00–16:30</span><span><span class="it__n">Rest, pool time before the flight home</span><span class="it__d"><span class="catm catm--rest">RS</span> Hotel pool</span></span>
+        <span class="it__cost dash">—</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+      <div class="it"><button class="it__grab" aria-label="Reorder this item" draggable="true" data-orgonly><svg width="12" height="12" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="12" r="1.3" fill="currentColor"/><circle cx="9" cy="18" r="1.3" fill="currentColor"/><circle cx="15" cy="6" r="1.3" fill="currentColor"/><circle cx="15" cy="12" r="1.3" fill="currentColor"/><circle cx="15" cy="18" r="1.3" fill="currentColor"/></svg></button>
+        <span class="it__t">18:00–20:30</span><span><span class="it__n">Farewell dinner, Pub Street</span><span class="it__d"><span class="catm">FD</span> The whole group, one long table</span></span>
+        <span class="it__cost money" data-m data-inr="₹2,200" data-eur="≈ €20" data-vnd="">₹2,200</span>
+        <span class="it__acts" data-orgonly><button class="iconbtn" aria-label="Edit this item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button><button class="iconbtn" aria-label="Delete this item" data-set="state:deleteitem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></span></div>
+    </div>
+
+    <div class="revnote" data-when="readonly" style="margin-top:14px">
+      <span class="revnote__k">Note</span>
+      <div>This is how a participant sees the same ten days on their phone — no grab handles, no edit
+        or delete icons, no regenerate button. Full page: <a href="participant-itinerary.html">participant-itinerary.html</a>.</div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════ the currency lens — view only ═ -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:430px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">Changes what you see, nothing else. Amounts are still entered and
+        stored in the trip's own currency, and this choice follows you across every trip and screen.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">This trip's own currency — the authoritative figures</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+        <span class="mono dim" style="font-size:11px">≈ €520</span>
+      </button>
+      <button class="pal__r" data-set="lens:vnd" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">VND</span>
+        <span><span class="pal__n">Vietnamese dong</span><span class="pal__d" style="color:var(--warn)">No rate available from our source — amounts stay in rupees</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">Daily reference rates from
+        the European Central Bank. A guide for reading a plan — <b>not</b> what a card issuer or a
+        money changer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+<script>
+  // Two small, page-local additions — deliberately not in app.js because
+  // neither is a shared pattern yet (see the report back to the brief owner):
+  //   1. Mirror the review-strip's "state" value onto <html data-page-state>
+  //      so CSS can hide the organizer-only controls (grab handle, item edit
+  //      / delete, per-day regenerate) as one group in the readonly state,
+  //      instead of repeating data-when-not="readonly" on ~47 rows.
+  //   2. A minimal drag affordance on .it__grab, on top of the ↑/↓ keyboard
+  //      reorder app.js already provides. Native HTML5 drag/drop, no library.
+  (function () {
+    function syncPageState() {
+      var pressed = document.querySelector('.rev__grp[data-axis="state"] .rev__b[aria-pressed="true"]');
+      if (pressed) document.documentElement.setAttribute('data-page-state', pressed.getAttribute('data-v'));
+    }
+    document.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.rev__b[data-v]')) setTimeout(syncPageState, 0);
+    });
+    // Registered after app.js's own DOMContentLoaded listener (script order),
+    // so this runs once the strip's aria-pressed already reflects the hash.
+    document.addEventListener('DOMContentLoaded', syncPageState);
+
+    var dragging = null;
+    document.addEventListener('dragstart', function (e) {
+      var grab = e.target.closest && e.target.closest('.it__grab');
+      if (!grab) return;
+      dragging = grab.closest('.it');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    document.addEventListener('dragover', function (e) {
+      if (!dragging) return;
+      var over = e.target.closest && e.target.closest('.it');
+      if (!over || over === dragging || over.parentElement !== dragging.parentElement) return;
+      e.preventDefault();
+      var rect = over.getBoundingClientRect();
+      var before = (e.clientY - rect.top) < rect.height / 2;
+      over.parentElement.insertBefore(dragging, before ? over : over.nextSibling);
+    });
+    document.addEventListener('dragend', function () { dragging = null; });
+  })();
+</script>
+</body>
+</html>

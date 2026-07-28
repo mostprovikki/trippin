@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dates · Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Mode</span>
+      <button class="rev__b" data-v="broad" aria-pressed="true">Broad window</button>
+      <button class="rev__b" data-v="slight">Slight variation</button>
+      <button class="rev__b" data-v="confirmed">Confirmed</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Moment</span>
+      <button class="rev__b" data-v="promote">Promoting a window</button>
+      <button class="rev__b" data-v="shift">Shifting a live trip</button>
+      <button class="rev__b" data-v="reopen">Reopening the decision</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Other</span>
+      <button class="rev__b" data-v="invalid">Bad input</button>
+      <button class="rev__b" data-v="empty">No windows</button>
+      <button class="rev__b" data-v="readonly">As a participant</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main"><a href="trips.html" aria-current="page">Trips</a><a href="people.html">People</a></nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg> Search <span class="kbd">⌘K</span></button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell" style="max-width:1080px">
+
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <a href="trip.html" data-when-not="broad empty">Vietnam &amp; Cambodia 2026</a>
+      <a href="trip.html#state=idea" data-when="broad empty">Kerala backwaters</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span>Dates</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>When are we going?</h1>
+        <div class="thead__meta">
+          <span data-when-not="readonly">Only you can set this. The group argues it out in WhatsApp;
+            you record the answer here.</span>
+          <span data-when="readonly">Set by the organizer. You're seeing it read-only.</span>
+        </div>
+      </div>
+      <div class="thead__acts" data-when-not="readonly">
+        <a class="btn" href="trip.html">Back to the board</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ how precise are we? the three modes ═══════ -->
+  <section class="sect" data-when-not="readonly promote shift reopen">
+    <h2 class="sect__t">How precise is the answer right now?
+      <span class="dim">· you can move between these freely, in either direction</span></h2>
+    <div class="segs" role="tablist" style="width:fit-content;max-width:100%;flex-wrap:wrap">
+      <button class="seg" role="tab" data-set="state:broad" aria-selected="true">
+        Somewhere in a window <span class="seg__count">vaguest</span></button>
+      <button class="seg" role="tab" data-set="state:slight" aria-selected="false">
+        A date, give or take <span class="seg__count">nearly there</span></button>
+      <button class="seg" role="tab" data-set="state:confirmed" aria-selected="false">
+        Exact dates <span class="seg__count">settled</span></button>
+    </div>
+    <p class="t-meta" style="margin:10px 0 0;max-width:80ch;font-size:12px">
+      Being vague is not a problem to be fixed — it is what the answer honestly is until people reply.
+      Tightening is progress; loosening again is allowed and costs whatever the warning says it costs.
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════ MODE 1 · broad window ══════ -->
+  <div data-when="broad empty">
+    <div class="split">
+      <div>
+        <div class="card">
+          <div class="card__head">
+            <h2>Candidate windows</h2>
+            <span style="flex:1"></span>
+            <span class="t-eyebrow" data-when="broad">3 on the table</span>
+            <span class="t-eyebrow" data-when="empty">none yet</span>
+          </div>
+
+          <!-- populated -->
+          <div data-when="broad">
+            <div class="row" data-state="muted" style="grid-template-columns:minmax(0,1fr) 150px auto;padding-left:19px">
+              <span class="cell">
+                <span class="cell__l1"><span class="row__n"><span class="mono">10–14 Oct 2026</span></span></span>
+                <span class="cell__l2">Onam holidays overlap — Asha and Nikhil are both free, but houseboat rates roughly double</span>
+              </span>
+              <span class="cell"><span class="cell__l1"><span class="mono" style="font-size:12.5px">5 days</span></span>
+                <span class="cell__l2">Sat → Wed</span></span>
+              <span class="wait__r">
+                <button class="btn btn--primary" data-open-modal="promote">Make these the dates</button>
+                <button class="iconbtn" aria-label="Edit this window"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button>
+                <button class="iconbtn" aria-label="Delete this window"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+              </span>
+            </div>
+            <div class="row" data-state="muted" style="grid-template-columns:minmax(0,1fr) 150px auto;padding-left:19px">
+              <span class="cell">
+                <span class="cell__l1"><span class="row__n"><span class="mono">17–21 Oct 2026</span></span></span>
+                <span class="cell__l2">Cheapest of the three. Meera can't do the 18th — a wedding.</span>
+              </span>
+              <span class="cell"><span class="cell__l1"><span class="mono" style="font-size:12.5px">5 days</span></span>
+                <span class="cell__l2">Sat → Wed</span></span>
+              <span class="wait__r">
+                <button class="btn" data-open-modal="promote">Make these the dates</button>
+                <button class="iconbtn" aria-label="Edit this window"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button>
+                <button class="iconbtn" aria-label="Delete this window"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+              </span>
+            </div>
+            <div class="row" data-state="muted" style="grid-template-columns:minmax(0,1fr) 150px auto;padding-left:19px">
+              <span class="cell">
+                <span class="cell__l1"><span class="row__n"><span class="mono">31 Oct – 4 Nov 2026</span></span></span>
+                <span class="cell__l2">Monsoon should be finished by then, but it's a guess</span>
+              </span>
+              <span class="cell"><span class="cell__l1"><span class="mono" style="font-size:12.5px">5 days</span></span>
+                <span class="cell__l2">Sat → Wed</span></span>
+              <span class="wait__r">
+                <button class="btn" data-open-modal="promote">Make these the dates</button>
+                <button class="iconbtn" aria-label="Edit this window"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg></button>
+                <button class="iconbtn" aria-label="Delete this window"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button>
+              </span>
+            </div>
+          </div>
+
+          <!-- empty, first run -->
+          <div class="card__body" data-when="empty">
+            <div class="blank">
+              <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <div>
+                <h4>No windows on the table yet</h4>
+                <p>A window is a stretch of days the trip could happen in — "sometime in October,
+                  four or five days". Add two or three, put them in the group chat, then come back
+                  and turn the winner into the trip's actual dates.</p>
+                <div class="blank__act"><button class="btn btn--primary">Add the first window</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- add a window -->
+          <div class="card__body" data-when="broad" style="border-top:1px solid var(--line);background:var(--surface-2)" data-section="addwin">
+            <div class="t-eyebrow" style="margin-bottom:11px">Add another window</div>
+            <div class="fgrid">
+              <label class="fg"><span class="fg__l">First day</span><input type="date" value="2026-11-07"></label>
+              <label class="fg"><span class="fg__l">Last day</span><input type="date" value="2026-11-11"></label>
+              <label class="fg"><span class="fg__l">Why this one? <span class="fg__opt">optional</span></span>
+                <input class="field" type="text" placeholder="Long weekend, nobody has to take leave"></label>
+            </div>
+            <button class="btn">Add this window</button>
+          </div>
+        </div>
+
+        <!-- cross-field validation -->
+        <div class="card" data-when="invalid" style="margin-top:14px">
+          <div class="card__head"><h2>Add another window</h2></div>
+          <div class="card__body">
+            <div class="fgrid">
+              <div class="fg" data-invalid><span class="fg__l">First day</span><input type="date" value="2026-10-22">
+                <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+                  This window would end before it starts — 22 Oct is after 18 Oct.</span></div>
+              <div class="fg" data-invalid><span class="fg__l">Last day</span><input type="date" value="2026-10-18"></div>
+            </div>
+            <button class="btn" disabled>Add this window</button>
+            <p class="fg__h" style="margin-top:9px">The button stays visibly unavailable rather than
+              accepting the window and failing later.</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="side__card">
+          <h3 class="side__t">Where this leaves the trip</h3>
+          <dl class="kv" style="grid-template-columns:104px minmax(0,1fr);font-size:12.5px">
+            <dt>Dates</dt><dd><span class="state state--muted" style="font-size:12.5px"><span class="state__dot"></span>A window, not an answer</span></dd>
+            <dt>Status</dt><dd>Idea — <b>Confirmed</b> needs exact dates</dd>
+            <dt>Itinerary</dt><dd>Can't exist yet · days come from dates</dd>
+            <dt>Participants</dt><dd>See the windows, read-only</dd>
+          </dl>
+        </div>
+        <div class="side__card">
+          <h3 class="side__t">What a window is for</h3>
+          <p class="t-meta" style="margin:0;font-size:12px;line-height:1.6">Somewhere to park the
+            options while people check their leave. Nothing downstream depends on a window — that's
+            the point. Once one wins, promoting it is what creates the ten days the itinerary hangs off.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════ MODE 2 · a date, give or take N days ═ -->
+  <div data-when="slight">
+    <div class="split">
+      <div class="card">
+        <div class="card__head"><h2>An anchor date, plus how far it could move</h2></div>
+        <div class="card__body" data-section="slight">
+          <div class="fgrid">
+            <label class="fg"><span class="fg__l">Start on or around</span><input type="date" value="2026-11-06"></label>
+            <label class="fg"><span class="fg__l">End on or around</span><input type="date" value="2026-11-15"></label>
+            <label class="fg"><span class="fg__l">Could shift by</span>
+              <span class="inp"><input type="number" value="2" min="0" max="30" aria-describedby="flexh"><span class="inp__pre" style="border-right:0;border-left:1px solid var(--line)">days</span></span>
+              <span class="fg__h" id="flexh">Either direction. Two days means the trip could start as
+                early as 4 Nov or as late as 8 Nov.</span></label>
+          </div>
+          <div class="facts" style="margin-top:6px">
+            <div class="fact"><div class="fact__k">Earliest start</div><div class="fact__v"><span class="mono">4 Nov 2026</span></div><div class="fact__d">Wed</div></div>
+            <div class="fact fact--info"><div class="fact__k">Planned</div><div class="fact__v"><span class="mono">6–15 Nov</span></div><div class="fact__d">10 days · Fri → Sun</div></div>
+            <div class="fact"><div class="fact__k">Latest end</div><div class="fact__v"><span class="mono">17 Nov 2026</span></div><div class="fact__d">Tue</div></div>
+            <div class="fact fact--off"><div class="fact__k">Itinerary</div><div class="fact__v">Still blocked</div><div class="fact__d">needs exact dates</div></div>
+          </div>
+          <div class="banner" style="margin-top:14px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+            <div><b>Days still can't be created while the dates can move.</b> An itinerary built on
+              6–15 Nov would be wrong the moment the anchor shifts, so it waits until you confirm.
+              Everything else — budget, people, documents, checklists — works fine right now.</div>
+          </div>
+        </div>
+        <div class="actionbar" style="position:static">
+          <span class="actionbar__l">Confirming locks <b class="mono">6–15 Nov 2026</b> and creates
+            <b class="mono">10</b> itinerary days.</span>
+          <span class="actionbar__spacer"></span>
+          <button class="btn" data-set="state:broad">Loosen to a window</button>
+          <button class="btn btn--primary" data-open-modal="promote">Confirm these ten days</button>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="side__card">
+          <h3 class="side__t">Negative flex is refused</h3>
+          <div class="fg" data-invalid style="margin:0">
+            <span class="fg__l">Could shift by</span>
+            <span class="inp"><input type="number" value="-2"><span class="inp__pre" style="border-right:0;border-left:1px solid var(--line)">days</span></span>
+            <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+              Flex can't be negative. Use <span class="mono">0</span> if the dates can't move at all —
+              or just confirm them.</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ════════════════════════ MODE 3 · confirmed. Windows become history ════ -->
+  <div data-when="confirmed">
+    <div class="split">
+      <div>
+        <div class="card">
+          <div class="card__head">
+            <h2>The trip's dates</h2>
+            <span style="flex:1"></span>
+            <span class="state state--ok" style="font-size:12.5px"><span class="state__dot"></span>Confirmed 14 Jun</span>
+          </div>
+          <div class="card__body">
+            <div class="facts">
+              <div class="fact fact--ok"><div class="fact__k">Departs</div><div class="fact__v"><span class="mono">Fri 6 Nov 2026</span></div><div class="fact__d">142 days from today</div></div>
+              <div class="fact fact--ok"><div class="fact__k">Returns</div><div class="fact__v"><span class="mono">Sun 15 Nov 2026</span></div><div class="fact__d">10 days away</div></div>
+              <div class="fact"><div class="fact__k">Itinerary days</div><div class="fact__v"><span class="mono">10</span> · 41 items</div><div class="fact__d">derived from these dates</div></div>
+              <div class="fact"><div class="fact__k">Document horizon</div><div class="fact__v"><span class="mono">15 May 2027</span></div><div class="fact__d">trip end + 6 months</div></div>
+            </div>
+            <p class="t-meta" style="margin:14px 0 0;max-width:78ch">
+              These ten days are what the itinerary, the document expiry rule and the participants'
+              phones all read from. That's why changing them isn't a plain edit — see below.</p>
+          </div>
+          <div class="actionbar" style="position:static">
+            <span class="actionbar__l">Two different things you might mean:</span>
+            <span class="actionbar__spacer"></span>
+            <button class="btn" data-open-modal="reopen">Reopen the date decision</button>
+            <button class="btn btn--primary" data-open-modal="shiftm">Move the dates</button>
+          </div>
+        </div>
+
+        <!-- the fix for §8.2: windows stop pretending to matter -->
+        <div class="card frozen" style="margin-top:16px">
+          <div class="card__head" style="background:var(--surface-2)">
+            <h2 style="color:var(--ink-2)">What was considered</h2>
+            <span style="flex:1"></span>
+            <span class="frozen__k">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+              No longer live</span>
+          </div>
+          <div class="card__body" style="padding-bottom:12px">
+            <p class="t-meta" style="margin:0 0 12px;max-width:78ch;font-size:12px">
+              These three windows were on the table before <span class="mono">6–15 Nov</span> was
+              chosen. They're kept as a record of what the group weighed up — <b>editing them would
+              change nothing</b>, so they aren't editable. Reopen the date decision and they come back.</p>
+            <div class="subcard dtable__scroll">
+              <table class="dtable">
+                <thead><tr><th style="width:170px">Window</th><th style="width:78px">Length</th><th>Note at the time</th><th style="width:104px">Outcome</th></tr></thead>
+                <tbody>
+                  <tr><td class="mono">6–15 Nov 2026</td><td class="mono">10 days</td>
+                    <td>Everyone clear, shoulder season, Angkor before the crowds</td>
+                    <td><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Chosen</span></td></tr>
+                  <tr><td class="mono dim">23 Oct – 1 Nov 2026</td><td class="mono dim">10 days</td>
+                    <td class="dim">Cheaper flights but Daniel had a work trip</td>
+                    <td><span class="dim">Not chosen</span></td></tr>
+                  <tr><td class="mono dim">28 Nov – 7 Dec 2026</td><td class="mono dim">10 days</td>
+                    <td class="dim">Lena preferred it; monsoon risk in the south</td>
+                    <td><span class="dim">Not chosen</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="side__card">
+          <h3 class="side__t">Edited vs invalidated</h3>
+          <p class="t-meta" style="margin:0 0 12px;font-size:12px;line-height:1.6">
+            The difference decides whether the trip's status survives.</p>
+          <div class="deflist" style="border:1px solid var(--line);border-radius:var(--r)">
+            <div class="defrow" style="grid-template-columns:minmax(0,1fr)">
+              <span><span class="defrow__n">6–15 Nov → 8–17 Nov</span>
+                <span class="defrow__d">Still exact dates, so the trip stays <b>Confirmed</b>. Days move.</span></span></div>
+            <div class="defrow" style="grid-template-columns:minmax(0,1fr)">
+              <span><span class="defrow__n">6–15 Nov → "sometime in December"</span>
+                <span class="defrow__d">No exact dates any more, so <b>Confirmed</b> can't hold and the
+                  trip drops to <b>Planning</b>. You're told before, not after.</span></span></div>
+          </div>
+        </div>
+        <div class="reassure">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+          <div><b>Confirmed isn't a one-way door.</b> Plenty of trips move twice before they happen.</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ as a participant: strictly read-only ════ -->
+  <div data-when="readonly">
+    <div class="revnote">
+      <span class="revnote__k">Note</span>
+      <div>Dates are organizer-only (§3.4). This is the same information inside the participant's
+        phone layout — no controls, no mode switch, and it reads well even when nothing is settled.
+        Full page: <a href="participant.html">participant.html</a></div>
+    </div>
+    <div class="pshell" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden">
+      <div class="pstep" data-done style="border-top:0">
+        <div class="pstep__head"><span class="pstep__i">✓</span><h3 class="pstep__h">When</h3></div>
+        <div class="pstep__body">
+          <div class="facts">
+            <div class="fact fact--ok"><div class="fact__k">Leaving</div><div class="fact__v"><span class="mono">Fri 6 Nov</span></div><div class="fact__d">2026</div></div>
+            <div class="fact fact--ok"><div class="fact__k">Back</div><div class="fact__v"><span class="mono">Sun 15 Nov</span></div><div class="fact__d">10 days</div></div>
+          </div>
+          <p class="t-meta" style="margin:12px 0 0;font-size:12.5px">Confirmed by Vignesh on
+            <span class="mono">14 Jun</span>. If it changes you'll see the new dates here.</p>
+        </div>
+      </div>
+      <div class="pstep" style="border-top:0">
+        <div class="pstep__head"><span class="pstep__i">?</span><h3 class="pstep__h">When · not settled yet</h3></div>
+        <div class="pstep__body">
+          <div class="prefill" style="border-left-color:var(--dash-line)">
+            <div class="prefill__k">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+              Being worked out</div>
+            <p style="margin:0;font-size:13px;line-height:1.6">Somewhere in <b>October</b>, four or
+              five days. Vignesh is choosing between three windows and will put the final dates here.</p>
+            <p style="margin:8px 0 0;font-size:12px;color:var(--ink-2)">Nothing for you to do about
+              this — you can fill in everything else meanwhile.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════ PROMOTE: the moment of decision the product didn't have (§8.1) -->
+<div class="modal" id="promote" role="dialog" aria-modal="true" aria-labelledby="pr-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+      <h2 id="pr-t">Make 10–14 Oct 2026 the trip's dates?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>This is the answer, not another option. Here is what it starts:</p>
+      <ul class="damage">
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Five itinerary days appear, Sat 10 Oct to Wed 14 Oct
+            <span class="damage__d">Empty to begin with. Days can't be added or removed by hand — they are these dates.</span></span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>Document expiry starts being checked against <span class="mono">14 Apr 2027</span>
+            <span class="damage__d">Trip end plus six months. Two passports on this trip fall inside that.</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>The other two windows become history
+            <span class="damage__d">17–21 Oct and 31 Oct – 4 Nov are kept as a record of what was weighed, and stop being editable. They come back if you reopen the decision.</span></span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>Everyone with a link sees the dates immediately
+            <span class="damage__d">Read-only, and nobody is notified — this app doesn't send anything. Tell the group yourself.</span></span></li>
+      </ul>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+        <div><b>Nothing here is permanent.</b> You can move these dates or reopen the whole decision
+          later — while the days are still empty it costs you nothing at all.</div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep comparing</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close data-set="state:confirmed">Confirm 10–14 Oct</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHIFT vs RE-DATE: two different intents, deliberately two actions (§3.4.3) -->
+<div class="modal" id="shiftm" role="dialog" aria-modal="true" aria-labelledby="sh-t" hidden>
+  <div class="modal__panel modal__panel--wide">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+      <h2 id="sh-t">Move the dates of a trip that already has ten days of plan</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <div class="banner banner--bad">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+        <div><b>This trip is Active and five people are reading the itinerary on their phones.</b>
+          Whatever you choose, they'll see it on their next refresh with no warning and no message
+          from the app.</div>
+      </div>
+      <p style="margin-top:14px">Two things people mean by "change the dates", and they do
+        <b>completely different</b> things to the plan. Pick the one you mean:</p>
+
+      <div class="fgrid" style="gap:12px">
+        <label class="prefill" style="display:block;cursor:pointer;border-left-color:var(--info)">
+          <span class="rowline" style="align-items:flex-start;margin-bottom:8px">
+            <input class="check" type="radio" name="sh" checked style="margin-top:2px">
+            <span class="defrow__n" style="font-size:13.5px">Slide the whole trip</span>
+          </span>
+          <span class="defrow__d" style="margin-bottom:10px">Everything keeps its day number and its
+            order. Day 3 stays Day 3, it just falls on a different date.</span>
+          <span class="rowline" style="margin-bottom:10px">
+            <span class="mono" style="font-size:12px">6–15 Nov</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2"><path d="M4 12h15M14 7l5 5-5 5"/></svg>
+            <span class="mono" style="font-size:12px;font-weight:600">8–17 Nov</span>
+            <span class="tag">+2 days</span>
+          </span>
+          <ul class="damage" style="margin:0">
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>All 41 items survive, on all 10 days</span></li>
+            <li data-k="warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+              <span>Two date-pinned goals no longer line up
+                <span class="damage__d">"Ha Long junk" is pinned to 8 Nov, which is now Day 1 (a travel day). "Angkor Wat at sunrise" is pinned to 15 Nov, now Day 8 — you'd be in Hoi An.</span></span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>Stays <b>Confirmed</b> — still exact dates</span></li>
+            <li data-k="warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+              <span>Nikhil's passport still expires <span class="mono">2 Nov</span> — worse, not better</span></li>
+          </ul>
+        </label>
+
+        <label class="prefill" style="display:block;cursor:pointer;border-left-color:var(--bad)">
+          <span class="rowline" style="align-items:flex-start;margin-bottom:8px">
+            <input class="check" type="radio" name="sh" style="margin-top:2px">
+            <span class="defrow__n" style="font-size:13.5px">Re-date it — different trip, same idea</span>
+          </span>
+          <span class="defrow__d" style="margin-bottom:10px">Days are rebuilt from the new dates. Use
+            this when the shape of the trip changes, not just when it moves.</span>
+          <span class="rowline" style="margin-bottom:10px">
+            <span class="mono" style="font-size:12px">6–15 Nov · 10 days</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2"><path d="M4 12h15M14 7l5 5-5 5"/></svg>
+            <span class="mono" style="font-size:12px;font-weight:600">14–20 Nov · 7 days</span>
+            <span class="tag">−3 days</span>
+          </span>
+          <ul class="damage" style="margin:0">
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>Days 8, 9 and 10 stop existing — and so do the 11 items in them
+                <span class="damage__d">Including "Overnight bus Hoi An → Nha Trang", "Angkor Wat at sunrise, 05:00 tuk-tuk" and "Ta Prohm before the coaches", with their times, costs and notes.</span></span></li>
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>The 15 Nov goal falls outside the trip entirely
+                <span class="damage__d">"Angkor Wat at sunrise — the whole reason for the Cambodia leg" keeps its date, which is now after you get home.</span></span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>Days 1–7 keep everything in them</span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>Budget, people, documents and checklists are untouched</span></li>
+          </ul>
+        </label>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Leave the dates alone</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close>Slide the trip to 8–17 Nov</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ REOPEN: undoing the decision itself, not editing it ═══ -->
+<div class="modal" id="reopen" role="dialog" aria-modal="true" aria-labelledby="ro-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg></span>
+      <h2 id="ro-t">Reopen the date decision?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>This goes back to <b>"we're still working out when"</b>. Use it when the dates fell apart, not
+        when they merely moved — moving them is <button class="linkish" data-close data-open-modal="shiftm">a different action</button>.</p>
+      <ul class="damage">
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>The trip drops from <b>Confirmed</b> back to <b>Planning</b>
+            <span class="damage__d">Not a punishment — <b>Confirmed</b> means "we have final dates", and after this you won't. Status is worked out from the facts, so it follows automatically.</span></span></li>
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>All 10 itinerary days and the 41 items in them are removed
+            <span class="damage__d">Days only exist while the trip has dates. This is the expensive part — <b>it cannot be undone by re-confirming the same dates.</b> Copy anything you want to keep first.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>The three windows you considered come back, editable
+            <span class="damage__d">Including 6–15 Nov, so re-choosing the same dates is one click.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Budget, people, links, documents and checklists all stay
+            <span class="damage__d">Only the days depend on the dates.</span></span></li>
+      </ul>
+      <div class="typeconfirm">
+        <label class="typeconfirm__l" for="ro-c">Because 41 itinerary items go, type
+          <code>reopen dates</code> to continue:</label>
+        <input class="field" id="ro-c" type="text" placeholder="reopen dates" style="font-family:var(--mono)">
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep the dates confirmed</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--danger" disabled>Reopen and remove 10 days</button>
+    </div>
+  </div>
+</div>
+
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

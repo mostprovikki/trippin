@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Trip</span>
+      <button class="rev__b" data-v="active" aria-pressed="true">Active</button>
+      <button class="rev__b" data-v="ready">All ready</button>
+      <button class="rev__b" data-v="planning">Planning</button>
+      <button class="rev__b" data-v="idea">Idea</button>
+      <button class="rev__b" data-v="empty">Nothing known</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="failed">Load failed</button>
+    </span>
+    <span class="rev__grp" data-axis="lens">
+      <span class="rev__lbl">Money in</span>
+      <button class="rev__b" data-v="inr" aria-pressed="true">INR base</button>
+      <button class="rev__b" data-v="eur">EUR</button>
+      <button class="rev__b" data-v="vnd">VND · no rate</button>
+      <button class="rev__b" data-v="stale">Stale</button>
+      <button class="rev__b" data-v="failed">Rates failed</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html" aria-current="page">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in">
+    <span class="lens__eyebrow">View in</span>
+    <span data-lens-label>INR</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <!-- ─────────────────────────────────────────────────────── trip head -->
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span data-when="active ready loading">Vietnam &amp; Cambodia 2026</span>
+      <span data-when="planning">Rajasthan in February</span>
+      <span data-when="idea">Kerala backwaters</span>
+      <span data-when="empty">Bhutan someday</span>
+      <span data-when="failed">This trip</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>
+          <span data-when="active ready loading">Vietnam &amp; Cambodia 2026</span>
+          <span data-when="planning">Rajasthan in February</span>
+          <span data-when="idea">Kerala backwaters</span>
+          <span data-when="empty">Bhutan someday</span>
+          <span data-when="failed">Vietnam &amp; Cambodia 2026</span>
+        </h1>
+        <div class="thead__meta">
+          <span class="state state--info" data-when="active" style="font-size:12.5px"><span class="state__dot"></span>Active</span>
+          <span class="state state--ok" data-when="ready" style="font-size:12.5px"><span class="state__dot"></span>Confirmed</span>
+          <span class="state state--info" data-when="planning" style="font-size:12.5px"><span class="state__dot"></span>Planning</span>
+          <span class="state state--muted" data-when="idea empty" style="font-size:12.5px"><span class="state__dot"></span>Idea</span>
+          <span class="dash" data-when-not="loading failed">·</span>
+          <span data-when="active ready">Ten days north-to-south through Vietnam, then over the border for the Angkor temples.</span>
+          <span data-when="planning">Nine of us, three cities, Holi in Jaipur if the dates work.</span>
+          <span data-when="idea">Somewhere warm and slow. Houseboat, no itinerary.</span>
+          <span class="dc__v--none" data-when="empty">No description yet</span>
+        </div>
+      </div>
+      <div class="thead__acts">
+        <button class="btn" data-open-modal="details">Trip details</button>
+        <a class="btn" href="trip-new.html#state=clone">Clone into a new trip</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── trip nav -->
+  <nav class="tnav" aria-label="This trip">
+    <a href="trip.html" aria-current="page">Board</a>
+    <a href="trip-itinerary.html">Itinerary <span class="tnav__n" data-when="active ready">10 days</span><span class="tnav__n" data-when="planning idea empty">no dates</span></a>
+    <a href="trip-budget.html">Budget <span class="tnav__n" data-when="active ready" data-m data-inr="₹4,80,000" data-eur="≈ €4,400" data-vnd="">₹4,80,000</span><span class="tnav__n" data-when="planning">draft</span><span class="tnav__n" data-when="idea empty">—</span></a>
+    <a href="trip-people.html">People <span class="tnav__n" data-when="active ready">6</span><span class="tnav__n" data-when="planning">9</span><span class="tnav__n" data-when="idea">2</span><span class="tnav__n" data-when="empty">0</span></a>
+    <a href="trip-checklists.html">Checklists <span class="tnav__n tnav__n--warn" data-when="active">3 overdue</span><span class="tnav__n" data-when="ready">all done</span><span class="tnav__n" data-when="planning">14 of 31</span><span class="tnav__n" data-when="idea empty">none yet</span></a>
+  </nav>
+
+  <!-- ───────────────────────────────────────────── lens-level notices -->
+  <div class="stack" style="margin-bottom:16px">
+    <div class="banner" data-when="lens:vnd">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>We can't convert to Vietnamese dong.</b> The rate source we use covers 31 European
+        Central Bank currencies and the dong is not one of them. Every amount below is still the
+        trip's own rupee figure, unconverted — nothing has been hidden or zeroed.
+        <button class="linkish" data-set="lens:eur" style="margin-left:4px">Read in euro instead</button>
+        or <button class="linkish" data-set="lens:inr">stay in rupees</button>.</div>
+    </div>
+    <div class="banner banner--bad" data-when="lens:failed">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>Today's rates couldn't be fetched, so amounts are showing in rupees.</b> We won't show
+        yesterday's rate as if it were today's. <button class="linkish linkish--bad" data-set="lens:eur">Try again</button></div>
+    </div>
+    <div class="banner" data-when="lens:stale">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+      <div><b>These rates are from 09:12 this morning and the source has published a new set since.</b>
+        The difference is usually a fraction of a percent, but the figures below are not today's
+        closing rate. <button class="linkish" data-set="lens:eur">Refresh the rates</button></div>
+    </div>
+    <div class="banner banner--info" data-when="active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>This trip is under way — five people are reading the itinerary on their phones right now.</b>
+        Changes you make to days, times and places are what they will see next time they pull to refresh.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════ active / all-ready: the populated board ═══ -->
+  <div class="board" data-when="active ready">
+
+    <!-- ───────────────────────────────────────────────── decided column -->
+    <div class="board__col">
+      <div class="colhead">
+        <h2>Decided</h2>
+        <span class="colhead__n" data-when="active">5 of 6</span>
+        <span class="colhead__n" data-when="ready">6 of 6</span>
+        <span class="colhead__sp"></span>
+        <span class="t-meta" style="font-size:12px">Every one of these can be reopened.</span>
+      </div>
+
+      <div class="dgrid">
+
+        <!-- dates -->
+        <div class="dc" data-state="ok">
+          <div class="dc__k">Dates</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">6–15 Nov 2026</span></div>
+          <div class="dc__d">10 days · Fri → Sun · confirmed 14 Jun</div>
+          <div class="dc__foot">
+            <span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Confirmed</span>
+            <span class="dc__sp"></span>
+            <a href="trip-dates.html#state=confirmed">Change or reopen</a>
+          </div>
+        </div>
+
+        <!-- destination -->
+        <div class="dc" data-state="ok">
+          <div class="dc__k">Destination</div>
+          <div class="dc__v">Vietnam &amp; Cambodia</div>
+          <div class="dc__d dc__d--sans">Chosen from 3 candidates on <span class="mono">12 Jun</span></div>
+          <div class="dc__foot">
+            <span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Decided</span>
+            <span class="dc__sp"></span>
+            <a href="trip-destination.html#state=decided">Change or un-decide</a>
+          </div>
+        </div>
+
+        <!-- budget -->
+        <div class="dc" data-state="ok">
+          <div class="dc__k">Budget</div>
+          <div class="dc__v dc__v--num" data-m data-inr="₹4,80,000" data-eur="≈ €4,400" data-vnd="">₹4,80,000</div>
+          <div class="dc__d dc__d--sans"><span class="mono" data-m data-inr="₹83,200" data-eur="≈ €760" data-vnd="">₹83,200</span> each · one person pays differently</div>
+          <div class="dc__foot">
+            <span class="prov" data-when="lens:eur"><span class="prov__d"></span>rates 29 Jul 2026</span>
+            <span class="prov prov--stale" data-when="lens:stale"><span class="prov__d"></span>rates 09:12 today</span>
+            <span class="state state--ok" style="font-size:12px" data-when-not="lens:eur lens:stale"><span class="state__dot"></span>All 8 drafted</span>
+            <span class="dc__sp"></span>
+            <a href="trip-budget.html">Open the budget</a>
+          </div>
+        </div>
+
+        <!-- itinerary -->
+        <div class="dc" data-state="ok" data-when="ready">
+          <div class="dc__k">Itinerary</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">10 days</span> · 47 items</div>
+          <div class="dc__d dc__d--sans">Every day has something · last edited 2 days ago</div>
+          <div class="dc__foot">
+            <span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Built</span>
+            <span class="dc__sp"></span>
+            <a href="trip-itinerary.html">Open the itinerary</a>
+          </div>
+        </div>
+        <div class="dc" data-state="warn" data-when="active">
+          <div class="dc__k">Itinerary</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">10 days</span> · 41 items</div>
+          <div class="dc__d dc__d--sans">Two days still have nothing in them</div>
+          <div class="dc__foot">
+            <span class="state state--warn" style="font-size:12px"><span class="state__dot"></span>Partly built</span>
+            <span class="dc__sp"></span>
+            <a href="trip-itinerary.html#state=gaps">Fill Day 6 and Day 9</a>
+          </div>
+        </div>
+
+        <!-- goals -->
+        <div class="dc">
+          <div class="dc__k">Goals</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">5</span> things this trip is for</div>
+          <div class="dc__d dc__d--sans">Two pinned to a date and a place · one to a place · two loose</div>
+          <div class="dc__foot">
+            <button class="linkish linkish--quiet" data-open-modal="goals">See all 5</button>
+            <span class="dc__sp"></span>
+            <button class="linkish" data-open-modal="goals">Edit goals</button>
+          </div>
+        </div>
+
+        <!-- checklists -->
+        <div class="dc" data-state="ok" data-when="ready">
+          <div class="dc__k">Checklists</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">31 of 31</span> done</div>
+          <div class="dc__d dc__d--sans"><span class="mono">9</span> tasks · <span class="mono">22</span> packing items across 6 people</div>
+          <div class="dc__foot">
+            <span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Nothing outstanding</span>
+            <span class="dc__sp"></span>
+            <a href="trip-checklists.html">Open</a>
+          </div>
+        </div>
+        <div class="dc" data-state="warn" data-when="active">
+          <div class="dc__k">Checklists</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">18 of 31</span> done</div>
+          <div class="dc__d dc__d--sans">Three tasks are past their due date</div>
+          <div class="dc__foot">
+            <span class="pill pill--3">3 overdue</span>
+            <span class="dc__sp"></span>
+            <a href="trip-checklists.html#state=overdue">See what's late</a>
+          </div>
+        </div>
+
+      </div><!-- /dgrid -->
+
+      <!-- goals: these ARE decisions about what the trip is for -->
+      <div class="card" data-when="active ready">
+        <div class="card__head"><h2>What this trip is for</h2>
+          <span style="flex:1"></span>
+          <span class="t-eyebrow">5 goals</span></div>
+        <div class="deflist">
+          <div class="defrow"><span>
+            <span class="defrow__n">Angkor Wat at sunrise</span>
+            <span class="defrow__d">The whole reason for the Cambodia leg</span></span>
+            <span class="defrow__v"><span class="pill pill--2">Hard</span></span></div>
+          <div class="defrow"><span>
+            <span class="defrow__n">One night on a Ha Long Bay junk</span>
+            <span class="defrow__d">Bai Tu Long, the quieter side</span></span>
+            <span class="defrow__v"><span class="pill pill--2">Hard</span></span></div>
+          <div class="defrow"><span>
+            <span class="defrow__n">Hoi An tailoring, with time for two fittings</span>
+            <span class="defrow__d">Hoi An · no fixed date</span></span>
+            <span class="defrow__v"><span class="tag">Place only</span></span></div>
+          <div class="defrow"><span>
+            <span class="defrow__n">A proper Vietnamese cooking class, vegan-friendly</span>
+            <span class="defrow__d">Tra Que herb village · no fixed date</span></span>
+            <span class="defrow__v"><span class="tag">Place only</span></span></div>
+          <div class="defrow"><span>
+            <span class="defrow__n">Keep two half-days completely unplanned</span>
+            <span class="defrow__d">Neither a date nor a place — a wish, not a constraint</span></span>
+            <span class="defrow__v"><span class="tag">Soft</span></span></div>
+        </div>
+        <div class="card__body" style="padding:12px 15px;background:var(--surface-2);border-top:1px solid var(--line-2)">
+          <p class="t-meta" style="margin:0;font-size:12px">The two <b>hard</b> goals are fed to the
+            itinerary planner as fixed anchors it may not move. The rest are read but not enforced.</p>
+        </div>
+      </div>
+
+    </div><!-- /decided -->
+
+    <!-- ────────────────────────────────────── open / waiting on column -->
+    <div class="board__col board__col--open">
+
+      <!-- the mixed reality of a real trip -->
+      <div data-when="active">
+        <div class="colhead">
+          <h2>Open · waiting on</h2>
+          <span class="colhead__n">6</span>
+          <span class="colhead__sp"></span>
+          <a href="trip-people.html#state=waiting" style="font-size:12px">Who am I waiting on?</a>
+        </div>
+        <div class="card" style="margin-top:12px">
+
+          <button class="wait" data-state="bad" data-href="person.html#state=expired">
+            <span class="wait__ic wait__ic--bad">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Nikhil Rao's passport expires before you land</span>
+              <span class="wait__d">Expires <span class="mono">2 Nov 2026</span> — four days before departure. He cannot travel on it, and a renewal takes weeks.</span>
+            </span>
+            <span class="wait__r"><span class="pill pill--4">Expired</span>
+              <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </button>
+
+          <button class="wait" data-state="warn" data-href="trip-people.html#state=docs">
+            <span class="wait__ic wait__ic--warn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">2 documents run out soon after you get back</span>
+              <span class="wait__d">Meera Iyer's passport <span class="mono">12 Jan 2027</span> · Daniel Weiss's Cambodia e-visa <span class="mono">20 Nov 2026</span>. Both are valid for the trip — worth renewing anyway.</span>
+            </span>
+            <span class="wait__r"><span class="pill pill--3">Warning</span>
+              <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </button>
+
+          <button class="wait" data-state="warn" data-href="trip-checklists.html#state=overdue">
+            <span class="wait__ic wait__ic--warn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">3 tasks are past their due date</span>
+              <span class="wait__d">Oldest: <b>Book the Ha Long junk</b>, due <span class="mono">15 Jul</span> and it's yours. Then Ravi's e-visas, then the Hoi An tailor.</span>
+            </span>
+            <span class="wait__r"><span class="pill pill--3">14 days</span>
+              <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </button>
+
+          <button class="wait" data-state="muted" data-href="trip-people.html#state=waiting">
+            <span class="wait__ic">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Ravi and Nikhil haven't confirmed their details</span>
+              <span class="wait__d">Both have a profile from Sri Lanka 2025 sitting pre-filled and waiting for a look. Ravi opened his link 6 days ago and stopped.</span>
+            </span>
+            <span class="wait__r"><span class="mono dim" style="font-size:11.5px">2 of 6</span>
+              <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </button>
+
+          <button class="wait" data-state="muted" data-href="trip-people.html#state=links">
+            <span class="wait__ic">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Nikhil Rao has no way in</span>
+              <span class="wait__d">His link was revoked on <span class="mono">14 Jul</span>. Re-issuing gives him a fresh one — you'll see it once and can't get it back after.</span>
+            </span>
+            <span class="wait__r"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>No link</span>
+              <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </button>
+
+          <button class="wait" data-state="muted" data-href="trip-itinerary.html#state=gaps">
+            <span class="wait__ic">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Day 6 and Day 9 are empty</span>
+              <span class="wait__d">11 Nov in Hue and 14 Nov in Siem Reap. One of them is meant to be — "keep two half-days completely unplanned" is a goal.</span>
+            </span>
+            <span class="wait__r"><span class="mono dim" style="font-size:11.5px">2 days</span>
+              <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </button>
+
+        </div>
+
+        <div class="revnote" style="margin-top:12px">
+          <span class="revnote__k">Note</span>
+          <div>Every row here is a link to the thing that fixes it, and every one names a person or a
+            date rather than showing a bare red mark. There is no readiness percentage anywhere on
+            this page — <b>§2.6 asks for actionability, not an aggregate.</b></div>
+        </div>
+      </div>
+
+      <!-- a fully-ready trip must feel finished, not empty -->
+      <div data-when="ready">
+        <div class="colhead"><h2>Open · waiting on</h2><span class="colhead__n">0</span></div>
+        <div class="card" style="margin-top:12px">
+          <div class="card__body" style="text-align:center;padding:26px 22px">
+            <span class="blank__icon" style="margin:0 auto 12px;background:var(--ok-wash);color:var(--ok);width:38px;height:38px">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            </span>
+            <h3 style="margin:0 0 6px;font-size:14.5px;font-weight:600">Nobody is holding this trip up</h3>
+            <p class="t-meta" style="margin:0 auto;max-width:44ch;line-height:1.6">All six profiles
+              confirmed, twelve documents on file and none expiring before <span class="mono">15 May 2027</span>,
+              six working links, every task done. Dates and destination are settled and the itinerary
+              covers all ten days.</p>
+            <div class="hr"></div>
+            <p class="t-meta" style="margin:0 auto;max-width:44ch;font-size:12px">The next thing that
+              happens is the trip. After it, archive it and record what you actually spent.</p>
+          </div>
+        </div>
+        <div class="reassure" style="margin-top:12px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+          <div><b>Settled is not sealed.</b> Dates, destination and every applied draft can still be
+            changed — each one will tell you what it costs first.</div>
+        </div>
+      </div>
+
+    </div><!-- /open column -->
+  </div><!-- /board -->
+
+  <!-- ═════════════════════════════ planning: mid-chase, half unconfirmed ═══ -->
+  <div class="board" data-when="planning">
+    <div class="board__col">
+      <div class="colhead"><h2>Decided</h2><span class="colhead__n">2 of 6</span>
+        <span class="colhead__sp"></span>
+        <span class="t-meta" style="font-size:12px">Two decisions still open.</span></div>
+      <div class="dgrid">
+        <div class="dc" data-state="open">
+          <div class="dc__k">Dates</div>
+          <div class="dc__v">Late Feb, around Holi</div>
+          <div class="dc__d dc__d--sans">Three candidate windows · 8–9 days each</div>
+          <div class="dc__foot">
+            <span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Broad window</span>
+            <span class="dc__sp"></span>
+            <a href="trip-dates.html#state=broad">Pick the dates</a>
+          </div>
+        </div>
+        <div class="dc" data-state="open">
+          <div class="dc__k">Destination</div>
+          <div class="dc__v">Rajasthan — 3 cities, order undecided</div>
+          <div class="dc__d dc__d--sans">Two candidates · neither marked</div>
+          <div class="dc__foot">
+            <span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Open</span>
+            <span class="dc__sp"></span>
+            <a href="trip-destination.html#state=open">Compare the 2</a>
+          </div>
+        </div>
+        <div class="dc" data-state="ok">
+          <div class="dc__k">Budget</div>
+          <div class="dc__v dc__v--num" data-m data-inr="₹3,15,000" data-eur="≈ €2,890" data-vnd="">₹3,15,000</div>
+          <div class="dc__d dc__d--sans">Drafted for 9 · <span class="mono" data-m data-inr="₹35,000" data-eur="≈ €320" data-vnd="">₹35,000</span> each</div>
+          <div class="dc__foot"><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>All 8 drafted</span>
+            <span class="dc__sp"></span><a href="trip-budget.html">Open the budget</a></div>
+        </div>
+        <div class="dc" data-state="open">
+          <div class="dc__k">Itinerary</div>
+          <div class="dc__v dc__v--none">Can't start yet</div>
+          <div class="dc__d dc__d--sans">Days come from the trip's dates, and the dates are still a window.</div>
+          <div class="dc__foot"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Blocked</span>
+            <span class="dc__sp"></span><a href="trip-dates.html#state=broad">Settle the dates first</a></div>
+        </div>
+        <div class="dc">
+          <div class="dc__k">Goals</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">3</span> things this trip is for</div>
+          <div class="dc__d dc__d--sans">One pinned to a date · two loose</div>
+          <div class="dc__foot"><button class="linkish linkish--quiet" data-open-modal="goals">See all 3</button>
+            <span class="dc__sp"></span><button class="linkish" data-open-modal="goals">Edit goals</button></div>
+        </div>
+        <div class="dc" data-state="warn">
+          <div class="dc__k">Checklists</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">14 of 31</span> done</div>
+          <div class="dc__d dc__d--sans">One task past its due date</div>
+          <div class="dc__foot"><span class="pill pill--2">2 days</span>
+            <span class="dc__sp"></span><a href="trip-checklists.html">Open</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="board__col board__col--open">
+      <div class="colhead"><h2>Open · waiting on</h2><span class="colhead__n">4</span>
+        <span class="colhead__sp"></span>
+        <a href="trip-people.html#state=waiting" style="font-size:12px">Who am I waiting on?</a></div>
+      <div class="card" style="margin-top:12px">
+        <button class="wait" data-state="info" data-href="trip-dates.html#state=broad">
+          <span class="wait__ic" style="background:var(--info-wash);color:var(--info)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+          <span><span class="wait__n">The dates decision has three candidates and no answer</span>
+            <span class="wait__d">21 Feb–1 Mar, 25 Feb–5 Mar, 1–9 Mar. Nothing else can start until one of them wins — the itinerary is blocked on it.</span></span>
+          <span class="wait__r"><span class="mono dim" style="font-size:11.5px">3 windows</span>
+            <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </button>
+        <button class="wait" data-state="muted" data-href="trip-people.html#state=waiting">
+          <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+          <span><span class="wait__n">5 of 9 haven't confirmed their details</span>
+            <span class="wait__d">Priya, Arjun, Sneha, Karthik and Divya. Three of the five have never opened their link.</span></span>
+          <span class="wait__r"><span class="mono dim" style="font-size:11.5px">4 of 9</span>
+            <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </button>
+        <button class="wait" data-state="muted" data-href="trip-people.html#state=links">
+          <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/></svg></span>
+          <span><span class="wait__n">3 people have never been sent a link</span>
+            <span class="wait__d">Sneha, Karthik and Divya were added from the directory but nobody has generated a link for them yet.</span></span>
+          <span class="wait__r"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>No link</span>
+            <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </button>
+        <button class="wait" data-state="warn" data-href="trip-checklists.html#state=overdue">
+          <span class="wait__ic wait__ic--warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg></span>
+          <span><span class="wait__n">Book the Jaipur haveli before Holi rates jump</span>
+            <span class="wait__d">Due <span class="mono">27 Jul</span>, assigned to you. Two days late.</span></span>
+          <span class="wait__r"><span class="pill pill--2">2 days</span>
+            <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════ idea: a starting line, not a wall of failure ═ -->
+  <div class="board" data-when="idea">
+    <div class="board__col">
+      <div class="colhead"><h2>Decided</h2><span class="colhead__n">1 of 6</span>
+        <span class="colhead__sp"></span>
+        <span class="t-meta" style="font-size:12px">Early days. Nothing here is late.</span></div>
+      <div class="dgrid">
+        <div class="dc" data-state="open">
+          <div class="dc__k">Dates</div>
+          <div class="dc__v">Sometime in October</div>
+          <div class="dc__d dc__d--sans">Three candidate windows · 4–5 days each</div>
+          <div class="dc__foot"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Broad window</span>
+            <span class="dc__sp"></span><a href="trip-dates.html#state=broad">Add or compare windows</a></div>
+        </div>
+        <div class="dc" data-state="open">
+          <div class="dc__k">Destination</div>
+          <div class="dc__v">Somewhere warm and slow</div>
+          <div class="dc__d dc__d--sans">Three candidates being compared</div>
+          <div class="dc__foot"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Open</span>
+            <span class="dc__sp"></span><a href="trip-destination.html#state=open">Compare the 3</a></div>
+        </div>
+        <div class="dc" data-state="open">
+          <div class="dc__k">Budget</div>
+          <div class="dc__v dc__v--none">Not drafted</div>
+          <div class="dc__d dc__d--sans">Each destination candidate carries its own rough per-person
+            figure — compare those first.</div>
+          <div class="dc__foot"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Nothing entered</span>
+            <span class="dc__sp"></span><a href="trip-budget.html#state=never">Start a budget</a></div>
+        </div>
+        <div class="dc" data-state="open">
+          <div class="dc__k">Itinerary</div>
+          <div class="dc__v dc__v--none">Can't start yet</div>
+          <div class="dc__d dc__d--sans">Days are made from the trip's dates. Pick a window and they appear.</div>
+          <div class="dc__foot"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Blocked</span>
+            <span class="dc__sp"></span><a href="trip-dates.html#state=broad">Choose a window</a></div>
+        </div>
+        <div class="dc">
+          <div class="dc__k">Goals</div>
+          <div class="dc__v"><span class="mono" style="font-weight:600">2</span> things this trip is for</div>
+          <div class="dc__d dc__d--sans">Both loose · nothing pinned yet</div>
+          <div class="dc__foot"><button class="linkish linkish--quiet" data-open-modal="goals">See both</button>
+            <span class="dc__sp"></span><button class="linkish" data-open-modal="goals">Add a goal</button></div>
+        </div>
+        <div class="dc" data-state="open">
+          <div class="dc__k">Checklists</div>
+          <div class="dc__v dc__v--none">None yet</div>
+          <div class="dc__d dc__d--sans">You have 4 saved templates, including one for a houseboat trip.</div>
+          <div class="dc__foot"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Empty</span>
+            <span class="dc__sp"></span><a href="trip-checklists.html#state=notemplate">Use a template</a></div>
+        </div>
+      </div>
+    </div>
+    <div class="board__col board__col--open">
+      <div class="colhead"><h2>Next, when you're ready</h2><span class="colhead__n">3</span></div>
+      <div class="card" style="margin-top:12px">
+        <button class="wait" data-state="info" data-href="trip-destination.html#state=open">
+          <span class="wait__ic" style="background:var(--info-wash);color:var(--info)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+          <span><span class="wait__n">Compare the three places</span>
+            <span class="wait__d">Alleppey, Kumarakom and Munnar all have a rough per-person figure and their own caveats. Deciding one unblocks almost everything else.</span></span>
+          <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </button>
+        <button class="wait" data-state="muted" data-href="trip-people.html">
+          <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+          <span><span class="wait__n">Only you and Asha are on this so far</span>
+            <span class="wait__d">No rush — but nobody can be asked for documents or preferences until they're added.</span></span>
+          <span class="wait__r"><span class="mono dim" style="font-size:11.5px">2 people</span>
+            <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </button>
+        <button class="wait" data-state="muted" data-href="trip-dates.html#state=broad">
+          <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+          <span><span class="wait__n">Three October windows, none chosen</span>
+            <span class="wait__d">That's fine for an idea. Choose one when people have answered in the group chat.</span></span>
+          <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </button>
+      </div>
+      <div class="reassure" style="margin-top:12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        <div><b>An idea is allowed to be vague.</b> Nothing above is overdue, missing or wrong — this
+          is what a trip looks like six weeks before anyone commits.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ nothing known at all: no dates, dest, people, money ═ -->
+  <div class="board" data-when="empty">
+    <div class="board__col">
+      <div class="colhead"><h2>Decided</h2><span class="colhead__n">0 of 6</span></div>
+      <div class="dgrid">
+        <div class="dc" data-state="open"><div class="dc__k">Dates</div>
+          <div class="dc__v dc__v--none">Not even a rough window</div>
+          <div class="dc__d dc__d--sans">"Sometime next year" is a perfectly good answer to start with.</div>
+          <div class="dc__foot"><span class="dc__sp"></span><a href="trip-dates.html#state=broad">Add a window</a></div></div>
+        <div class="dc" data-state="open"><div class="dc__k">Destination</div>
+          <div class="dc__v dc__v--none">Not decided, no candidates</div>
+          <div class="dc__d dc__d--sans">Add places by hand, or let the assistant suggest a few.</div>
+          <div class="dc__foot"><span class="dc__sp"></span><a href="trip-destination.html#state=empty">Add a candidate</a></div></div>
+        <div class="dc" data-state="open"><div class="dc__k">Budget</div>
+          <div class="dc__v dc__v--none">Not drafted</div>
+          <div class="dc__d dc__d--sans">Eight categories, all empty. Not the same as a budget of zero.</div>
+          <div class="dc__foot"><span class="dc__sp"></span><a href="trip-budget.html#state=never">Start a budget</a></div></div>
+        <div class="dc" data-state="open"><div class="dc__k">Itinerary</div>
+          <div class="dc__v dc__v--none">Can't start yet</div>
+          <div class="dc__d dc__d--sans">Days come from dates. There are no dates.</div>
+          <div class="dc__foot"><span class="dc__sp"></span><a href="trip-dates.html#state=broad">Add a window</a></div></div>
+        <div class="dc" data-state="open"><div class="dc__k">Goals</div>
+          <div class="dc__v dc__v--none">Nothing written down</div>
+          <div class="dc__d dc__d--sans">Why are you going? One line is enough.</div>
+          <div class="dc__foot"><span class="dc__sp"></span><button class="linkish" data-open-modal="goals">Add a goal</button></div></div>
+        <div class="dc" data-state="open"><div class="dc__k">Checklists</div>
+          <div class="dc__v dc__v--none">None yet</div>
+          <div class="dc__d dc__d--sans">4 templates saved from past trips.</div>
+          <div class="dc__foot"><span class="dc__sp"></span><a href="trip-checklists.html#state=notemplate">Use a template</a></div></div>
+      </div>
+    </div>
+    <div class="board__col board__col--open">
+      <div class="colhead"><h2>Where to start</h2></div>
+      <div class="blank" style="margin-top:12px">
+        <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+        <div>
+          <h4>Only the name exists so far</h4>
+          <p>That is a legitimate state and it will stay that way until you change it — no reminders,
+            no setup checklist. When you're ready, the cheapest first move is adding the people, because
+            everything else can be drafted around them.</p>
+          <div class="blank__act">
+            <a class="btn btn--primary" href="trip-people.html#state=empty">Add people from the directory</a>
+            <a class="btn" href="trip-destination.html#state=empty">Or start with places</a>
+          </div>
+        </div>
+      </div>
+      <div class="revnote" style="margin-top:12px">
+        <span class="revnote__k">Note</span>
+        <div>This is §5.11's "a trip with no destination, no dates, no participants, no budget, no
+          itinerary — all at once". Six dashed cards, each stating what would go there and why it is
+          empty. <b>No card renders as an error and none shows a zero.</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ loading -->
+  <div class="board" data-when="loading">
+    <div class="board__col">
+      <div class="colhead"><h2>Decided</h2></div>
+      <div class="dgrid">
+        <div class="dc"><span class="sk sk--pill"></span><span class="sk sk--l1" style="display:block;margin-top:12px"></span><span class="sk sk--l2" style="display:block"></span></div>
+        <div class="dc"><span class="sk sk--pill"></span><span class="sk sk--l1" style="display:block;margin-top:12px"></span><span class="sk sk--l2" style="display:block"></span></div>
+        <div class="dc"><span class="sk sk--pill"></span><span class="sk sk--l1" style="display:block;margin-top:12px"></span><span class="sk sk--l2" style="display:block"></span></div>
+        <div class="dc"><span class="sk sk--pill"></span><span class="sk sk--l1" style="display:block;margin-top:12px"></span><span class="sk sk--l2" style="display:block"></span></div>
+      </div>
+    </div>
+    <div class="board__col board__col--open">
+      <div class="colhead"><h2>Open · waiting on</h2></div>
+      <div class="card">
+        <div class="skrow" style="grid-template-columns:26px minmax(0,1fr)"><span class="sk" style="width:26px;height:26px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span></div>
+        <div class="skrow" style="grid-template-columns:26px minmax(0,1fr)"><span class="sk" style="width:26px;height:26px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span></div>
+        <div class="skrow" style="grid-template-columns:26px minmax(0,1fr)"><span class="sk" style="width:26px;height:26px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ load failed -->
+  <div data-when="failed">
+    <div class="blank blank--bad">
+      <span class="blank__icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <div>
+        <h4>This trip didn't load</h4>
+        <p>The server answered, but not with the trip — <span class="mono">502</span> from the API at
+          <span class="mono">01:14</span>. Nothing has been changed or lost; this is a read that
+          failed. It is <b>not</b> the same as an empty trip.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:loading">Try loading it again</button>
+          <a class="btn" href="trips.html">Back to all trips</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ lifecycle — the only status control -->
+  <section class="sect" data-when-not="loading failed" style="margin-top:26px">
+    <h2 class="sect__t">Where this trip is <span class="dim">· status follows the decisions, it isn't a label you set</span></h2>
+
+    <div class="lc" data-when="active ready">
+      <div class="lc__s" data-past><span class="lc__k">1 · Idea</span><span class="lc__n">Passed</span><span class="lc__d">2 Apr 2026</span></div>
+      <div class="lc__s" data-past><span class="lc__k">2 · Planning</span><span class="lc__n">Passed</span><span class="lc__d">18 Apr 2026</span></div>
+      <div class="lc__s" data-past data-when="active"><span class="lc__k">3 · Confirmed</span><span class="lc__n">Passed</span><span class="lc__d">14 Jun 2026</span></div>
+      <div class="lc__s" data-now data-when="ready"><span class="lc__k">3 · Confirmed</span><span class="lc__n">You are here</span><span class="lc__d">since 14 Jun 2026</span></div>
+      <div class="lc__s" data-now data-when="active"><span class="lc__k">4 · Active</span><span class="lc__n">You are here</span><span class="lc__d">since 6 Nov 2026</span></div>
+      <div class="lc__s" data-next data-when="ready"><span class="lc__k">4 · Active</span><span class="lc__n">On 6 Nov</span><span class="lc__d">automatic</span></div>
+      <div class="lc__s" data-next><span class="lc__k">5 · Archived</span><span class="lc__n">Not yet</span><span class="lc__d">after you get back</span></div>
+    </div>
+    <div class="lc" data-when="planning">
+      <div class="lc__s" data-past><span class="lc__k">1 · Idea</span><span class="lc__n">Passed</span><span class="lc__d">11 May 2026</span></div>
+      <div class="lc__s" data-now><span class="lc__k">2 · Planning</span><span class="lc__n">You are here</span><span class="lc__d">since 3 Jun 2026</span></div>
+      <div class="lc__s" data-next><span class="lc__k">3 · Confirmed</span><span class="lc__n">Two things missing</span><span class="lc__d">dates · destination</span></div>
+      <div class="lc__s" data-next><span class="lc__k">4 · Active</span><span class="lc__n">Not yet</span><span class="lc__d">—</span></div>
+      <div class="lc__s" data-next><span class="lc__k">5 · Archived</span><span class="lc__n">Not yet</span><span class="lc__d">—</span></div>
+    </div>
+    <div class="lc" data-when="idea empty">
+      <div class="lc__s" data-now><span class="lc__k">1 · Idea</span><span class="lc__n">You are here</span><span class="lc__d" data-when="idea">since 21 Jul 2026</span><span class="lc__d" data-when="empty">since 29 Jul 2026</span></div>
+      <div class="lc__s" data-next><span class="lc__k">2 · Planning</span><span class="lc__n">Whenever you like</span><span class="lc__d">no requirements</span></div>
+      <div class="lc__s" data-next><span class="lc__k">3 · Confirmed</span><span class="lc__n">Needs 2 things</span><span class="lc__d">dates · destination</span></div>
+      <div class="lc__s" data-next><span class="lc__k">4 · Active</span><span class="lc__n">Not yet</span><span class="lc__d">—</span></div>
+      <div class="lc__s" data-next><span class="lc__k">5 · Archived</span><span class="lc__n">Not yet</span><span class="lc__d">—</span></div>
+    </div>
+
+    <!-- one primary action per surface; the fill MOVES with state rather than
+         a second primary being added -->
+    <div class="actionbar" style="position:static;margin-top:14px">
+      <span class="actionbar__l" data-when="active">This trip is under way. There is nowhere forward
+        except archiving it, and that's a thing you do <b>after</b> you get home.</span>
+      <span class="actionbar__l" data-when="ready">Everything <b>Confirmed</b> requires is in place.
+        It becomes <b>Active</b> on its own on <b class="mono">6 Nov</b> — you don't have to do anything.</span>
+      <span class="actionbar__l" data-when="planning">Moving to <b>Confirmed</b> needs final dates and
+        a decided destination. <b>Neither is settled yet.</b></span>
+      <span class="actionbar__l" data-when="idea">Moving to <b>Planning</b> asks nothing of you — it
+        just says out loud that this is happening.</span>
+      <span class="actionbar__l" data-when="empty">Nothing has been added to this trip. If it was a
+        mistake, you can delete it outright — that stops being true the moment anything is attached.</span>
+      <span class="actionbar__spacer"></span>
+
+      <button class="btn" data-when="active" data-open-modal="stepback">Push the departure back</button>
+      <button class="btn btn--primary" data-when="active" data-open-modal="archive">Archive with a retrospective</button>
+
+      <button class="btn" data-when="ready" data-open-modal="stepback">Step back to Planning</button>
+      <button class="btn" data-when="ready" data-open-modal="archive">Archive it</button>
+
+      <button class="btn" data-when="planning" data-open-modal="stepback">Step back to Idea</button>
+      <button class="btn btn--primary" data-when="planning" data-open-modal="blocked">Move to Confirmed</button>
+
+      <button class="btn btn--primary" data-when="idea" data-set="state:planning">Move to Planning</button>
+      <button class="btn" data-when="idea" data-open-modal="archive">Archive it</button>
+
+      <button class="btn btn--primary" data-when="empty" data-set="state:idea">Move to Planning</button>
+      <button class="btn btn--danger" data-when="empty" data-open-modal="deletetrip">Delete this trip</button>
+    </div>
+
+    <p class="t-meta" style="margin:12px 0 0;max-width:88ch;font-size:12px" data-when="active ready planning idea">
+      Status is worked out from whether its requirements still hold, not stored as a label. Turn
+      confirmed dates back into a window and the trip returns to <b>Planning</b> by itself — you'll be
+      told that before you do it, never after.
+      <a href="patterns.html#state=rollback">See how that reads</a>
+    </p>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════ blocked by precondition — never a dead disabled button -->
+<div class="modal" id="blocked" role="dialog" aria-modal="true" aria-labelledby="blocked-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+      <h2 id="blocked-t">Two things have to be settled first</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p><b>Confirmed</b> means the group has committed to a when and a where. Rajasthan in February
+        has neither yet, so the step isn't available — here is exactly what's missing:</p>
+      <ul class="damage">
+        <li data-k="warn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          <span>The dates are still a broad window
+            <span class="damage__d">Three candidates: 21 Feb–1 Mar, 25 Feb–5 Mar, 1–9 Mar. One of them needs to become the trip's actual dates.</span></span>
+        </li>
+        <li data-k="warn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+          <span>No destination candidate is marked as decided
+            <span class="damage__d">Two candidates are being compared and neither is chosen.</span></span>
+        </li>
+        <li data-k="keep">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Everything else is fine
+            <span class="damage__d">The budget is drafted, nine people are on the trip, and a partly-done checklist does not block anything.</span></span>
+        </li>
+      </ul>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+        <div>Confirming isn't a commitment you're stuck with. You can step back to Planning
+          afterwards, and you can change confirmed dates later — both will tell you what it costs.</div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Not now</button>
+      <span class="modal__sp"></span>
+      <a class="btn" href="trip-destination.html#state=open">Choose a destination</a>
+      <a class="btn btn--primary" href="trip-dates.html#state=broad">Pick the dates</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ stepping a trip backwards (reversal) -->
+<div class="modal" id="stepback" role="dialog" aria-modal="true" aria-labelledby="sb-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg></span>
+      <h2 id="sb-t">Push the departure back to Confirmed?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>This says the trip hasn't started after all. Use it when departure slipped — not to edit the
+        dates, which is a <a href="trip-dates.html#state=shift">separate thing</a>.</p>
+      <ul class="damage">
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>The itinerary, budget and checklists are untouched
+            <span class="damage__d">All 41 items across 10 days stay exactly as they are. Status is a label on the trip, not on its contents.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>All five access links keep working
+            <span class="damage__d">Nobody gets locked out. Only archiving revokes links.</span></span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>The trip will turn Active again on <span class="mono">6 Nov 2026</span>
+            <span class="damage__d">Because it still has those dates. If the real departure moved, change the dates too or this will just flip back.</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>Five people are reading this itinerary right now
+            <span class="damage__d">They see the plan, not the status, so nothing will look different to them.</span></span></li>
+      </ul>
+      <div class="reassure">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+        <div><b>This is fully reversible and destroys nothing.</b> Move it forward again whenever you like.</div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Leave it Active</button>
+      <span class="modal__sp"></span>
+      <a class="btn" href="trip-dates.html#state=shift">Change the dates instead</a>
+      <button class="btn btn--primary" data-close data-set="state:ready">Step back to Confirmed</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════════════ archive — locks the plan AND kills the links -->
+<div class="modal" id="archive" role="dialog" aria-modal="true" aria-labelledby="ar-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg></span>
+      <h2 id="ar-t">Archive Vietnam &amp; Cambodia 2026?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>Archiving turns the trip into a record of what happened. Two of these four are not reversible
+        by just un-archiving, so they are worth reading properly.</p>
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>All 5 working links stop working, immediately
+            <span class="damage__d">Asha, Meera, Daniel, Lena and Ravi lose access mid-sentence. Links are stored hashed, so un-archiving cannot bring them back — you would re-issue five new ones by hand, one person at a time.</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>The itinerary, budget and checklists freeze as a snapshot
+            <span class="damage__d">10 days · 41 items · 8 categories · 31 checklist items, captured as they are now and read-only afterwards.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Three things stay editable forever
+            <span class="damage__d">Retrospective notes, photo album links, and one real-spend figure per budget category to sit against each estimate.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Everyone's profile and documents are untouched
+            <span class="damage__d">Those belong to the people, not the trip. They'll be waiting, pre-filled, on the next one.</span></span></li>
+      </ul>
+      <div class="banner banner--info">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <div>You can un-archive later. The plan comes back out of the snapshot; <b>the five links do not.</b></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep it active</button>
+      <span class="modal__sp"></span>
+      <a class="btn btn--primary" href="trip-archive.html">Archive and start the retrospective</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ delete — only a trip with nothing in it -->
+<div class="modal" id="deletetrip" role="dialog" aria-modal="true" aria-labelledby="dt-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+      <h2 id="dt-t">Delete "Bhutan someday" for good?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>Deleting is only offered because <b>nothing has been attached to this trip</b>. Here is
+        everything that would go:</p>
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>The name, and nothing else
+            <span class="damage__d"><span class="mono">0</span> participants · <span class="mono">0</span> dates or windows · <span class="mono">0</span> destination candidates · <span class="mono">0</span> budget figures · <span class="mono">0</span> itinerary days · <span class="mono">0</span> documents · <span class="mono">0</span> links ever issued · <span class="mono">0</span> checklist items.</span></span></li>
+      </ul>
+      <p>The moment any of those counts stops being zero, this button disappears and <b>archiving</b>
+        becomes the way to put a trip away. That is deliberate: a trip somebody has put work into
+        should never be one click from gone.</p>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep it</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--danger" data-close>Delete the trip</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ goals editor -->
+<div class="modal" id="goals" role="dialog" aria-modal="true" aria-labelledby="g-t" hidden>
+  <div class="modal__panel modal__panel--wide">
+    <div class="modal__head">
+      <h2 id="g-t">What this trip is for</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p style="margin-bottom:14px">A goal pinned to a date or a place is a <b>hard constraint</b> — the
+        itinerary planner may not move it. A goal with neither is a wish: read, but not enforced.</p>
+      <div class="subcard dtable__scroll">
+        <table class="dtable">
+          <thead><tr>
+            <th style="min-width:230px">Goal</th><th style="width:112px">Fixed date</th>
+            <th style="width:150px">Fixed place</th><th style="width:88px">Kind</th><th style="width:40px"></th>
+          </tr></thead>
+          <tbody>
+            <tr><td style="font-weight:500">Angkor Wat at sunrise<span class="defrow__d">The whole reason for the Cambodia leg</span></td>
+              <td class="mono">15 Nov 2026</td><td>Siem Reap</td><td><span class="pill pill--2">Hard</span></td>
+              <td><button class="iconbtn" aria-label="Delete this goal" data-open-modal="delgoal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></td></tr>
+            <tr><td style="font-weight:500">One night on a Ha Long Bay junk<span class="defrow__d">The quieter side, not the main bay</span></td>
+              <td class="mono">8 Nov 2026</td><td>Bai Tu Long Bay</td><td><span class="pill pill--2">Hard</span></td>
+              <td><button class="iconbtn" aria-label="Delete this goal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></td></tr>
+            <tr><td style="font-weight:500">Hoi An tailoring, with time for two fittings</td>
+              <td class="dash">—</td><td>Hoi An</td><td><span class="tag">Place</span></td>
+              <td><button class="iconbtn" aria-label="Delete this goal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></td></tr>
+            <tr><td style="font-weight:500">A proper Vietnamese cooking class, vegan-friendly<span class="defrow__d">Asha is vegan; two others are vegetarian</span></td>
+              <td class="dash">—</td><td>Tra Que herb village</td><td><span class="tag">Place</span></td>
+              <td><button class="iconbtn" aria-label="Delete this goal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></td></tr>
+            <tr><td style="font-weight:500">Keep two half-days completely unplanned</td>
+              <td class="dash">—</td><td class="dash">—</td><td><span class="tag">Soft</span></td>
+              <td><button class="iconbtn" aria-label="Delete this goal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="hr"></div>
+      <div class="fgrid">
+        <label class="fg"><span class="fg__l">Goal <span class="fg__req">Required</span></span>
+          <input class="field" type="text" placeholder="Sunrise over the Mekong from a boat"></label>
+        <label class="fg"><span class="fg__l">Fixed date <span class="fg__opt">only if it truly can't move</span></span>
+          <input type="date" value=""></label>
+        <label class="fg"><span class="fg__l">Fixed place <span class="fg__opt">optional</span></span>
+          <input class="field" type="text" placeholder="Can Tho"></label>
+      </div>
+      <div class="fg" data-invalid>
+        <span class="fg__l">Goal <span class="fg__req">Required</span></span>
+        <input class="field" type="text" value="">
+        <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+          A goal needs a title. The date and place are optional — the title isn't.</span>
+        <span class="fg__h">Shown for review: this is the empty-required-field state for a goal.</span>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Cancel</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close>Save 6 goals</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ deleting a goal that an itinerary day depends on -->
+<div class="modal" id="delgoal" role="dialog" aria-modal="true" aria-labelledby="dg-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+      <h2 id="dg-t">Delete "Angkor Wat at sunrise"?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>The goal and its note go
+            <span class="damage__d">Fixed to <span class="mono">15 Nov 2026</span> in Siem Reap. "The whole reason for the Cambodia leg."</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>Day 10 stops being anchored
+            <span class="damage__d">Its three items stay, but a redraft of that day would no longer be told to keep the 05:00 start.</span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep it</button><span class="modal__sp"></span>
+      <button class="btn btn--danger" data-close>Delete the goal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ trip details — identity only. Lifecycle lives on the board -->
+<aside class="drawer" id="details" role="dialog" aria-modal="true" aria-labelledby="d-t" hidden>
+  <div class="drawer__head">
+    <h2 id="d-t" style="margin:0;font-size:15px;font-weight:600">Trip details</h2>
+    <span style="flex:1"></span>
+    <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="drawer__body" data-section="details">
+    <p class="t-meta" style="margin:14px 0">The trip's own facts. Dates, destination, status and
+      archiving are decisions and live on the board.</p>
+    <label class="fg"><span class="fg__l">Name <span class="fg__req">Required</span></span>
+      <input class="field" type="text" value="Vietnam &amp; Cambodia 2026"></label>
+    <label class="fg"><span class="fg__l">Description</span>
+      <textarea class="field" style="min-height:88px;font-family:var(--sans);font-size:12.5px;line-height:1.6">Ten days north-to-south through Vietnam, then over the border for the Angkor temples. Six of us, two joining from Europe. Street food first, museums second, one proper beach afternoon.</textarea></label>
+    <label class="fg"><span class="fg__l">Starting from</span>
+      <input class="field" type="text" value="Bengaluru"></label>
+    <div class="fg">
+      <span class="fg__l">Vibe</span>
+      <div class="rowline" style="margin-bottom:8px">
+        <span class="chip">street food <button class="chip__x" aria-label="Remove street food">×</button></span>
+        <span class="chip">temples <button class="chip__x" aria-label="Remove temples">×</button></span>
+        <span class="chip">boats <button class="chip__x" aria-label="Remove boats">×</button></span>
+        <span class="chip">photography <button class="chip__x" aria-label="Remove photography">×</button></span>
+        <span class="chip">first-time SE Asia <button class="chip__x" aria-label="Remove first-time SE Asia">×</button></span>
+      </div>
+      <input class="field" type="text" placeholder="Add a tag and press Enter">
+      <span class="fg__h">Chips in, chips out — no comma-separated field to get wrong.</span>
+    </div>
+    <hr class="hr">
+    <div class="fg">
+      <span class="fg__l">Currency amounts are entered in</span>
+      <div class="rowline" style="justify-content:space-between">
+        <span class="mono" style="font-size:13px;font-weight:600">INR — Indian rupee</span>
+        <button class="linkish" data-open-modal="basecur">Change</button>
+      </div>
+      <span class="fg__h">This is the trip's own currency: every figure is stored in it. It is not the
+        same as the <b>View in</b> control in the top bar, which only changes what you read.</span>
+    </div>
+    <hr class="hr">
+    <div class="blank" style="padding:14px 15px">
+      <div>
+        <h4 style="font-size:12.5px">Deleting isn't available for this trip</h4>
+        <p style="font-size:12px">It has 6 people, a 10-day itinerary, a drafted budget and 12
+          documents attached. Put it away with <b>Archive</b> on the board instead — that keeps it
+          readable and can be undone.</p>
+      </div>
+    </div>
+  </div>
+  <div class="drawer__foot">
+    <button class="btn" data-close>Discard changes</button>
+    <button class="btn btn--primary" data-close>Save details</button>
+  </div>
+</aside>
+
+<!-- ═════════════════════ changing the trip's BASE currency — both readings shown -->
+<div class="modal" id="basecur" role="dialog" aria-modal="true" aria-labelledby="bc-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2h5M9.5 12h5M11 15.5c2.4 0 3.6-1.2 3.6-3.2S13.4 9 11 9"/></svg></span>
+      <h2 id="bc-t">Change the trip's currency from INR to EUR?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p><b>There are 34 amounts already entered on this trip.</b> They have to mean something
+        different afterwards, and there are only two honest options. Pick one:</p>
+
+      <label class="prefill" style="display:block;cursor:pointer;margin-bottom:10px;border-left-color:var(--info)">
+        <span class="rowline" style="align-items:flex-start">
+          <input class="check" type="radio" name="bc" checked style="margin-top:2px">
+          <span style="flex:1">
+            <span class="defrow__n">Keep the numbers, change the label</span>
+            <span class="defrow__d" style="margin-top:4px">Every figure you typed stays as typed. The
+              total reads <span class="mono">€4,80,000</span> instead of <span class="mono">₹4,80,000</span>.
+              Obviously wrong where it's wrong, so you can find and fix it.</span>
+          </span>
+          <span class="tag">Recommended</span>
+        </span>
+      </label>
+
+      <label class="prefill" style="display:block;cursor:pointer;border-left-color:var(--dash-line)">
+        <span class="rowline" style="align-items:flex-start">
+          <input class="check" type="radio" name="bc" style="margin-top:2px">
+          <span style="flex:1">
+            <span class="defrow__n">Convert them at today's rate</span>
+            <span class="defrow__d" style="margin-top:4px">The total becomes
+              <span class="mono">€4,403</span> at <span class="mono">1 EUR = 109.01 INR</span>, and the
+              rate and date get recorded on the trip. But the reasoning notes don't convert —
+              "9 nights × 3 twin rooms × ₹4,000" would still say ₹4,000 beside a euro figure,
+              and every split and override is recomputed from an approximate daily rate.</span>
+          </span>
+        </span>
+      </label>
+
+      <div class="banner" style="margin-top:12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <div>If you only want to <b>read</b> this trip in euro, you don't need this at all — use
+          <b>View in</b> in the top bar. That changes nothing and can't corrupt a figure.
+          <button class="linkish" data-close data-set="lens:eur">Do that instead</button></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Leave it in INR</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close>Change to EUR, keeping the numbers</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ the currency lens — a view control, nothing more -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:430px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">Changes what you see, nothing else. Amounts are still entered and
+        stored in the trip's own currency, and this choice follows you across every trip and screen.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">This trip's own currency — the authoritative figures</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+        <span class="mono dim" style="font-size:11px">≈ €4,400</span>
+      </button>
+      <button class="pal__r" data-set="lens:gbp" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">GBP</span>
+        <span><span class="pal__n">Pound sterling</span><span class="pal__d">1 GBP = 126.40 INR · rates as of 29 Jul 2026</span></span>
+        <span class="mono dim" style="font-size:11px">≈ £3,800</span>
+      </button>
+      <button class="pal__r" data-set="lens:vnd" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">VND</span>
+        <span><span class="pal__n">Vietnamese dong</span><span class="pal__d" style="color:var(--warn)">No rate available from our source — amounts stay in rupees</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">Daily reference rates from
+        the European Central Bank. They are a guide for reading a budget — <b>not</b> what a card
+        issuer or a money changer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" value="ha long" data-autofocus aria-label="Search trips, people, documents, itinerary items, templates and archived notes">
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g">
+      <div class="pal__gk">Itinerary items <span class="mono" style="font-weight:400">3</span></div>
+      <button class="pal__r" aria-selected="true">
+        <span class="catm">AC</span>
+        <span><span class="pal__n">Overnight on a <mark class="hit">Ha Long</mark> junk, Bai Tu Long</span>
+          <span class="pal__d">Vietnam &amp; Cambodia 2026 · Day 3 · Sun 8 Nov · 16:00–09:00</span></span>
+        <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button class="pal__r">
+        <span class="catm">TR</span>
+        <span><span class="pal__n">Transfer Hanoi → <mark class="hit">Ha Long</mark> pier</span>
+          <span class="pal__d">Vietnam &amp; Cambodia 2026 · Day 3 · Sun 8 Nov · 09:00–12:30</span></span>
+        <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="pal__g">
+      <div class="pal__gk">Checklist tasks <span class="mono" style="font-weight:400">1</span></div>
+      <button class="pal__r">
+        <span class="wait__ic" style="width:20px;height:20px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+        <span><span class="pal__n">Book the <mark class="hit">Ha Long</mark> junk</span>
+          <span class="pal__d">Vietnam &amp; Cambodia 2026 · due 15 Jul · yours · 14 days late</span></span>
+        <span class="pill pill--3">Overdue</span>
+      </button>
+    </div>
+    <div class="pal__g">
+      <div class="pal__gk">Checklist templates <span class="mono" style="font-weight:400">1</span></div>
+      <!-- Not a <button>: this row is deliberately NOT actionable, but it contains
+           the link that IS. A <button disabled> wrapping an <a> is invalid HTML and
+           makes that link unreachable, which defeats the point of the row. -->
+      <div class="pal__r" aria-disabled="true">
+        <span class="thumb" style="width:20px;height:20px;border-radius:var(--r-sm)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h9M8 12h9M8 18h6"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+        <span><span class="pal__n">Boat trip — overnight (<mark class="hit">Ha Long</mark>, houseboats)</span>
+          <span class="pal__d">A template isn't a place you can go — it only exists inside a trip's checklists.
+            <a href="trip-checklists.html#state=templates">Use it on a trip</a></span></span>
+        <span class="tag">Template</span>
+      </div>
+    </div>
+  </div>
+  <div class="pal__foot">
+    <span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span>
+    <span style="flex:1"></span>
+    <a href="search.html">See all 5 matches</a>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Your details</span>
+      <button class="rev__b" data-v="prefilled" aria-pressed="true">Pre-filled</button>
+      <button class="rev__b" data-v="newperson">Brand new</button>
+      <button class="rev__b" data-v="invalid">Missing name</button>
+      <button class="rev__b" data-v="savefailed">Save failed</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Overall</span>
+      <button class="rev__b" data-v="saved">Confirmed, reloaded</button>
+      <button class="rev__b" data-v="done">Fully ready</button>
+      <button class="rev__b" data-v="tbd">Dates not set</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Documents</span>
+      <button class="rev__b" data-v="docsnone">None yet</button>
+      <button class="rev__b" data-v="docsproblem">A problem</button>
+      <button class="rev__b" data-v="upload">Uploading</button>
+      <button class="rev__b" data-v="uploadbig">Too big</button>
+      <button class="rev__b" data-v="uploadtype">Wrong type</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Checklist</span>
+      <button class="rev__b" data-v="checklistempty">Empty</button>
+      <button class="rev__b" data-v="checklistpartial">Partial</button>
+      <button class="rev__b" data-v="checklistdone">All done</button>
+    </span>
+    <span class="rev__grp" data-axis="lens">
+      <span class="rev__lbl">Read in</span>
+      <button class="rev__b" data-v="inr" aria-pressed="true">INR</button>
+      <button class="rev__b" data-v="eur">EUR</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<div class="revnote">
+  <span class="revnote__k">Note</span>
+  <div>No app bar and no navigation on purpose — this is a link opened once, on a phone, by someone with
+    no account. <b>View in</b> exists because two of the six people on this trip, Daniel Weiss and Lena
+    Hoffmann, read money in euro; it is a display filter only, styled to look like a fact label rather
+    than a setting. <b>Confirmed, reloaded</b> is the fix for a real bug: today "you already confirmed"
+    is session-local and disappears on refresh. Here it's just what the page renders once the server has
+    a <span class="mono">confirmed_at</span> timestamp — no client storage involved, so it survives a
+    reload, a closed tab, or opening the same link next week.</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<main class="pshell">
+
+  <div class="ptop">
+    <div class="ptop__t">
+      <h1><span data-when-not="tbd">Vietnam &amp; Cambodia 2026</span><span data-when="tbd">Kerala Backwaters</span></h1>
+    </div>
+    <div class="ptop__left">
+      <span data-when="prefilled newperson invalid savefailed">Takes about two minutes · no account needed</span>
+      <span data-when="loading">Loading your details…</span>
+      <span data-when="done">Nothing else needed from you</span>
+      <span data-when="tbd">Dates aren't settled yet — nothing urgent</span>
+      <span data-when-not="prefilled newperson invalid savefailed loading done tbd">All caught up</span>
+      <span style="flex:1"></span>
+      <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in" style="height:28px;padding:0 7px 0 9px">
+        <span class="lens__eyebrow">View in</span><span data-lens-label>INR</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ page loading -->
+  <div data-when="loading" style="padding:16px">
+    <div class="stack">
+      <span class="sk sk--block" style="height:64px"></span>
+      <span class="sk sk--block" style="height:120px"></span>
+      <span class="sk sk--block" style="height:120px"></span>
+      <span class="sk sk--block" style="height:90px"></span>
+    </div>
+  </div>
+
+  <div data-when-not="loading">
+
+    <!-- ─────────────────────────────────────────────────────────── trip facts -->
+    <div style="padding:16px 16px 4px">
+      <div class="facts" style="grid-template-columns:1fr 1fr" data-when-not="tbd">
+        <div class="fact fact--ok"><div class="fact__k">Leaving</div><div class="fact__v"><span class="mono">Fri 6 Nov</span></div><div class="fact__d">2026</div></div>
+        <div class="fact fact--ok"><div class="fact__k">Back</div><div class="fact__v"><span class="mono">Sun 15 Nov</span></div><div class="fact__d">10 days away</div></div>
+        <div class="fact"><div class="fact__k">Where</div><div class="fact__v">Vietnam &amp; Cambodia</div><div class="fact__d">Ten days, north to south</div></div>
+        <div class="fact"><div class="fact__k">Group</div><div class="fact__v"><span class="mono">6</span> people</div><div class="fact__d">including you</div></div>
+      </div>
+      <div class="prefill" style="border-left-color:var(--dash-line)" data-when="tbd">
+        <div class="prefill__k">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          Being worked out</div>
+        <p style="margin:0;font-size:13px;line-height:1.6">Somewhere warm and slow, sometime in October.
+          The organiser is comparing three windows and hasn't settled on a place yet either.</p>
+        <p style="margin:8px 0 0;font-size:12px;color:var(--ink-2)">There's nothing for you to do about
+          this. You can still confirm your details, documents and checklist below — none of that waits
+          on the dates.</p>
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────────── privacy, upfront -->
+    <div class="reassure" style="margin:0 16px 16px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3.2v5.6c0 5-3 8.3-7 9.2-4-.9-7-4.2-7-9.2V6.2L12 3z"/></svg>
+      <div><b>This page only shows you.</b> Your own details, your own documents, and the trip's shared
+        facts — dates and destination. It never shows the other five people's documents, phones, emails,
+        emergency contacts or medical notes, never who else is on the trip, and never the group's budget.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ fully ready -->
+    <div class="pdone" data-when="done">
+      <span class="pdone__ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+      <h2>You're all set for this trip</h2>
+      <p>Your details are confirmed, your passport is on file and fine for these dates, and your packing
+        list is done. Nothing else is needed from you before <span class="mono">6 Nov</span>.</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ ① ② ③ the steps -->
+    <div data-when-not="done">
+
+      <!-- ① your details -->
+      <div class="pstep" data-todo="" data-when="prefilled">
+        <div class="pstep__head"><span class="pstep__i">1</span><h3 class="pstep__h">① Your details</h3></div>
+        <div class="pstep__body">
+          <div class="prefill">
+            <div class="prefill__k">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1015-6.7M18 3v4.5h-4.5"/></svg>
+              This is what we have from Sri Lanka 2025 — still right?</div>
+            <div class="deflist">
+              <div class="defrow" style="grid-template-columns:minmax(0,1fr)"><span><span class="defrow__n">Asha Kumar</span><span class="defrow__d">Chennai</span></span></div>
+              <div class="defrow" style="grid-template-columns:minmax(0,1fr)"><span><span class="defrow__n">Vegan · moderate pace</span><span class="defrow__d">Dietary preference and how packed a day you like</span></span></div>
+              <div class="defrow" style="grid-template-columns:minmax(0,1fr)"><span><span class="defrow__n">Karthik Kumar · 98450 11223</span><span class="defrow__d">Emergency contact</span></span></div>
+            </div>
+          </div>
+          <div class="rowline" style="margin-top:12px">
+            <button class="btn btn--primary" data-set="state:saved">Yes, still right</button>
+            <button class="linkish">Something's changed</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pstep" data-todo="" data-when="newperson">
+        <div class="pstep__head"><span class="pstep__i">1</span><h3 class="pstep__h">① Your details</h3></div>
+        <div class="pstep__body">
+          <p class="t-meta" style="margin:0 0 12px">No trip on file for you before, so nothing to
+            pre-fill — just a few questions.</p>
+          <label class="fg"><span class="fg__l">Your name <span class="fg__req">Required</span></span>
+            <input class="field" type="text" placeholder="Full name"></label>
+          <label class="fg"><span class="fg__l">Home city</span>
+            <input class="field" type="text" placeholder="Where you're travelling from"></label>
+          <label class="fg"><span class="fg__l">Dietary preference <span class="fg__opt">optional</span></span>
+            <select><option>Not set</option><option>Vegan</option><option>Vegetarian</option><option>Non-veg</option></select></label>
+          <label class="fg"><span class="fg__l">Pace you prefer <span class="fg__opt">optional</span></span>
+            <select><option>Not set</option><option>Relaxed</option><option>Moderate</option><option>Packed</option></select></label>
+          <label class="fg"><span class="fg__l">Emergency contact <span class="fg__opt">optional, only you and the organiser see this</span></span>
+            <input class="field" type="text" placeholder="Name and phone number"></label>
+          <button class="btn btn--primary">Save your details</button>
+        </div>
+      </div>
+
+      <div class="pstep" data-todo="" data-when="invalid">
+        <div class="pstep__head"><span class="pstep__i">1</span><h3 class="pstep__h">① Your details</h3></div>
+        <div class="pstep__body">
+          <div class="fg" data-invalid>
+            <span class="fg__l">Your name <span class="fg__req">Required</span></span>
+            <input class="field" type="text" value="">
+            <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+              We need a name so the organiser knows whose profile this is.</span>
+          </div>
+          <label class="fg"><span class="fg__l">Home city</span>
+            <input class="field" type="text" value="Bengaluru"></label>
+          <button class="btn btn--primary" disabled>Save your details</button>
+          <p class="fg__h" style="margin-top:9px">Everything else you typed is still here — only the
+            missing name is stopping this from saving.</p>
+        </div>
+      </div>
+
+      <div class="pstep" data-todo="" data-when="savefailed">
+        <div class="pstep__head"><span class="pstep__i">1</span><h3 class="pstep__h">① Your details</h3></div>
+        <div class="pstep__body">
+          <div class="banner banner--bad" style="margin-bottom:14px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <div><b>That didn't save — the connection dropped.</b> Nothing you typed below was lost.</div>
+          </div>
+          <label class="fg"><span class="fg__l">Your name <span class="fg__req">Required</span></span>
+            <input class="field" type="text" value="Ravi Menon"></label>
+          <label class="fg"><span class="fg__l">Home city</span>
+            <input class="field" type="text" value="Bengaluru"></label>
+          <button class="btn btn--primary">Try saving again</button>
+        </div>
+      </div>
+
+      <div class="pstep" data-done="" data-when-not="prefilled newperson invalid savefailed">
+        <div class="pstep__head"><span class="pstep__i">✓</span><h3 class="pstep__h">① Your details</h3></div>
+        <div class="pstep__body">
+          <div class="rowline" style="justify-content:space-between;align-items:flex-start">
+            <span><span class="defrow__n">Asha Kumar</span><span class="defrow__d">Chennai · vegan · moderate pace</span></span>
+            <span class="saved"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>Confirmed 12 Jul</span>
+          </div>
+          <button class="linkish" style="margin-top:10px">Something's changed — update this</button>
+        </div>
+      </div>
+
+      <!-- ② your documents -->
+      <div class="pstep">
+        <div class="pstep__head"><span class="pstep__i" data-when="docsnone uploadbig uploadtype">2</span><span class="pstep__i" data-when-not="docsnone uploadbig uploadtype" style="border-color:var(--ok);background:var(--ok);color:var(--surface)">✓</span><h3 class="pstep__h">② Your documents</h3></div>
+        <div class="pstep__body">
+
+          <div data-when-not="docsnone docsproblem upload uploadbig uploadtype">
+            <div class="rowline" style="align-items:flex-start">
+              <span class="thumb" style="width:48px;height:62px">
+                <img class="thumb__img" alt="Your passport, photo page" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 108'%3E%3Crect width='84' height='108' fill='%23eef1f5'/%3E%3Crect x='0' y='0' width='84' height='14' fill='%233b5b8c'/%3E%3Ccircle cx='23' cy='40' r='13' fill='%23c7d3e2'/%3E%3Crect x='10' y='55' width='26' height='30' fill='%23c7d3e2'/%3E%3Crect x='46' y='30' width='30' height='3' fill='%23aebccf'/%3E%3Crect x='46' y='38' width='26' height='3' fill='%23aebccf'/%3E%3Crect x='46' y='46' width='28' height='3' fill='%23aebccf'/%3E%3Crect x='46' y='54' width='22' height='3' fill='%23aebccf'/%3E%3Crect x='8' y='94' width='68' height='6' fill='%233b5b8c'/%3E%3C/svg%3E">
+              </span>
+              <span>
+                <span class="defrow__n">Passport</span>
+                <span class="defrow__d">Expires <span class="mono">14 Mar 2032</span> — well clear of this trip</span>
+              </span>
+            </div>
+            <p class="t-meta" style="margin:12px 0 0;font-size:12px">This is your own document, on your
+              own phone, so it's shown plainly — nobody obscures a passport for the person it belongs to.</p>
+          </div>
+
+          <div class="blank" data-when="docsnone" style="margin-bottom:14px">
+            <span class="blank__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span>
+            <div><h4>Nothing on file yet</h4>
+              <p>The organiser needs at least your passport to check it's valid for this trip.</p></div>
+          </div>
+          <div class="drop" data-when="docsnone">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V5M7.5 9.5L12 5l4.5 4.5"/><path d="M5 20h14"/></svg>
+            <h4>Add your passport</h4>
+            <p>JPEG, PNG, HEIC, WebP or PDF · up to 10 MB</p>
+            <button class="btn btn--primary btn--sm" style="margin-top:4px">Choose a file</button>
+          </div>
+
+          <div data-when="docsproblem">
+            <div class="rowline" style="align-items:flex-start;margin-bottom:12px">
+              <span class="thumb" style="width:48px;height:62px">
+                <img class="thumb__img" alt="Your passport, photo page" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 108'%3E%3Crect width='84' height='108' fill='%23f5eeee'/%3E%3Crect x='0' y='0' width='84' height='14' fill='%238c3b3b'/%3E%3Ccircle cx='23' cy='40' r='13' fill='%23e2c7c7'/%3E%3Crect x='10' y='55' width='26' height='30' fill='%23e2c7c7'/%3E%3Crect x='46' y='30' width='30' height='3' fill='%23cfaeae'/%3E%3Crect x='46' y='38' width='26' height='3' fill='%23cfaeae'/%3E%3Crect x='46' y='46' width='28' height='3' fill='%23cfaeae'/%3E%3Crect x='8' y='94' width='68' height='6' fill='%238c3b3b'/%3E%3C/svg%3E">
+              </span>
+              <span>
+                <span class="defrow__n">Passport <span class="pill pill--4" style="margin-left:4px">Expired</span></span>
+                <span class="defrow__d">Expired <span class="mono">2 Nov 2026</span> — four days before this trip leaves</span>
+              </span>
+            </div>
+            <div class="banner banner--bad">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+              <div><b>You can't travel on this passport.</b> A renewal takes weeks, so start now — message
+                the organiser if you'd like help figuring out the timeline.</div>
+            </div>
+            <button class="btn" style="margin-top:12px">Upload a renewed passport</button>
+          </div>
+
+          <div data-when="upload">
+            <div class="upl" style="margin-bottom:10px">
+              <span class="thumb" style="width:38px;height:48px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span>
+              <span>
+                <span class="defrow__n" style="font-size:12.5px">passport-photo-page.jpg</span>
+                <span class="upl__bar"><i style="width:62%"></i></span>
+              </span>
+              <span class="mono dim" style="font-size:11px">62%</span>
+            </div>
+            <div class="rowline" style="justify-content:space-between;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)">
+              <span class="rowline">
+                <span class="thumb" style="width:38px;height:48px">
+                  <img class="thumb__img" alt="Your passport, photo page" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 108'%3E%3Crect width='84' height='108' fill='%23eef1f5'/%3E%3Crect x='0' y='0' width='84' height='14' fill='%233b5b8c'/%3E%3Ccircle cx='23' cy='40' r='13' fill='%23c7d3e2'/%3E%3Crect x='10' y='55' width='26' height='30' fill='%23c7d3e2'/%3E%3C/svg%3E">
+                </span>
+                <span class="defrow__n" style="font-size:12.5px">passport-photo-page-2.jpg</span>
+              </span>
+              <span class="saved"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>Uploaded</span>
+            </div>
+            <p class="t-meta" style="margin:10px 0 0;font-size:12px">One file at a time, up to 10 MB. This
+              screen shows choosing, uploading and finished side by side so both moments are visible.</p>
+          </div>
+
+          <div class="drop" data-bad data-when="uploadbig">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <h4>That file is too big</h4>
+            <p><span class="mono">14.2 MB</span> — the limit is <span class="mono">10 MB</span>. A photo
+              straight from your camera is usually well under that; try again with the regular photo,
+              not the RAW file.</p>
+            <button class="btn btn--sm" style="margin-top:4px">Choose a different file</button>
+          </div>
+
+          <div class="drop" data-bad data-when="uploadtype">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <h4>We can't use that file type</h4>
+            <p><span class="mono">passport-scan.docx</span> — we only accept JPEG, PNG, HEIC, WebP or PDF
+              for a document.</p>
+            <button class="btn btn--sm" style="margin-top:4px">Choose a different file</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ③ your checklist -->
+      <div class="pstep" style="border-bottom:0">
+        <div class="pstep__head"><span class="pstep__i" data-when="checklistempty checklistpartial" data-when-not="checklistdone">3</span><span class="pstep__i" data-when="checklistdone" style="border-color:var(--ok);background:var(--ok);color:var(--surface)">✓</span><h3 class="pstep__h">③ Your checklist</h3></div>
+        <div class="pstep__body">
+
+          <div class="blank" data-when="checklistempty">
+            <span class="blank__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+            <div><h4>Nothing assigned to you yet</h4>
+              <p>The organiser hasn't given you any packing items. Check back closer to the trip — nothing
+                to do here for now.</p></div>
+          </div>
+
+          <div class="subcard" data-when-not="checklistempty checklistdone">
+            <div class="tick" data-done>
+              <input class="check" type="checkbox" checked aria-label="Rain jacket, packed">
+              <span><span class="tick__n">Pack a light rain jacket</span><span class="tick__d">Ha Long Bay can drizzle even in the dry season</span></span>
+            </div>
+            <div class="tick" data-done>
+              <input class="check" type="checkbox" checked aria-label="Cambodia e-visa printed, packed">
+              <span><span class="tick__n">Print the Cambodia e-visa PDF</span><span class="tick__d">Border crossings have asked for a paper copy</span></span>
+            </div>
+            <div class="tick">
+              <input class="check" type="checkbox" aria-label="Visa-on-arrival cash, packed">
+              <span><span class="tick__n">Carry <span class="mono">$20</span> cash for the visa-on-arrival fee</span><span class="tick__d">USD only, exact change helps</span></span>
+            </div>
+          </div>
+
+          <div class="subcard" data-when="checklistdone">
+            <div class="tick" data-done>
+              <input class="check" type="checkbox" checked aria-label="Rain jacket, packed">
+              <span><span class="tick__n">Pack a light rain jacket</span><span class="tick__d">Ha Long Bay can drizzle even in the dry season</span></span>
+            </div>
+            <div class="tick" data-done>
+              <input class="check" type="checkbox" checked aria-label="Cambodia e-visa printed, packed">
+              <span><span class="tick__n">Print the Cambodia e-visa PDF</span><span class="tick__d">Border crossings have asked for a paper copy</span></span>
+            </div>
+            <div class="tick" data-done>
+              <input class="check" type="checkbox" checked aria-label="Visa-on-arrival cash, packed">
+              <span><span class="tick__n">Carry <span class="mono">$20</span> cash for the visa-on-arrival fee</span><span class="tick__d">USD only, exact change helps</span></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /steps -->
+
+    <!-- ④ the itinerary -->
+    <div class="pstep" style="border-top:0">
+      <div class="pstep__head"><span class="pstep__i"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg></span><h3 class="pstep__h">④ The itinerary</h3></div>
+      <div class="pstep__body">
+
+        <div data-when-not="tbd">
+          <div class="rowline" style="align-items:flex-start;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);margin-bottom:12px">
+            <span class="catm">AC</span>
+            <span>
+              <span class="defrow__n">Coming up: cooking class, Tra Que herb village</span>
+              <span class="defrow__d">A vegan-friendly option is on the menu · roughly
+                <span class="money" data-m data-inr="₹1,200" data-eur="≈ €11" data-vnd="" style="font-family:var(--mono)">₹1,200</span>
+                per person, paid on the day</span>
+            </span>
+          </div>
+          <a class="btn btn--primary" href="participant-itinerary.html">See the full 10-day plan</a>
+        </div>
+
+        <div data-when="tbd">
+          <div class="fact fact--off" style="margin-bottom:12px">
+            <div class="fact__k">Itinerary</div><div class="fact__v">Can't exist yet</div>
+            <div class="fact__d">days come from the dates, and there aren't any yet</div>
+          </div>
+          <a class="btn" href="participant-itinerary.html#state=notbuilt">See what to expect</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /data-when-not loading -->
+
+</main>
+
+<!-- ══════════════════════════════════════════════════ fixed bottom action bar -->
+<div class="pbar">
+  <span class="pbar__l" data-when="prefilled">Confirming takes one tap — nothing to type if it's still right.</span>
+  <span class="pbar__l" data-when="newperson">Just the name is required. Everything else can wait.</span>
+  <span class="pbar__l" data-when="invalid">Add your name above to continue.</span>
+  <span class="pbar__l" data-when="savefailed">Nothing was lost — try saving again when you're ready.</span>
+  <span class="pbar__l" data-when="loading">Loading…</span>
+  <span class="pbar__l" data-when="tbd">Nothing to do until the dates are settled.</span>
+  <span class="pbar__l" data-when="done"><b>You're fully ready.</b> Nothing else is needed.</span>
+  <span class="pbar__l" data-when-not="prefilled newperson invalid savefailed loading tbd done">
+    <b>All set</b> — nothing else needed from you right now.</span>
+  <button class="btn btn--primary" data-when="prefilled" data-set="state:saved">Yes, still right</button>
+  <button class="btn btn--primary" data-when="newperson">Save your details</button>
+  <button class="btn btn--primary" data-when="invalid" disabled>Save your details</button>
+  <button class="btn btn--primary" data-when="savefailed">Try saving again</button>
+  <a class="btn" data-when-not="prefilled newperson invalid savefailed loading tbd" href="participant-itinerary.html">View the itinerary</a>
+  <a class="btn" data-when="tbd" href="participant-itinerary.html#state=notbuilt">What to expect</a>
+</div>
+
+<!-- ══════════════════════════════ the currency lens — a view control, nothing more -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:400px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">This only changes how amounts look on your screen. It doesn't change
+        the trip, and the organiser sees exactly the same figures either way.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">This trip's own currency</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">Daily reference rates from the
+        European Central Bank — a guide for reading amounts, not what a card issuer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

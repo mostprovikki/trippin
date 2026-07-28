@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>People · Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Empty &amp; load</span>
+      <button class="rev__b" data-v="empty">Empty</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="failed">Load failed</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Link moment</span>
+      <button class="rev__b" data-v="newlink">New link · one-time reveal</button>
+      <button class="rev__b" data-v="relink">Re-issue warning</button>
+      <button class="rev__b" data-v="revoke">Revoke confirm</button>
+      <button class="rev__b" data-v="remove">Remove person</button>
+      <button class="rev__b" data-v="expiry">Set expiry</button>
+      <button class="rev__b" data-v="noclipboard">Clipboard denied</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Roster</span>
+      <button class="rev__b" data-v="waiting" aria-pressed="true">Who's waiting</button>
+      <button class="rev__b" data-v="populated">Populated</button>
+      <button class="rev__b" data-v="docs">Docs entry point</button>
+      <button class="rev__b" data-v="links">Links entry point</button>
+      <button class="rev__b" data-v="twenty">20 participants</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <!-- ─────────────────────────────────────────────────────── trip head -->
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <a href="trip.html">Vietnam &amp; Cambodia 2026</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span>People</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>Who's coming, and how they get in</h1>
+        <div class="thead__meta">
+          <span data-when="waiting">Sorted by who is blocking you right now — the same order as the board's waiting list.</span>
+          <span data-when="populated">Six people, in the order you added them.</span>
+          <span data-when="docs">You landed here from a document warning on the board.</span>
+          <span data-when="links">You landed here from a link problem on the board.</span>
+          <span data-when="twenty">A bigger trip — twenty participants, so the roster stays readable at scale.</span>
+          <span data-when-not="waiting populated docs links twenty empty loading failed">Access links and per-person readiness for this trip.</span>
+        </div>
+      </div>
+      <div class="thead__acts" data-when-not="loading failed">
+        <a class="btn" href="trip.html">Back to the board</a>
+        <button class="btn btn--primary" data-open-modal="addperson">Add someone</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── trip nav -->
+  <nav class="tnav" aria-label="This trip">
+    <a href="trip.html">Board</a>
+    <a href="trip-itinerary.html">Itinerary <span class="tnav__n">10 days</span></a>
+    <a href="trip-budget.html">Budget <span class="tnav__n">₹4,80,000</span></a>
+    <a href="trip-people.html" aria-current="page">People <span class="tnav__n" data-when-not="twenty">6</span><span class="tnav__n" data-when="twenty">20</span></a>
+    <a href="trip-checklists.html">Checklists <span class="tnav__n tnav__n--warn">3 overdue</span></a>
+  </nav>
+
+  <!-- ═══════════════════════════════════════ context banners per entry point -->
+  <div class="stack" style="margin-bottom:16px">
+    <div class="revnote" data-when="waiting">
+      <span class="revnote__k">Note</span>
+      <div>This is one of the product's three composite readiness views (§5.8): <b>who am I waiting
+        on right now</b>. Every row below is sorted by how much it's blocking, most urgent first — the
+        same six people trip.html's board already names.</div>
+    </div>
+    <div class="banner" data-when="docs">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>Two documents run out soon after you get back.</b> Meera Iyer's passport
+        <span class="mono">12 Jan 2027</span> · Daniel Weiss's Cambodia e-visa <span class="mono">20 Nov 2026</span>.
+        Both are valid for the trip — worth renewing anyway, not urgent.</div>
+    </div>
+    <div class="banner banner--bad" data-when="links">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      <div><b>Nikhil Rao has no way in.</b> His link was revoked on <span class="mono">14 Jul</span>.
+        Re-issuing gives him a fresh one — you'll see it exactly once and can't get it back after.
+        <button class="linkish linkish--bad" data-open-modal="newlink" style="margin-left:4px">Give him a new link now</button></div>
+    </div>
+  </div>
+
+  <div class="split" data-when="waiting populated docs links">
+
+    <div>
+      <!-- ─────────────────────────────────────────────────────── metrics -->
+      <div class="metrics" style="margin-bottom:16px">
+        <div class="metric">
+          <div class="metric__k">Profiles</div>
+          <div class="metric__v">4 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400">of 6 confirmed</span></div>
+          <div class="metric__d">Ravi, Nikhil — not yet</div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">Documents</div>
+          <div class="metric__v" style="color:var(--bad)">1 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-2)">expired</span></div>
+          <div class="metric__d">plus 2 warning, 8 fine</div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">Links</div>
+          <div class="metric__v">5 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400">active</span></div>
+          <div class="metric__d">1 revoked · 0 never sent</div>
+        </div>
+        <div class="metric">
+          <div class="metric__k">Expiring</div>
+          <div class="metric__v" style="color:var(--info)">1</div>
+          <div class="metric__d">Lena · 12 days</div>
+        </div>
+      </div>
+
+      <!-- ─────────────────────────────────────────────────────── roster -->
+      <div class="card">
+        <div class="card__head">
+          <h2>Everyone on this trip</h2>
+          <span style="flex:1"></span>
+          <span class="t-eyebrow">6 people</span>
+        </div>
+
+        <details style="border-bottom:1px solid var(--line-2)" id="p-nikhil">
+          <summary class="wait" data-state="bad" style="list-style:none;cursor:pointer">
+            <span class="wait__ic wait__ic--bad">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Nikhil Rao <span class="dim" style="font-weight:400;font-size:12px">· Mumbai</span></span>
+              <span class="wait__d">
+                <span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Not confirmed</span>
+                <span class="dash">·</span>
+                <span class="pill pill--4">Expired</span> <span class="dim" style="font-size:11.5px">1 document</span>
+                <span class="dash">·</span>
+                <span class="state state--bad" style="font-size:11.5px"><span class="state__dot"></span>Revoked 14 Jul</span>
+              </span>
+            </span>
+            <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div style="padding:14px 16px 16px 53px;background:var(--surface-2);border-top:1px solid var(--line-2)">
+            <p class="t-meta" style="margin:0 0 10px;font-size:12.5px;max-width:64ch">
+              <b style="color:var(--ink)">Blocking two things:</b> his passport expires
+              <span class="mono">2 Nov 2026</span>, four days before you land — he cannot travel on it and
+              a renewal takes weeks. And he currently has no way to open the trip at all, so he can't be
+              asked to fix it himself.</p>
+            <div class="rowline">
+              <button class="btn btn--primary" data-open-modal="newlink">Give Nikhil a new link</button>
+              <button class="btn" data-open-modal="remove">Remove from this trip</button>
+              <a class="btn" href="person.html#state=expired">See his profile</a>
+            </div>
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--line-2)" id="p-meera">
+          <summary class="wait" data-state="warn" style="list-style:none;cursor:pointer">
+            <span class="wait__ic wait__ic--warn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Meera Iyer <span class="dim" style="font-weight:400;font-size:12px">· Bengaluru</span></span>
+              <span class="wait__d">
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+                <span class="dash">·</span>
+                <span class="pill pill--3">Warning</span> <span class="dim" style="font-size:11.5px">1 document</span>
+                <span class="dash">·</span>
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span>
+              </span>
+            </span>
+            <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div style="padding:14px 16px 16px 53px;background:var(--surface-2);border-top:1px solid var(--line-2)">
+            <p class="t-meta" style="margin:0 0 10px;font-size:12.5px;max-width:64ch">
+              <b style="color:var(--ink)">Blocking nothing.</b> Her passport is valid for the whole trip —
+              it expires <span class="mono">12 Jan 2027</span>, two months after you're back. Worth
+              renewing before her next trip, not this one.</p>
+            <div class="rowline">
+              <button class="btn" data-open-modal="relink">Generate a new link</button>
+              <button class="btn" data-open-modal="revoke">Revoke</button>
+              <button class="btn" data-open-modal="expiry">Set expiry</button>
+              <button class="btn" data-open-modal="remove">Remove from this trip</button>
+            </div>
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--line-2)" id="p-daniel">
+          <summary class="wait" data-state="warn" style="list-style:none;cursor:pointer">
+            <span class="wait__ic wait__ic--warn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Daniel Weiss <span class="dim" style="font-weight:400;font-size:12px">· Berlin</span></span>
+              <span class="wait__d">
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+                <span class="dash">·</span>
+                <span class="pill pill--3">Warning</span> <span class="dim" style="font-size:11.5px">2 documents</span>
+                <span class="dash">·</span>
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span>
+              </span>
+            </span>
+            <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div style="padding:14px 16px 16px 53px;background:var(--surface-2);border-top:1px solid var(--line-2)">
+            <p class="t-meta" style="margin:0 0 10px;font-size:12.5px;max-width:64ch">
+              <b style="color:var(--ink)">Blocking nothing.</b> Passport is fine to 2031. His Cambodia
+              e-visa expires <span class="mono">20 Nov 2026</span> — five days after you're home, so it
+              covers the trip, but there's no reason to leave it that close.</p>
+            <div class="rowline">
+              <button class="btn" data-open-modal="relink">Generate a new link</button>
+              <button class="btn" data-open-modal="revoke">Revoke Daniel's link</button>
+              <button class="btn" data-open-modal="expiry">Set expiry</button>
+              <button class="btn" data-open-modal="remove">Remove from this trip</button>
+            </div>
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--line-2)" id="p-ravi">
+          <summary class="wait" data-state="muted" style="list-style:none;cursor:pointer">
+            <span class="wait__ic">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Ravi Menon <span class="dim" style="font-weight:400;font-size:12px">· Bengaluru</span></span>
+              <span class="wait__d">
+                <span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Not confirmed</span>
+                <span class="dash">·</span>
+                <span class="dim" style="font-size:11.5px">No documents yet</span>
+                <span class="dash">·</span>
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span>
+              </span>
+            </span>
+            <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div style="padding:14px 16px 16px 53px;background:var(--surface-2);border-top:1px solid var(--line-2)">
+            <p class="t-meta" style="margin:0 0 10px;font-size:12.5px;max-width:64ch">
+              <b style="color:var(--ink)">Blocking his own readiness.</b> He opened his link
+              <span class="mono">6 days ago</span> and stopped before confirming his profile or adding
+              any documents. Nothing you can fix for him — a nudge in the group chat is the only lever.</p>
+            <div class="rowline">
+              <button class="btn" data-open-modal="relink">Generate a new link</button>
+              <button class="btn" data-open-modal="revoke">Revoke</button>
+              <button class="btn" data-open-modal="expiry">Set expiry</button>
+              <button class="btn" data-open-modal="remove">Remove from this trip</button>
+            </div>
+          </div>
+        </details>
+
+        <details style="border-bottom:1px solid var(--line-2)" id="p-lena">
+          <summary class="wait" data-state="info" style="list-style:none;cursor:pointer">
+            <span class="wait__ic" style="background:var(--info-wash);color:var(--info)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Lena Hoffmann <span class="dim" style="font-weight:400;font-size:12px">· Munich</span></span>
+              <span class="wait__d">
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+                <span class="dash">·</span>
+                <span class="dim" style="font-size:11.5px">1 document, fine to 2029</span>
+                <span class="dash">·</span>
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active — expires in 12 days</span>
+              </span>
+            </span>
+            <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div style="padding:14px 16px 16px 53px;background:var(--surface-2);border-top:1px solid var(--line-2)">
+            <p class="t-meta" style="margin:0 0 10px;font-size:12.5px;max-width:64ch">
+              <b style="color:var(--ink)">Blocking nothing, but on a clock.</b> Her link carries an
+              expiry — it stops working on <span class="mono">10 Aug 2026</span> whether or not she's
+              used it by then. That's still well before departure, so there's time to extend it.</p>
+            <div class="rowline">
+              <button class="btn btn--primary" data-open-modal="expiry">Change the expiry</button>
+              <button class="btn" data-open-modal="relink">Generate a new link</button>
+              <button class="btn" data-open-modal="revoke">Revoke</button>
+              <button class="btn" data-open-modal="remove">Remove from this trip</button>
+            </div>
+          </div>
+        </details>
+
+        <details id="p-asha">
+          <summary class="wait" data-state="info" style="list-style:none;cursor:pointer">
+            <span class="wait__ic" style="background:var(--ok-wash);color:var(--ok)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            </span>
+            <span>
+              <span class="wait__n">Asha Kumar <span class="dim" style="font-weight:400;font-size:12px">· Chennai</span></span>
+              <span class="wait__d">
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+                <span class="dash">·</span>
+                <span class="dim" style="font-size:11.5px">1 document, fine to 2032</span>
+                <span class="dash">·</span>
+                <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span>
+              </span>
+            </span>
+            <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+          </summary>
+          <div style="padding:14px 16px 16px 53px;background:var(--surface-2);border-top:1px solid var(--line-2)">
+            <p class="t-meta" style="margin:0 0 10px;font-size:12.5px;max-width:64ch">
+              <b style="color:var(--ink)">Blocking nothing.</b> Profile confirmed, one document good
+              until 2032, link active. Nothing here needs you.</p>
+            <div class="rowline">
+              <button class="btn" data-open-modal="relink">Generate a new link</button>
+              <button class="btn" data-open-modal="revoke">Revoke</button>
+              <button class="btn" data-open-modal="expiry">Set expiry</button>
+              <button class="btn" data-open-modal="remove">Remove from this trip</button>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ─────────────────────────────────────────────────── link history -->
+      <div class="card" style="margin-top:16px">
+        <div class="card__head">
+          <h2>Link history</h2>
+          <span style="flex:1"></span>
+          <span class="t-eyebrow">who currently has access</span>
+        </div>
+        <div class="subcard dtable__scroll">
+          <table class="dtable">
+            <thead><tr><th>Person</th><th>Created</th><th>Expires</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#p-asha">Asha Kumar</a></td><td class="mono">2 Jun 2026</td>
+                <td class="dim" style="font-style:italic">No expiry set</td>
+                <td><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Active</span></td></tr>
+              <tr><td><a href="#p-meera">Meera Iyer</a></td><td class="mono">2 Jun 2026</td>
+                <td class="dim" style="font-style:italic">No expiry set</td>
+                <td><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Active</span></td></tr>
+              <tr><td><a href="#p-daniel">Daniel Weiss</a></td><td class="mono">5 Jun 2026</td>
+                <td class="dim" style="font-style:italic">No expiry set</td>
+                <td><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Active</span></td></tr>
+              <tr><td><a href="#p-lena">Lena Hoffmann</a></td><td class="mono">5 Jun 2026</td>
+                <td class="mono">10 Aug 2026 <span class="dim" style="font-size:11px">· 12 days</span></td>
+                <td><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Active</span></td></tr>
+              <tr><td><a href="#p-ravi">Ravi Menon</a></td><td class="mono">9 Jun 2026</td>
+                <td class="dim" style="font-style:italic">No expiry set</td>
+                <td><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Active</span></td></tr>
+              <tr><td><a href="#p-nikhil">Nikhil Rao</a></td><td class="mono">9 Jun 2026</td>
+                <td class="dash">—</td>
+                <td><span class="state state--bad" style="font-size:12px"><span class="state__dot"></span>Revoked 14 Jul</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="side__card">
+        <h3 class="side__t">About access links</h3>
+        <p class="t-meta" style="margin:0 0 10px;font-size:12px;line-height:1.6">A link is the only way
+          someone without an account gets into their piece of the trip. No password, no account —
+          just a token in the URL.</p>
+        <div class="hr hr--tight"></div>
+        <ul class="privacy" style="grid-template-columns:1fr;gap:8px;display:grid">
+          <li style="display:grid;grid-template-columns:15px minmax(0,1fr);gap:7px;font-size:12px;color:var(--ink-2)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" style="margin-top:2px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+            <span>Tokens are stored <b style="color:var(--ink)">hashed</b>, the same way a password
+              would be. Nobody — including you — can look up or re-display an existing link.</span></li>
+          <li style="display:grid;grid-template-columns:15px minmax(0,1fr);gap:7px;font-size:12px;color:var(--ink-2)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" style="margin-top:2px"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>That's why the raw link is shown to you <b style="color:var(--ink)">exactly once</b>,
+              right after it's created — and why the recovery for a lost, revoked or expired link is
+              always the same: generate a new one.</span></li>
+        </ul>
+      </div>
+      <div class="side__card">
+        <h3 class="side__t">Why this order</h3>
+        <p class="t-meta" style="margin:0;font-size:12px;line-height:1.6">Whoever is blocking the trip
+          most sits at the top — an expired passport and a dead link outrank a routine renewal.
+          <b>§2.6 asks for actionability, not a percentage</b> — there is no readiness score anywhere
+          on this page.</p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ 20 people -->
+  <div data-when="twenty">
+    <div class="metrics" style="margin-bottom:16px">
+      <div class="metric"><div class="metric__k">Profiles</div>
+        <div class="metric__v">14 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400">of 20 confirmed</span></div></div>
+      <div class="metric"><div class="metric__k">Documents</div>
+        <div class="metric__v" style="color:var(--bad)">2 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400;color:var(--ink-2)">expired</span></div>
+        <div class="metric__d">plus 4 warning</div></div>
+      <div class="metric"><div class="metric__k">Links</div>
+        <div class="metric__v">17 <span class="dim" style="font-family:var(--sans);font-size:12px;font-weight:400">active</span></div>
+        <div class="metric__d">1 revoked · 2 never sent</div></div>
+      <div class="metric"><div class="metric__k">Expiring</div>
+        <div class="metric__v" style="color:var(--info)">2</div>
+        <div class="metric__d">within 5 days</div></div>
+    </div>
+    <div class="card">
+      <div class="card__head"><h2>Everyone on this trip</h2><span style="flex:1"></span><span class="t-eyebrow">20 people</span></div>
+
+      <button class="wait" data-state="warn" data-href="person.html">
+        <span class="wait__ic wait__ic--warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span>
+        <span><span class="wait__n">Rohan Shah <span class="dim" style="font-weight:400;font-size:12px">· Mumbai</span></span>
+          <span class="wait__d"><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+            <span class="dash">·</span><span class="pill pill--4">Expired</span> <span class="dim" style="font-size:11.5px">1 document</span>
+            <span class="dash">·</span><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="warn" data-href="person.html">
+        <span class="wait__ic wait__ic--warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span>
+        <span><span class="wait__n">Sanjay Rao <span class="dim" style="font-weight:400;font-size:12px">· Hyderabad</span></span>
+          <span class="wait__d"><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+            <span class="dash">·</span><span class="pill pill--4">Expired</span> <span class="dim" style="font-size:11.5px">1 document</span>
+            <span class="dash">·</span><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="bad" data-href="person.html">
+        <span class="wait__ic wait__ic--bad"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/></svg></span>
+        <span><span class="wait__n">Vikram Nath <span class="dim" style="font-weight:400;font-size:12px">· Bengaluru</span></span>
+          <span class="wait__d"><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Not confirmed</span>
+            <span class="dash">·</span><span class="pill pill--3">Warning</span> <span class="dim" style="font-size:11.5px">1 document</span>
+            <span class="dash">·</span><span class="state state--bad" style="font-size:11.5px"><span class="state__dot"></span>Revoked 3 Jul</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="muted" data-href="person.html">
+        <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+        <span><span class="wait__n">Sneha Reddy <span class="dim" style="font-weight:400;font-size:12px">· Hyderabad</span></span>
+          <span class="wait__d"><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Not confirmed</span>
+            <span class="dash">·</span> <span class="dim" style="font-size:11.5px">No documents yet</span>
+            <span class="dash">·</span><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="muted" data-href="person.html">
+        <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/></svg></span>
+        <span><span class="wait__n">Divya Pillai <span class="dim" style="font-weight:400;font-size:12px">· Bengaluru</span></span>
+          <span class="wait__d"><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Not confirmed</span>
+            <span class="dash">·</span> <span class="dim" style="font-size:11.5px">No documents yet</span>
+            <span class="dash">·</span><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>No link sent</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="muted" data-href="person.html">
+        <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/></svg></span>
+        <span><span class="wait__n">Kavya Menon <span class="dim" style="font-weight:400;font-size:12px">· Kochi</span></span>
+          <span class="wait__d"><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Not confirmed</span>
+            <span class="dash">·</span> <span class="dim" style="font-size:11.5px">No documents yet</span>
+            <span class="dash">·</span><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>No link sent</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="info" data-href="person.html">
+        <span class="wait__ic" style="background:var(--info-wash);color:var(--info)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+        <span><span class="wait__n">Karthik Iyer <span class="dim" style="font-weight:400;font-size:12px">· Pune</span></span>
+          <span class="wait__d"><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+            <span class="dash">·</span> <span class="dim" style="font-size:11.5px">1 document, fine</span>
+            <span class="dash">·</span><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active — expires in 5 days</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="info" data-href="person.html">
+        <span class="wait__ic" style="background:var(--info-wash);color:var(--info)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+        <span><span class="wait__n">Laura Becker <span class="dim" style="font-weight:400;font-size:12px">· Munich</span></span>
+          <span class="wait__d"><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span>
+            <span class="dash">·</span> <span class="dim" style="font-size:11.5px">1 document, fine</span>
+            <span class="dash">·</span><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active — expires in 3 days</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+      <button class="wait" data-state="muted" data-href="person.html">
+        <span class="wait__ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+        <span><span class="wait__n">Fatima Sheikh <span class="dim" style="font-weight:400;font-size:12px">· Bengaluru</span></span>
+          <span class="wait__d"><span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Not confirmed</span>
+            <span class="dash">·</span> <span class="dim" style="font-size:11.5px">No documents yet</span>
+            <span class="dash">·</span><span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Active link</span></span></span>
+        <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+      </button>
+
+      <!-- the remaining eleven: all fine, folded to keep the awkward-scale case honest without padding it out -->
+      <div style="padding:9px 16px;background:var(--surface-2);border-top:1px solid var(--line-2);font-size:12px;color:var(--ink-2)">
+        Plus <b style="color:var(--ink)">11 more</b> — Priya Nair, Arjun Menon, Ananya Rao, Priyanka
+        Desai, Suresh Kumar, Aditya Verma, Neha Gupta, Tom Fischer, Ramesh Pillai, Meenal Joshi and
+        Arvind Krishnan — all confirmed, documents fine, links active. Nothing here needs you.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ empty -->
+  <div class="split" data-when="empty">
+    <div class="stack">
+      <div class="blank">
+        <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+        <div>
+          <h4>Nobody is on this trip yet</h4>
+          <p>No participants, so nothing below has anywhere to attach — no links to issue, no
+            readiness to track, nobody to ask for a document. Add people from your directory to
+            start.</p>
+          <div class="blank__act">
+            <button class="btn btn--primary" data-open-modal="addperson">Add people from the directory</button>
+          </div>
+        </div>
+      </div>
+      <div class="blank">
+        <span class="blank__icon" style="background:var(--hatch-off);border:1px dashed var(--dash-line)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+        <div>
+          <h4>If the directory itself has nobody in it</h4>
+          <p>This is the harder version of the same gap: a brand-new account with no people saved at
+            all yet. "Add someone from the directory" has nobody to offer — the directory is where a
+            person is created in the first place, and it's shared across every trip you'll ever run.</p>
+          <div class="blank__act">
+            <a class="btn" href="people.html#state=empty">Add a person to the directory first</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="side__card">
+        <h3 class="side__t">Why this isn't an error</h3>
+        <p class="t-meta" style="margin:0;font-size:12px;line-height:1.6">A trip is allowed to exist
+          with nobody on it — that's just early. Nothing here nags you to fix it on a timer.</p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ loading -->
+  <div data-when="loading">
+    <div class="metrics" style="margin-bottom:16px">
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:8px"></span></div>
+    </div>
+    <div class="card">
+      <div class="skrow" style="grid-template-columns:26px minmax(0,1fr) 150px"><span class="sk" style="width:26px;height:26px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span class="sk sk--num"></span></div>
+      <div class="skrow" style="grid-template-columns:26px minmax(0,1fr) 150px"><span class="sk" style="width:26px;height:26px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span class="sk sk--num"></span></div>
+      <div class="skrow" style="grid-template-columns:26px minmax(0,1fr) 150px"><span class="sk" style="width:26px;height:26px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span class="sk sk--num"></span></div>
+      <div class="skrow" style="grid-template-columns:26px minmax(0,1fr) 150px"><span class="sk" style="width:26px;height:26px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span class="sk sk--num"></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ load failed -->
+  <div data-when="failed">
+    <div class="blank blank--bad">
+      <span class="blank__icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <div>
+        <h4>The roster didn't load</h4>
+        <p>The server answered, but not with the people on this trip — <span class="mono">503</span>
+          from the API at <span class="mono">09:41</span>. Nobody has been removed and no link has
+          changed; this is a read that failed, not an empty trip.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:loading">Try loading it again</button>
+          <a class="btn" href="trip.html">Back to the board</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════ NEW LINK: the one-time reveal — the sharpest edge on this page -->
+<div class="modal" id="newlink" role="dialog" aria-modal="true" aria-labelledby="nl-t" data-when="newlink noclipboard" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+      <h2 id="nl-t">Nikhil's new link is ready</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <div class="banner banner--bad">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <div><b>You will not see this link again after you close this window.</b> Copy it now, before
+          you navigate anywhere else — not after.</div>
+      </div>
+      <div data-copy-scope style="margin-top:14px">
+        <label class="fg" style="margin-bottom:8px">
+          <span class="fg__l">Nikhil's link</span>
+          <span class="inp"><input type="text" readonly value="https://tripper.app/j/8f2c9a41e07b4c1d" style="font-size:12px" aria-label="Nikhil's one-time access link"></span>
+        </label>
+        <button class="btn btn--primary" data-copy="https://tripper.app/j/8f2c9a41e07b4c1d">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>
+          Copy the link
+        </button>
+        <div class="copyfall" data-copy-fallback data-when="noclipboard" hidden>
+          <span class="fg__h" style="margin-top:0">Clipboard access was blocked by the browser. Select
+            the text below and copy it manually — this is still the only chance:</span>
+          <input type="text" readonly value="https://tripper.app/j/8f2c9a41e07b4c1d" aria-label="Select to copy manually">
+        </div>
+      </div>
+      <div class="hr hr--tight"></div>
+      <ul class="damage" style="margin:0">
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+          <span>Stored hashed, not as text
+            <span class="damage__d">Even we can't look this exact link up again. Lost it before Nikhil opens it? Generate another — that revokes this one and starts over.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>No expiry set on this one
+            <span class="damage__d">It stays active until you revoke it. <button class="linkish" data-close data-open-modal="expiry">Give it one instead</button></span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn--primary" data-close>I've copied it — done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ RE-ISSUE: warn before killing an existing link -->
+<div class="modal" id="relink" role="dialog" aria-modal="true" aria-labelledby="rl-t" data-when="relink" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg></span>
+      <h2 id="rl-t">Generate a new link for Meera Iyer?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p><b>Her current link is active.</b> A person can only ever have one working link at a time, so
+        making a new one <b>immediately breaks the one she has now</b> — even if it's saved in her
+        messages or already open in her browser.</p>
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>Her existing link stops working the moment you confirm
+            <span class="damage__d">Not at the end of the day — immediately, mid-session if she's in one.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>Her profile, documents and checklist progress are untouched
+            <span class="damage__d">Only the link changes — nothing she's filled in is affected.</span></span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>You'll see the new one exactly once, right after this</span></li>
+      </ul>
+      <p class="t-meta" style="font-size:12px">Only worth doing if she's lost the old one, or you
+        suspect it's been shared with someone it shouldn't have been.</p>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep her current link</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close data-set="state:newlink">Generate a new link, breaking the old</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ REVOKE: immediate, irreversible -->
+<div class="modal" id="revoke" role="dialog" aria-modal="true" aria-labelledby="rv-t" data-when="revoke" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l2.6-2.6a4 4 0 00-5.7-5.7L11.5 7"/><path d="M14 10a4 4 0 00-5.7 0L5.7 12.6a4 4 0 005.7 5.7L12.5 17"/></svg></span>
+      <h2 id="rv-t">Revoke Daniel Weiss's link?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p><b>Immediate and irreversible.</b> The moment you confirm, his link stops opening for anyone
+        who has it — there is no undo button for this one.</p>
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>His link stops working right now
+            <span class="damage__d">Not "next time he tries" — this instant, even mid-session.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>His profile and documents stay exactly as they are
+            <span class="damage__d">Revoking a link never touches what he's already told you.</span></span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+          <span>It stays revoked for good — re-issuing is the recovery
+            <span class="damage__d">Tokens are hashed, so there is nothing to "un-revoke". A fresh link
+              is a new hash, generated whenever he needs access again.</span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep it active</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--danger" data-close>Revoke Daniel's link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ REMOVE: taking someone off the trip entirely -->
+<div class="modal" id="remove" role="dialog" aria-modal="true" aria-labelledby="rm-t" data-when="remove" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8.5" r="3.4"/><path d="M2.6 20c0-3.4 2.9-5.3 6.4-5.3M15 8h6M18 5v6"/></svg></span>
+      <h2 id="rm-t">Remove Ravi Menon from this trip?</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <p>This is about the <b>trip</b>, not the person — everything that belongs to him personally
+        stays in your directory for next time.</p>
+      <ul class="damage">
+        <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>His link to this trip stops working immediately
+            <span class="damage__d">Same as a revoke — hashed, so it can't be undone by adding him back with the same link.</span></span></li>
+        <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+          <span>He drops off this trip's checklist and budget split
+            <span class="damage__d">Nothing was assigned to him yet, so there's nothing to reassign this time — that won't always be true.</span></span></li>
+        <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+          <span>His profile and documents stay in your directory
+            <span class="damage__d">Those belong to him, not this trip — they'll be there, pre-filled, next time you add him to one.</span></span></li>
+        <li data-k="info"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <span>Adding him back later means a brand-new link
+            <span class="damage__d">Not restoring this one — it's gone the same way a revoked one is.</span></span></li>
+      </ul>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Keep him on the trip</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--danger" data-close>Remove Ravi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ EXPIRY: optional, in days, off by default -->
+<div class="modal" id="expiry" role="dialog" aria-modal="true" aria-labelledby="ex-t" data-when="expiry" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <span class="modal__ic modal__ic--info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+      <h2 id="ex-t">Lena Hoffmann's link expiry</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <div class="facts" style="margin-bottom:14px">
+        <div class="fact fact--info"><div class="fact__k">Currently expires</div><div class="fact__v"><span class="mono">10 Aug 2026</span></div><div class="fact__d">12 days from today</div></div>
+        <div class="fact"><div class="fact__k">Link created</div><div class="fact__v"><span class="mono">5 Jun 2026</span></div></div>
+      </div>
+      <label class="fg">
+        <span class="fg__l">Expires in <span class="fg__opt">optional — most links have none</span></span>
+        <span class="inp"><input id="ex-days" type="number" value="12" min="0" step="1" aria-describedby="ex-h"><span class="inp__pre" style="border-right:0;border-left:1px solid var(--line)">days</span></span>
+        <span class="fg__h" id="ex-h">Counted from today, not from when the link was created. Set to
+          <span class="mono">0</span> or clear it for no expiry at all.</span>
+      </label>
+      <div class="banner" style="margin-top:4px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <div>When an expiry passes, the link behaves exactly like a revoked one — gone, with re-issuing
+          as the only way back. Nothing warns her in advance from inside the app.</div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn" data-close>Cancel</button>
+      <span class="modal__sp"></span>
+      <button class="btn btn--primary" data-close>Save expiry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ add someone from the directory -->
+<div class="modal" id="addperson" role="dialog" aria-modal="true" aria-labelledby="ap-t" hidden>
+  <div class="modal__panel">
+    <div class="modal__head">
+      <h2 id="ap-t">Add someone to this trip</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <div class="search" style="margin-bottom:2px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        <input type="text" placeholder="Search your directory…" data-autofocus>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--line);margin-top:10px">
+      <button class="pal__r" style="grid-template-columns:32px minmax(0,1fr) auto;padding:10px 20px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">PN</span>
+        <span><span class="pal__n">Priya Nair</span><span class="pal__d">Kochi · on 2 other trips</span></span>
+        <span class="btn btn--sm" style="height:28px">Add</span>
+      </button>
+      <button class="pal__r" style="grid-template-columns:32px minmax(0,1fr) auto;padding:10px 20px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">AV</span>
+        <span><span class="pal__n">Aditya Verma</span><span class="pal__d">Jaipur · on 1 other trip</span></span>
+        <span class="btn btn--sm" style="height:28px">Add</span>
+      </button>
+      <button class="pal__r" style="grid-template-columns:32px minmax(0,1fr) auto;padding:10px 20px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">TF</span>
+        <span><span class="pal__n">Tom Fischer</span><span class="pal__d">Berlin · new to your directory</span></span>
+        <span class="btn btn--sm" style="height:28px">Add</span>
+      </button>
+    </div>
+    <div class="modal__foot">
+      <span class="t-meta" style="font-size:12px">Can't find them?</span>
+      <a class="btn" href="people.html#state=newperson" style="margin-left:auto">Add a brand-new person</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

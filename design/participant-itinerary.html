@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Itinerary · Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">State</span>
+      <button class="rev__b" data-v="today" aria-pressed="true">Mid-trip · today</button>
+      <button class="rev__b" data-v="beforetrip">Before it starts</button>
+      <button class="rev__b" data-v="daydetail">One day, in full</button>
+      <button class="rev__b" data-v="emptyday">A deliberately empty day</button>
+      <button class="rev__b" data-v="stale">Loaded a while ago</button>
+      <button class="rev__b" data-v="notbuilt">Not built yet</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+    </span>
+    <span class="rev__grp" data-axis="lens">
+      <span class="rev__lbl">Read in</span>
+      <button class="rev__b" data-v="inr" aria-pressed="true">INR</button>
+      <button class="rev__b" data-v="eur">EUR</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<div class="revnote">
+  <span class="revnote__k">Note</span>
+  <div>Read-only everywhere — no grab handles, no edit icons, no delete. Unlike
+    <a href="participant.html">participant.html</a>'s personal sections, the itinerary is the one thing
+    the whole group already shares in the real world, so it isn't scoped to "you only" — every
+    participant sees the same ten days. What stays private is everyone's own packing line at the bottom
+    of each day, which only shows here as "yours".</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<main class="pshell">
+
+  <div class="ptop">
+    <div class="ptop__t"><h1>Vietnam &amp; Cambodia 2026</h1></div>
+    <div class="ptop__left">
+      <span data-when="today stale">Day <span class="mono">3</span> of <span class="mono">10</span> · <span class="mono">Sun 8 Nov</span></span>
+      <span data-when="beforetrip">Leaves in <span class="mono">142</span> days</span>
+      <span data-when="daydetail">Day <span class="mono">5</span> of <span class="mono">10</span></span>
+      <span data-when="emptyday">Day <span class="mono">9</span> of <span class="mono">10</span></span>
+      <span data-when="notbuilt">Not built yet</span>
+      <span data-when="loading">Loading…</span>
+      <span style="flex:1"></span>
+      <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in" data-when-not="notbuilt loading" style="height:28px;padding:0 7px 0 9px">
+        <span class="lens__eyebrow">View in</span><span data-lens-label>INR</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ page loading -->
+  <div data-when="loading" style="padding:16px">
+    <div class="stack">
+      <span class="sk sk--block" style="height:150px"></span>
+      <span class="sk sk--block" style="height:90px"></span>
+    </div>
+  </div>
+
+  <div data-when-not="loading" style="padding:0 16px 16px">
+
+    <!-- ══════════════════════════════════════════════════════ dependency-blocked -->
+    <div data-when="notbuilt" style="padding-top:16px">
+      <div class="blank">
+        <span class="blank__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+        <div>
+          <h4>There's no day-by-day plan yet</h4>
+          <p>The dates for this trip aren't settled, and the days come from the dates — so there's
+            nothing to show here yet. Once the organiser confirms when you're going, this page fills in
+            on its own.</p>
+        </div>
+      </div>
+      <div class="reassure" style="margin-top:12px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11a5 5 0 110 10H8"/><path d="M3 10l4-4M3 10l4 4"/></svg>
+        <div>Nothing to check back for constantly — you'll have the same link either way.
+          <a href="participant.html">Back to your details</a></div>
+      </div>
+    </div>
+
+    <div data-when-not="notbuilt">
+
+      <!-- stale: loaded a while ago -->
+      <div class="banner" style="margin:16px 0 0" data-when="stale">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg>
+        <div>Loaded at <span class="mono">09:12</span> this morning. Pull down, or
+          <button class="linkish" data-set="state:today">tap to check for changes</button>.</div>
+      </div>
+
+      <!-- before the trip starts -->
+      <div class="banner banner--info" style="margin:16px 0 0" data-when="beforetrip">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <div>Nothing has started yet. <b>Day 1</b> is next, on <span class="mono">Fri 6 Nov</span> —
+          everything below can still change before then.</div>
+      </div>
+
+      <!-- back-link when looking at one day in isolation -->
+      <div style="margin-top:16px" data-when="daydetail">
+        <button class="linkish" data-set="state:today">&larr; Back to today</button>
+      </div>
+
+      <!-- ═══════════════════════════════════════ TODAY / STALE: today's day, in full -->
+      <div class="day" style="margin-top:16px" data-when="today stale">
+        <div class="day__head">
+          <span class="day__n"><span class="day__num">Day 3 · Today</span><span class="day__date">Sun 8 Nov</span></span>
+          <span class="day__where">Ha Long Bay</span>
+          <span class="day__sp"></span>
+          <span class="day__meta"><span class="mono" data-m data-inr="₹9,700" data-eur="≈ €89" data-vnd="">₹9,700</span> today</span>
+        </div>
+        <div class="anchor">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+          <span><b>One night on a Ha Long Bay junk</b> — the whole reason for stopping here. This is fixed;
+            nothing today moves around it.</span>
+        </div>
+        <div style="padding:11px 16px;border-bottom:1px solid var(--line-2)">
+          <span class="it__n">Transfer Hanoi → Ha Long pier</span>
+          <span class="it__d"><span class="catm">TR</span>Shared minivan, hotel pickup included</span>
+          <div class="rowline" style="justify-content:space-between;margin-top:7px">
+            <span class="it__t" style="padding-top:0">09:00–12:30</span>
+            <span class="it__cost mono" data-m data-inr="₹1,400" data-eur="≈ €13" data-vnd="">₹1,400</span>
+          </div>
+        </div>
+        <div style="padding:11px 16px;border-bottom:1px solid var(--line-2)">
+          <span class="it__n">Overnight on a Ha Long junk, Bai Tu Long</span>
+          <span class="it__d"><span class="catm">AC</span>Sunset kayaking included · bring a light jacket for the evening deck</span>
+          <div class="rowline" style="justify-content:space-between;margin-top:7px">
+            <span class="it__t" style="padding-top:0">16:00–09:00</span>
+            <span class="it__cost mono" data-m data-inr="₹8,300" data-eur="≈ €76" data-vnd="">₹8,300</span>
+          </div>
+        </div>
+        <div class="subcard" style="margin:0;border:0;border-top:1px solid var(--line-2);border-radius:0">
+          <div class="tick" data-done style="padding:9px 16px">
+            <input class="check" type="checkbox" checked disabled aria-label="Light rain jacket, packed">
+            <span><span class="tick__n" style="font-size:12.5px">Your packing for today: light rain jacket</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════ compact list of the rest -->
+      <div class="card" style="margin-top:14px" data-when="today stale beforetrip">
+        <div class="card__head"><h2 style="font-size:12.5px">All 10 days</h2></div>
+        <div data-when="beforetrip" class="row row--link" data-state="info" style="grid-template-columns:70px minmax(0,1fr) auto" data-href="#state=daydetail">
+          <span class="cell__l1"><span class="mono">6 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 1 · Hanoi arrival <span class="tag" style="margin-left:6px">Next</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="ok" style="grid-template-columns:70px minmax(0,1fr) auto" data-when="today stale" data-set="state:daydetail">
+          <span class="cell__l1"><span class="mono">6 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 1 · Hanoi arrival <span class="dim" style="margin-left:6px">4 items</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="ok" style="grid-template-columns:70px minmax(0,1fr) auto" data-when="today stale" data-set="state:daydetail">
+          <span class="cell__l1"><span class="mono">7 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 2 · Hanoi old quarter <span class="dim" style="margin-left:6px">5 items</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row" data-state="info" style="grid-template-columns:70px minmax(0,1fr) auto">
+          <span class="cell__l1"><span class="mono">8 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 3 · Ha Long Bay <span class="tag" style="margin-left:6px">Today</span></span>
+          <span></span>
+        </div>
+        <div class="row row--link" data-state="ok" style="grid-template-columns:70px minmax(0,1fr) auto" data-set="state:daydetail">
+          <span class="cell__l1"><span class="mono">9 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 4 · Back to Hanoi, fly to Hoi An <span class="dim" style="margin-left:6px">3 items</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="ok" style="grid-template-columns:70px minmax(0,1fr) auto" data-set="state:daydetail">
+          <span class="cell__l1"><span class="mono">10 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 5 · Hoi An tailoring <span class="dim" style="margin-left:6px">4 items</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="muted" style="grid-template-columns:70px minmax(0,1fr) auto" data-set="state:emptyday">
+          <span class="cell__l1"><span class="mono">11 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 6 · Hue <span class="dim" style="margin-left:6px">nothing planned</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="ok" style="grid-template-columns:70px minmax(0,1fr) auto" data-set="state:daydetail">
+          <span class="cell__l1"><span class="mono">12 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 7 · Hue → Ho Chi Minh City <span class="dim" style="margin-left:6px">3 items</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="ok" style="grid-template-columns:70px minmax(0,1fr) auto" data-set="state:daydetail">
+          <span class="cell__l1"><span class="mono">13 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 8 · Cross into Cambodia <span class="dim" style="margin-left:6px">4 items</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="muted" style="grid-template-columns:70px minmax(0,1fr) auto" data-set="state:emptyday">
+          <span class="cell__l1"><span class="mono">14 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 9 · Siem Reap <span class="dim" style="margin-left:6px">kept open</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="ok" style="grid-template-columns:70px minmax(0,1fr) auto" data-set="state:daydetail">
+          <span class="cell__l1"><span class="mono">15 Nov</span></span>
+          <span class="cell__l1" style="min-width:0">Day 10 · Angkor Wat, fly home <span class="dim" style="margin-left:6px">3 items</span></span>
+          <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════ ONE DAY, in full -->
+      <div class="day" style="margin-top:16px" data-when="daydetail">
+        <div class="day__head">
+          <span class="day__n"><span class="day__num">Day 5</span><span class="day__date">Tue 10 Nov</span></span>
+          <span class="day__where">Hoi An</span>
+          <span class="day__sp"></span>
+          <span class="day__meta"><span class="mono" data-m data-inr="₹6,400" data-eur="≈ €59" data-vnd="">₹6,400</span> that day</span>
+        </div>
+        <div class="anchor">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+          <span><b>Hoi An tailoring, with time for two fittings</b> — not tied to an exact date, but this
+            is the day the group agreed to use.</span>
+        </div>
+        <div style="padding:11px 16px;border-bottom:1px solid var(--line-2)">
+          <span class="it__n">First fitting, Yaly Couture</span>
+          <span class="it__d"><span class="catm">SH</span>Bring the reference photos from the group chat</span>
+          <div class="rowline" style="justify-content:space-between;margin-top:7px">
+            <span class="it__t" style="padding-top:0">09:30–11:30</span>
+            <span class="it__cost mono" data-m data-inr="₹4,200" data-eur="≈ €39" data-vnd="">₹4,200</span>
+          </div>
+        </div>
+        <div style="padding:11px 16px;border-bottom:1px solid var(--line-2)">
+          <span class="it__n">Walk the Ancient Town by lantern light</span>
+          <span class="it__d"><span class="catm">LE</span>Best after 18:00 once the lanterns are lit</span>
+          <div class="rowline" style="justify-content:space-between;margin-top:7px">
+            <span class="it__t it__t--none" style="padding-top:0">No fixed time</span>
+            <span class="it__cost dash">—</span>
+          </div>
+        </div>
+        <div style="padding:11px 16px;border-bottom:1px solid var(--line-2)">
+          <span class="it__n">Second fitting and collection</span>
+          <span class="it__d"><span class="catm">SH</span>Same tailor, evening slot</span>
+          <div class="rowline" style="justify-content:space-between;margin-top:7px">
+            <span class="it__t" style="padding-top:0">19:00–21:00</span>
+            <span class="it__cost mono" data-m data-inr="₹2,200" data-eur="≈ €20" data-vnd="">₹2,200</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════ a deliberately empty day -->
+      <div class="day" style="margin-top:16px" data-when="emptyday">
+        <div class="day__head">
+          <span class="day__n"><span class="day__num">Day 9</span><span class="day__date">Fri 14 Nov</span></span>
+          <span class="day__where">Siem Reap</span>
+        </div>
+        <div class="pstep__body" style="padding-top:16px">
+          <div class="banner banner--info">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+            <div><b>This day is empty on purpose.</b> "Keep two half-days completely unplanned" is one of
+              the trip's own goals — this isn't a gap the organiser forgot, it's free time to wander,
+              rest, or decide on the day.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /data-when-not notbuilt -->
+
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════ fixed bottom action bar -->
+<div class="pbar" data-when-not="loading">
+  <span class="pbar__l" data-when="today stale">Everything here is read-only — the organiser is the only
+    one who can change times, places or costs.</span>
+  <span class="pbar__l" data-when="beforetrip">Nothing to do yet. This screen fills in properly once
+    the trip starts.</span>
+  <span class="pbar__l" data-when="daydetail emptyday">Read-only — the organiser makes any changes.</span>
+  <span class="pbar__l" data-when="notbuilt">Check back once dates are settled.</span>
+  <a class="btn" href="participant.html">Back to your details</a>
+</div>
+
+<!-- ══════════════════════════════ the currency lens — a view control, nothing more -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:400px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">This only changes how amounts look on your screen. It doesn't change
+        the trip, and the organiser sees exactly the same figures either way.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">This trip's own currency</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">Daily reference rates from the
+        European Central Bank — a guide for reading amounts, not what a card issuer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

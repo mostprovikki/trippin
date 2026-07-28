@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI review · Vietnam &amp; Cambodia 2026 · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">AI feature</span>
+      <button class="rev__b" data-v="budget" aria-pressed="true">Budget</button>
+      <button class="rev__b" data-v="itinerary">Itinerary</button>
+      <button class="rev__b" data-v="day">One day</button>
+      <button class="rev__b" data-v="packing">Packing</button>
+      <button class="rev__b" data-v="destinations">Destinations</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Lifecycle</span>
+      <button class="rev__b" data-v="idle">Idle</button>
+      <button class="rev__b" data-v="generating">Generating</button>
+      <button class="rev__b" data-v="failed">Failed</button>
+      <button class="rev__b" data-v="aioff">AI off</button>
+      <button class="rev__b" data-v="applied">Applied</button>
+      <button class="rev__b" data-v="partial">Partial</button>
+      <button class="rev__b" data-v="discard">Discard</button>
+      <button class="rev__b" data-v="overwrite">Overwrite</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html" aria-current="page">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in">
+    <span class="lens__eyebrow">View in</span>
+    <span data-lens-label>INR</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell" style="max-width:1160px">
+
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="trips.html">Trips</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <a href="trip.html">Vietnam &amp; Cambodia 2026</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span>AI review</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0">
+        <h1>
+          <span data-when="budget failed applied partial discard overwrite">Review the AI's budget draft</span>
+          <span data-when="itinerary">Review the AI's itinerary draft</span>
+          <span data-when="day">Review the redraft of Day 3</span>
+          <span data-when="packing">Review suggested packing items</span>
+          <span data-when="destinations">Review suggested destinations</span>
+          <span data-when="idle">Draft the budget with AI</span>
+          <span data-when="generating">Generating the budget draft…</span>
+          <span data-when="aioff">AI drafting is off</span>
+        </h1>
+        <div class="thead__meta">
+          <span data-when="budget">Current on the left, the AI's draft on the right, row by row — keep
+            what's useful and skip the rest before anything changes.</span>
+          <span data-when="itinerary">Ten days, collapsed to a count each. Open a day to see exactly
+            what would change in it.</span>
+          <span data-when="day">From the instruction "redo day 3, more relaxed" — only Day 3 is
+            touched.</span>
+          <span data-when="packing">Items the AI thinks are missing from the shared packing list.</span>
+          <span data-when="destinations">Candidates the AI suggests for a trip that's still just an
+            idea, compared the same way everything else on this page is.</span>
+          <span data-when="idle">One pattern for every AI feature in Tripper — this is the moment
+            before you ask for anything.</span>
+          <span data-when="generating">Working, not stuck. This can take up to a minute.</span>
+          <span data-when="failed">Recoverable. Nothing you had before this is touched.</span>
+          <span data-when="aioff">A permanent, expected condition for this deployment — not an error.</span>
+          <span data-when="applied">What changed, and how to undo it while it's fresh.</span>
+          <span data-when="partial">What changed, what you chose to leave alone, and how to undo it.</span>
+          <span data-when="discard">Nothing is applied until you say so — including right now.</span>
+          <span data-when="overwrite">One category was hand-edited two days ago. Say so before it's
+            gone.</span>
+        </div>
+      </div>
+      <div class="thead__acts">
+        <a class="btn" href="trip-budget.html" data-when="budget idle generating failed aioff applied partial discard overwrite">Back to the budget</a>
+        <a class="btn" href="trip-itinerary.html" data-when="itinerary">Back to the itinerary</a>
+        <a class="btn" href="trip-itinerary.html#state=dayregen" data-when="day">Back to Day 3</a>
+        <a class="btn" href="trip-checklists.html" data-when="packing">Back to checklists</a>
+        <a class="btn" href="trip-destination.html#state=open" data-when="destinations">Back to destinations</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ idle ═══════ -->
+  <div data-when="idle">
+    <div class="card">
+      <div class="card__head"><h2>What the AI will be given</h2></div>
+      <div class="card__body">
+        <dl class="kv" style="grid-template-columns:180px minmax(0,1fr)">
+          <dt>Trip length</dt><dd><span class="mono">10 days</span>, 6–15 Nov 2026</dd>
+          <dt>Destination</dt><dd>Vietnam &amp; Cambodia</dd>
+          <dt>Travelling from</dt><dd>Bengaluru</dd>
+          <dt>Group size</dt><dd><span class="mono">6</span> participants, no names</dd>
+          <dt>Currency</dt><dd>INR — the trip's base currency</dd>
+          <dt>What's drafted so far</dt><dd><span class="mono">7 of 8</span> budget categories, totalling <span class="money" data-m data-inr="₹4,71,000" data-eur="≈ €4,320" data-vnd="">₹4,71,000</span></dd>
+        </dl>
+        <p class="t-meta" style="margin:12px 0 0;font-size:12px">Nothing below — names, documents,
+          phones, emails — is part of that request. See exactly what does and doesn't leave the
+          deployment further down this page.</p>
+      </div>
+      <div class="card__body" style="padding-top:0">
+        <button class="btn btn--primary" data-set="state:generating">Generate a draft</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ generating ═══ -->
+  <div class="gen" data-when="generating">
+    <div class="gen__bar"><i></i></div>
+    <h3>Drafting the budget…</h3>
+    <p>Working from your 10-day itinerary, 6 participants and the 7 categories already drafted. Your
+      current budget stays exactly as it is until you choose to apply anything.</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ failed ═══ -->
+  <div data-when="failed">
+    <div class="blank blank--bad">
+      <span class="blank__icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <div>
+        <h4>The draft didn't come through</h4>
+        <p>The AI service didn't respond in time. Nothing has changed — your <span class="mono">7 of 8</span>
+          drafted categories are exactly as they were before you asked. This is safe to try again.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:generating">Try again</button>
+          <button class="btn" data-set="state:idle">Not now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ AI off ═══ -->
+  <div class="aioff" data-when="aioff">
+    <span class="aioff__ic">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"/></svg>
+    </span>
+    <div>
+      <h4>AI drafting is off for this deployment</h4>
+      <p>That's expected, not broken — some deployments never turn it on, and everything on this trip
+        works fine without it. Draft the budget by hand on the budget page; every AI feature this page
+        stands in for (itinerary, per-day redo, packing, destinations) has an equivalent manual path
+        of its own.</p>
+      <div style="margin-top:10px"><a class="btn" href="trip-budget.html">Go draft it by hand</a></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ applied ══ -->
+  <div data-when="applied">
+    <div class="card">
+      <div class="card__head">
+        <span class="modal__ic modal__ic--ok" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+        <h2>Applied — 8 of 8 categories updated</h2>
+      </div>
+      <div class="card__body">
+        <p style="margin:0 0 10px">Including <b>Stay</b>, which overwrote Meera's hand edit from two
+          days ago — you chose to use the AI's number anyway.</p>
+        <div class="facts">
+          <div class="fact"><div class="fact__k">Before</div><div class="fact__v"><span class="money" data-m data-inr="₹4,71,000" data-eur="≈ €4,320" data-vnd="">₹4,71,000</span></div><div class="fact__d">7 of 8 drafted</div></div>
+          <div class="fact fact--ok"><div class="fact__k">After</div><div class="fact__v"><span class="money" data-m data-inr="₹4,78,200" data-eur="≈ €4,380" data-vnd="">₹4,78,200</span></div><div class="fact__d">8 of 8 drafted</div></div>
+        </div>
+      </div>
+      <div class="card__body" style="padding-top:0;display:flex;gap:10px;align-items:center">
+        <button class="btn" data-set="state:idle">Undo this apply</button>
+        <span class="t-meta" style="font-size:11.5px">Undo works while this confirmation is on screen.
+          After that, changing it back is a manual edit like any other.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ partial ══ -->
+  <div data-when="partial">
+    <div class="card">
+      <div class="card__head">
+        <span class="modal__ic modal__ic--ok" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg></span>
+        <h2>Applied — 7 of 8 categories updated</h2>
+      </div>
+      <div class="card__body">
+        <p style="margin:0 0 10px"><b>Stay</b> was left exactly as Meera hand-edited it two days ago —
+          that's what you chose when you skipped its row.</p>
+        <div class="facts">
+          <div class="fact"><div class="fact__k">Before</div><div class="fact__v"><span class="money" data-m data-inr="₹4,71,000" data-eur="≈ €4,320" data-vnd="">₹4,71,000</span></div><div class="fact__d">7 of 8 drafted</div></div>
+          <div class="fact fact--ok"><div class="fact__k">After</div><div class="fact__v"><span class="money" data-m data-inr="₹4,90,200" data-eur="≈ €4,500" data-vnd="">₹4,90,200</span></div><div class="fact__d">8 of 8 drafted · 1 kept as-is</div></div>
+        </div>
+      </div>
+      <div class="card__body" style="padding-top:0;display:flex;gap:10px;align-items:center">
+        <button class="btn" data-set="state:idle">Undo this apply</button>
+        <span class="t-meta" style="font-size:11.5px">Undo works while this confirmation is on screen.
+          After that, changing it back is a manual edit like any other.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ discard ══ -->
+  <div data-when="discard">
+    <div class="card" style="border-color:var(--bad-line)">
+      <div class="card__head">
+        <span class="modal__ic modal__ic--bad" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        <h2>Discard this draft?</h2>
+      </div>
+      <div class="card__body">
+        <ul class="damage">
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Your current budget is untouched
+              <span class="damage__d">7 of 8 categories, totalling ₹4,71,000 — nothing about it changes.</span></span></li>
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>This draft and its reasoning are gone
+              <span class="damage__d">Regenerating starts over — it won't remember which rows you'd already skipped.</span></span></li>
+        </ul>
+      </div>
+      <div class="card__body" style="padding-top:0;display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn" data-set="state:budget">Keep reviewing</button>
+        <button class="btn btn--danger" data-set="state:idle">Discard the draft</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ overwrite ═ -->
+  <div data-when="overwrite">
+    <div class="card" style="border-color:var(--warn-line)">
+      <div class="card__head">
+        <span class="modal__ic modal__ic--warn" style="width:26px;height:26px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg></span>
+        <h2>Applying will overwrite Stay, hand-edited two days ago</h2>
+      </div>
+      <div class="card__body">
+        <p style="margin:0 0 12px">Meera changed this category herself on <span class="mono">27 Jul</span>.
+          Applying the AI's number replaces her edit, not just the original estimate.</p>
+        <div class="cmp" style="margin:0">
+          <div class="cmp__head"><span>Meera's edit</span><span>AI's draft</span><span>Change</span><span></span></div>
+          <div class="cmp__row">
+            <span class="cmp__was"><span class="cmp__k">Stay</span>
+              <span class="money" data-m data-inr="₹1,08,000" data-eur="≈ €990" data-vnd="">₹1,08,000</span>
+              <span class="cmp__basis">Adjusted 27 Jul after the guesthouse changed its rate</span></span>
+            <span class="cmp__new"><span class="cmp__was-inline">Stay</span><span class="money" data-m data-inr="₹96,000" data-eur="≈ €880" data-vnd="">₹96,000</span>
+              <span class="cmp__basis">Assumes the cheaper guesthouse option in Hue — doesn't know
+                about the rate change Meera found</span></span>
+            <span class="cmp__delta cmp__delta--down">−₹12,000</span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+      <div class="card__body" style="padding-top:0;display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn" data-set="state:budget">Keep Meera's edit</button>
+        <button class="btn btn--primary" data-set="state:applied">Use the AI's number anyway</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ BUDGET ═══ -->
+  <div data-when="budget">
+    <div class="cmp">
+      <div class="cmp__head"><span>Current</span><span>AI draft</span><span>Change</span><span>Keep</span></div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Primary transport</span>
+          <span class="money" data-m data-inr="₹1,68,000" data-eur="≈ €1,540" data-vnd="">₹1,68,000</span>
+          <span class="cmp__basis">6 × return BLR–HAN and REP–BLR, Nov fares</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Primary transport</span>
+          <span class="money" data-m data-inr="₹1,68,000" data-eur="≈ €1,540" data-vnd="">₹1,68,000</span>
+          <span class="cmp__basis">Same fares, same basis — nothing to change</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Primary transport"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Secondary transport</span>
+          <span class="money" data-m data-inr="₹39,000" data-eur="≈ €360" data-vnd="">₹39,000</span>
+          <span class="cmp__basis">2 internal flights, 1 sleeper train, Grab everywhere</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Secondary transport</span>
+          <span class="money" data-m data-inr="₹45,000" data-eur="≈ €410" data-vnd="">₹45,000</span>
+          <span class="cmp__basis">A third internal flight, added for the Hue ↔ Hoi An leg</span></span>
+        <span class="cmp__delta cmp__delta--up">+₹6,000</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Secondary transport"></span>
+      </div>
+
+      <div class="cmp__row" data-skip>
+        <span class="cmp__was"><span class="cmp__k">Stay</span>
+          <span class="money" data-m data-inr="₹1,08,000" data-eur="≈ €990" data-vnd="">₹1,08,000</span>
+          <span class="cmp__basis">9 nights × 3 twin rooms × ₹4,000</span>
+          <span class="cmp__flag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L20 8l-4-4L4 16v4z"/></svg>Hand-edited 2 days ago</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Stay</span>
+          <span class="money" data-m data-inr="₹96,000" data-eur="≈ €880" data-vnd="">₹96,000</span>
+          <span class="cmp__basis">Assumes the cheaper guesthouse option in Hue — doesn't know about
+            Meera's rate-change edit</span></span>
+        <span class="cmp__delta cmp__delta--down">−₹12,000</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" aria-label="Keep the draft for Stay — currently skipped, keeping Meera's edit"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Food</span>
+          <span class="money" data-m data-inr="₹57,600" data-eur="≈ €530" data-vnd="">₹57,600</span>
+          <span class="cmp__basis">10 days × 6 people × ₹960, street food led</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Food</span>
+          <span class="money" data-m data-inr="₹64,800" data-eur="≈ €590" data-vnd="">₹64,800</span>
+          <span class="cmp__basis">Two more food-heavy evenings, in Hoi An and Siem Reap</span></span>
+        <span class="cmp__delta cmp__delta--up">+₹7,200</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Food"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Activities</span>
+          <span class="money" data-m data-inr="₹50,400" data-eur="≈ €460" data-vnd="">₹50,400</span>
+          <span class="cmp__basis">Ha Long junk, Angkor 3-day pass, cooking class</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Activities</span>
+          <span class="money" data-m data-inr="₹46,800" data-eur="≈ €430" data-vnd="">₹46,800</span>
+          <span class="cmp__basis">A lower group rate found for the Angkor pass, 6 people</span></span>
+        <span class="cmp__delta cmp__delta--down">−₹3,600</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Activities"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Shopping</span>
+          <span class="money" data-m data-inr="₹36,000" data-eur="≈ €330" data-vnd="">₹36,000</span>
+          <span class="cmp__basis">Hoi An tailoring, about ₹6,000 each</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Shopping</span>
+          <span class="money" data-m data-inr="₹33,000" data-eur="≈ €300" data-vnd="">₹33,000</span>
+          <span class="cmp__basis">The tailor's quote came in slightly under the old estimate</span></span>
+        <span class="cmp__delta cmp__delta--down">−₹3,000</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Shopping"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Leisure</span>
+          <span class="money" data-m data-inr="₹12,000" data-eur="≈ €110" data-vnd="">₹12,000</span>
+          <span class="cmp__basis">one beach afternoon, one spa evening</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Leisure</span>
+          <span class="money" data-m data-inr="₹15,600" data-eur="≈ €140" data-vnd="">₹15,600</span>
+          <span class="cmp__basis">Adds a second spa evening, in Siem Reap</span></span>
+        <span class="cmp__delta cmp__delta--up">+₹3,600</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Leisure"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Misc</span>
+          <span class="money money--none">Not drafted yet</span>
+          <span class="cmp__basis">Nothing entered so far</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Misc</span>
+          <span class="money" data-m data-inr="₹9,000" data-eur="≈ €83" data-vnd="">₹9,000</span>
+          <span class="cmp__basis">Buffer and visa-on-arrival fees — about 2% of the running total</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Misc"></span>
+      </div>
+    </div>
+
+    <div class="actionbar" style="position:static;margin-top:14px">
+      <span class="actionbar__l"><b>Applying updates 7 of 8 categories</b> and drafts Misc for the
+        first time. Stay stays at Meera's hand-edited <b class="mono">₹1,08,000</b> —
+        <button class="linkish" data-set="state:overwrite">see what overwriting it would mean</button>.
+        Total: <b class="mono">₹4,71,000 → ₹4,90,200</b>.</span>
+      <span class="actionbar__spacer"></span>
+      <button class="btn" data-set="state:discard">Discard</button>
+      <button class="btn btn--primary" data-set="state:partial">Apply 7 categories</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ ITINERARY ═══ -->
+  <div data-when="itinerary">
+    <div class="cmp">
+      <div class="cmp__head"><span>Current</span><span>AI draft</span><span>Change</span><span>Keep</span></div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 1 · Fri 6 Nov · Hanoi</span><span class="cmp__basis">4 items</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 1 · Fri 6 Nov · Hanoi</span><span class="cmp__basis">4 items · no changes proposed</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 1"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 2 · Sat 7 Nov · Hanoi</span><span class="cmp__basis">5 items</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 2 · Sat 7 Nov · Hanoi</span><span class="cmp__basis">6 items</span>
+          <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
+            <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: Coffee break, Hoan Kiem
+              lake shore (12:45–13:15)</p></details></span>
+        <span class="cmp__delta cmp__delta--up">+1 item</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 2"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 3 · Sun 8 Nov · Ha Long Bay</span><span class="cmp__basis">4 items · anchored to a goal</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 3 · Sun 8 Nov · Ha Long Bay</span><span class="cmp__basis">4 items · anchor untouched</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 3"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 4 · Mon 9 Nov · Hanoi → Hue</span><span class="cmp__basis">5 items</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 4 · Mon 9 Nov · Hanoi → Hue</span><span class="cmp__basis">5 items · no changes proposed</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 4"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 5 · Tue 10 Nov · Hue</span><span class="cmp__basis">5 items</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 5 · Tue 10 Nov · Hue</span><span class="cmp__basis">7 items</span>
+          <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
+            <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: Cyclo tour (17:00) ·
+              Spa evening (19:30)</p></details></span>
+        <span class="cmp__delta cmp__delta--up">+2 items</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 5"></span>
+      </div>
+
+      <div class="cmp__row" data-skip>
+        <span class="cmp__was"><span class="cmp__k">Day 6 · Wed 11 Nov · Hue</span><span class="cmp__basis">Deliberately empty</span>
+          <span class="cmp__flag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>Conflicts with "keep two half-days unplanned"</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 6 · Wed 11 Nov · Hue</span><span class="cmp__basis">2 items</span>
+          <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
+            <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: Cooking demo (10:00) ·
+              Local market visit (15:00) — the AI doesn't know this day is meant to stay open</p></details></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" aria-label="Keep the draft for Day 6 — currently skipped, day stays empty"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 7 · Thu 12 Nov · Hue → Hoi An</span><span class="cmp__basis">5 items</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 7 · Thu 12 Nov · Hue → Hoi An</span><span class="cmp__basis">4 items</span>
+          <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
+            <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">− Removed: Stop at Hai Van Pass
+              viewpoint (folded into the drive)</p></details></span>
+        <span class="cmp__delta cmp__delta--down">−1 item</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 7"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 8 · Fri 13 Nov · Hoi An</span><span class="cmp__basis">5 items · 2 goals land here</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 8 · Fri 13 Nov · Hoi An</span><span class="cmp__basis">5 items · goals untouched</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 8"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 9 · Sat 14 Nov · Hoi An → Siem Reap</span><span class="cmp__basis">Nothing planned — looked like an oversight</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 9 · Sat 14 Nov · Hoi An → Siem Reap</span><span class="cmp__basis">3 items</span>
+          <details><summary class="linkish" style="font-size:11.5px">What changed</summary>
+            <p class="t-meta" style="margin:6px 0 0;font-size:11.5px">+ Added: transfer to Da Nang
+              airport · flight DAD → REP · transfer to hotel</p></details></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 9"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Day 10 · Sun 15 Nov · Siem Reap</span><span class="cmp__basis">8 items · anchored to a goal</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Day 10 · Sun 15 Nov · Siem Reap</span><span class="cmp__basis">8 items · anchor untouched</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the draft for Day 10"></span>
+      </div>
+    </div>
+
+    <div class="actionbar" style="position:static;margin-top:14px">
+      <span class="actionbar__l"><b>Applying updates 9 of 10 days.</b> Day 6 stays empty — filling it
+        conflicts with the goal to keep it unplanned. <b class="mono">41 → 46</b> items across the trip.</span>
+      <span class="actionbar__spacer"></span>
+      <button class="btn" data-set="state:discard">Discard</button>
+      <button class="btn btn--primary" data-set="state:partial">Apply 9 days</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ DAY ══ -->
+  <div data-when="day">
+    <div class="banner banner--info" style="margin-bottom:14px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+      <div><b>Instruction given:</b> "redo day 3, more relaxed." Only Day 3 changes — the other nine
+        days and the goal anchored to this one are given as context, not touched.</div>
+    </div>
+    <div class="cmp">
+      <div class="cmp__head"><span>Current</span><span>AI draft</span><span>Change</span><span>Keep</span></div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Transfer Hanoi → Ha Long pier</span>
+          <span class="mono" style="font-size:12.5px">08:00–11:30</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Transfer Hanoi → Ha Long pier</span><span class="mono" style="font-size:12.5px;font-weight:600">09:30–12:30</span>
+          <span class="cmp__basis">Starts 90 minutes later — no more pre-dawn wake-up</span></span>
+        <span class="cmp__delta cmp__delta--up">Shifted</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the new time for the transfer"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Board the junk, cruise into Bai Tu Long</span>
+          <span class="mono" style="font-size:12.5px">12:00–15:30</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Board the junk, cruise into Bai Tu Long</span><span class="mono" style="font-size:12.5px;font-weight:600">13:00–16:00</span>
+          <span class="cmp__basis">Follows the later transfer</span></span>
+        <span class="cmp__delta cmp__delta--up">Shifted</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the new time for boarding the junk"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Kayak among the limestone karsts</span>
+          <span class="mono" style="font-size:12.5px">16:00–17:30</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Kayak among the limestone karsts</span><span class="money money--none">Removed from this draft</span>
+          <span class="cmp__basis">Swapped for something slower, per "more relaxed"</span></span>
+        <span class="cmp__delta cmp__delta--down">Dropped</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the AI's removal of the kayak item"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">Dinner on deck, then overnight at anchor</span>
+          <span class="mono" style="font-size:12.5px">18:00–09:00 +1</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Dinner on deck, then overnight at anchor</span><span class="cmp__basis">Unchanged</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep dinner and overnight unchanged"></span>
+      </div>
+
+      <div class="cmp__row">
+        <span class="cmp__was"><span class="cmp__k">—</span><span class="cmp__basis">Nothing here currently</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">—</span><span class="cmp__k">Spa treatment on board</span>
+          <span class="mono" style="font-size:12.5px;font-weight:600">17:30–18:30</span>
+          <span class="cmp__basis">Fills the slot the kayak left</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Keep the new spa item"></span>
+      </div>
+    </div>
+
+    <div class="actionbar" style="position:static;margin-top:14px">
+      <span class="actionbar__l"><b>Applying redoes Day 3:</b> two times shift later, the kayak drops,
+        a spa slot is added. Day 3's cost moves from <b class="mono">₹10,800</b> to about
+        <b class="mono">₹11,400</b>.</span>
+      <span class="actionbar__spacer"></span>
+      <button class="btn" data-set="state:discard">Discard</button>
+      <button class="btn btn--primary" data-set="state:applied">Apply to Day 3</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ PACKING ═ -->
+  <div data-when="packing">
+    <div class="cmp">
+      <div class="cmp__head"><span>Current</span><span>AI suggests</span><span>Change</span><span>Keep</span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
+        <span class="cmp__new"><span class="cmp__k">Mosquito repellent</span>
+          <span class="cmp__basis">For the Ha Long and Siem Reap evenings</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add mosquito repellent"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Mosquito repellent</span>
+          <span class="cmp__basis">For the Ha Long and Siem Reap evenings</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add mosquito repellent"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span><span class="cmp__k">Reef-safe sunscreen</span>
+          <span class="cmp__basis">For the day on the junk</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add reef-safe sunscreen"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
+        <span class="cmp__new"><span class="cmp__k">A light rain poncho</span>
+          <span class="cmp__basis">November showers are common in Hue</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a rain poncho"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">A light rain poncho</span>
+          <span class="cmp__basis">November showers are common in Hue</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a rain poncho"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span><span class="cmp__k">Photocopies of everyone's passport</span>
+          <span class="cmp__basis">Kept separately from the originals</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add passport photocopies"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
+        <span class="cmp__new"><span class="cmp__k">A universal power adapter</span>
+          <span class="cmp__basis">Vietnam and Cambodia both use type A/C/G sockets</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a power adapter"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">A universal power adapter</span>
+          <span class="cmp__basis">Vietnam and Cambodia both use type A/C/G sockets</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add a power adapter"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">Not on the list</span><span class="cmp__k">An offline phrase list</span>
+          <span class="cmp__basis">Vietnamese and Khmer basics, no signal needed</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add an offline phrase list"></span></div>
+
+      <div class="cmp__row" data-skip>
+        <span class="cmp__was"><span class="cmp__k">Passport</span>
+          <span class="cmp__basis">Already on every packing list</span>
+          <span class="cmp__flag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>Already tracked</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Passport</span><span class="cmp__basis">Same item — skipping to avoid a duplicate</span></span>
+        <span class="cmp__delta cmp__delta--same">Same</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" aria-label="Keep passport as a duplicate — currently skipped"></span>
+      </div>
+    </div>
+
+    <div class="actionbar" style="position:static;margin-top:14px">
+      <span class="actionbar__l"><b>Adds 6 new items</b> to the shared packing list. Passport is
+        already tracked, so it's skipped rather than duplicated.</span>
+      <span class="actionbar__spacer"></span>
+      <button class="btn" data-set="state:discard">Discard</button>
+      <button class="btn btn--primary" data-set="state:partial">Add 6 items</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ DESTINATIONS ═ -->
+  <div data-when="destinations">
+    <p class="t-meta" style="margin:0 0 14px;font-size:12.5px">For Kerala backwaters — still an idea,
+      "somewhere warm and slow." Every candidate here is new, so every row on the left is empty; that's
+      the same pattern working at its simplest.</p>
+    <div class="cmp">
+      <div class="cmp__head"><span>Current</span><span>AI suggests</span><span>Change</span><span>Keep</span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span></span>
+        <span class="cmp__new"><span class="cmp__k">Alleppey</span>
+          <span class="cmp__basis">Houseboat backwaters. Best Oct–Feb, monsoon risk before that.
+            Est. <span class="money" data-m data-inr="₹18,000" data-eur="≈ €170" data-vnd="">₹18,000</span> each.</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Alleppey as a candidate"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Alleppey</span>
+          <span class="cmp__basis">Houseboat backwaters. Best Oct–Feb, monsoon risk before that.
+            Est. <span class="money" data-m data-inr="₹18,000" data-eur="≈ €170" data-vnd="">₹18,000</span> each.</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Alleppey as a candidate"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span><span class="cmp__k">Kumarakom</span>
+          <span class="cmp__basis">Quieter backwaters, a bird sanctuary. Same season as Alleppey.
+            Est. <span class="money" data-m data-inr="₹16,500" data-eur="≈ €150" data-vnd="">₹16,500</span> each.</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Kumarakom as a candidate"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span></span>
+        <span class="cmp__new"><span class="cmp__k">Munnar</span>
+          <span class="cmp__basis">Tea hills, cooler nights. Landslide risk in heavy rain.
+            Est. <span class="money" data-m data-inr="₹15,000" data-eur="≈ €140" data-vnd="">₹15,000</span> each.</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Munnar as a candidate"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span></span>
+        <span class="cmp__new"><span class="cmp__was-inline">Munnar</span>
+          <span class="cmp__basis">Tea hills, cooler nights. Landslide risk in heavy rain.
+            Est. <span class="money" data-m data-inr="₹15,000" data-eur="≈ €140" data-vnd="">₹15,000</span> each.</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Munnar as a candidate"></span></div>
+
+      <div class="cmp__row"><span class="cmp__was"><span class="cmp__basis">No candidate yet</span><span class="cmp__k">Wayanad</span>
+          <span class="cmp__basis">Forests and waterfalls. A long drive from Kochi airport.
+            Est. <span class="money" data-m data-inr="₹14,000" data-eur="≈ €130" data-vnd="">₹14,000</span> each.</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" checked aria-label="Add Wayanad as a candidate"></span></div>
+
+      <div class="cmp__row" data-skip>
+        <span class="cmp__was"><span class="cmp__basis">No candidate yet</span></span>
+        <span class="cmp__new"><span class="cmp__k">Kovalam</span>
+          <span class="cmp__basis">Beach town. Three hours further south than the other four.
+            Est. <span class="money" data-m data-inr="₹19,500" data-eur="≈ €180" data-vnd="">₹19,500</span> each.</span>
+          <span class="cmp__flag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>Adds a travel day the others don't need</span></span>
+        <span class="cmp__delta cmp__delta--new">New</span>
+        <span class="cmp__keep"><input class="check" type="checkbox" aria-label="Add Kovalam as a candidate — currently skipped"></span>
+      </div>
+    </div>
+
+    <div class="actionbar" style="position:static;margin-top:14px">
+      <span class="actionbar__l"><b>Adds 4 of 5 suggested candidates</b> to compare. Kovalam is
+        skipped — it doesn't fit alongside the other four.</span>
+      <span class="actionbar__spacer"></span>
+      <button class="btn" data-set="state:discard">Discard</button>
+      <button class="btn btn--primary" data-set="state:partial">Add 4 candidates</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ privacy ═══ -->
+  <section class="sect" data-when-not="aioff" style="margin-top:26px">
+    <h2 class="sect__t">What this sends, and what it never does</h2>
+    <div class="privacy">
+      <div class="privacy__c">
+        <h4 style="margin:0 0 2px;font-size:12.5px;font-weight:600">Used to draft</h4>
+        <ul>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>Aggregated preference counts — "2 vegetarian, 1 vegan, 3 no restriction," never whose</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>Trip-level parameters — duration, destination, season, group size</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>The budget's shape — category totals and basis notes, no per-person overrides</li>
+        </ul>
+      </div>
+      <div class="privacy__c privacy__c--no">
+        <h4 style="margin:0 0 2px;font-size:12.5px;font-weight:600">Never leaves the deployment</h4>
+        <ul>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>Names, phone numbers, emails</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>Emergency contacts, medical notes, allergies</li>
+          <li><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>Document numbers, or the documents themselves</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════════════════════════════════════ the currency lens — view only ═ -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:430px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">Changes what you see, nothing else. Amounts are still entered and
+        stored in the trip's own currency, and this choice follows you across every trip and screen.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">This trip's own currency — the authoritative figures</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+        <span class="mono dim" style="font-size:11px">≈ €4,320</span>
+      </button>
+      <button class="pal__r" data-set="lens:vnd" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">VND</span>
+        <span><span class="pal__n">Vietnamese dong</span><span class="pal__d" style="color:var(--warn)">No rate available from our source — amounts stay in rupees</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">Daily reference rates from
+        the European Central Bank. A guide for reading a draft — <b>not</b> what a card issuer or a
+        money changer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

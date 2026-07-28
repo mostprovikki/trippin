@@ -1,0 +1,1209 @@
+/* ==========================================================================
+   overrides.css — Tripper additions on top of the dense-product-ui system.
+
+   system.css is copied verbatim from the skill and is never edited. Everything
+   below is either (a) a primitive the system does not have, built in its own
+   idiom, or (b) a Tripper-specific composition of existing primitives.
+
+   No new hue is introduced. The five semantic slots keep their single meanings:
+     --bad   destructive, expired, blocking
+     --warn  degree / severity  (expiry tier, how overdue)
+     --ok    confirmed, decided, done
+     --info  actionable
+     --muted indeterminate — TBD, open, unset, not yet decided
+
+   Where two things need the same slot they are separated by FORM: dashed
+   borders, hatch fills, outline-vs-fill, icon shape. Never by a new colour.
+
+   Every colour below is a token or derived from one, so a dark theme remains
+   possible (see ia.md § "The theme question").
+   ========================================================================== */
+
+:root {
+  /* Form-based distinctions inside the neutral slot. Not new hues — these are
+     the existing neutrals given a texture so "indeterminate" never wears the
+     same clothes as "secondary text". */
+  --hatch-off: repeating-linear-gradient(-45deg, #F2F4F6 0 4px, #FAFBFC 4px 8px);
+  --dash-line: #C7CDD4;
+
+  /* Border and deeper-tint companions to system.css's four washes. These exist
+     purely so no page has to inline a hex to build a tinted panel — the values
+     match the borders system.css already uses on .banner--bad / --info / --ok.
+     Keeping them here is what makes a dark theme a token swap. */
+  --bad-line:  #EBC6C2;
+  --bad-tint:  #F7DCD8;
+  --info-line: #C6DCF3;
+  --ok-line:   #C6E3D0;
+  --warn-line: #EEDDBE;
+
+  --pad: 22px;
+}
+
+/* ============================================ Global weight and italic caps =
+   The system allows 400/500/600 only, but a bare <b>/<strong> renders at 700 in
+   every browser. Rather than police every inline use across 22 pages, cap it
+   once here. Same for <i>: italic is reserved for "this value is absent", so
+   an italic that is merely emphasis should read as ordinary prose weight. */
+b, strong { font-weight: 600; }
+
+/* Failure variant of the blank slate. A load that failed is not an absence of
+   data, so it must not look like an empty state — but it is the same component
+   in a different state, per the system's "reuse in a second state" rule. */
+.blank--bad { border-color: var(--bad-line); border-style: solid; background: var(--bad-wash); }
+.blank--bad .blank__icon { background: var(--bad-tint); color: var(--bad); }
+.blank--bad h4 { color: var(--bad); }
+
+/* ======================================================= Review-tool strip =
+   Deliberately not product UI. Dark, full-bleed, mono, sits above the app bar
+   so a reviewer can never mistake it for a feature. */
+
+.rev {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: var(--ink);
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+.rev__in {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 8px var(--pad);
+}
+.rev__k {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font: 600 10px/1 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .55);
+}
+.rev__k::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .4);
+}
+.rev__grp { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.rev__grp + .rev__grp { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.16); }
+.rev__lbl { font: 500 10.5px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase;
+            color: rgba(255,255,255,.5); margin-right: 2px; }
+.rev__b {
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: rgba(255, 255, 255, .82);
+  font: 500 11.5px/1 var(--sans);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rev__b:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.rev__b[aria-pressed="true"] { background: #fff; border-color: #fff; color: var(--ink); font-weight: 600; }
+.rev__sp { flex: 1; }
+.rev a { color: rgba(255,255,255,.7); font-size: 11.5px; }
+.rev a:hover { color: #fff; }
+
+/* A note the reviewer reads, not the user. */
+.revnote {
+  display: flex;
+  gap: 9px;
+  margin: 0 0 16px;
+  padding: 9px 12px;
+  border: 1px dashed var(--dash-line);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.revnote b { color: var(--ink); font-weight: 600; }
+.revnote__k {
+  flex: none;
+  font: 600 10px/1.5 var(--mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ================================================================== Shell = */
+
+.appbar__nav { display: flex; align-items: center; gap: 2px; }
+.appbar__nav a {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: var(--r);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+.appbar__nav a:hover { background: var(--surface-3); color: var(--ink); text-decoration: none; }
+.appbar__nav a[aria-current="page"] { background: var(--surface-3); color: var(--ink); font-weight: 600; }
+
+.appbar__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 26px; height: 26px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--ink-2);
+  font: 600 10.5px/1 var(--sans);
+  letter-spacing: .02em;
+}
+.avatar--lg { width: 40px; height: 40px; font-size: 13px; }
+
+/* The currency lens. A VIEW control: it lives with the other view controls in
+   the app bar, never inside a trip's settings. */
+.lens {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 12px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.lens:hover { background: var(--surface-2); border-color: #D6DAE0; }
+.lens__eyebrow { font: 600 9.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+                 color: var(--ink-3); }
+.lens[data-converted] { border-style: dashed; border-color: var(--dash-line); }
+.lens svg { color: var(--ink-3); }
+
+/* ========================================================= Trip page head = */
+
+.thead { margin-bottom: 18px; }
+.thead__crumb { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-3);
+                margin-bottom: 7px; }
+.thead__top { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.thead__top h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.02em;
+                 overflow-wrap: anywhere; }
+.thead__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px;
+               font-size: 12.5px; color: var(--ink-2); }
+.thead__acts { margin-left: auto; display: flex; gap: 9px; flex-wrap: wrap; }
+
+/* Trip nav: the board plus four deep surfaces. Not "sections" — the board is
+   the trip, these are the four places that need real screen area. */
+.tnav { display: flex; gap: 2px; margin-bottom: 20px; border-bottom: 1px solid var(--line);
+        overflow-x: auto; }
+.tnav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 13px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tnav a:hover { color: var(--ink); text-decoration: none; background: var(--surface-2); }
+.tnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+.tnav a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 8px; right: 8px; bottom: -1px;
+  height: 2px;
+  background: var(--info);
+  border-radius: 2px 2px 0 0;
+}
+.tnav__n { font: 400 11px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.tnav__n--warn { color: var(--warn); font-weight: 600; }
+
+/* ============================================================ Board layout =
+   Two columns with opposite jobs: what the group has decided, and what is
+   still open or waiting on somebody. §2.2 is the product's core value, so it
+   is the page's structure rather than a widget on it. */
+
+.board { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+.board__col { display: grid; gap: 14px; }
+.colhead { display: flex; align-items: baseline; gap: 9px; }
+.colhead h2 { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .08em;
+              text-transform: uppercase; color: var(--ink-3); }
+.colhead__n { font: 600 11px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.colhead__sp { flex: 1; }
+
+/* Two up, never more. At four across the cards get narrower than their own
+   detail lines and the column leaves a void beside the waiting list. */
+.dgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+/* A decision card. Same shape whether the decision is made or not; the state
+   is carried by the rail, the word, and the border form — never by colour
+   alone. Undecided uses a dashed edge and a hatch header: form, not hue. */
+.dc {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 13px 15px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.dc::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 12px; bottom: 12px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--rail, transparent);
+}
+.dc[data-state="ok"]    { --rail: var(--ok); }
+.dc[data-state="warn"]  { --rail: var(--warn); }
+.dc[data-state="bad"]   { --rail: var(--bad); }
+.dc[data-state="info"]  { --rail: var(--info); }
+.dc[data-state="open"]  { border-style: dashed; border-color: var(--dash-line); background: var(--surface-2); }
+.dc[data-state="open"]::before {
+  background: repeating-linear-gradient(180deg, var(--dash-line) 0 3px, transparent 3px 6px);
+}
+
+.dc__k { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+         color: var(--ink-3); margin-bottom: 6px; }
+.dc__v { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap;
+         font-size: 13.5px; font-weight: 500; overflow-wrap: anywhere; }
+.dc__v--num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 600; }
+.dc__v--none { font-style: italic; font-weight: 400; color: var(--muted); }
+.dc__d { font: 400 11.5px/1.5 var(--mono); font-variant-numeric: tabular-nums;
+         color: var(--ink-3); margin-top: 4px; }
+.dc__d--sans { font-family: var(--sans); font-size: 12px; }
+.dc__foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--line-2); }
+.dc__foot a, .dc__foot button.linkish { font-size: 12px; font-weight: 500; }
+.dc__sp { flex: 1; }
+
+/* A "waiting on somebody" row: the highest-value object in the product, so it
+   is always a link to the thing that fixes it. Never a red mark on its own. */
+.wait {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  gap: 11px;
+  align-items: start;
+  width: 100%;
+  padding: 11px 13px 11px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line-2);
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.wait:last-child { border-bottom: 0; }
+.wait:hover { background: var(--surface-2); }
+.wait:hover .wait__n { color: var(--info-ink); }
+.wait::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--rail, transparent);
+}
+.wait[data-state="bad"]   { --rail: var(--bad); }
+.wait[data-state="warn"]  { --rail: var(--warn); }
+.wait[data-state="muted"] { --rail: var(--dash-line); }
+.wait[data-state="info"]  { --rail: var(--info); }
+.wait__ic { display: grid; place-items: center; width: 26px; height: 26px; flex: none;
+            border-radius: 50%; background: var(--surface-3); color: var(--ink-2); }
+.wait__ic--bad  { background: var(--bad-wash);  color: var(--bad); }
+.wait__ic--warn { background: var(--warn-wash); color: var(--warn); }
+.wait__n { display: block; font-size: 13px; font-weight: 500; }
+.wait__d { display: block; font-size: 12px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+.wait__r { display: flex; align-items: center; gap: 8px; padding-top: 2px; }
+
+/* ================================================================== Money =
+   Base-currency amounts are authoritative and rendered plainly. Converted
+   amounts are approximations and must never look as precise: they carry a ≈,
+   sit in the muted ink, and round coarsely. */
+
+.money { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+.money--big { font-size: 15px; font-weight: 600; }
+.money--none { font-family: var(--sans); font-style: italic; font-weight: 400; color: var(--muted); }
+
+/* Set by app.js whenever the active lens is not the trip's base currency. The
+   figure keeps its slot in the layout but stops looking authoritative. */
+.money[data-converted] { font-weight: 400; color: var(--ink-2); }
+.money--big[data-converted] { font-weight: 500; }
+.metric__v [data-converted], .dc__v--num[data-converted] { color: var(--ink-2); }
+
+.conv {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.conv--block { display: block; margin-top: 2px; }
+.conv--lead { font-size: 13px; color: var(--ink-2); }
+.conv__x { color: var(--dash-line); margin-right: 1px; }
+
+/* Provenance for a rate. Always on screen wherever a converted figure is. */
+.prov {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 11px/1.4 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+.prov__d { width: 5px; height: 5px; border-radius: 50%; flex: none; background: var(--dash-line); }
+.prov--stale .prov__d { background: var(--warn); }
+.prov--stale { color: var(--warn); }
+
+/* ============================================================== Thumbnails =
+   A document row shows the document, not a filename. Legible personal data,
+   so the organizer's default is obscured with an explicit reveal. */
+
+.thumb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px; height: 54px;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+.thumb--lg { width: 72px; height: 92px; }
+.thumb__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Very tall or very wide scans: cover crops, and the badge says it is cropped. */
+.thumb__img--tall { object-position: top center; }
+
+/* Obscured: the shape and colour of the document survive, the data does not. */
+.thumb--hide .thumb__img { filter: blur(6px) saturate(.55); transform: scale(1.14); }
+.thumb--hide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(-45deg, rgba(46,53,64,.07) 0 4px, rgba(46,53,64,.02) 4px 8px);
+}
+.thumb__lock {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 1;
+  padding: 2px 0;
+  background: rgba(46, 53, 64, .72);
+  color: #fff;
+  font: 600 8.5px/1.3 var(--sans);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-align: center;
+}
+/* Nothing renderable. A designed state, not a broken image. */
+.thumb--none { background: var(--hatch-off); border-style: dashed; border-color: var(--dash-line); }
+.thumb--none .thumb__ext { font: 600 9px/1 var(--mono); color: var(--ink-3); letter-spacing: .04em; }
+/* Not generated yet. */
+.thumb--pending { background: var(--surface-3); }
+.thumb--pending::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,.75) 50%, transparent 80%);
+  animation: sheen 1.3s linear infinite;
+}
+@keyframes sheen { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+.thumb__pg {
+  position: absolute;
+  top: 3px; right: 3px;
+  z-index: 1;
+  padding: 1px 3px;
+  border-radius: 2px;
+  background: rgba(46, 53, 64, .78);
+  color: #fff;
+  font: 600 8.5px/1.35 var(--mono);
+}
+
+.reveal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: 500 11px/1 var(--sans);
+  cursor: pointer;
+}
+.reveal:hover { background: var(--surface-3); color: var(--ink); }
+
+/* Document previewer: image or paged PDF, at a readable size, in place. */
+.pv { display: grid; gap: 12px; }
+.pv__stage {
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface-3);
+}
+.pv__stage img { max-width: 100%; max-height: 460px; display: block;
+                 box-shadow: var(--shadow-2); border-radius: 2px; }
+.pv__pager { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.pv__pn { font: 500 12px/1 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
+/* ========================================================== Form primitives =
+   system.css styles bare inputs. This is the label / hint / error wrapper and
+   the prefilled treatment, which is the whole point of §2.1. */
+
+.fg { display: block; margin-bottom: 14px; }
+.fg__l { display: flex; align-items: baseline; gap: 7px; margin-bottom: 5px;
+         font-size: 12px; font-weight: 500; color: var(--ink); }
+.fg__req { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+           color: var(--ink-3); }
+.fg__opt { font-size: 11.5px; font-weight: 400; color: var(--ink-3); }
+.fg__h { font-size: 11.5px; color: var(--ink-2); margin-top: 5px; line-height: 1.5; }
+.fg__err {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--bad);
+}
+.fg__err svg { flex: none; margin-top: 1px; }
+.fg[data-invalid] .field,
+.fg[data-invalid] select,
+.fg[data-invalid] textarea.field { border-color: var(--bad); }
+.fg[data-invalid] .field:focus { box-shadow: 0 0 0 3px var(--bad-wash); }
+
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0 16px; }
+
+/* Machine-entered values read as mono even in a form. */
+input.field--num, .field--num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* An input group: currency prefix locked to the trip's base currency. The
+   viewing lens NEVER reaches into a field — §3.13. */
+.inp {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+.inp:focus-within { border-color: var(--info); box-shadow: 0 0 0 3px var(--info-wash); }
+.inp__pre {
+  display: grid;
+  place-items: center;
+  padding: 0 9px;
+  flex: none;
+  background: var(--surface-3);
+  border-right: 1px solid var(--line);
+  font: 600 11.5px/1 var(--mono);
+  color: var(--ink-2);
+}
+.inp input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 400 13px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+/* Sits beside the input while a converted lens is on. Read-only, mono, muted,
+   and explicitly labelled so it can never be mistaken for the field. */
+.inp__aside {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  flex: none;
+  border-left: 1px dashed var(--dash-line);
+  background: var(--hatch-off);
+  font: 400 11.5px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* "This is what we have from last time — still right?" Dashed left edge plus a
+   worded eyebrow. Visibly pre-filled, never silently defaulted. */
+.prefill {
+  position: relative;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--dash-line);
+  border-radius: 0 var(--r) var(--r) 0;
+  background: var(--surface-2);
+}
+.prefill__k {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.prefill__k svg { flex: none; }
+
+/* A single field marked as carried over, inline. */
+.carried {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 500 10.5px/1 var(--sans);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.carried::before {
+  content: "";
+  width: 12px; height: 0;
+  border-top: 1.5px dashed var(--dash-line);
+}
+
+/* Section dirty marker — the one dirty-state pattern, used everywhere. */
+.dirty {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--info);
+}
+.dirty::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--info);
+  flex: none;
+}
+.saved { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+.saved svg { color: var(--ok); flex: none; }
+
+/* ================================================================== Dialog =
+   Centred modal for confirmations. system.css has a drawer for filters; a
+   consequence warning must interrupt, so it gets its own primitive. */
+
+.modal { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center;
+         padding: 20px; overflow: auto; }
+.modal[hidden] { display: none !important; }
+.modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+.modal__panel--wide { max-width: 940px; }
+.modal__panel--sheet { max-width: 1120px; }
+.modal__head { display: flex; align-items: flex-start; gap: 12px; padding: 17px 20px 14px; }
+.modal__head h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.modal__head .iconbtn { margin-left: auto; margin-top: -4px; }
+.modal__ic { display: grid; place-items: center; width: 30px; height: 30px; flex: none;
+             border-radius: 50%; background: var(--surface-3); color: var(--ink-2); }
+.modal__ic--bad  { background: var(--bad-wash);  color: var(--bad); }
+.modal__ic--warn { background: var(--warn-wash); color: var(--warn); }
+.modal__ic--ok   { background: var(--ok-wash);   color: var(--ok); }
+.modal__ic--info { background: var(--info-wash); color: var(--info-ink); }
+.modal__body { padding: 0 20px 18px; font-size: 13px; color: var(--ink-2); line-height: 1.55; }
+.modal__body > :first-child { margin-top: 0; }
+.modal__body p { margin: 0 0 10px; }
+.modal__body b { color: var(--ink); font-weight: 600; }
+.modal__foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+               padding: 14px 20px; background: var(--surface-2); border-top: 1px solid var(--line); }
+.modal__foot .modal__sp { flex: 1; }
+
+/* The list of concrete damage a change will do. Not "are you sure?" — the
+   specific things that break, itemised. */
+.damage { display: grid; gap: 0; margin: 0 0 12px; padding: 0; list-style: none;
+          border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.damage li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 9px;
+             padding: 9px 12px; background: var(--surface-2);
+             border-bottom: 1px solid var(--line-2); font-size: 12.5px; color: var(--ink); }
+.damage li:last-child { border-bottom: 0; }
+.damage li svg { margin-top: 2px; }
+.damage__d { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 2px; }
+.damage li[data-k="lose"] svg { color: var(--bad); }
+.damage li[data-k="warn"] svg { color: var(--warn); }
+.damage li[data-k="keep"] svg { color: var(--ok); }
+.damage li[data-k="info"] svg { color: var(--info); }
+
+/* The reassuring inverse — half of §2.11's value is knowing backing out is
+   cheap. Same shape as .damage so the two read as one system. */
+.reassure {
+  display: flex;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid #C6E3D0;
+  border-radius: var(--r);
+  background: var(--ok-wash);
+  font-size: 12.5px;
+  color: #1F6E36;
+}
+.reassure svg { flex: none; margin-top: 2px; }
+.reassure b { font-weight: 600; }
+
+/* Typing a phrase to confirm the worst actions. */
+.typeconfirm { display: grid; gap: 7px; margin: 12px 0 0; }
+.typeconfirm__l { font-size: 12px; color: var(--ink-2); }
+.typeconfirm__l code { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink);
+                       background: var(--surface-3); padding: 1px 5px; border-radius: 3px; }
+
+/* ==================================================== AI: the review moment =
+   One pattern, used by all five AI features. Current on the left, draft on the
+   right, aligned row by row, each row individually keepable. */
+
+.cmp { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.cmp__head,
+.cmp__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.35fr) 92px 44px;
+  gap: 12px;
+  align-items: start;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line-2);
+}
+.cmp__head {
+  padding-top: 8px; padding-bottom: 8px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.cmp__row:last-child { border-bottom: 0; }
+.cmp__row:hover { background: var(--surface-2); }
+.cmp__row[data-skip] { background: var(--hatch-off); }
+.cmp__row[data-skip] .cmp__new { opacity: .45; }
+.cmp__k { display: block; font-size: 12.5px; font-weight: 500; }
+.cmp__was, .cmp__new { min-width: 0; }
+.cmp__basis { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 3px;
+              line-height: 1.45; overflow-wrap: anywhere; }
+.cmp__new .cmp__basis { color: var(--ink); }
+.cmp__delta { font: 500 11.5px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.cmp__delta--up   { color: var(--warn); }
+.cmp__delta--down { color: var(--info); }
+.cmp__delta--new  { color: var(--ok); }
+.cmp__delta--same { color: var(--ink-3); }
+.cmp__keep { display: grid; place-items: center; padding-top: 1px; }
+.cmp__flag {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 5px;
+  font-size: 11px; font-weight: 500; color: var(--warn);
+}
+.cmp__flag svg { flex: none; }
+
+/* Generating. Many seconds — say what it is doing and what it was given. */
+.gen { display: grid; gap: 14px; padding: 26px 22px; border: 1px solid var(--line);
+       border-radius: var(--r); background: var(--surface-2); text-align: center;
+       justify-items: center; }
+.gen__bar { width: 100%; max-width: 320px; height: 4px; border-radius: 999px;
+            background: var(--surface-3); overflow: hidden; }
+.gen__bar i { display: block; width: 40%; height: 100%; border-radius: 999px;
+              background: var(--info); animation: slide 1.5s ease-in-out infinite; }
+@keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+.gen h3 { margin: 0; font-size: 13.5px; font-weight: 600; }
+.gen p { margin: 0; max-width: 56ch; font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+
+/* AI off is a permanent, expected condition — not a fault. Hatched, quiet, and
+   it points at the manual path rather than at a setting nobody can change. */
+.aioff {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--hatch-off);
+}
+.aioff__ic { display: grid; place-items: center; width: 28px; height: 28px; flex: none;
+             border-radius: 50%; background: var(--surface); border: 1px dashed var(--dash-line);
+             color: var(--ink-3); }
+.aioff h4 { margin: 1px 0 4px; font-size: 12.5px; font-weight: 600; }
+.aioff p { margin: 0; font-size: 12px; color: var(--ink-2); line-height: 1.55; max-width: 70ch; }
+
+/* What leaves the deployment, itemised. Trust is a list, not a promise. */
+.privacy { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.privacy__c { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r);
+              background: var(--surface-2); }
+.privacy__c--no { background: var(--hatch-off); }
+.privacy ul { margin: 8px 0 0; padding-left: 0; list-style: none; display: grid; gap: 5px; }
+.privacy li { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 7px;
+              font-size: 12px; color: var(--ink-2); }
+.privacy li svg { margin-top: 3px; }
+
+/* =============================================================== Itinerary = */
+
+.day { border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface);
+       box-shadow: var(--shadow-1); overflow: hidden; }
+.day + .day { margin-top: 12px; }
+.day__head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+             padding: 12px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.day__n { display: inline-flex; align-items: baseline; gap: 8px; }
+.day__num { font: 600 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+            color: var(--ink-3); }
+.day__date { font: 600 13.5px/1 var(--sans); }
+.day__where { font-size: 12.5px; color: var(--ink-2); }
+.day__sp { flex: 1; }
+.day__meta { display: flex; align-items: center; gap: 10px; font: 400 11.5px/1 var(--mono);
+             font-variant-numeric: tabular-nums; color: var(--ink-3); }
+
+.it {
+  display: grid;
+  grid-template-columns: 26px 92px minmax(0, 1fr) 96px 62px;
+  gap: 12px;
+  align-items: start;
+  padding: 11px 16px 11px 13px;
+  border-bottom: 1px solid var(--line-2);
+}
+.it:last-child { border-bottom: 0; }
+.it:hover { background: var(--surface-2); }
+.it__grab { display: grid; place-items: center; width: 22px; height: 22px; border: 0;
+            border-radius: var(--r-sm); background: transparent; color: var(--ink-3);
+            cursor: grab; margin-top: -1px; }
+.it__grab:hover { background: var(--surface-3); color: var(--ink-2); }
+.it__t { font: 500 12px/1.35 var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-2);
+         padding-top: 1px; }
+.it__t--none { font-family: var(--sans); font-style: italic; color: var(--ink-3); }
+.it__n { display: block; font-size: 13px; font-weight: 500; }
+.it__d { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+         font-size: 12px; color: var(--ink-2); }
+.it__cost { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums;
+            font-size: 12.5px; }
+.it__acts { display: flex; gap: 2px; justify-content: flex-end; }
+.it__acts .iconbtn { width: 26px; height: 26px; }
+
+/* Category marker: five categories, one neutral form each. Category is not a
+   severity, so it gets no hue — an outlined letter mark carries it. */
+.catm {
+  display: inline-grid;
+  place-items: center;
+  width: 19px; height: 19px;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font: 600 9px/1 var(--mono);
+  color: var(--ink-2);
+  letter-spacing: 0;
+}
+.catm--rest { border-style: dashed; }
+
+/* A goal anchored into a day. Reads as a constraint, not an item. */
+.anchor {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 9px 16px 9px 13px;
+  background: var(--info-wash);
+  border-bottom: 1px solid var(--line-2);
+  font-size: 12px;
+  color: var(--info-ink);
+}
+.anchor svg { flex: none; margin-top: 2px; }
+.anchor b { font-weight: 600; }
+
+/* Overlap notice: informational, never blocking. */
+.overlap { display: flex; align-items: center; gap: 7px; padding: 7px 16px 7px 13px;
+           background: var(--warn-wash); border-bottom: 1px solid var(--line-2);
+           font-size: 11.5px; color: #7A4E10; }
+.overlap svg { flex: none; }
+
+/* ================================================================ Skeleton =
+   Loading policy: skeleton wherever the layout is known in advance (lists,
+   boards, tables). A spinner only ever appears inside an in-flight control. */
+
+/* display:block is load-bearing, not cosmetic. A skeleton is almost always
+   authored as a <span>, and an inline element ignores width and height — so
+   without this the skeleton renders as nothing at all and the "loading" state
+   looks like a blank page. Set here rather than inlined on every use. */
+.sk { display: block; border-radius: var(--r-sm); background: var(--surface-3);
+      animation: pulse 1.4s ease-in-out infinite; }
+.sk--l1 { height: 11px; width: 62%; }
+.sk--l2 { height: 9px;  width: 38%; margin-top: 7px; }
+.sk--pill { height: 16px; width: 54px; border-radius: var(--r-sm); }
+.sk--thumb { width: 42px; height: 54px; border-radius: var(--r-sm); }
+.sk--num { height: 11px; width: 66px; margin-left: auto; }
+.sk--block { height: 76px; width: 100%; }
+.skrow { display: grid; grid-template-columns: 26px minmax(0, 1fr) 150px 96px;
+         gap: 14px; align-items: center; padding: 14px 16px 14px 19px;
+         border-bottom: 1px solid var(--line-2); }
+.skrow:last-child { border-bottom: 0; }
+
+/* ============================================================== Checklists = */
+
+.tick { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; gap: 11px;
+        align-items: start; padding: 10px 15px; border-bottom: 1px solid var(--line-2); }
+.tick:last-child { border-bottom: 0; }
+.tick:hover { background: var(--surface-2); }
+.tick .check { margin-top: 2px; }
+.tick__n { display: block; font-size: 13px; }
+.tick__d { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+           font-size: 11.5px; color: var(--ink-2); }
+.tick__r { display: flex; align-items: center; gap: 8px; }
+.tick[data-done] .tick__n { color: var(--ink-3); text-decoration: line-through;
+                            text-decoration-color: var(--dash-line); }
+
+/* Undo in place of the row, for the one delete that gets no confirm. */
+.undo { display: flex; align-items: center; gap: 11px; padding: 10px 15px;
+        background: var(--surface-3); border-bottom: 1px solid var(--line-2); font-size: 12.5px;
+        color: var(--ink-2); }
+.undo__sp { flex: 1; }
+
+/* ============================================================= Participant =
+   Phone-first by construction: one narrow column, 44px touch targets, no
+   navigation to get lost in. Not a squeezed desktop layout. */
+
+.pshell { max-width: 460px; margin: 0 auto; padding: 0 0 96px; }
+.ptop {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 11px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.ptop__t { display: flex; align-items: baseline; gap: 8px; }
+.ptop__t h1 { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+.ptop__left { display: flex; align-items: center; gap: 9px; margin-top: 6px; font-size: 12px; }
+
+.pstep { background: var(--surface); border-top: 1px solid var(--line);
+         border-bottom: 1px solid var(--line); }
+.pstep + .pstep { border-top: 0; }
+.pstep__head { display: flex; align-items: center; gap: 10px; padding: 13px 16px;
+               min-height: 44px; }
+.pstep__i { display: grid; place-items: center; width: 20px; height: 20px; flex: none;
+            border-radius: 50%; border: 1.5px solid var(--dash-line); background: var(--surface);
+            font: 600 10.5px/1 var(--mono); color: var(--ink-3); }
+.pstep[data-done] .pstep__i { border-color: var(--ok); background: var(--ok); color: #fff; }
+.pstep[data-todo] .pstep__i { border-color: var(--warn); color: var(--warn); }
+.pstep__h { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .07em;
+            text-transform: uppercase; color: var(--ink-2); }
+.pstep__sp { flex: 1; }
+.pstep__body { padding: 0 16px 16px; }
+
+/* Touch targets on the participant surface. */
+.ptouch { min-height: 44px; }
+.pshell .btn { height: 44px; padding: 0 16px; font-size: 13.5px; }
+.pshell .btn--sm { height: 34px; padding: 0 12px; font-size: 12.5px; }
+.pshell .check { width: 20px; height: 20px; }
+.pshell .tick { padding: 12px 16px; grid-template-columns: 20px minmax(0, 1fr) auto; }
+.pshell .field, .pshell select, .pshell .inp input { height: 44px; }
+.pshell .tick__n { font-size: 13.5px; }
+
+/* Fixed bottom bar on the participant surface. */
+.pbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -3px 12px rgba(46, 53, 64, .06);
+}
+.pbar__l { flex: 1; min-width: 0; font-size: 12px; color: var(--ink-2); line-height: 1.4; }
+.pbar__l b { color: var(--ink); font-weight: 600; }
+
+/* The finish state. Green is earned here — it means "healthy", per its slot. */
+.pdone { display: grid; justify-items: center; gap: 11px; padding: 34px 22px; text-align: center; }
+.pdone__ic { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
+             background: var(--ok-wash); color: var(--ok); }
+.pdone h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.pdone p { margin: 0; max-width: 42ch; font-size: 12.5px; color: var(--ink-2); line-height: 1.6; }
+
+/* A blocked link. Expired, revoked and never-existed are one message. */
+.pblock { display: grid; justify-items: center; gap: 12px; max-width: 400px; margin: 0 auto;
+          padding: 56px 22px; text-align: center; }
+.pblock__ic { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+              background: var(--surface-3); color: var(--ink-3); }
+.pblock h1 { margin: 0; font-size: 17px; font-weight: 600; }
+.pblock p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+
+/* =============================================================== Lifecycle = */
+
+.lc { display: flex; align-items: stretch; overflow-x: auto; border: 1px solid var(--line);
+      border-radius: var(--r); background: var(--surface-2); }
+.lc__s { position: relative; flex: 1; min-width: 116px; padding: 11px 13px;
+         border-right: 1px solid var(--line); }
+.lc__s:last-child { border-right: 0; }
+.lc__k { font: 600 9.5px/1 var(--mono); letter-spacing: .09em; text-transform: uppercase;
+         color: var(--ink-3); }
+.lc__n { display: block; margin-top: 6px; font-size: 12.5px; font-weight: 500; color: var(--ink-3); }
+.lc__d { display: block; margin-top: 3px; font: 400 11px/1.4 var(--mono);
+         font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.lc__s[data-past] { background: var(--surface); }
+.lc__s[data-past] .lc__n { color: var(--ink-2); }
+.lc__s[data-now]  { background: var(--surface); }
+.lc__s[data-now]  .lc__n { color: var(--ink); font-weight: 600; }
+.lc__s[data-now]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+                          height: 2px; background: var(--info); }
+.lc__s[data-next] { background: var(--hatch-off); }
+
+/* ================================================================== Search = */
+
+.pal {
+  position: fixed;
+  top: 12vh; left: 50%;
+  transform: translateX(-50%);
+  z-index: 71;
+  width: min(620px, 94vw);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+.pal__in { display: flex; align-items: center; gap: 10px; padding: 0 14px;
+           border-bottom: 1px solid var(--line); }
+.pal__in input { flex: 1; height: 48px; border: 0; outline: 0; background: transparent;
+                 font: 400 13.5px/1 var(--sans); color: var(--ink); }
+.pal__body { max-height: 52vh; overflow: auto; }
+.pal__g { padding: 9px 0 5px; border-bottom: 1px solid var(--line-2); }
+.pal__g:last-child { border-bottom: 0; }
+.pal__gk { display: flex; align-items: baseline; gap: 8px; padding: 0 14px 6px;
+           font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+           color: var(--ink-3); }
+.pal__r { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px;
+          align-items: center; width: 100%; padding: 8px 14px; border: 0; background: transparent;
+          text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.pal__r[aria-selected="true"] { background: var(--info-wash); }
+/* A non-navigable result (a checklist template) — not disabled, because it
+   still contains a working link. Styled to read as "not a destination". */
+.pal__r[aria-disabled="true"] { cursor: default; }
+.pal__r[aria-disabled="true"] .pal__n { color: var(--ink-3); }
+.pal__r[disabled] { cursor: default; }
+.pal__r[disabled] .pal__n { color: var(--ink-3); }
+.pal__n { display: block; font-size: 13px; font-weight: 500; }
+.pal__d { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 2px; }
+.pal__foot { display: flex; align-items: center; gap: 14px; padding: 8px 14px;
+             background: var(--surface-2); border-top: 1px solid var(--line);
+             font-size: 11.5px; color: var(--ink-3); }
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  background: var(--surface);
+  font: 500 10.5px/1 var(--mono);
+  color: var(--ink-2);
+}
+mark.hit { background: #FCF3D4; color: inherit; border-radius: 2px; padding: 0 1px; }
+
+/* ================================================================== Upload = */
+
+.drop {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 22px;
+  border: 1px dashed var(--dash-line);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  text-align: center;
+}
+.drop[data-over] { border-color: var(--info); background: var(--info-wash); }
+.drop[data-bad]  { border-color: var(--bad);  background: var(--bad-wash); }
+.drop h4 { margin: 0; font-size: 13px; font-weight: 600; }
+.drop p { margin: 0; font-size: 11.5px; color: var(--ink-2); }
+.upl { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 12px;
+       align-items: center; padding: 11px 13px; border: 1px solid var(--line);
+       border-radius: var(--r); background: var(--surface); }
+.upl__bar { height: 4px; border-radius: 999px; background: var(--surface-3); overflow: hidden;
+            margin-top: 6px; }
+.upl__bar i { display: block; height: 100%; border-radius: 999px; background: var(--info); }
+
+/* ============================================================ Small pieces = */
+
+/* Copy-to-clipboard confirmation, plus the fallback when access is denied. */
+[data-copied] { color: var(--ok) !important; border-color: #C6E3D0 !important; }
+.copyfall { display: grid; gap: 6px; margin-top: 9px; }
+.copyfall input {
+  width: 100%; height: 34px; padding: 0 9px;
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--surface-2);
+  font: 400 11.5px/1 var(--mono); color: var(--ink);
+}
+
+/* An outlined tag marking something as still actionable/editable — used on an
+   archived trip for the three regions that stay editable forever, set against
+   the frozen snapshot. Outline, not fill: filled pills are reserved for degree.
+   (.tag and .tag--more live in system.css; this is a Tripper-side modifier.) */
+.tag--info { border-color: var(--info-line); color: var(--info-ink); background: var(--info-wash); }
+
+.linkish { border: 0; background: transparent; padding: 0; color: var(--info);
+           font: 500 12px/1 var(--sans); cursor: pointer; }
+.linkish:hover { color: var(--info-ink); text-decoration: underline; }
+.linkish--bad { color: var(--bad); }
+.linkish--quiet { color: var(--ink-2); }
+.linkish--quiet:hover { color: var(--ink); }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px;
+           background: var(--line); border: 1px solid var(--line); border-radius: var(--r);
+           overflow: hidden; }
+.metric { padding: 11px 13px; background: var(--surface); }
+.metric__k { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+             color: var(--ink-3); }
+.metric__v { display: flex; align-items: baseline; gap: 6px; margin-top: 5px;
+             font-family: var(--mono); font-variant-numeric: tabular-nums;
+             font-size: 15px; font-weight: 600; }
+.metric__d { font: 400 11px/1.4 var(--mono); font-variant-numeric: tabular-nums;
+             color: var(--ink-3); margin-top: 3px; }
+.metric--off { background: var(--hatch-off); }
+.metric--off .metric__v { font-family: var(--sans); font-size: 12.5px; font-weight: 400;
+                          font-style: italic; color: var(--muted); }
+/* trip-budget.html: a zero-basis note is a sentence, not a figure — .metric__d is mono by
+   default (it was built for a date/count), so give prose the same escape hatch .dc__d--sans
+   already has rather than reading a basis explanation in monospace. */
+.metric__d--sans { font-family: var(--sans); font-size: 11.5px; }
+
+/* Frozen vs editable on an archived trip — the boundary has to be visible. */
+.frozen { position: relative; }
+.frozen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--r-lg);
+  background: repeating-linear-gradient(-45deg, rgba(46,53,64,.022) 0 6px, transparent 6px 12px);
+}
+.frozen__k {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 10px/1 var(--sans);
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.hr--tight { margin: 12px 0; }
+.wrap { overflow-wrap: anywhere; }
+.nowrap { white-space: nowrap; }
+.right { text-align: right; }
+.tnum { font-variant-numeric: tabular-nums; }
+.sronly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+          clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ============================================================= Responsive =
+   Mobile is a designed layout, not a reflow accident. 768px and 640px. */
+
+@media (max-width: 1180px) {
+  .board { grid-template-columns: minmax(0, 1fr); }
+  /* On a phone the organizer is answering "who do I chase", not admiring what
+     is already settled — so the waiting column comes first. */
+  .board__col--open { order: -1; }
+}
+@media (max-width: 900px) {
+  .cmp__head, .cmp__row { grid-template-columns: minmax(0, 1fr) 80px 40px; }
+  .cmp__was { display: none; }
+  .cmp__head span:nth-child(2) { display: none; }
+  .cmp__new .cmp__was-inline { display: block; font-size: 11.5px; color: var(--ink-3);
+                               margin-top: 3px; }
+}
+@media (max-width: 768px) {
+  :root { --pad: 14px; }
+  .appbar { padding: 0 14px; gap: 10px; }
+  .appbar__nav { display: none; }
+  .appbar__who span { display: none; }
+  .thead__acts { margin-left: 0; width: 100%; }
+  .it { grid-template-columns: 22px minmax(0, 1fr) 62px; row-gap: 4px; }
+  .it__t { grid-column: 2; grid-row: 2; }
+  .it__cost { grid-column: 3; grid-row: 2; }
+  .it__acts { grid-column: 3; grid-row: 1; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lc__s { min-width: 100px; }
+}
+@media (max-width: 640px) {
+  .dgrid { grid-template-columns: minmax(0, 1fr); }
+  .fgrid { grid-template-columns: minmax(0, 1fr); }
+  .modal { padding: 0; place-items: end stretch; }
+  .modal__panel { max-width: none; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+  .modal__foot { flex-direction: column-reverse; align-items: stretch; }
+  .modal__foot .btn { justify-content: center; height: 44px; }
+  .modal__foot .modal__sp { display: none; }
+  .rev__in { padding: 7px 14px; gap: 8px; }
+  .thead__top h1 { font-size: 22px; }
+  .pagehead { flex-wrap: wrap; }
+  .pagehead__actions { margin-left: 0; width: 100%; }
+  .btn { height: 38px; }
+  .privacy { grid-template-columns: minmax(0, 1fr); }
+
+  /* people.html's directory row is 6 columns (avatar, name, preferences,
+     documents, trips, chevron) — deliberately dense at desktop width per the
+     brief. At a phone width there isn't room for six; preferences and document
+     detail are one tap away on person.html, so they drop and the row keeps
+     only what answers "who is this and what trip are they on". */
+  .prow { grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) 15px !important; }
+  .prow > :nth-child(3), .prow > :nth-child(4) { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk, .gen__bar i, .thumb--pending::after { animation: none !important; }
+  .thumb--pending::after { display: none; }
+}
+
+@media print {
+  .rev, .revnote, .appbar, .pbar { display: none !important; }
+}
+
+/* ============================================================ trips.html =
+   The portfolio row packs five data points (identity, dates, destination,
+   people, needs-you) into one line via .row/.cell — more than the dc/wait/it
+   shapes above account for, and none of their existing breakpoints fit a
+   summary row like this. Only the grid + the mobile relabelling is new;
+   everything else reuses .row/.cell/.wait__ic verbatim. */
+.triprow {
+  grid-template-columns: minmax(0, 1.5fr) 200px 98px minmax(0, 1.85fr);
+  padding-right: 40px;
+}
+.triprow__chev { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); }
+.triprow__lbl { display: none; }
+.row--head.triprow > span { font-size: 11px; }
+
+@media (max-width: 640px) {
+  .triprow { grid-template-columns: minmax(0, 1fr); row-gap: 9px; }
+  .row--head.triprow { display: none; }
+  .triprow__lbl { display: inline; font: 600 10px/1 var(--sans); letter-spacing: .06em;
+                  text-transform: uppercase; color: var(--ink-3); margin-right: 6px; }
+}

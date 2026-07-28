@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">State</span>
+      <button class="rev__b" data-v="results" aria-pressed="true">Results, 6 kinds</button>
+      <button class="rev__b" data-v="noquery">No query yet</button>
+      <button class="rev__b" data-v="tooshort">Too short</button>
+      <button class="rev__b" data-v="nomatch">No matches</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="failed">Failed</button>
+      <button class="rev__b" data-v="keyboard">⌘K palette</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell" style="max-width:1080px">
+
+  <div class="pagehead" style="margin-bottom:14px">
+    <div>
+      <h1>Search</h1>
+      <div class="pagehead__sub" data-when-not="keyboard">Across every trip, every person and every template you own.</div>
+      <div class="pagehead__sub" data-when="keyboard">How this page relates to the fast path.</div>
+    </div>
+  </div>
+
+  <label class="search" aria-label="Search everything" style="width:100%;max-width:520px;margin-bottom:6px;height:40px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" value="cambodia" placeholder="Search trips, people, documents, itinerary, templates, archived notes…" style="font-size:13.5px">
+  </label>
+  <p class="t-meta" style="margin:0 0 4px;font-size:11.5px" data-when="tooshort">Shown here as if only <span class="mono">"c"</span> had been typed so far.</p>
+  <p class="t-meta" style="margin:0 0 4px;font-size:11.5px" data-when="nomatch">Shown here as if <span class="mono">"zorbing"</span> had been searched.</p>
+  <p class="t-meta" style="margin:0 0 4px;font-size:11.5px" data-when="noquery">Shown here as if nothing had been typed yet.</p>
+  <p class="t-meta" style="margin:0 0 20px;font-size:11.5px">Never searches phones, emails, medical notes or document numbers — only what's meant to be found.</p>
+
+  <!-- ══════════════════════════════════════════════════════════ results -->
+  <div class="stack" data-when="results" style="gap:18px">
+
+    <section>
+      <div class="colhead" style="margin-bottom:8px"><h2>Trips</h2><span class="colhead__n">1</span></div>
+      <div class="card">
+        <div class="row row--link" data-href="trip.html" data-state="info" style="grid-template-columns:minmax(0,1fr) auto;padding-left:16px">
+          <span class="cell">
+            <span class="cell__l1"><span class="row__n">Vietnam &amp; <mark class="hit">Cambodia</mark> 2026</span></span>
+            <span class="cell__l2">Active · 6–15 Nov 2026 · Vietnam &amp; Cambodia</span>
+          </span>
+          <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="colhead" style="margin-bottom:8px"><h2>Itinerary items</h2><span class="colhead__n">2</span></div>
+      <div class="card">
+        <div class="row row--link" data-href="trip-itinerary.html" data-state="muted" style="grid-template-columns:26px minmax(0,1fr) auto;padding-left:16px">
+          <span class="catm">TR</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="row__n">Cross into <mark class="hit">Cambodia</mark> — Bavet border</span></span>
+            <span class="cell__l2">Vietnam &amp; Cambodia 2026 · Day 9 · Thu 14 Nov · 09:00–11:30</span>
+          </span>
+          <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+        <div class="row row--link" data-href="trip-itinerary.html" data-state="muted" style="grid-template-columns:26px minmax(0,1fr) auto;padding-left:16px;border-bottom:0">
+          <span class="catm">AC</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="row__n">Angkor Wat at sunrise, 05:00 tuk-tuk</span></span>
+            <span class="cell__l2">Vietnam &amp; Cambodia 2026 · Day 10 · Siem Reap, <mark class="hit">Cambodia</mark></span>
+          </span>
+          <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="colhead" style="margin-bottom:8px"><h2>Checklist tasks</h2><span class="colhead__n">1</span></div>
+      <div class="card">
+        <div class="row row--link" data-href="trip-checklists.html#state=overdue" data-state="warn" style="grid-template-columns:26px minmax(0,1fr) auto;padding-left:16px;border-bottom:0">
+          <span class="wait__ic wait__ic--warn" style="width:22px;height:22px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg></span>
+          <span class="cell">
+            <span class="cell__l1"><span class="row__n">Get <mark class="hit">Cambodia</mark> e-visas</span></span>
+            <span class="cell__l2">Vietnam &amp; Cambodia 2026 · due <span class="mono">20 Jul</span> · Ravi · 9 days late</span>
+          </span>
+          <span class="wait__r"><span class="pill pill--3">Overdue</span><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="colhead" style="margin-bottom:8px"><h2>Documents</h2><span class="colhead__n">1</span></div>
+      <div class="card">
+        <div class="row row--link" data-href="documents.html#state=previewimage" data-state="warn" style="grid-template-columns:34px minmax(0,1fr) auto;padding-left:16px;border-bottom:0">
+          <span class="thumb" style="width:26px;height:34px"><img class="thumb__img" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23fdf1d6'/%3E%3Crect width='300' height='50' fill='%23e3b23c'/%3E%3Ccircle cx='215' cy='250' r='48' fill='none' stroke='%23a6392e' stroke-width='6' opacity='0.65'/%3E%3C/svg%3E"></span>
+          <span class="cell">
+            <span class="cell__l1"><span class="row__n">Daniel Weiss's <mark class="hit">Cambodia</mark> e-visa</span></span>
+            <span class="cell__l2">Vietnam &amp; Cambodia 2026 · Daniel Weiss · expires <span class="mono">20 Nov 2026</span></span>
+          </span>
+          <span class="wait__r"><span class="pill pill--3">Warning</span><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="colhead" style="margin-bottom:8px"><h2>Checklist templates</h2><span class="colhead__n">1</span></div>
+      <div class="card">
+        <div class="row" style="grid-template-columns:22px minmax(0,1fr) auto;padding-left:16px;border-bottom:0">
+          <span class="thumb" style="width:20px;height:20px;border-radius:var(--r-sm)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h9M8 12h9M8 18h6"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+          <span class="cell">
+            <span class="cell__l1"><span class="row__n">Vietnam &amp; <mark class="hit">Cambodia</mark> — visas and vaccinations</span></span>
+            <span class="cell__l2">A template isn't a place you can go — it only exists inside a trip's checklists.</span>
+          </span>
+          <span class="wait__r"><span class="tag">Template</span><a class="btn btn--sm" href="trip-checklists.html#state=templates">Use it on a trip</a></span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="colhead" style="margin-bottom:8px"><h2>Archived-trip notes</h2><span class="colhead__n">1</span></div>
+      <div class="card">
+        <div class="row row--link" data-href="trip-archive.html#state=editnotes" data-state="muted" style="grid-template-columns:minmax(0,1fr) auto;padding-left:16px;border-bottom:0">
+          <span class="cell">
+            <span class="cell__l1"><span class="row__n">Sri Lanka 2025 — retrospective note</span></span>
+            <span class="cell__l2">"…glad we kept this one simple instead of folding in a few days in <mark class="hit">Cambodia</mark> as well."</span>
+          </span>
+          <span class="wait__r"><svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+      </div>
+    </section>
+
+    <div class="revnote">
+      <span class="revnote__k">Note</span>
+      <div>The ⌘K palette on every page shows the same six kinds, capped at 3 rows each. This page has
+        no cap — it's for browsing and for the overflow beyond what the palette can show at once.
+        <button class="linkish" data-set="state:keyboard">See how they relate</button></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ no query yet -->
+  <div class="blank" data-when="noquery">
+    <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
+    <div>
+      <h4>Start typing to search everything you own</h4>
+      <p>Six kinds are searchable: trips, people, documents, itinerary items, checklist templates and
+        archived-trip notes. It takes at least 2 characters before anything runs.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ too short -->
+  <div class="blank" data-when="tooshort">
+    <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
+    <div>
+      <h4>Keep typing — "c" is 1 character</h4>
+      <p>Search starts at 2 characters, so one letter matching almost everything doesn't flood the page.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ loading -->
+  <div class="card" data-when="loading">
+    <div class="skrow" style="grid-template-columns:26px minmax(0,1fr) 90px"><span class="sk" style="width:20px;height:20px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span class="sk sk--num"></span></div>
+    <div class="skrow" style="grid-template-columns:26px minmax(0,1fr) 90px"><span class="sk" style="width:20px;height:20px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span class="sk sk--num"></span></div>
+    <div class="skrow" style="grid-template-columns:26px minmax(0,1fr) 90px;border-bottom:0"><span class="sk" style="width:20px;height:20px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span class="sk sk--num"></span></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ no matches -->
+  <div class="blank" data-when="nomatch">
+    <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></span>
+    <div>
+      <h4>No matches for "zorbing"</h4>
+      <p>Searched trips, people, documents, itinerary items, checklist templates and archived-trip
+        notes. Nothing in any of them contains that.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ failed -->
+  <div class="blank" data-when="failed" style="border-color:var(--bad-line);background:var(--bad-wash)">
+    <span class="blank__icon">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <div>
+      <h4>Search didn't load</h4>
+      <p>The server answered, but not with results — <span class="mono">502</span> from the API at
+        <span class="mono">01:31</span>. Nothing has been changed or lost; this is a read that failed,
+        not the same as no matches.</p>
+      <div class="blank__act"><button class="btn btn--primary" data-set="state:loading">Try again</button></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ ⌘K relationship -->
+  <div data-when="keyboard">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card__head"><h2>This page vs. <span class="kbd">⌘K</span></h2></div>
+      <div class="card__body">
+        <p style="margin:0 0 12px">Both search the same six kinds with the same rules — 2 characters
+          minimum, nothing private indexed. They differ in one thing: how much they show.</p>
+        <div class="facts" style="margin-bottom:14px">
+          <div class="fact fact--info"><div class="fact__k">⌘K palette</div><div class="fact__v">Top 3 per kind</div><div class="fact__d">fast path, any page, no navigation</div></div>
+          <div class="fact"><div class="fact__k">This page</div><div class="fact__v">No cap</div><div class="fact__d">browsing and the overflow</div></div>
+        </div>
+        <button class="btn btn--primary" data-open-modal="palette">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+          Open the ⌘K palette
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card__head"><h2>Keyboard model</h2></div>
+      <div class="card__body">
+        <dl class="kv" style="grid-template-columns:120px minmax(0,1fr)">
+          <dt><span class="kbd">⌘K</span> / <span class="kbd">Ctrl</span><span class="kbd">K</span></dt><dd>Open the palette from anywhere</dd>
+          <dt><span class="kbd">↑</span> <span class="kbd">↓</span></dt><dd>Move between results</dd>
+          <dt><span class="kbd">↵</span></dt><dd>Open the selected row</dd>
+          <dt><span class="kbd">esc</span></dt><dd>Close, without navigating</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" value="cambodia" data-autofocus aria-label="Search trips, people, documents, itinerary items, templates and archived notes">
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g">
+      <div class="pal__gk">Trips <span class="mono" style="font-weight:400">1</span></div>
+      <button class="pal__r" aria-selected="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+        <span><span class="pal__n">Vietnam &amp; <mark class="hit">Cambodia</mark> 2026</span>
+          <span class="pal__d">Active · 6–15 Nov 2026</span></span>
+        <svg class="row__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="pal__g">
+      <div class="pal__gk">Checklist tasks <span class="mono" style="font-weight:400">1</span></div>
+      <button class="pal__r">
+        <span class="wait__ic wait__ic--warn" style="width:20px;height:20px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2" stroke-linecap="round"/></svg></span>
+        <span><span class="pal__n">Get <mark class="hit">Cambodia</mark> e-visas</span>
+          <span class="pal__d">Vietnam &amp; Cambodia 2026 · due 20 Jul · Ravi · 9 days late</span></span>
+        <span class="pill pill--3">Overdue</span>
+      </button>
+    </div>
+    <div class="pal__g">
+      <div class="pal__gk">Documents <span class="mono" style="font-weight:400">1</span></div>
+      <button class="pal__r">
+        <span class="thumb" style="width:20px;height:20px"><img class="thumb__img" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23fdf1d6'/%3E%3Crect width='300' height='50' fill='%23e3b23c'/%3E%3C/svg%3E"></span>
+        <span><span class="pal__n">Daniel Weiss's <mark class="hit">Cambodia</mark> e-visa</span>
+          <span class="pal__d">Expires 20 Nov 2026</span></span>
+        <span class="pill pill--3">Warning</span>
+      </button>
+    </div>
+    <div class="pal__g">
+      <div class="pal__gk">Checklist templates <span class="mono" style="font-weight:400">1</span></div>
+      <button class="pal__r" disabled>
+        <span class="thumb" style="width:20px;height:20px;border-radius:var(--r-sm)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h9M8 12h9M8 18h6"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+        <span><span class="pal__n">Vietnam &amp; <mark class="hit">Cambodia</mark> — visas and vaccinations</span>
+          <span class="pal__d">A template isn't a place you can go.</span></span>
+        <span class="tag">Template</span>
+      </button>
+    </div>
+  </div>
+  <div class="pal__foot">
+    <span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span>
+    <span style="flex:1"></span>
+    <a href="search.html#state=results">See all 6 matches</a>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

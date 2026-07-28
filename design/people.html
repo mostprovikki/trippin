@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>People · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Directory</span>
+      <button class="rev__b" data-v="populated" aria-pressed="true">Populated</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="empty">Empty</button>
+      <button class="rev__b" data-v="failed">Load failed</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Deleting</span>
+      <button class="rev__b" data-v="deleteblocked">Blocked · on a live trip</button>
+      <button class="rev__b" data-v="deleteok">Allowed · no live trip</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html">Trips</a>
+    <a href="people.html" aria-current="page">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <div class="pagehead">
+    <div>
+      <h1>People</h1>
+      <div class="pagehead__sub">Everyone who has ever been added to a trip. Add someone once here and
+        every trip after this just picks them from the list — nobody types a passport number twice.</div>
+    </div>
+    <div class="pagehead__actions" data-when="populated deleteblocked deleteok empty">
+      <a class="btn btn--primary" href="person-new.html">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+        Add a person</a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ populated / deleteblocked / deleteok -->
+  <div data-when="populated deleteblocked deleteok">
+
+    <div class="toolbar">
+      <label class="search" aria-label="Search people">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        <input type="text" placeholder="Search by name or home city">
+      </label>
+      <label class="fg" style="margin:0;min-width:186px">
+        <span class="fg__l" style="margin-bottom:4px">Sort by</span>
+        <select>
+          <option>Name (A–Z)</option>
+          <option>Most trips first</option>
+          <option>Worst document status</option>
+          <option>Home city</option>
+        </select>
+      </label>
+      <span style="flex:1"></span>
+      <span class="t-eyebrow">20 people</span>
+    </div>
+
+    <div class="card">
+      <div class="row row--head prow" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span></span><span>Name</span><span>Preferences</span><span>Documents</span><span>Trips</span><span></span>
+      </div>
+
+      <!-- 1 · Asha Kumar — populated demo -->
+      <div class="row row--link prow" data-href="person.html#state=populated" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">AK</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Asha Kumar</span></span>
+          <span class="cell__l2">Chennai</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegan</span><span class="tag">Moderate pace</span></span>
+          <span class="cell__l2">Medium budget · temples, photography</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">Passport <span class="mono">14 Mar 2032</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">4</span> trips
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l2"><a href="trip.html">Vietnam &amp; Cambodia 2026</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 2 · Meera Iyer — deleteblocked demo -->
+      <div class="row row--link prow" data-state="warn" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">MI</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Meera Iyer</span></span>
+          <span class="cell__l2">Bengaluru</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Packed pace</span></span>
+          <span class="cell__l2">High budget · street food, boats</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> <span class="pill pill--3">Warning</span></span>
+          <span class="cell__l2">Passport <span class="mono">12 Jan 2027</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">3</span> trips
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l2"><a href="trip.html">Vietnam &amp; Cambodia 2026</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 3 · Daniel Weiss -->
+      <div class="row row--link prow" data-state="warn" data-href="person.html#state=manydocs" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">DW</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Daniel Weiss</span></span>
+          <span class="cell__l2">Berlin</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Relaxed pace</span></span>
+          <span class="cell__l2">High budget · photography</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">8</span> <span class="pill pill--3">Warning</span></span>
+          <span class="cell__l2">Vietnam e-visa <span class="mono">5 Nov 2026</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">2</span> trips
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l2"><a href="trip.html">Vietnam &amp; Cambodia 2026</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 4 · Lena Hoffmann -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">LH</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Lena Hoffmann</span></span>
+          <span class="cell__l2">Munich</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegetarian</span><span class="tag">Moderate pace</span></span>
+          <span class="cell__l2">Medium budget · temples</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">Passport <span class="mono">9 May 2029</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">2</span> trips
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l2"><a href="trip.html">Vietnam &amp; Cambodia 2026</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 5 · Ravi Menon — noprefs demo -->
+      <div class="row row--link prow" data-href="person.html#state=noprefs" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">RM</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Ravi Menon</span></span>
+          <span class="cell__l2">Bengaluru</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="dc__v--none" style="font-size:12px">Nothing set</span></span>
+          <span class="cell__l2">Hasn't confirmed a profile yet</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono dim">0</span></span>
+          <span class="cell__l2"><span class="dc__v--none" style="font-size:12px">No documents</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">2</span> trips
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l2"><a href="trip.html">Vietnam &amp; Cambodia 2026</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 6 · Nikhil Rao -->
+      <div class="row row--link prow" data-state="bad" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">NR</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Nikhil Rao</span></span>
+          <span class="cell__l2">Mumbai</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Packed pace</span></span>
+          <span class="cell__l2">Medium budget · street food</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> <span class="pill pill--4">Expired</span></span>
+          <span class="cell__l2">Passport <span class="mono">2 Nov 2026</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l2"><a href="trip.html">Vietnam &amp; Cambodia 2026</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 7 · Priya Nair -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">PN</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Priya Nair</span></span>
+          <span class="cell__l2">Kochi</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegetarian</span><span class="tag">Relaxed pace</span></span>
+          <span class="cell__l2">Low budget · temples, backwaters</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">Passport <span class="mono">19 Feb 2029</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Planning</span></span>
+          <span class="cell__l2"><a href="trip.html#state=planning">Rajasthan in February</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 8 · Arjun Batra -->
+      <div class="row row--link prow" data-state="bad" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">AB</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Arjun Batra</span></span>
+          <span class="cell__l2">Delhi</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Packed pace</span></span>
+          <span class="cell__l2">High budget · forts</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> <span class="pill pill--4">Expired</span></span>
+          <span class="cell__l2">Passport <span class="mono">30 Sep 2026</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Planning</span></span>
+          <span class="cell__l2"><a href="trip.html#state=planning">Rajasthan in February</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 9 · Sneha Kulkarni — nodocs demo -->
+      <div class="row row--link prow" data-href="person.html#state=nodocs" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">SK</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Sneha Kulkarni</span></span>
+          <span class="cell__l2">Pune</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegan</span><span class="tag">Relaxed pace</span></span>
+          <span class="cell__l2">Medium budget · markets</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono dim">0</span></span>
+          <span class="cell__l2"><span class="dc__v--none" style="font-size:12px">No documents</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Planning</span></span>
+          <span class="cell__l2"><a href="trip.html#state=planning">Rajasthan in February</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 10 · Karthik Subramanian -->
+      <div class="row row--link prow" data-state="warn" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">KS</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Karthik Subramanian</span></span>
+          <span class="cell__l2">Chennai</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Moderate pace</span></span>
+          <span class="cell__l2">Medium budget · forts, food</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> <span class="pill pill--3">Warning</span></span>
+          <span class="cell__l2">Passport <span class="mono">1 Dec 2026</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Planning</span></span>
+          <span class="cell__l2"><a href="trip.html#state=planning">Rajasthan in February</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 11 · Divya Menon -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">DM</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Divya Menon</span></span>
+          <span class="cell__l2">Bengaluru</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegetarian</span><span class="tag">Packed pace</span></span>
+          <span class="cell__l2">Low budget · shopping</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">Passport <span class="mono">3 Jul 2031</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--info" style="font-size:11.5px"><span class="state__dot"></span>Planning</span></span>
+          <span class="cell__l2"><a href="trip.html#state=planning">Rajasthan in February</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 12 · Rohan Kapoor -->
+      <div class="row row--link prow" data-state="bad" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">RK</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Rohan Kapoor</span></span>
+          <span class="cell__l2">Mumbai</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Moderate pace</span></span>
+          <span class="cell__l2">High budget · nightlife, beaches</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">2</span> <span class="pill pill--4">Expired</span></span>
+          <span class="cell__l2">Driving licence <span class="mono">15 Aug 2025</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span></span>
+          <span class="cell__l2"><a href="trip.html#state=ready">Goa New Year</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 13 · Sanya Reddy -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">SR</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Sanya Reddy</span></span>
+          <span class="cell__l2">Hyderabad</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegetarian</span><span class="tag">Relaxed pace</span></span>
+          <span class="cell__l2">Low budget · beaches</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">Passport <span class="mono">4 Apr 2033</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span></span>
+          <span class="cell__l2"><a href="trip.html#state=ready">Goa New Year</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 14 · Vikram Shah -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">VS</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Vikram Shah</span></span>
+          <span class="cell__l2">Ahmedabad</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Packed pace</span></span>
+          <span class="cell__l2">High budget · nightlife</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">2</span></span>
+          <span class="cell__l2">Passport <span class="mono">21 Jan 2030</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">2</span> trips
+            <span class="state state--ok" style="font-size:11.5px"><span class="state__dot"></span>Confirmed</span></span>
+          <span class="cell__l2"><a href="trip.html#state=ready">Goa New Year</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 15 · Farah Sheikh -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">FS</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Farah Sheikh</span></span>
+          <span class="cell__l2">Bengaluru</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegetarian</span><span class="tag">Moderate pace</span></span>
+          <span class="cell__l2">Medium budget · houseboats</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono dim">0</span></span>
+          <span class="cell__l2"><span class="dc__v--none" style="font-size:12px">No documents</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Idea</span></span>
+          <span class="cell__l2"><a href="trip.html#state=idea">Kerala backwaters</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 16 · Tara Fernandes -->
+      <div class="row row--link prow" data-state="warn" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">TF</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Tara Fernandes</span></span>
+          <span class="cell__l2">Goa</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Relaxed pace</span></span>
+          <span class="cell__l2">Low budget · houseboats, beaches</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> <span class="pill pill--3">Warning</span></span>
+          <span class="cell__l2">Passport <span class="mono">1 Mar 2027</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip
+            <span class="state state--muted" style="font-size:11.5px"><span class="state__dot"></span>Idea</span></span>
+          <span class="cell__l2"><a href="trip.html#state=idea">Kerala backwaters</a></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 17 · Imran Qureshi — never on a trip -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">IQ</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Imran Qureshi</span></span>
+          <span class="cell__l2">Lucknow</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Moderate pace</span></span>
+          <span class="cell__l2">Medium budget · history</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">Passport <span class="mono">11 Oct 2030</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono dim">0</span></span>
+          <span class="cell__l2"><span class="dc__v--none" style="font-size:12px">Not on any trip yet</span></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 18 · Chitra Venkataraghavan Padmanabhan — long name edge case, never on a trip -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">CV</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Chitra Venkataraghavan Padmanabhan</span></span>
+          <span class="cell__l2">Coimbatore</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegan</span><span class="tag">Relaxed pace</span></span>
+          <span class="cell__l2">Low budget</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono dim">0</span></span>
+          <span class="cell__l2"><span class="dc__v--none" style="font-size:12px">No documents</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono dim">0</span></span>
+          <span class="cell__l2"><span class="dc__v--none" style="font-size:12px">Not on any trip yet</span></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 19 · Oliver Grant — archived-only trip -->
+      <div class="row row--link prow" data-href="person.html" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">OG</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Oliver Grant</span></span>
+          <span class="cell__l2">London</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Non-veg</span><span class="tag">Packed pace</span></span>
+          <span class="cell__l2">High budget · temples</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">Passport <span class="mono">6 Jun 2028</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip <span class="tag">Archived</span></span>
+          <span class="cell__l2"><a href="trip.html#state=empty">Sri Lanka 2025</a> <span class="dim" style="font-size:11px">· no live trip</span></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 20 · Yuki Tanaka — deleteok demo: archived-only trip, 1 expired doc -->
+      <div class="row row--link prow" data-state="bad" data-href="person.html#state=nodocs" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span class="avatar" style="width:28px;height:28px;font-size:10px">YT</span>
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Yuki Tanaka</span></span>
+          <span class="cell__l2">Tokyo</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="tag">Vegetarian</span><span class="tag">Moderate pace</span></span>
+          <span class="cell__l2">Medium budget · photography</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> <span class="pill pill--4">Expired</span></span>
+          <span class="cell__l2">Passport <span class="mono">10 Aug 2026</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="mono" style="font-weight:600">1</span> trip <span class="tag">Archived</span></span>
+          <span class="cell__l2"><a href="trip.html#state=empty">Sri Lanka 2025</a> <span class="dim" style="font-size:11px">· no live trip</span></span>
+        </span>
+        <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+    </div><!-- /card -->
+
+    <!-- ═══════════════ deleteblocked: naming the trip, offering to open it ═══ -->
+    <div class="card" data-when="deleteblocked" style="margin-top:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg></span>
+        <h2>Can't delete Meera Iyer</h2>
+      </div>
+      <div class="modal__body">
+        <p>She's on <b>Vietnam &amp; Cambodia 2026</b>, which is <b>Active</b> — five other people are
+          reading that trip's plan right now. Remove her from the trip first, then come back and
+          delete her here.</p>
+        <ul class="damage">
+          <li data-k="warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            <span>She's on 2 other trips too
+              <span class="damage__d">Goa New Year (confirmed) and Rajasthan in February (planning) would lose her as well, once this trip lets her go.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Nothing is deleted yet
+              <span class="damage__d">Her profile, 1 document and her history on all 3 trips are untouched until the active trip lets her go.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" data-set="state:populated">Back to the directory</button>
+        <span class="modal__sp"></span>
+        <a class="btn btn--primary" href="trip.html">Open Vietnam &amp; Cambodia 2026</a>
+      </div>
+    </div>
+
+    <!-- ═══════════════ deleteok: no live trip, confirm naming what goes ═══════ -->
+    <div class="card" data-when="deleteok" style="margin-top:16px">
+      <div class="modal__head">
+        <span class="modal__ic modal__ic--bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4.6h6V7M6.5 7l.8 13a1.6 1.6 0 001.6 1.5h6.2a1.6 1.6 0 001.6-1.5l.8-13"/></svg></span>
+        <h2>Delete Yuki Tanaka for good?</h2>
+      </div>
+      <div class="modal__body">
+        <p>She isn't on any trip that's still live. Her only trip, <b>Sri Lanka 2025</b>, was archived
+          and its plan is frozen either way. Here is everything that would go:</p>
+        <ul class="damage">
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>Her profile
+              <span class="damage__d">Vegetarian, moderate pace, medium budget, Tokyo. Nothing carries over to a new profile if she's added again later.</span></span></li>
+          <li data-k="lose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <span>1 document
+              <span class="damage__d">Passport, expired <span class="mono">10 Aug 2026</span> — already unusable for travel, but it's the only record of her document number.</span></span></li>
+          <li data-k="keep"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            <span>Sri Lanka 2025 itself is unaffected
+              <span class="damage__d">Its archived snapshot keeps her name and role in the record — deleting her here doesn't rewrite that trip's history.</span></span></li>
+        </ul>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" data-set="state:populated">Keep her</button>
+        <span class="modal__sp"></span>
+        <button class="btn btn--danger">Delete Yuki Tanaka</button>
+      </div>
+    </div>
+
+  </div><!-- /populated deleteblocked deleteok -->
+
+  <!-- ══════════════════════════════════════════════════════════════ loading -->
+  <div data-when="loading">
+    <div class="card">
+      <div class="row row--head prow" style="grid-template-columns:32px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px 16px">
+        <span></span><span>Name</span><span>Preferences</span><span>Documents</span><span>Trips</span><span></span>
+      </div>
+      <div class="skrow" style="grid-template-columns:28px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px"><span class="sk" style="width:28px;height:28px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span><span class="sk sk--l1" style="display:block;width:70%"></span><span class="sk sk--l2" style="display:block;width:50%"></span></span><span class="sk sk--num"></span><span class="sk sk--num" style="width:110px"></span></div>
+      <div class="skrow" style="grid-template-columns:28px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px"><span class="sk" style="width:28px;height:28px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span><span class="sk sk--l1" style="display:block;width:70%"></span><span class="sk sk--l2" style="display:block;width:50%"></span></span><span class="sk sk--num"></span><span class="sk sk--num" style="width:110px"></span></div>
+      <div class="skrow" style="grid-template-columns:28px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px"><span class="sk" style="width:28px;height:28px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span><span class="sk sk--l1" style="display:block;width:70%"></span><span class="sk sk--l2" style="display:block;width:50%"></span></span><span class="sk sk--num"></span><span class="sk sk--num" style="width:110px"></span></div>
+      <div class="skrow" style="grid-template-columns:28px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px"><span class="sk" style="width:28px;height:28px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span><span class="sk sk--l1" style="display:block;width:70%"></span><span class="sk sk--l2" style="display:block;width:50%"></span></span><span class="sk sk--num"></span><span class="sk sk--num" style="width:110px"></span></div>
+      <div class="skrow" style="grid-template-columns:28px minmax(0,1.05fr) minmax(0,1.25fr) 122px 200px;border-bottom:0"><span class="sk" style="width:28px;height:28px;border-radius:50%"></span><span><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block"></span></span><span><span class="sk sk--l1" style="display:block;width:70%"></span><span class="sk sk--l2" style="display:block;width:50%"></span></span><span class="sk sk--num"></span><span class="sk sk--num" style="width:110px"></span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ empty, first run -->
+  <div data-when="empty">
+    <div class="blank">
+      <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+      <div>
+        <h4>Nobody's in the directory yet</h4>
+        <p>People live here once and get reused on every trip after — their preferences and documents
+          follow them, so nobody fills in a passport number twice. There's no directory-shaped trip
+          this depends on; you can add the first person right now.</p>
+        <div class="blank__act">
+          <a class="btn btn--primary" href="person-new.html">Add your first person</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ load failed -->
+  <div data-when="failed">
+    <div class="blank blank--bad">
+      <span class="blank__icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <div>
+        <h4>The directory didn't load</h4>
+        <p>The server answered, but not with the people — <span class="mono">502</span> from the API
+          at <span class="mono">01:14</span>. Nothing has been changed or lost; this is a read that
+          failed. It is <b>not</b> the same as an empty directory.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:loading">Try loading it again</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

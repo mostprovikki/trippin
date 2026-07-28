@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Person · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Traveller</span>
+      <button class="rev__b" data-v="populated" aria-pressed="true">Asha · on 4 trips</button>
+      <button class="rev__b" data-v="noprefs">Ravi · nothing set</button>
+      <button class="rev__b" data-v="manydocs">Daniel · 8 documents</button>
+      <button class="rev__b" data-v="nodocs">Sneha · no documents</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Editing a document</span>
+      <button class="rev__b" data-v="editdoc">Metadata-only edit</button>
+      <button class="rev__b" data-v="saving">Saving</button>
+      <button class="rev__b" data-v="savefailed">Save failed</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html">Trips</a>
+    <a href="people.html" aria-current="page">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell" style="max-width:1080px">
+
+  <!-- ─────────────────────────────────────────────────────── page head -->
+  <div class="thead">
+    <div class="thead__crumb">
+      <a href="people.html">People</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      <span data-when="populated">Asha Kumar</span>
+      <span data-when="noprefs">Ravi Menon</span>
+      <span data-when="manydocs editdoc saving savefailed">Daniel Weiss</span>
+      <span data-when="nodocs">Sneha Kulkarni</span>
+    </div>
+    <div class="thead__top">
+      <div style="min-width:0;display:flex;align-items:flex-start;gap:14px">
+        <span class="avatar avatar--lg" data-when="populated">AK</span>
+        <span class="avatar avatar--lg" data-when="noprefs">RM</span>
+        <span class="avatar avatar--lg" data-when="manydocs editdoc saving savefailed">DW</span>
+        <span class="avatar avatar--lg" data-when="nodocs">SK</span>
+        <div>
+          <h1>
+            <span data-when="populated">Asha Kumar</span>
+            <span data-when="noprefs">Ravi Menon</span>
+            <span data-when="manydocs editdoc saving savefailed">Daniel Weiss</span>
+            <span data-when="nodocs">Sneha Kulkarni</span>
+          </h1>
+          <div class="thead__meta">
+            <span data-when="populated">Chennai</span>
+            <span data-when="noprefs">Bengaluru</span>
+            <span data-when="manydocs editdoc saving savefailed">Berlin</span>
+            <span data-when="nodocs">Pune</span>
+            <span class="dash">·</span>
+            <span class="mono" data-when="populated">4 trips</span>
+            <span class="mono" data-when="noprefs">2 trips</span>
+            <span class="mono" data-when="manydocs editdoc saving savefailed">2 trips</span>
+            <span class="mono" data-when="nodocs">1 trip</span>
+          </div>
+        </div>
+      </div>
+      <div class="thead__acts">
+        <button class="btn" data-when="populated" data-open-modal="editprofile">Edit profile</button>
+        <button class="btn" data-when="editdoc saving savefailed" data-set="state:manydocs">Back to Daniel's documents</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ profile -->
+  <section class="sect">
+    <div class="card">
+      <div class="card__head"><h2>Profile</h2></div>
+      <div class="card__body">
+        <dl class="kv" style="grid-template-columns:150px minmax(0,1fr)">
+          <dt>Home city</dt>
+          <dd>
+            <span data-when="populated">Chennai</span>
+            <span data-when="noprefs">Bengaluru</span>
+            <span data-when="manydocs editdoc saving savefailed">Berlin</span>
+            <span data-when="nodocs">Pune</span>
+          </dd>
+          <dt>Dietary</dt>
+          <dd>
+            <span class="tag" data-when="populated">Vegan</span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span class="tag" data-when="manydocs editdoc saving savefailed">Non-veg</span>
+            <span class="tag" data-when="nodocs">Vegan</span>
+          </dd>
+          <dt>Pace</dt>
+          <dd>
+            <span class="tag" data-when="populated">Moderate</span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span class="tag" data-when="manydocs editdoc saving savefailed">Relaxed</span>
+            <span class="tag" data-when="nodocs">Relaxed</span>
+          </dd>
+          <dt>Budget band</dt>
+          <dd>
+            <span class="tag" data-when="populated">Medium</span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span class="tag" data-when="manydocs editdoc saving savefailed">High</span>
+            <span class="tag" data-when="nodocs">Medium</span>
+          </dd>
+          <dt>Interests</dt>
+          <dd>
+            <span data-when="populated"><span class="tag">Temples</span> <span class="tag">Photography</span></span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span data-when="manydocs editdoc saving savefailed"><span class="tag">Photography</span></span>
+            <span data-when="nodocs"><span class="tag">Markets</span></span>
+          </dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────── private fields — visibly marked as such -->
+    <div class="card" style="margin-top:14px">
+      <div class="card__head">
+        <h2>Private details</h2>
+        <span style="flex:1"></span>
+        <span class="t-eyebrow">Visible to you only</span>
+      </div>
+      <div class="card__body">
+        <p class="t-meta" style="margin:0 0 12px;font-size:12px">Never shown to other participants, and
+          never sent to the AI features — see <a href="ai-review.html">the privacy account there</a>.</p>
+        <dl class="kv" style="grid-template-columns:150px minmax(0,1fr)">
+          <dt>Phone</dt>
+          <dd class="rowline" style="gap:8px">
+            <span class="mono" data-when="populated">+91 98450 11223</span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span class="mono" data-when="manydocs editdoc saving savefailed">+49 30 1234 567</span>
+            <span class="mono" data-when="nodocs">+91 98220 33445</span>
+            <span class="tag">Private</span>
+          </dd>
+          <dt>Email</dt>
+          <dd class="rowline" style="gap:8px">
+            <span class="mono" data-when="populated">asha.kumar@example.com</span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span class="mono" data-when="manydocs editdoc saving savefailed">daniel.weiss@example.com</span>
+            <span class="mono" data-when="nodocs">sneha.kulkarni@example.com</span>
+            <span class="tag">Private</span>
+          </dd>
+          <dt>Emergency contact</dt>
+          <dd class="rowline" style="gap:8px">
+            <span data-when="populated">Priya Kumar (sister) · <span class="mono">+91 98450 99887</span></span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span data-when="manydocs editdoc saving savefailed">Klara Weiss (wife) · <span class="mono">+49 30 765 4321</span></span>
+            <span data-when="nodocs">Amit Kulkarni (brother) · <span class="mono">+91 98220 99001</span></span>
+            <span class="tag">Private</span>
+          </dd>
+          <dt>Allergies</dt>
+          <dd class="rowline" style="gap:8px">
+            <span data-when="populated">Peanuts</span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span class="dc__v--none" data-when="manydocs editdoc saving savefailed" style="font-size:13px">None known</span>
+            <span class="dc__v--none" data-when="nodocs" style="font-size:13px">None known</span>
+            <span class="tag">Private</span>
+          </dd>
+          <dt>Medical notes</dt>
+          <dd class="rowline" style="gap:8px">
+            <span data-when="populated">Carries an EpiPen</span>
+            <span class="dc__v--none" data-when="noprefs" style="font-size:13px">Not set</span>
+            <span class="dash" data-when="manydocs editdoc saving savefailed">—</span>
+            <span class="dash" data-when="nodocs">—</span>
+            <span class="tag">Private</span>
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ documents -->
+  <section class="sect" data-when="populated noprefs manydocs nodocs">
+    <div class="card">
+      <div class="card__head">
+        <h2>Documents</h2>
+        <span style="flex:1"></span>
+        <span class="t-eyebrow" data-when="populated">1 on file</span>
+        <span class="t-eyebrow" data-when="manydocs">8 on file</span>
+        <span class="t-eyebrow" data-when="noprefs nodocs">none on file</span>
+        <button class="btn" data-when="populated manydocs" data-reveal="all" data-reveal-label style="margin-left:10px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span> Reveal all</span>
+        </button>
+      </div>
+
+      <!-- populated: 1 document, fine -->
+      <div data-when="populated">
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='116' width='140' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px"><span style="font-weight:600;font-size:13.5px">Passport</span></div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">M1284213</span> · Expires <span class="mono">14 Mar 2032</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span> Reveal</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- noprefs / nodocs: empty -->
+      <div class="card__body" data-when="noprefs nodocs">
+        <div class="blank" style="border-style:dashed">
+          <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span>
+          <div>
+            <h4 data-when="noprefs">No documents from Ravi yet</h4>
+            <h4 data-when="nodocs">No documents from Sneha yet</h4>
+            <p data-when="noprefs">He hasn't opened his link, so nothing has been uploaded. Nothing is
+              required until the trip he's on needs it.</p>
+            <p data-when="nodocs">Not required yet — Rajasthan in February is still a broad window, so
+              there's nothing to check a document against.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- manydocs / editdoc / saving / savefailed: 8 documents, half problematic -->
+      <div data-when="manydocs">
+
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px"><span style="font-weight:600;font-size:13.5px">Passport</span></div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">C4471209</span> · Expires <span class="mono">12 Mar 2031</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span> Reveal</span></button>
+          </div>
+        </div>
+
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px">
+              <span style="font-weight:600;font-size:13.5px">Cambodia e-visa</span>
+              <span class="pill pill--3">Warning</span>
+            </div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">EVISA-KH-2026-88213</span> · Expires <span class="mono">20 Nov 2026</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span> Reveal</span></button>
+            <button class="linkish linkish--quiet" data-set="state:editdoc">Edit</button>
+          </div>
+        </div>
+
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px">
+              <span style="font-weight:600;font-size:13.5px">Vietnam e-visa</span>
+              <span class="pill pill--4">Expired</span>
+            </div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">EVISA-VN-2026-40718</span> · Expires <span class="mono">5 Nov 2026</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span> Reveal</span></button>
+          </div>
+        </div>
+
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+            <span class="thumb__pg">1/2</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px">
+              <span style="font-weight:600;font-size:13.5px">Travel insurance certificate</span>
+              <span class="pill pill--3">Warning</span>
+            </div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">TI-DE-7734021</span> · Expires <span class="mono">16 Nov 2026</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span> Reveal</span></button>
+          </div>
+        </div>
+
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px"><span style="font-weight:600;font-size:13.5px">International driving permit</span></div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">IDP-DE-991823</span> · Expires <span class="mono">8 Apr 2028</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span> Reveal</span></button>
+          </div>
+        </div>
+
+        <!-- unpreviewable -->
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--none">
+            <span class="thumb__ext">DOCX</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px"><span style="font-weight:600;font-size:13.5px">Vaccination certificate</span></div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">No preview available for this
+              file type · Expires <span class="dash">—</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="linkish linkish--quiet">Download to view</button>
+          </div>
+        </div>
+
+        <!-- very tall scan -->
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0;border-bottom:1px solid var(--line-2)">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img thumb__img--tall" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='980'%3E%3Crect width='300' height='980' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='90' width='244' height='700' fill='%23e5ecf3'/%3E%3Crect x='28' y='820' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='150' cy='450' r='60' fill='%23c3d0dd'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+            <span class="thumb__pg">Cropped</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px"><span style="font-weight:600;font-size:13.5px">National ID (Personalausweis)</span></div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">L01X00T47</span> · Expires <span class="dash">—</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span> Reveal</span></button>
+          </div>
+        </div>
+
+        <div class="upl" data-doc style="grid-template-columns:72px minmax(0,1fr) auto;align-items:start;padding:14px 16px;border:0;border-radius:0">
+          <div class="thumb thumb--lg thumb--hide">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+          </div>
+          <div>
+            <div class="rowline" style="gap:8px"><span style="font-weight:600;font-size:13.5px">Yellow fever certificate</span></div>
+            <div class="t-meta" style="margin-top:4px;font-size:12px">Number <span class="mono">YF-2026-771</span> · Expires <span class="mono">22 Aug 2031</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="reveal" data-reveal data-reveal-label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span> Reveal</span></button>
+          </div>
+        </div>
+
+      </div><!-- /manydocs -->
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════════════ metadata-only edit of one document -->
+  <section class="sect" data-when="editdoc saving savefailed">
+    <div class="card">
+      <div class="card__head">
+        <h2>Edit Cambodia e-visa</h2>
+        <span style="flex:1"></span>
+        <span class="t-eyebrow">Metadata only</span>
+      </div>
+      <div class="card__body">
+        <p class="t-meta" style="margin:0 0 14px;font-size:12.5px;max-width:70ch">The scanned file
+          itself can't be changed from here — <b>delete this document and upload a new one</b> if the
+          file is wrong. Only the type, number and expiry below are editable.</p>
+        <div style="display:flex;gap:18px;flex-wrap:wrap">
+          <div class="thumb thumb--lg thumb--hide" style="flex:none">
+            <img class="thumb__img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='386'%3E%3Crect width='300' height='386' fill='%23d8e2ee'/%3E%3Crect x='28' y='36' width='244' height='24' fill='%23aebfd1'/%3E%3Crect x='28' y='76' width='180' height='10' fill='%23c3d0dd'/%3E%3Crect x='28' y='96' width='180' height='10' fill='%23c3d0dd'/%3E%3Ccircle cx='220' cy='270' r='44' fill='%23aebfd1'/%3E%3C/svg%3E" alt="">
+            <span class="thumb__lock">Hidden</span>
+          </div>
+          <div style="flex:1;min-width:240px">
+
+            <!-- editable — idle or failed -->
+            <div class="fgrid" data-when="editdoc savefailed">
+              <label class="fg"><span class="fg__l">Type <span class="fg__req">Required</span></span>
+                <select>
+                  <option selected>Cambodia e-visa</option>
+                  <option>Passport</option>
+                  <option>Vietnam e-visa</option>
+                  <option>Travel insurance</option>
+                  <option>Vaccination certificate</option>
+                  <option>National ID</option>
+                  <option>Driving licence</option>
+                  <option>Other</option>
+                </select></label>
+              <label class="fg"><span class="fg__l">Document number</span>
+                <input class="field" type="text" value="EVISA-KH-2026-88213"></label>
+              <label class="fg"><span class="fg__l">Expires</span>
+                <input type="date" value="2026-11-20"></label>
+            </div>
+
+            <!-- saving — disabled, legible -->
+            <div class="fgrid" data-when="saving">
+              <label class="fg"><span class="fg__l">Type <span class="fg__req">Required</span></span>
+                <select disabled>
+                  <option selected>Cambodia e-visa</option>
+                </select></label>
+              <label class="fg"><span class="fg__l">Document number</span>
+                <input class="field" type="text" value="EVISA-KH-2026-88213" disabled></label>
+              <label class="fg"><span class="fg__l">Expires</span>
+                <input type="date" value="2026-11-20" disabled></label>
+            </div>
+
+            <div class="rowline" style="gap:8px" data-when="saving">
+              <span class="spin"></span><span class="t-meta" style="font-size:12.5px">Saving…</span>
+            </div>
+
+            <div class="banner banner--bad" data-when="savefailed">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+              <div><b>Couldn't save.</b> The connection dropped partway through — everything above is
+                still in the form exactly as you typed it; nothing was lost.</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button class="btn" data-when="editdoc savefailed" data-set="state:manydocs">Cancel</button>
+        <span class="modal__sp" data-when="editdoc savefailed"></span>
+        <button class="btn btn--primary" data-when="editdoc" data-set="state:saving">Save changes</button>
+        <button class="btn btn--primary" data-when="savefailed" data-set="state:saving">Try saving again</button>
+        <button class="btn btn--primary" disabled data-when="saving">Saving…</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ which trips this person is on — the reason this page exists -->
+  <section class="sect" data-when="populated noprefs manydocs nodocs">
+    <h2 class="sect__t">Which trips they're on
+      <span class="dim">· and their readiness on each — this doesn't exist anywhere in the current build</span></h2>
+    <div class="card">
+      <div class="row row--head" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+        <span>Trip</span><span>Status</span><span>Role</span><span>Readiness</span><span></span>
+      </div>
+
+      <!-- populated: Asha, 4 trips -->
+      <div data-when="populated">
+        <div class="row row--link" data-href="trip.html" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Vietnam &amp; Cambodia 2026</span></span>
+            <span class="cell__l2 mono">6–15 Nov 2026</span></span>
+          <span class="cell__l1"><span class="state state--info" style="font-size:12.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="state state--ok" style="font-size:12.5px"><span class="state__dot"></span>All set</span></span>
+            <span class="cell__l2">Profile confirmed · document fine · nothing outstanding</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-href="trip.html#state=ready" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Goa New Year</span></span>
+            <span class="cell__l2 mono">30 Dec – 2 Jan</span></span>
+          <span class="cell__l1"><span class="state state--ok" style="font-size:12.5px"><span class="state__dot"></span>Confirmed</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="state state--ok" style="font-size:12.5px"><span class="state__dot"></span>All set</span></span>
+            <span class="cell__l2">Profile confirmed here too</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-href="trip.html#state=idea" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Kerala backwaters</span></span>
+            <span class="cell__l2">Sometime in October</span></span>
+          <span class="cell__l1"><span class="state state--muted" style="font-size:12.5px"><span class="state__dot"></span>Idea</span></span>
+          <span class="cell__l1">Candidate</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="state state--muted" style="font-size:12.5px"><span class="state__dot"></span>Nothing needed yet</span></span>
+            <span class="cell__l2">Still comparing destinations — nothing to confirm</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-href="trip.html#state=empty" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Sri Lanka 2025</span></span>
+            <span class="cell__l2 mono">3–11 Jan 2025</span></span>
+          <span class="cell__l1"><span class="tag">Archived</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1 dim">Trip finished</span>
+            <span class="cell__l2">Record only, from the archived snapshot</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- noprefs: Ravi, 2 trips -->
+      <div data-when="noprefs">
+        <div class="row row--link" data-state="warn" data-href="trip.html" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Vietnam &amp; Cambodia 2026</span></span>
+            <span class="cell__l2 mono">6–15 Nov 2026</span></span>
+          <span class="cell__l1"><span class="state state--info" style="font-size:12.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="state state--warn" style="font-size:12.5px"><span class="state__dot"></span>Not confirmed</span></span>
+            <span class="cell__l2">Opened the link 6 days ago and stopped</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-state="warn" data-href="trip.html#state=ready" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Goa New Year</span></span>
+            <span class="cell__l2 mono">30 Dec – 2 Jan</span></span>
+          <span class="cell__l1"><span class="state state--ok" style="font-size:12.5px"><span class="state__dot"></span>Confirmed</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="state state--warn" style="font-size:12.5px"><span class="state__dot"></span>Not confirmed</span></span>
+            <span class="cell__l2">Added from the directory, hasn't opened the link yet</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- manydocs / editdoc / saving / savefailed: Daniel, 2 trips -->
+      <div data-when="manydocs editdoc saving savefailed">
+        <div class="row row--link" data-state="warn" data-href="trip.html" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Vietnam &amp; Cambodia 2026</span></span>
+            <span class="cell__l2 mono">6–15 Nov 2026</span></span>
+          <span class="cell__l1"><span class="state state--info" style="font-size:12.5px"><span class="state__dot"></span>Active</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="pill pill--3">2 documents</span></span>
+            <span class="cell__l2">Vietnam e-visa expired, 2 more warn — see documents above</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+        <div class="row row--link" data-href="trip.html#state=empty" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Sri Lanka 2025</span></span>
+            <span class="cell__l2 mono">3–11 Jan 2025</span></span>
+          <span class="cell__l1"><span class="tag">Archived</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1 dim">Trip finished</span>
+            <span class="cell__l2">Record only, from the archived snapshot</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+      <!-- nodocs: Sneha, 1 trip -->
+      <div data-when="nodocs">
+        <div class="row row--link" data-href="trip.html#state=planning" style="grid-template-columns:minmax(0,1.3fr) 128px 108px minmax(0,1.3fr) 16px">
+          <span class="cell"><span class="cell__l1"><span class="row__n">Rajasthan in February</span></span>
+            <span class="cell__l2">Late Feb, around Holi</span></span>
+          <span class="cell__l1"><span class="state state--info" style="font-size:12.5px"><span class="state__dot"></span>Planning</span></span>
+          <span class="cell__l1">Traveller</span>
+          <span class="cell">
+            <span class="cell__l1"><span class="state state--info" style="font-size:12.5px"><span class="state__dot"></span>Nothing required yet</span></span>
+            <span class="cell__l2">No documents on file — not needed until dates are confirmed</span>
+          </span>
+          <svg class="row__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════ edit profile -->
+<aside class="drawer" id="editprofile" role="dialog" aria-modal="true" aria-labelledby="ep-t" hidden>
+  <div class="drawer__head">
+    <h2 id="ep-t" style="margin:0;font-size:15px;font-weight:600">Edit Asha Kumar</h2>
+    <span style="flex:1"></span>
+    <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="drawer__body">
+    <p class="t-meta" style="margin:14px 0">Preferences only. Documents have their own edit, right
+      where they're listed — the file never comes through this form.</p>
+    <label class="fg"><span class="fg__l">Home city</span>
+      <input class="field" type="text" value="Chennai"></label>
+    <label class="fg"><span class="fg__l">Dietary</span>
+      <select><option selected>Vegan</option><option>Vegetarian</option><option>Non-veg</option></select></label>
+    <label class="fg"><span class="fg__l">Pace</span>
+      <select><option>Relaxed</option><option selected>Moderate</option><option>Packed</option></select></label>
+    <label class="fg"><span class="fg__l">Budget band</span>
+      <select><option>Low</option><option selected>Medium</option><option>High</option></select></label>
+    <div class="fg">
+      <span class="fg__l">Interests</span>
+      <div class="rowline" style="margin-bottom:8px">
+        <span class="chip">temples <button class="chip__x" aria-label="Remove temples">×</button></span>
+        <span class="chip">photography <button class="chip__x" aria-label="Remove photography">×</button></span>
+      </div>
+      <input class="field" type="text" placeholder="Add an interest and press Enter">
+    </div>
+  </div>
+  <div class="drawer__foot">
+    <button class="btn" data-close>Discard changes</button>
+    <button class="btn btn--primary" data-close>Save profile</button>
+  </div>
+</aside>
+
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

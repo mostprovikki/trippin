@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trips · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Portfolio</span>
+      <button class="rev__b" data-v="populated" aria-pressed="true">Populated</button>
+      <button class="rev__b" data-v="archivedmixed">Archived mixed in</button>
+      <button class="rev__b" data-v="loading">Loading</button>
+      <button class="rev__b" data-v="empty">Nothing yet</button>
+      <button class="rev__b" data-v="failed">Load failed</button>
+    </span>
+    <span class="rev__grp" data-axis="lens">
+      <span class="rev__lbl">Money in</span>
+      <button class="rev__b" data-v="inr" aria-pressed="true">INR base</button>
+      <button class="rev__b" data-v="eur">EUR</button>
+      <button class="rev__b" data-v="vnd">VND · no rate</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html" aria-current="page">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <button class="lens" data-open-modal="lensmenu" aria-label="Change the currency you read amounts in">
+    <span class="lens__eyebrow">View in</span>
+    <span data-lens-label>INR</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell">
+
+  <div class="pagehead">
+    <div>
+      <h1>Trips</h1>
+      <div class="pagehead__sub">Sorted by who needs you, not by when you leave.</div>
+    </div>
+    <div class="pagehead__actions" data-when-not="loading failed">
+      <a class="btn btn--primary" href="trip-new.html">Start a trip</a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ populated / mixed -->
+  <div data-when="populated archivedmixed">
+
+    <div class="metrics" style="margin-bottom:16px">
+      <div class="metric">
+        <div class="metric__k">Trips</div>
+        <div class="metric__v" style="font-size:15px"><span data-when="populated">5</span><span data-when="archivedmixed">6</span></div>
+        <div class="metric__d"><span data-when="populated">live · 4 open decisions across them</span><span data-when="archivedmixed">including 1 archived</span></div>
+      </div>
+      <div class="metric">
+        <div class="metric__k">Drafted budget, across trips</div>
+        <div class="metric__v" data-m data-inr="₹7,95,000" data-eur="≈ €7,290" data-vnd="" style="font-size:15px">₹7,95,000</div>
+        <div class="metric__d">Vietnam &amp; Cambodia · Rajasthan — the only two with a figure yet</div>
+      </div>
+      <div class="metric">
+        <div class="metric__k">Needs you first</div>
+        <div class="metric__v" style="font-size:15px;color:var(--bad)">1 trip</div>
+        <div class="metric__d">Nikhil's passport expired</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="segs" role="tablist" aria-label="Filter by status">
+        <button class="seg" role="tab" data-set="state:populated"
+                aria-selected="true" data-when="populated">Live <span class="seg__count">5</span></button>
+        <button class="seg" role="tab" data-set="state:populated"
+                aria-selected="false" data-when="archivedmixed">Live <span class="seg__count">5</span></button>
+        <button class="seg" role="tab" data-set="state:archivedmixed"
+                aria-selected="false" data-when="populated">Everything <span class="seg__count">6</span></button>
+        <button class="seg" role="tab" data-set="state:archivedmixed"
+                aria-selected="true" data-when="archivedmixed">Everything <span class="seg__count">6</span></button>
+        <button class="seg" role="tab" aria-selected="false">Active <span class="seg__count">1</span></button>
+        <button class="seg" role="tab" aria-selected="false">Planning <span class="seg__count">1</span></button>
+        <button class="seg" role="tab" aria-selected="false">Idea <span class="seg__count">2</span></button>
+        <button class="seg" role="tab" aria-selected="false">Confirmed <span class="seg__count">1</span></button>
+      </div>
+    </div>
+
+    <div class="revnote" data-when="archivedmixed">
+      <span class="revnote__k">Note</span>
+      <div>The default view is <b>Live</b>, so an archived trip is filtered out rather than
+        hidden by styling. Switched to <b>Everything</b>, Sri Lanka 2025 appears in its ordinary sort
+        position — no separate section and no grey wash. A hatch texture and a plain-ink status word
+        are what say "closed", not a duller version of the same row. <b>§4.1.2</b>.</div>
+    </div>
+
+    <div class="card">
+      <div class="row row--head triprow">
+        <span>Trip</span><span>Dates &amp; destination</span><span>People</span><span>Needs you</span>
+      </div>
+
+      <!-- 1 — Vietnam & Cambodia 2026 — active, expired passport: top of the list -->
+      <div class="row row--link triprow" data-state="bad" data-href="trip.html#state=active">
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Vietnam &amp; Cambodia 2026</span></span>
+          <span class="cell__l2"><span class="state state--info" style="font-size:12px"><span class="state__dot"></span>Active</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">Dates</span><span class="mono">6–15 Nov 2026</span></span>
+          <span class="cell__l2"><span class="triprow__lbl">Destination</span>Vietnam &amp; Cambodia</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">People</span><span class="mono" style="font-weight:600">6</span></span>
+          <span class="cell__l2">4 of 6 confirmed</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1">
+            <span class="wait__ic wait__ic--bad" style="width:22px;height:22px;flex:none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <span><span class="triprow__lbl">Needs you</span>Nikhil's passport expired</span>
+          </span>
+        </span>
+        <svg class="row__chev triprow__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 2 — Rajasthan in February — planning, mid-chase -->
+      <div class="row row--link triprow" data-state="muted" data-href="trip.html#state=planning">
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Rajasthan in February</span></span>
+          <span class="cell__l2"><span class="state state--info" style="font-size:12px"><span class="state__dot"></span>Planning</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">Dates</span><span class="mono">Late Feb, around Holi</span></span>
+          <span class="cell__l2"><span class="triprow__lbl">Destination</span>2 candidates, neither marked</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">People</span><span class="mono" style="font-weight:600">9</span></span>
+          <span class="cell__l2">4 of 9 confirmed</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1">
+            <span class="wait__ic" style="width:22px;height:22px;flex:none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
+            </span>
+            <span><span class="triprow__lbl">Needs you</span>5 of 9 unconfirmed</span>
+          </span>
+        </span>
+        <svg class="row__chev triprow__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 3 — Kerala backwaters — idea, an open decision but nothing late -->
+      <div class="row row--link triprow" data-state="info" data-href="trip.html#state=idea">
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Kerala backwaters</span></span>
+          <span class="cell__l2"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Idea</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">Dates</span><span class="mono">Sometime in October</span></span>
+          <span class="cell__l2"><span class="triprow__lbl">Destination</span>3 candidates</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">People</span><span class="mono" style="font-weight:600">2</span></span>
+          <span class="cell__l2">just you and Asha</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1">
+            <span class="wait__ic" style="width:22px;height:22px;flex:none;background:var(--info-wash);color:var(--info)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+            </span>
+            <span><span class="triprow__lbl">Needs you</span>Compare the three places</span>
+          </span>
+        </span>
+        <svg class="row__chev triprow__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 4 — Bhutan someday — idea, empty: earliest possible stage -->
+      <div class="row row--link triprow" data-state="muted" data-href="trip.html#state=empty">
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Bhutan someday</span></span>
+          <span class="cell__l2"><span class="state state--muted" style="font-size:12px"><span class="state__dot"></span>Idea</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">Dates</span><span class="dc__v--none" style="font-size:13px">No dates yet</span></span>
+          <span class="cell__l2"><span class="triprow__lbl">Destination</span>Not decided</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">People</span><span class="mono" style="font-weight:600">1</span></span>
+          <span class="cell__l2">just you so far</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1">
+            <span class="wait__ic" style="width:22px;height:22px;flex:none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg>
+            </span>
+            <span><span class="triprow__lbl">Needs you</span>Add the first person</span>
+          </span>
+        </span>
+        <svg class="row__chev triprow__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 5 — Goa New Year — confirmed, fully ready -->
+      <div class="row row--link triprow" data-state="ok" data-href="trip.html#state=ready">
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Goa New Year</span></span>
+          <span class="cell__l2"><span class="state state--ok" style="font-size:12px"><span class="state__dot"></span>Confirmed</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">Dates</span><span class="mono">29 Dec 2026 – 2 Jan 2027</span></span>
+          <span class="cell__l2"><span class="triprow__lbl">Destination</span>Goa</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">People</span><span class="mono" style="font-weight:600">5</span></span>
+          <span class="cell__l2">5 of 5 confirmed</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1">
+            <span class="wait__ic" style="width:22px;height:22px;flex:none;background:var(--ok-wash);color:var(--ok)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            </span>
+            <span><span class="triprow__lbl">Needs you</span>Nothing — ready to go</span>
+          </span>
+        </span>
+        <svg class="row__chev triprow__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+      <!-- 6 — Sri Lanka 2025 — archived: textured, plain-ink, still fully legible -->
+      <div class="row row--link triprow frozen" data-href="trip-archive.html" data-when="archivedmixed">
+        <span class="cell">
+          <span class="cell__l1"><span class="row__n">Sri Lanka 2025</span></span>
+          <span class="cell__l2"><span class="state state--plain" style="font-size:12px"><span class="state__dot"></span>Archived</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">Dates</span><span class="mono dim">14–22 Feb 2025</span></span>
+          <span class="cell__l2"><span class="triprow__lbl">Destination</span><span class="dim">Sri Lanka</span></span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1"><span class="triprow__lbl">People</span><span class="mono dim" style="font-weight:600">6</span></span>
+          <span class="cell__l2 dim">confirmed at the time</span>
+        </span>
+        <span class="cell">
+          <span class="cell__l1">
+            <span class="wait__ic" style="width:22px;height:22px;flex:none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a2 2 0 002 2h10a2 2 0 002-2V8"/><path d="M10 12h4"/></svg>
+            </span>
+            <span><span class="triprow__lbl">Needs you</span><span class="dim">Actuals recorded, nothing open</span></span>
+          </span>
+        </span>
+        <svg class="row__chev triprow__chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ loading -->
+  <div data-when="loading">
+    <div class="metrics" style="margin-bottom:16px">
+      <div class="metric"><span class="sk sk--l1" style="display:block;width:40%"></span><span class="sk sk--l2" style="display:block;margin-top:9px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="display:block;width:55%"></span><span class="sk sk--l2" style="display:block;margin-top:9px"></span></div>
+      <div class="metric"><span class="sk sk--l1" style="display:block;width:35%"></span><span class="sk sk--l2" style="display:block;margin-top:9px"></span></div>
+    </div>
+    <div class="card">
+      <div class="row row--head triprow">
+        <span>Trip</span><span>Dates &amp; destination</span><span>People</span><span>Needs you</span>
+      </div>
+      <div class="row triprow"><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--num" style="display:block;margin-left:0"></span></span><span class="cell"><span class="sk sk--l1" style="display:block;width:78%"></span></span></div>
+      <div class="row triprow"><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--num" style="display:block;margin-left:0"></span></span><span class="cell"><span class="sk sk--l1" style="display:block;width:78%"></span></span></div>
+      <div class="row triprow"><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--num" style="display:block;margin-left:0"></span></span><span class="cell"><span class="sk sk--l1" style="display:block;width:78%"></span></span></div>
+      <div class="row triprow"><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--num" style="display:block;margin-left:0"></span></span><span class="cell"><span class="sk sk--l1" style="display:block;width:78%"></span></span></div>
+      <div class="row triprow"><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--l1" style="display:block"></span><span class="sk sk--l2" style="display:block;margin-top:7px"></span></span><span class="cell"><span class="sk sk--num" style="display:block;margin-left:0"></span></span><span class="cell"><span class="sk sk--l1" style="display:block;width:78%"></span></span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ empty, first run ever -->
+  <div data-when="empty">
+    <div class="blank">
+      <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span>
+      <div>
+        <h4>You haven't created a trip yet</h4>
+        <p>That's just where every account starts — there's nothing overdue and nothing to fix.
+          A trip needs only a name to exist; everything else can wait until you know it.</p>
+        <div class="blank__act">
+          <a class="btn btn--primary" href="trip-new.html">Start your first trip</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════ load failed -->
+  <div data-when="failed">
+    <div class="blank blank--bad">
+      <span class="blank__icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <div>
+        <h4>Your trips didn't load</h4>
+        <p>The server answered, but not with the list — <span class="mono">502</span> from the API at
+          <span class="mono">09:41</span>. Nothing has been changed or lost; this is a read that
+          failed. It is <b>not</b> the same as an account with no trips in it.</p>
+        <div class="blank__act">
+          <button class="btn btn--primary" data-set="state:loading">Try loading it again</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════ the currency lens — a view control -->
+<div class="modal" id="lensmenu" role="dialog" aria-modal="true" aria-labelledby="lm-t" hidden>
+  <div class="modal__panel" style="max-width:430px">
+    <div class="modal__head">
+      <h2 id="lm-t">Read amounts in</h2>
+      <button class="iconbtn" data-close aria-label="Close"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="modal__body" style="padding-bottom:0">
+      <p style="margin-bottom:12px">Changes what you see, nothing else. Each trip's amounts are still
+        entered and stored in its own currency, and this choice follows you across every trip and
+        screen.</p>
+    </div>
+    <div style="border-top:1px solid var(--line)">
+      <button class="pal__r" data-set="lens:inr" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">INR</span>
+        <span><span class="pal__n">Indian rupee</span><span class="pal__d">The most common base across your trips</span></span>
+        <span class="tag">Base</span>
+      </button>
+      <button class="pal__r" data-set="lens:eur" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">EUR</span>
+        <span><span class="pal__n">Euro</span><span class="pal__d">1 EUR = 109.01 INR · rates as of 29 Jul 2026</span></span>
+        <span class="mono dim" style="font-size:11px">≈ €7,290</span>
+      </button>
+      <button class="pal__r" data-set="lens:gbp" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">GBP</span>
+        <span><span class="pal__n">Pound sterling</span><span class="pal__d">1 GBP = 126.40 INR · rates as of 29 Jul 2026</span></span>
+        <span class="mono dim" style="font-size:11px">≈ £6,290</span>
+      </button>
+      <button class="pal__r" data-set="lens:vnd" style="grid-template-columns:44px minmax(0,1fr) auto;padding:11px 16px">
+        <span class="mono" style="font-weight:600;font-size:12.5px">VND</span>
+        <span><span class="pal__n">Vietnamese dong</span><span class="pal__d" style="color:var(--warn)">No rate available from our source — amounts stay in their own currency</span></span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </div>
+    <div class="modal__foot" style="display:block">
+      <p class="t-meta" style="margin:0;font-size:11.5px;line-height:1.6">Daily reference rates from
+        the European Central Bank. They are a guide for reading a budget — <b>not</b> what a card
+        issuer or a money changer will actually give you.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>

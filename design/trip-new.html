@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New trip · Tripper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<link rel="stylesheet" href="overrides.css">
+</head>
+<body>
+<span id="live" class="sronly" aria-live="polite"></span>
+
+<!-- ═══════════════════════════════════════════════ review tool, not product -->
+<div class="rev">
+  <div class="rev__in">
+    <span class="rev__k">Review</span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Form</span>
+      <button class="rev__b" data-v="blank" aria-pressed="true">Blank</button>
+      <button class="rev__b" data-v="filling">Filling</button>
+      <button class="rev__b" data-v="invalid">Invalid</button>
+      <button class="rev__b" data-v="restored">Draft restored</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">People</span>
+      <button class="rev__b" data-v="newperson">Add someone new</button>
+      <button class="rev__b" data-v="nopeople">Directory empty</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Clone</span>
+      <button class="rev__b" data-v="clone">From an existing trip</button>
+    </span>
+    <span class="rev__grp" data-axis="state">
+      <span class="rev__lbl">Save</span>
+      <button class="rev__b" data-v="saving">Saving</button>
+      <button class="rev__b" data-v="savefailed">Save failed</button>
+    </span>
+    <span class="rev__sp"></span>
+    <a href="index.html">All screens</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════ shell -->
+<header class="appbar">
+  <a class="appbar__brand" href="trips.html" style="color:inherit">Tripper</a>
+  <nav class="appbar__nav" aria-label="Main">
+    <a href="trips.html" aria-current="page">Trips</a>
+    <a href="people.html">People</a>
+  </nav>
+  <span class="appbar__spacer"></span>
+  <button class="btn" data-open-modal="palette">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    Search <span class="kbd">⌘K</span>
+  </button>
+  <span class="appbar__who"><span>Vignesh</span><span class="avatar">VM</span></span>
+</header>
+
+<main class="shell" style="max-width:920px">
+
+  <div class="pagehead">
+    <div>
+      <h1 data-when-not="clone">Start a trip</h1>
+      <h1 data-when="clone">Clone Vietnam &amp; Cambodia 2026</h1>
+      <div class="pagehead__sub" data-when-not="clone">Only the name is required. Add whatever else
+        you know now — everything can be filled in later, on the board.</div>
+      <div class="pagehead__sub" data-when="clone">Starts from this trip's shape, not its calendar.</div>
+    </div>
+    <div class="pagehead__actions" data-when-not="saving">
+      <a class="btn" href="trip.html">Cancel</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ save failed — inputs untouched ═ -->
+  <div class="banner banner--bad" data-when="savefailed" style="margin-bottom:16px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4.5L2.8 20h18.4L12 4.5z"/><path d="M12 10v4.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
+    <div><b>Couldn't create the trip — the server didn't respond.</b> Nothing was lost; every field
+      below is exactly as you left it. Save again when you're ready.</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ a local draft came back ═════ -->
+  <div class="banner" data-when="restored" style="margin-bottom:16px">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+    <div><b>We restored a draft you started 2 days ago, at 19:12 on 27 Jul.</b> Nothing has been
+      saved yet — this only ever lived on this device. <button class="linkish" style="margin-left:2px">Discard this draft and start over</button></div>
+  </div>
+
+  <!-- ═══════════════════════════════ clone: the carry-over/reset split, first ═ -->
+  <div class="card" data-when="clone" style="margin-bottom:18px">
+    <div class="card__head"><h2>What comes with you, and what doesn't</h2></div>
+    <div class="card__body">
+      <p style="margin-bottom:14px">Say this out loud before anything below is touched, because it's
+        the whole reason to clone rather than start blank.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+        <div>
+          <div class="t-eyebrow" style="margin-bottom:8px;color:var(--ok)">Comes with you</div>
+          <ul class="damage" style="margin:0">
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>Name<span class="damage__d">A fresh one, suggested below from the original — change it before saving</span></span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>Vibe tags, origin city and currency<span class="damage__d">5 tags · Bengaluru · INR</span></span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>Goal titles and notes<span class="damage__d">All 5, without their pinned date or place</span></span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>The 6 participants<span class="damage__d">Asha, Meera, Daniel, Lena, Ravi and Nikhil — starting fresh on this trip, not yet confirmed</span></span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>8 budget estimates and their bases<span class="damage__d">₹4,80,000 total, each category's reasoning note intact</span></span></li>
+            <li data-k="keep"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              <span>Checklists, with their items<span class="damage__d">Task and packing item text carries over</span></span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="t-eyebrow" style="margin-bottom:8px;color:var(--ink-2)">Starts fresh</div>
+          <ul class="damage" style="margin:0">
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>All dates<span class="damage__d">Not even a rough window — same as a brand-new trip</span></span></li>
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>Destination<span class="damage__d">Back to open — no candidate carried or chosen</span></span></li>
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>The whole itinerary<span class="damage__d">All 10 days and 41 items — days only exist once there are dates</span></span></li>
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>Budget overrides<span class="damage__d">Lena's ₹64,000 exception — the equal split resets to plain</span></span></li>
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>Goals' fixed dates and places<span class="damage__d">The titles stay; nothing is pinned as a hard constraint yet</span></span></li>
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>Checklist assignees and done-state<span class="damage__d">Items come back unchecked and unassigned</span></span></li>
+            <li data-k="lose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              <span>Documents and links<span class="damage__d">Nobody has access yet; you issue fresh links after creating this one</span></span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ the editable form ═══ -->
+  <div data-when-not="saving">
+
+    <div class="card" data-section="basics" style="margin-bottom:16px">
+      <div class="card__head"><h2>The basics</h2>
+        <span style="flex:1"></span>
+        <span class="dirty" data-dirty-mark data-when-not="blank invalid nopeople" hidden>Unsaved</span>
+      </div>
+      <div class="card__body">
+
+        <!-- name: empty + required, no error yet -->
+        <label class="fg" data-when="blank nopeople">
+          <span class="fg__l">Trip name <span class="fg__req">Required</span></span>
+          <input class="field" type="text" placeholder="Ladakh road trip">
+          <span class="fg__h">The only thing this trip actually needs today.</span>
+        </label>
+
+        <!-- name: empty + the error, reached by trying to save with nothing -->
+        <div class="fg" data-invalid data-when="invalid">
+          <span class="fg__l">Trip name <span class="fg__req">Required</span></span>
+          <input class="field" type="text" value="">
+          <span class="fg__err"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5" stroke-linecap="round"/><circle cx="12" cy="16.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+            A trip needs a name. Everything else here can wait.</span>
+        </div>
+
+        <!-- name: carried from the clone source, suggested but yours to change -->
+        <div class="fg" data-when="clone">
+          <span class="fg__l">Trip name <span class="fg__req">Required</span></span>
+          <div class="prefill" style="padding:9px 12px">
+            <div class="prefill__k">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              Suggested from Vietnam &amp; Cambodia 2026 — change this</div>
+            <input class="field" type="text" value="Vietnam &amp; Cambodia 2026 — copy">
+          </div>
+        </div>
+
+        <!-- name: an ordinary filled value -->
+        <label class="fg" data-when-not="blank invalid nopeople clone">
+          <span class="fg__l">Trip name <span class="fg__req">Required</span></span>
+          <input class="field" type="text" value="Ladakh road trip">
+        </label>
+
+        <label class="fg" data-when-not="clone">
+          <span class="fg__l">Description <span class="fg__opt">optional</span></span>
+          <textarea class="field" style="min-height:64px;font-family:var(--sans);font-size:12.5px;line-height:1.6" placeholder="Two weeks, self-drive from Leh, high passes and monasteries." data-when="blank invalid nopeople"></textarea>
+          <textarea class="field" style="min-height:64px;font-family:var(--sans);font-size:12.5px;line-height:1.6" data-when-not="blank invalid nopeople">Two weeks, self-drive from Leh, high passes and monasteries. Rough dates, rougher roads.</textarea>
+        </label>
+
+        <div class="fg" data-when="clone">
+          <span class="fg__l">Description <span class="fg__opt">optional</span></span>
+          <div class="prefill" style="padding:9px 12px">
+            <div class="prefill__k">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+              Carried from the original</div>
+            <textarea class="field" style="min-height:64px;font-family:var(--sans);font-size:12.5px;line-height:1.6">Ten days north-to-south through Vietnam, then over the border for the Angkor temples. Six of us, two joining from Europe. Street food first, museums second, one proper beach afternoon.</textarea>
+          </div>
+        </div>
+
+        <div class="fgrid">
+          <label class="fg"><span class="fg__l">Starting from <span class="fg__opt">optional</span></span>
+            <input class="field" type="text" placeholder="Bengaluru" value="Bengaluru"></label>
+          <label class="fg"><span class="fg__l">Currency amounts are entered in</span>
+            <select>
+              <option>INR — Indian rupee</option>
+              <option>EUR — Euro</option>
+              <option>GBP — Pound sterling</option>
+              <option>USD — US dollar</option>
+            </select>
+            <span class="fg__h">This is the trip's own currency. You can view any trip in a different
+              one later — that's separate and changes nothing stored.</span>
+          </label>
+        </div>
+
+        <div class="fg">
+          <span class="fg__l">Vibe <span class="fg__opt">optional</span></span>
+          <div class="rowline" style="margin-bottom:8px" data-when-not="blank invalid nopeople">
+            <span class="chip">mountains <button class="chip__x" aria-label="Remove mountains">×</button></span>
+            <span class="chip">self-drive <button class="chip__x" aria-label="Remove self-drive">×</button></span>
+          </div>
+          <div class="rowline" style="margin-bottom:8px" data-when="clone">
+            <span class="chip">street food <button class="chip__x" aria-label="Remove street food">×</button></span>
+            <span class="chip">temples <button class="chip__x" aria-label="Remove temples">×</button></span>
+            <span class="chip">boats <button class="chip__x" aria-label="Remove boats">×</button></span>
+            <span class="chip">photography <button class="chip__x" aria-label="Remove photography">×</button></span>
+            <span class="chip">first-time SE Asia <button class="chip__x" aria-label="Remove first-time SE Asia">×</button></span>
+          </div>
+          <input class="field" type="text" placeholder="Add a tag and press Enter">
+          <span class="fg__h" data-when="clone">Carried from the original, editable like any other tag.</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ people ═══ -->
+    <div class="card" data-section="people" style="margin-bottom:16px">
+      <div class="card__head"><h2>Who's coming</h2>
+        <span style="flex:1"></span>
+        <span class="t-eyebrow" data-when-not="clone nopeople">optional — add anyone now, or later on the board</span>
+        <span class="t-eyebrow" data-when="clone">6 carried from the original</span>
+      </div>
+      <div class="card__body">
+
+        <!-- normal directory picker -->
+        <div data-when-not="nopeople clone">
+          <div class="search" style="margin-bottom:10px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+            <input type="text" placeholder="Search your directory">
+          </div>
+          <div class="subcard" style="margin-bottom:10px">
+            <label class="rowline" style="padding:10px 14px;border-bottom:1px solid var(--line-2);cursor:pointer">
+              <input class="check" type="checkbox" checked>
+              <span><span style="display:block;font-size:13px;font-weight:500">Asha Kumar</span><span style="display:block;font-size:12px;color:var(--ink-2)">Chennai</span></span>
+            </label>
+            <label class="rowline" style="padding:10px 14px;border-bottom:1px solid var(--line-2);cursor:pointer">
+              <input class="check" type="checkbox" checked>
+              <span><span style="display:block;font-size:13px;font-weight:500">Meera Iyer</span><span style="display:block;font-size:12px;color:var(--ink-2)">Bengaluru</span></span>
+            </label>
+            <label class="rowline" style="padding:10px 14px;border-bottom:1px solid var(--line-2);cursor:pointer">
+              <input class="check" type="checkbox" checked>
+              <span><span style="display:block;font-size:13px;font-weight:500">Daniel Weiss</span><span style="display:block;font-size:12px;color:var(--ink-2)">Berlin</span></span>
+            </label>
+            <label class="rowline" style="padding:10px 14px;border-bottom:1px solid var(--line-2);cursor:pointer">
+              <input class="check" type="checkbox">
+              <span><span style="display:block;font-size:13px;font-weight:500">Lena Hoffmann</span><span style="display:block;font-size:12px;color:var(--ink-2)">Munich</span></span>
+            </label>
+            <label class="rowline" style="padding:10px 14px;border-bottom:1px solid var(--line-2);cursor:pointer">
+              <input class="check" type="checkbox">
+              <span><span style="display:block;font-size:13px;font-weight:500">Ravi Menon</span><span style="display:block;font-size:12px;color:var(--ink-2)">Bengaluru</span></span>
+            </label>
+            <label class="rowline" style="padding:10px 14px;cursor:pointer">
+              <input class="check" type="checkbox">
+              <span><span style="display:block;font-size:13px;font-weight:500">Nikhil Rao</span><span style="display:block;font-size:12px;color:var(--ink-2)">Mumbai</span></span>
+            </label>
+          </div>
+          <button class="linkish" data-set="state:newperson">Can't find them? Add someone new</button>
+        </div>
+
+        <!-- inline add — the rest of the form above is untouched -->
+        <div data-when="newperson">
+          <div class="subcard" style="margin-bottom:12px">
+            <label class="rowline" style="padding:10px 14px;border-bottom:1px solid var(--line-2)">
+              <input class="check" type="checkbox" checked>
+              <span><span style="display:block;font-size:13px;font-weight:500">Asha Kumar</span><span style="display:block;font-size:12px;color:var(--ink-2)">Chennai</span></span>
+            </label>
+            <label class="rowline" style="padding:10px 14px;border-bottom:1px solid var(--line-2)">
+              <input class="check" type="checkbox" checked>
+              <span><span style="display:block;font-size:13px;font-weight:500">Meera Iyer</span><span style="display:block;font-size:12px;color:var(--ink-2)">Bengaluru</span></span>
+            </label>
+            <label class="rowline" style="padding:10px 14px">
+              <input class="check" type="checkbox" checked>
+              <span><span style="display:block;font-size:13px;font-weight:500">Daniel Weiss</span><span style="display:block;font-size:12px;color:var(--ink-2)">Berlin</span></span>
+            </label>
+          </div>
+          <div class="card__body" style="border:1px dashed var(--dash-line);border-radius:var(--r);background:var(--surface-2);padding:14px 15px">
+            <div class="t-eyebrow" style="margin-bottom:10px">Add someone new to the directory</div>
+            <div class="fgrid">
+              <label class="fg" style="margin-bottom:10px"><span class="fg__l">Name <span class="fg__req">Required</span></span>
+                <input class="field" type="text" placeholder="Priyanka Shetty"></label>
+              <label class="fg" style="margin-bottom:10px"><span class="fg__l">Home city <span class="fg__opt">optional</span></span>
+                <input class="field" type="text" placeholder="Pune"></label>
+            </div>
+            <div class="rowline">
+              <button class="btn btn--primary" data-set="state:filling">Add to this trip</button>
+              <button class="btn" data-set="state:filling">Cancel</button>
+            </div>
+            <p class="fg__h" style="margin-top:10px">The name and description above are exactly as you
+              left them — adding someone here doesn't touch the rest of this form.</p>
+          </div>
+        </div>
+
+        <!-- the directory itself has nobody in it -->
+        <div class="blank" data-when="nopeople">
+          <span class="blank__icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6"/></svg></span>
+          <div>
+            <h4>Your directory is empty</h4>
+            <p>There's nobody to pick from yet. Add a person once and they're ready to add to this
+              trip and every one after it — nothing about the trip above is blocked while you do.</p>
+            <div class="blank__act"><button class="btn btn--primary" data-set="state:newperson">Add your first person</button></div>
+          </div>
+        </div>
+
+        <!-- clone: the 6 participants come along as-is, not re-picked -->
+        <div class="prefill" data-when="clone">
+          <div class="prefill__k">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12.5l5 5L20 6.5"/></svg>
+            Carried from Vietnam &amp; Cambodia 2026</div>
+          <p style="margin:0;font-size:13px;line-height:1.7">Asha Kumar, Meera Iyer, Daniel Weiss, Lena
+            Hoffmann, Ravi Menon and Nikhil Rao all come with you. Each starts fresh on this trip —
+            not yet confirmed, no documents or links carried over. Add or remove people once it's
+            created.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ saving: disabled and legible ═ -->
+  <div class="card" data-when="saving" style="margin-bottom:16px">
+    <div class="card__body" style="display:grid;gap:16px">
+      <div class="rowline">
+        <span class="spin"></span>
+        <span style="font-size:13.5px;font-weight:600">Creating "Ladakh road trip"…</span>
+      </div>
+      <div class="fgrid">
+        <label class="fg" style="margin-bottom:0"><span class="fg__l">Trip name</span>
+          <input class="field" type="text" value="Ladakh road trip" disabled></label>
+        <label class="fg" style="margin-bottom:0"><span class="fg__l">Starting from</span>
+          <input class="field" type="text" value="Bengaluru" disabled></label>
+        <label class="fg" style="margin-bottom:0"><span class="fg__l">Currency</span>
+          <select disabled><option>INR — Indian rupee</option></select></label>
+        <label class="fg" style="margin-bottom:0"><span class="fg__l">People</span>
+          <input class="field" type="text" value="3 people selected" disabled></label>
+      </div>
+      <p class="t-meta" style="margin:0;font-size:12px">Everything above is exactly what will be
+        saved. You can't edit it until this finishes, which is normally under a second.</p>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════ save bar ═════ -->
+  <div class="actionbar" style="position:sticky" data-when-not="saving">
+    <span class="actionbar__l" data-when="blank nopeople">Nothing is required below except the name.</span>
+    <span class="actionbar__l" data-when="invalid">A trip needs a name before it can be created.</span>
+    <span class="actionbar__l" data-when="filling newperson">Creates <b>Ladakh road trip</b> · INR ·
+      Bengaluru · 2 tags · <b>3</b> people added.</span>
+    <span class="actionbar__l" data-when="restored">Saving turns this restored draft into a real
+      trip — it isn't one until you do.</span>
+    <span class="actionbar__l" data-when="clone">Creates a new trip carrying 5 tags, 5 goals, 6
+      participants, 8 budget estimates and your checklists. Dates and destination start open.</span>
+    <span class="actionbar__l" data-when="savefailed">Nothing was lost — save whenever you're ready
+      to try again.</span>
+    <span class="actionbar__spacer"></span>
+    <button class="btn btn--primary" data-when="blank nopeople" data-set="state:invalid">Create trip</button>
+    <button class="btn btn--primary" disabled data-when="invalid">Create trip</button>
+    <button class="btn btn--primary" data-when="filling newperson restored clone savefailed" data-set="state:saving">Create trip</button>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════ ⌘K — the fast path to anything -->
+<div class="pal" id="palette" role="dialog" aria-modal="true" aria-label="Search everything" hidden>
+  <div class="pal__in">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="1.9"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+    <input type="text" placeholder="Search trips, people, documents, itinerary, templates…" data-autofocus>
+    <span class="kbd">esc</span>
+  </div>
+  <div class="pal__body">
+    <div class="pal__g" style="padding:18px 14px">
+      <p class="t-meta" style="margin:0;font-size:12.5px">Type at least two characters. Searches trips,
+        people, documents, itinerary items, checklist templates and archived-trip notes.</p>
+    </div>
+  </div>
+  <div class="pal__foot"><span><span class="kbd">↑</span><span class="kbd">↓</span> move</span>
+    <span><span class="kbd">↵</span> open</span><span style="flex:1"></span><a href="search.html">Full search</a></div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<script src="app.js"></script>
+</body>
+</html>
