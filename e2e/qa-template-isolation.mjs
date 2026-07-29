@@ -41,7 +41,7 @@ function findExecutable() {
 const BASE = process.env.BASE_URL || 'http://[::1]:43100'
 // The two seeded organizers. Isolation is only testable with a real second one.
 const ORG_A = { email: process.env.QA_EMAIL || 'demo@example.com', password: process.env.QA_PASSWORD || 'demo-pass-123' }
-const ORG_B = { email: process.env.QA_EMAIL_B || 'demo@tripper.dev', password: process.env.QA_PASSWORD_B || 'demo-pass-1234' }
+const ORG_B = { email: process.env.QA_EMAIL_B || 'demo@tripper.dev', password: process.env.QA_PASSWORD_B || 'tripper1234' }
 
 // A term unlikely to collide with seeded data, so a hit is unambiguously ours.
 const STAMP = String(process.pid)

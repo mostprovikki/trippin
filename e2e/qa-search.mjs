@@ -295,7 +295,7 @@ if (!(await trigger.count())) {
 // proves nothing. So confirm the owner CAN find its own data first, in a separate
 // browser context, then confirm this organizer cannot.
 const OTHER_EMAIL = process.env.QA_OTHER_EMAIL || 'demo@tripper.dev'
-const OTHER_PASSWORD = process.env.QA_OTHER_PASSWORD || 'demo-pass-1234'
+const OTHER_PASSWORD = process.env.QA_OTHER_PASSWORD || 'tripper1234'
 const otherCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
 const otherPage = await otherCtx.newPage()
 await otherPage.goto(`${BASE}/login`, { waitUntil: 'networkidle' })
