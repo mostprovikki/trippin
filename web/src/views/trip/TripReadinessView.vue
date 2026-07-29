@@ -88,7 +88,7 @@ function chipText(chip) {
                   v-for="(w, i) in data.doc_warnings"
                   :key="i"
                   :value="`${w.doc_type} ${w.level} (${w.expiry_date})`"
-                  severity="warn"
+                  :severity="w.level === 'expired' ? 'danger' : 'warn'"
                 />
               </div>
             </template>

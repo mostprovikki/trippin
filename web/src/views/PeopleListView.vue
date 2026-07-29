@@ -5,6 +5,7 @@ import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
 import Tag from 'primevue/tag'
 import { usePeopleStore } from '../stores/people.js'
+import { humanizeEnum } from '../utils/format.js'
 import { useNotify } from '../composables/useNotify.js'
 import PersonForm from '../components/PersonForm.vue'
 import EmptyState from '../components/EmptyState.vue'
@@ -73,7 +74,7 @@ async function onCreate(fields) {
                heading rather than a labelled field. -->
           <td><router-link :to="{ name: 'person', params: { id: person.id } }">{{ person.name }}</router-link></td>
           <td data-label="Home city">{{ person.home_city || '-' }}</td>
-          <td data-label="Dietary"><Tag v-if="person.dietary" :value="person.dietary" severity="secondary" /></td>
+          <td data-label="Dietary"><Tag v-if="person.dietary" :value="humanizeEnum(person.dietary)" severity="secondary" /></td>
         </tr>
       </tbody>
     </table>

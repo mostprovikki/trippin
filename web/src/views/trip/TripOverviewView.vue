@@ -6,6 +6,7 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { nextActions, readinessPercent } from '../../utils/tripNav.js'
+import { formatAmount } from '../../utils/format.js'
 
 const STATUSES = ['idea', 'planning', 'confirmed', 'active']
 
@@ -80,7 +81,7 @@ watch(tripId, load)
     <div class="stat-grid">
       <RouterLink class="card stat-card" :to="{ name: 'trip-budget', params: { id: trip.id } }">
         <span class="stat-label">Budget</span>
-        <span class="stat-value">{{ budget.total || '—' }}</span>
+        <span class="stat-value">{{ budget.total ? formatAmount(budget.total) : '—' }}</span>
       </RouterLink>
       <RouterLink class="card stat-card" :to="{ name: 'trip-readiness', params: { id: trip.id } }">
         <span class="stat-label">Readiness</span>

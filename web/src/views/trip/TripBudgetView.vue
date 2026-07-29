@@ -7,6 +7,7 @@ import Skeleton from 'primevue/skeleton'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
+import { formatAmount } from '../../utils/format.js'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import { api } from '../../api/client.js'
@@ -130,7 +131,7 @@ onBeforeRouteLeave(async () => {
       <div class="card">
         <h2>Category estimates</h2>
         <BudgetTable v-model="linesDraft.draft.lines" :draft="store.draft" />
-        <p><strong>Total: {{ store.total }}</strong></p>
+        <p><strong>Total: {{ formatAmount(store.total) }}</strong></p>
         <Button label="Save budget" @click="saveLines" />
       </div>
 

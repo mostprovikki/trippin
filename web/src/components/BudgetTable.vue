@@ -4,6 +4,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
+import { formatAmount } from '../utils/format.js'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -45,7 +46,7 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
           @update:model-value="update(data.category, 'estimate', Number($event) || 0)"
         />
       </template>
-      <template #footer><strong>{{ total }}</strong></template>
+      <template #footer><strong>{{ formatAmount(total) }}</strong></template>
     </Column>
     <Column header="Basis">
       <template #body="{ data }">
