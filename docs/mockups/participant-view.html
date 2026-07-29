@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Participant view — redesign mockup</title>
+<style>
+  :root {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --surface-alt: #faf9f7;
+    --border: #e7e5e0;
+    --border-2: #f0efec;
+    --text: #1c1917;
+    --text-muted: #78716c;
+    --text-subtle: #a8a29e;
+    --primary: #0f766e;
+    --primary-soft: #f0fdfa;
+    --primary-contrast: #ffffff;
+    --accent: #d97706;
+    --accent-soft: #fef3c7;
+    --accent-strong: #b45309;
+    --success: #16a34a;
+    --success-soft: #f0fdf4;
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --hover: #f5f4f1;
+    --focus-ring: rgba(15, 118, 110, 0.15);
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05);
+    --shadow-md: 0 4px 16px rgba(28, 25, 23, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-size: 0.9375rem; line-height: 1.5; }
+  h1, h2, h3 { font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.0625rem; font-weight: 600; }
+  h3 { font-size: 0.8125rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+  p { margin: 0; }
+  a { color: var(--primary); }
+  button { font-family: inherit; }
+
+  .icon { width: 1em; height: 1em; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; vertical-align: -0.125em; }
+
+  /* ---------- review strip: NOT part of the product, a review tool ---------- */
+  .review-strip {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #1c1917; color: #e7e5e0;
+    font-size: 0.75rem;
+    border-bottom: 1px dashed #57534e;
+    flex-wrap: wrap;
+  }
+  .review-strip strong { color: #fafaf9; font-weight: 600; }
+  .review-strip .spacer { flex: 1 1 auto; }
+  .state-btn {
+    appearance: none; cursor: pointer;
+    border: 1px solid #44403c; background: #292524; color: #d6d3d1;
+    font-size: 0.75rem; font-weight: 500; font-family: inherit;
+    padding: 0.3rem 0.625rem; border-radius: 999px;
+    transition: background-color .15s ease, color .15s ease;
+  }
+  .state-btn:hover { background: #3f3a37; }
+  .state-btn[aria-pressed="true"] { background: #2dd4bf; color: #0c0a09; border-color: #2dd4bf; }
+
+  /* ---------- layout ---------- */
+  .page { max-width: 28rem; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 1.375rem 1.25rem 1.5rem; }
+  .greeting { display: flex; align-items: center; gap: 0.375rem; margin: 0 0 0.625rem; color: var(--text-muted); font-size: 0.875rem; }
+  .hero h1 { margin-bottom: 0.75rem; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.875rem; }
+  .meta-pill {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    background: var(--primary-soft); color: var(--primary);
+    border-radius: 999px; padding: 0.3125rem 0.6875rem;
+    font-size: 0.8125rem; font-weight: 500;
+  }
+  .hero-desc { color: var(--text); margin-bottom: 0.875rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-bottom: 1rem; }
+  .tag {
+    font-size: 0.75rem; font-weight: 500; color: var(--text-muted);
+    background: var(--surface-alt); border: 1px solid var(--border);
+    border-radius: 999px; padding: 0.1875rem 0.625rem;
+  }
+
+  .goals { list-style: none; margin: 0; padding: 0.75rem 0 0; border-top: 1px solid var(--border-2); }
+  .goals-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.625rem; }
+  .goal { display: flex; gap: 0.625rem; padding: 0.4375rem 0; }
+  .goal + .goal { border-top: 1px solid var(--border-2); }
+  .goal-icon { flex: 0 0 auto; width: 1.5rem; height: 1.5rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; margin-top: 0.0625rem; }
+  .goal.is-fixed .goal-icon { background: var(--accent-soft); color: var(--accent-strong); }
+  .goal.is-open .goal-icon { background: var(--surface-alt); color: var(--text-subtle); border: 1px solid var(--border); }
+  .goal-body { min-width: 0; }
+  .goal-title { font-size: 0.875rem; color: var(--text); }
+  .goal-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.0625rem; }
+
+  /* ---------- itinerary ---------- */
+  .itin-summary { display: flex; align-items: center; gap: 0.375rem; color: var(--text-muted); font-size: 0.8125rem; margin-bottom: 1rem; }
+  .itin-toggle summary {
+    list-style: none; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    color: var(--primary); font-size: 0.875rem; font-weight: 600;
+  }
+  .itin-toggle summary::-webkit-details-marker { display: none; }
+  .itin-toggle > summary .chevron { color: var(--primary); }
+  .itin-toggle[open] > summary .chevron { transform: rotate(180deg); }
+  .itin-days { margin-top: 0.875rem; }
+  .itin-day { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.625rem; overflow: hidden; }
+  .itin-day:last-child { margin-bottom: 0; }
+  .itin-day summary {
+    list-style: none; cursor: pointer; padding: 0.75rem 0.875rem;
+    display: flex; align-items: center; gap: 0.625rem;
+    background: var(--surface-alt);
+  }
+  .itin-day summary::-webkit-details-marker { display: none; }
+  .itin-day[open] summary { border-bottom: 1px solid var(--border); }
+  .itin-day-num {
+    flex: 0 0 auto; width: 1.75rem; height: 1.75rem; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;
+  }
+  .itin-day-head { flex: 1 1 auto; min-width: 0; }
+  .itin-day-title { font-size: 0.875rem; font-weight: 600; }
+  .itin-day-date { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.0625rem; }
+  .itin-goal-badge {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.25rem;
+    font-size: 0.6875rem; font-weight: 700; color: var(--accent-strong); background: var(--accent-soft);
+    padding: 0.125rem 0.5rem; border-radius: 999px;
+  }
+  .chevron { color: var(--text-subtle); transition: transform 0.15s ease; }
+  .itin-day[open] .chevron { transform: rotate(180deg); }
+  .itin-items { list-style: none; margin: 0; padding: 0.25rem 0.875rem 0.75rem; }
+  .itin-item { display: flex; gap: 0.625rem; padding: 0.4375rem 0; }
+  .itin-item + .itin-item { border-top: 1px solid var(--border-2); }
+  .itin-time { flex: 0 0 auto; width: 3.5rem; font-size: 0.75rem; color: var(--text-subtle); font-variant-numeric: tabular-nums; padding-top: 0.0625rem; }
+  .itin-item-body { min-width: 0; }
+  .itin-item-title { font-size: 0.8125rem; }
+  .itin-item-loc { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.0625rem; }
+
+  /* ---------- stepper ---------- */
+  .stepper { display: flex; margin-bottom: 1rem; padding: 0 0.25rem; }
+  .step {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.375rem;
+    position: relative; text-decoration: none; color: inherit; background: none; border: none; cursor: pointer; padding: 0.5rem 0.125rem 0;
+  }
+  .step::before {
+    content: ''; position: absolute; top: 1.0625rem; left: -50%; width: 100%; height: 2px;
+    background: var(--border); z-index: 0;
+  }
+  .step:first-child::before { display: none; }
+  .step.is-complete::before { background: var(--primary); }
+  .step-chip {
+    position: relative; z-index: 1;
+    width: 2.125rem; height: 2.125rem; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 2px solid var(--border);
+    color: var(--text-muted); font-weight: 700; font-size: 0.875rem;
+  }
+  .step.is-complete .step-chip { background: var(--primary); border-color: var(--primary); color: var(--primary-contrast); }
+  .step.is-current .step-chip { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+  .step-label { font-size: 0.75rem; font-weight: 600; color: var(--text); text-align: center; }
+  .step-hint { font-size: 0.6875rem; color: var(--text-muted); text-align: center; line-height: 1.3; }
+  .step.is-current .step-label { color: var(--primary); }
+
+  /* ---------- section cards ---------- */
+  .section-head { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 1rem; }
+  .section-badge {
+    flex: 0 0 auto; width: 1.75rem; height: 1.75rem; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface-alt); color: var(--text-muted); font-size: 0.9375rem;
+  }
+  .section-badge.is-done { background: var(--success-soft); color: var(--success); }
+  .section-head-text h2 { margin: 0; }
+  .section-head-text p { font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.0625rem; }
+
+  .callout {
+    display: flex; gap: 0.625rem; align-items: flex-start;
+    background: var(--primary-soft); border: 1px solid #ccfbf1;
+    border-radius: var(--radius-sm); padding: 0.75rem 0.875rem; margin-bottom: 1.125rem;
+    font-size: 0.8125rem; color: #0f4f49;
+  }
+  .callout .icon { color: var(--primary); margin-top: 0.125rem; }
+
+  .fieldset { margin-bottom: 1.25rem; }
+  .fieldset:last-of-type { margin-bottom: 1rem; }
+  .fieldset h3 { margin-bottom: 0.75rem; }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
+  .field { display: block; margin-bottom: 0.875rem; }
+  .field.span-2 { grid-column: 1 / -1; }
+  .field label { display: flex; align-items: center; gap: 0.3125rem; margin-bottom: 0.3125rem; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); }
+  .lock-icon { color: var(--text-subtle); }
+  .field input, .field select, .field textarea {
+    width: 100%; min-height: 2.75rem; padding: 0.5rem 0.6875rem;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 0.9375rem; font-family: inherit; background: var(--surface); color: var(--text);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .field textarea { min-height: 3.5rem; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+  .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2378716c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 1.75rem; }
+
+  /* read-only "view mode" rendering of the same field-grid */
+  .view-field { margin-bottom: 0.875rem; }
+  .vf-label { display: flex; align-items: center; gap: 0.3125rem; margin-bottom: 0.1875rem; font-size: 0.75rem; font-weight: 600; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.03em; }
+  .vf-value { font-size: 0.9375rem; color: var(--text); }
+  .vf-value.is-empty { color: var(--text-subtle); font-style: normal; }
+
+  .form-actions, .profile-actions { display: flex; align-items: center; gap: 0.75rem; padding-top: 0.25rem; border-top: 1px solid var(--border-2); margin-top: 0.25rem; flex-wrap: wrap; }
+  /* Shared shape for every button variant — .btn-outline and .btn-text are used
+     on their own in the markup (never combined with .btn), so each needs the
+     full reset here or it falls back to the native OS button box: no radius,
+     tiny native padding, a default border even where none was intended. That
+     was exactly what made Edit/Delete look broken rather than styled. */
+  .btn, .btn-outline, .btn-text {
+    appearance: none; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 0.875rem;
+    padding: 0.625rem 1.125rem; border-radius: var(--radius-sm); min-height: 2.75rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem;
+    border: 1px solid transparent;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .btn { background: var(--primary); color: var(--primary-contrast); }
+  .btn:hover { background: #0d635c; }
+  .btn-outline { background: var(--surface); border-color: var(--border); color: var(--text); font-weight: 600; }
+  .btn-outline:hover { background: var(--hover); border-color: var(--text-subtle); }
+  .btn-text { background: transparent; border-color: transparent; color: var(--danger); font-weight: 600; }
+  .btn-text:hover { background: var(--danger-soft); border-color: var(--danger-soft); }
+  .btn-sm { padding: 0.375rem 0.6875rem; font-size: 0.8125rem; min-height: 2.25rem; }
+  .confirmed-badge { display: inline-flex; align-items: center; gap: 0.3125rem; color: var(--success); font-size: 0.8125rem; font-weight: 600; }
+
+  /* ---------- documents ---------- */
+  .doc-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 0.625rem;
+  }
+  .doc-icon {
+    flex: 0 0 auto; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-sm);
+    background: var(--surface-alt); color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center;
+  }
+  .doc-main { min-width: 0; flex: 1 1 auto; }
+  .doc-type { font-size: 0.875rem; font-weight: 600; }
+  .doc-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.125rem; }
+  .doc-sub a { color: var(--text-muted); text-decoration: underline; text-decoration-color: var(--border); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.6875rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.02em; padding: 0.1875rem 0.5rem; border-radius: 999px;
+  }
+  .badge-ok { background: var(--success-soft); color: #157a3f; }
+  .badge-warn { background: var(--accent-soft); color: var(--accent-strong); }
+  .badge-bad { background: var(--danger-soft); color: var(--danger); }
+  .empty-note {
+    text-align: center; padding: 1.25rem 1rem; color: var(--text-muted); font-size: 0.8125rem;
+    border: 1px dashed var(--border); border-radius: var(--radius-sm); margin-bottom: 1rem;
+  }
+  .doc-add { border: 1px dashed var(--border); border-radius: var(--radius-sm); margin-top: 0.25rem; }
+  .doc-add summary {
+    list-style: none; cursor: pointer; padding: 0.75rem 0.875rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.875rem; font-weight: 600; color: var(--primary);
+  }
+  .doc-add summary::-webkit-details-marker { display: none; }
+  .doc-add[open] summary { border-bottom: 1px dashed var(--border); }
+  .upload-form { padding: 1rem 0.875rem 0.875rem; }
+  .file-row {
+    display: flex; align-items: center; gap: 0.625rem; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+    padding: 0.75rem; margin-bottom: 0.875rem; font-size: 0.8125rem; color: var(--text-muted);
+  }
+  .file-row input[type=file] { flex: 1 1 auto; font-size: 0.8125rem; color: var(--text); }
+  .file-row input[type=file]::file-selector-button {
+    margin-right: 0.625rem; padding: 0.375rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-alt); color: var(--text); font-family: inherit; font-size: 0.8125rem; font-weight: 500; cursor: pointer;
+  }
+  .hint-row { font-size: 0.75rem; color: var(--text-subtle); margin: -0.5rem 0 1rem; }
+
+  /* ---------- checklist ---------- */
+  .checklist-progress { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 1rem; }
+  .progress-track { flex: 1 1 auto; height: 0.4375rem; background: var(--surface-alt); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width .2s ease; }
+  .progress-label { font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+
+  .checklist-group + .checklist-group { margin-top: 1.125rem; }
+  .checklist-group h3 { display: flex; align-items: center; justify-content: space-between; text-transform: none; letter-spacing: normal; color: var(--text); font-size: 0.875rem; margin-bottom: 0.5rem; }
+  .group-count { font-size: 0.75rem; font-weight: 500; color: var(--text-subtle); text-transform: none; }
+  ul.items { list-style: none; margin: 0; padding: 0; }
+  .item {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.5625rem 0.25rem;
+    border-bottom: 1px solid var(--border-2);
+  }
+  .item:last-child { border-bottom: none; }
+  .item input[type=checkbox] {
+    flex: 0 0 auto; width: 1.375rem; height: 1.375rem; border-radius: var(--radius-xs);
+    border: 1.5px solid var(--border); accent-color: var(--primary); cursor: pointer;
+  }
+  .item-title { flex: 1 1 auto; font-size: 0.875rem; min-width: 0; }
+  .item.is-done .item-title { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
+  .item-tag { font-size: 0.6875rem; font-weight: 500; color: var(--text-subtle); background: var(--surface-alt); border-radius: var(--radius-xs); padding: 0.125rem 0.4375rem; white-space: nowrap; }
+  .item-tag.is-overdue { color: var(--danger); background: var(--danger-soft); font-weight: 700; }
+
+  .finish-banner {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: var(--success-soft); border: 1px solid #bbf7d0; color: #14532d;
+    border-radius: var(--radius); padding: 1rem 1.125rem; font-size: 0.875rem; font-weight: 500;
+  }
+  .finish-banner .icon { color: var(--success); width: 1.375rem; height: 1.375rem; }
+
+  /* ---------- invalid link ---------- */
+  .invalid-wrap { max-width: 22rem; margin: 3.5rem auto 0; text-align: center; padding: 0 1rem; }
+  .brand { display: flex; align-items: center; justify-content: center; gap: 0.4375rem; color: var(--primary); font-weight: 700; font-size: 1.0625rem; margin-bottom: 1.5rem; }
+  .invalid-card { padding: 2.25rem 1.75rem; }
+  .invalid-icon {
+    width: 3rem; height: 3rem; border-radius: 999px; background: var(--danger-soft); color: var(--danger);
+    display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;
+  }
+  .invalid-icon .icon { width: 1.5rem; height: 1.5rem; }
+  .invalid-card h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+  .invalid-card p { color: var(--text-muted); }
+
+  /* ---------- state visibility plumbing (review tool, not product behaviour) ---------- */
+  /* data-show holds a space-separated list of states an element is visible in;
+     ~= matches a single word in that list, so one node can serve 2+ states. */
+  [data-show] { display: none; }
+  body[data-state="done"] [data-show~="done"],
+  body[data-state="pending"] [data-show~="pending"],
+  body[data-state="new"] [data-show~="new"] { display: block; }
+  /* Some gated nodes rely on their OWN display for inner layout (a flex row,
+     centring within a circle, inline text) — the plain rule above would
+     silently drop that, so these carry it back at higher specificity. */
+  body[data-state="done"] [data-show~="done"].flex,
+  body[data-state="pending"] [data-show~="pending"].flex,
+  body[data-state="new"] [data-show~="new"].flex { display: flex; }
+  body[data-state="done"] [data-show~="done"].inline,
+  body[data-state="pending"] [data-show~="pending"].inline,
+  body[data-state="new"] [data-show~="new"].inline { display: inline-flex; }
+  body[data-state="done"] [data-show~="done"].text,
+  body[data-state="pending"] [data-show~="pending"].text,
+  body[data-state="new"] [data-show~="new"].text { display: inline; }
+
+  .app-shell, .invalid-wrap { display: none; }
+  body[data-state="done"] .app-shell, body[data-state="pending"] .app-shell, body[data-state="new"] .app-shell { display: block; }
+  body[data-state="invalid"] .invalid-wrap { display: block; }
+
+  /* profile view/edit toggle — local to the section, independent of the state switcher */
+  #profile .edit-panel-filled { display: none; }
+  #profile[data-pmode="edit"] .view-panel { display: none; }
+  #profile[data-pmode="edit"] .edit-panel-filled { display: block; }
+  /* a brand-new person has nothing to view, regardless of pmode */
+  body[data-state="new"] #profile .view-panel,
+  body[data-state="new"] #profile .edit-panel-filled { display: none !important; }
+
+  @media (min-width: 30rem) {
+    .field-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body data-state="done">
+
+  <!-- Review tool only — never ships. Lets you preview the states this page
+       must cover without a backend: the returning-traveller happy path, the
+       very first open of the link, a brand-new person with nothing on file
+       yet, and a dead link. -->
+  <div class="review-strip" role="note" aria-label="Mockup state switcher">
+    <strong>Mockup</strong><span>· preview a state</span>
+    <span class="spacer"></span>
+    <button class="state-btn" data-set-state="done" aria-pressed="true">Everything done</button>
+    <button class="state-btn" data-set-state="pending" aria-pressed="false">Just opened the link</button>
+    <button class="state-btn" data-set-state="new" aria-pressed="false">Brand-new person</button>
+    <button class="state-btn" data-set-state="invalid" aria-pressed="false">Invalid link</button>
+  </div>
+
+  <!-- shared icon sprite -->
+  <svg style="display:none" aria-hidden="true">
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5L13 14l-4.5 1.5L10 11z"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.55-6.5-11a6.5 6.5 0 0 1 13 0c0 5.45-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.25"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-flag-fixed" viewBox="0 0 24 24"><path d="M6 3v18M6 4h11l-2.5 3.5L17 11H6"/></symbol>
+    <symbol id="i-flag-open" viewBox="0 0 24 24"><path d="M6 3v18M6 4h11l-2.5 3.5L17 11H6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="1.75"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M14 3.5V8h4"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5L22 20H2z"/><path d="M12 9.5v5M12 17.5h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 8v.01"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="4.5" cy="18.5" r="1.5"/><circle cx="19.5" cy="5.5" r="1.5"/><path d="M4.5 17a9 9 0 0 0 4-2.3c2.3-2.3 3-6 5.3-8.3a9 9 0 0 1 4-2.3"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5-4-4L4 16z"/><path d="M13 6.5l4 4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9 7V4.75a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7M6.5 7l.9 12.4a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9L17.5 7"/></symbol>
+  </svg>
+
+  <main class="page">
+
+    <!-- ============ INVALID LINK ============ -->
+    <div class="invalid-wrap">
+      <p class="brand"><svg class="icon" width="20" height="20"><use href="#i-compass"/></svg> Tripper</p>
+      <div class="card invalid-card">
+        <span class="invalid-icon"><svg class="icon"><use href="#i-alert"/></svg></span>
+        <h1>This link isn't valid</h1>
+        <p style="margin:0;">It may have expired or been revoked — ask your trip organiser for a fresh one. There's nothing else to try from here.</p>
+      </div>
+    </div>
+
+    <!-- ============ MAIN APP (done / pending / new) ============ -->
+    <div class="app-shell">
+
+      <section class="card hero">
+        <p class="greeting">
+          Hi <span class="text" data-show="done pending">Asha</span><span class="text" data-show="new">Marco</span> 👋 you're invited to
+        </p>
+        <h1>Vietnam &amp; Cambodia 2026</h1>
+        <div class="hero-meta">
+          <span class="meta-pill"><svg class="icon"><use href="#i-pin"/></svg> Vietnam &amp; Cambodia</span>
+          <span class="meta-pill"><svg class="icon"><use href="#i-calendar"/></svg> 6–15 Nov 2026</span>
+        </div>
+        <p class="hero-desc">Ten days north-to-south through Vietnam, then over the border for the Angkor temples. Six of us, two joining from Europe. Street food first, museums second, one proper beach afternoon.</p>
+        <div class="tags">
+          <span class="tag">street food</span>
+          <span class="tag">temples</span>
+          <span class="tag">boats</span>
+          <span class="tag">photography</span>
+          <span class="tag">first-time SE Asia</span>
+        </div>
+        <ul class="goals">
+          <span class="goals-label">What this trip is really for</span>
+          <li class="goal is-fixed">
+            <span class="goal-icon"><svg class="icon" width="13" height="13"><use href="#i-flag-fixed"/></svg></span>
+            <div class="goal-body">
+              <p class="goal-title">Angkor Wat at sunrise — the whole reason for the Cambodia leg</p>
+              <p class="goal-meta">15 Nov · Angkor Wat, Siem Reap</p>
+            </div>
+          </li>
+          <li class="goal is-fixed">
+            <span class="goal-icon"><svg class="icon" width="13" height="13"><use href="#i-flag-fixed"/></svg></span>
+            <div class="goal-body">
+              <p class="goal-title">One night on a Ha Long Bay junk</p>
+              <p class="goal-meta">8 Nov · Bai Tu Long Bay</p>
+            </div>
+          </li>
+          <li class="goal is-fixed">
+            <span class="goal-icon"><svg class="icon" width="13" height="13"><use href="#i-flag-fixed"/></svg></span>
+            <div class="goal-body">
+              <p class="goal-title">Hoi An tailoring with time for two fittings</p>
+              <p class="goal-meta">Hoi An Ancient Town</p>
+            </div>
+          </li>
+          <li class="goal is-fixed">
+            <span class="goal-icon"><svg class="icon" width="13" height="13"><use href="#i-flag-fixed"/></svg></span>
+            <div class="goal-body">
+              <p class="goal-title">A proper Vietnamese cooking class, vegan-friendly</p>
+              <p class="goal-meta">Tra Que herb village</p>
+            </div>
+          </li>
+          <li class="goal is-open">
+            <span class="goal-icon"><svg class="icon" width="13" height="13"><use href="#i-flag-open"/></svg></span>
+            <div class="goal-body">
+              <p class="goal-title">Keep two half-days completely unplanned</p>
+              <p class="goal-meta">No fixed date or place</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ===== itinerary — read first, then do the 3 tasks below ===== -->
+      <section class="card" id="itinerary">
+        <div class="section-head">
+          <span class="section-badge"><svg class="icon"><use href="#i-route"/></svg></span>
+          <div class="section-head-text">
+            <h2>Itinerary</h2>
+            <p>10 days · Hanoi → Ha Long Bay → Hoi An → Siem Reap</p>
+          </div>
+        </div>
+
+        <details class="itin-toggle">
+        <summary><svg class="icon chevron" width="14" height="14"><use href="#i-chevron"/></svg> See the day-by-day plan</summary>
+        <div class="itin-days">
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">1</span>
+            <span class="itin-day-head"><span class="itin-day-title">Arrive in Hanoi</span><span class="itin-day-date"> · Fri 6 Nov</span></span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">14:00</span><div class="itin-item-body"><p class="itin-item-title">Land at Noi Bai, transfer to hotel</p><p class="itin-item-loc">Hanoi Old Quarter</p></div></li>
+            <li class="itin-item"><span class="itin-time">19:00</span><div class="itin-item-body"><p class="itin-item-title">Welcome dinner — bun cha, first round</p><p class="itin-item-loc">Old Quarter</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">2</span>
+            <span class="itin-day-head"><span class="itin-day-title">Hanoi on foot</span><span class="itin-day-date"> · Sat 7 Nov</span></span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">08:00</span><div class="itin-item-body"><p class="itin-item-title">Street food walk — egg coffee, pho, banh mi</p><p class="itin-item-loc">Old Quarter</p></div></li>
+            <li class="itin-item"><span class="itin-time">14:00</span><div class="itin-item-body"><p class="itin-item-title">Women's Museum + Train Street</p><p class="itin-item-loc">Hanoi</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">3</span>
+            <span class="itin-day-head"><span class="itin-day-title">Ha Long Bay junk boat</span><span class="itin-day-date"> · Sun 8 Nov</span></span>
+            <span class="itin-goal-badge"><svg class="icon" width="11" height="11"><use href="#i-flag-fixed"/></svg> Goal day</span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">07:30</span><div class="itin-item-body"><p class="itin-item-title">Bus transfer to Ha Long, board the junk</p><p class="itin-item-loc">Bai Tu Long Bay</p></div></li>
+            <li class="itin-item"><span class="itin-time">15:00</span><div class="itin-item-body"><p class="itin-item-title">Kayaking + cave stop</p><p class="itin-item-loc">Bai Tu Long Bay</p></div></li>
+            <li class="itin-item"><span class="itin-time">overnight</span><div class="itin-item-body"><p class="itin-item-title">Sleep aboard the junk</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">4</span>
+            <span class="itin-day-head"><span class="itin-day-title">Back to Hanoi</span><span class="itin-day-date"> · Mon 9 Nov</span></span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">09:00</span><div class="itin-item-body"><p class="itin-item-title">Brunch on deck, cruise back to harbour</p></div></li>
+            <li class="itin-item"><span class="itin-time">13:00</span><div class="itin-item-body"><p class="itin-item-title">Transfer to Hanoi, easy afternoon</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">5</span>
+            <span class="itin-day-head"><span class="itin-day-title">Fly to Da Nang, on to Hoi An</span><span class="itin-day-date"> · Tue 10 Nov</span></span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">08:00</span><div class="itin-item-body"><p class="itin-item-title">Morning flight HAN → DAD</p></div></li>
+            <li class="itin-item"><span class="itin-time">20:00</span><div class="itin-item-body"><p class="itin-item-title">Lantern-lit riverside walk</p><p class="itin-item-loc">Hoi An Ancient Town</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">6</span>
+            <span class="itin-day-head"><span class="itin-day-title">Hoi An tailoring, fitting one</span><span class="itin-day-date"> · Wed 11 Nov</span></span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">10:00</span><div class="itin-item-body"><p class="itin-item-title">Fabric picks + first fitting</p><p class="itin-item-loc">Hoi An Ancient Town</p></div></li>
+            <li class="itin-item"><span class="itin-time">17:00</span><div class="itin-item-body"><p class="itin-item-title">Cycle to An Bang beach for sunset</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">7</span>
+            <span class="itin-day-head"><span class="itin-day-title">Cooking class + second fitting</span><span class="itin-day-date"> · Thu 12 Nov</span></span>
+            <span class="itin-goal-badge"><svg class="icon" width="11" height="11"><use href="#i-flag-fixed"/></svg> Goal day</span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">09:00</span><div class="itin-item-body"><p class="itin-item-title">Vegan-friendly Vietnamese cooking class</p><p class="itin-item-loc">Tra Que herb village</p></div></li>
+            <li class="itin-item"><span class="itin-time">16:00</span><div class="itin-item-body"><p class="itin-item-title">Second tailoring fitting, collect orders</p><p class="itin-item-loc">Hoi An Ancient Town</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">8</span>
+            <span class="itin-day-head"><span class="itin-day-title">On to Siem Reap</span><span class="itin-day-date"> · Fri 13 Nov</span></span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">11:00</span><div class="itin-item-body"><p class="itin-item-title">Fly DAD → SGN → REP</p></div></li>
+            <li class="itin-item"><span class="itin-time">21:00</span><div class="itin-item-body"><p class="itin-item-title">Check in, early night ahead of temples</p><p class="itin-item-loc">Siem Reap</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">9</span>
+            <span class="itin-day-head"><span class="itin-day-title">Temples of Angkor</span><span class="itin-day-date"> · Sat 14 Nov</span></span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">08:00</span><div class="itin-item-body"><p class="itin-item-title">Angkor Thom + Bayon + Ta Prohm</p></div></li>
+            <li class="itin-item"><span class="itin-time"></span><div class="itin-item-body"><p class="itin-item-title">Free half-day — unplanned, on purpose</p></div></li>
+          </ul>
+        </details>
+
+        <details class="itin-day">
+          <summary>
+            <span class="itin-day-num">10</span>
+            <span class="itin-day-head"><span class="itin-day-title">Angkor Wat sunrise, fly home</span><span class="itin-day-date"> · Sun 15 Nov</span></span>
+            <span class="itin-goal-badge"><svg class="icon" width="11" height="11"><use href="#i-flag-fixed"/></svg> Goal day</span>
+            <svg class="icon chevron"><use href="#i-chevron"/></svg>
+          </summary>
+          <ul class="itin-items">
+            <li class="itin-item"><span class="itin-time">05:00</span><div class="itin-item-body"><p class="itin-item-title">Sunrise at Angkor Wat — the reason we came</p><p class="itin-item-loc">Angkor Wat, Siem Reap</p></div></li>
+            <li class="itin-item"><span class="itin-time">14:00</span><div class="itin-item-body"><p class="itin-item-title">Transfer to airport, fly out</p></div></li>
+          </ul>
+        </details>
+        </div>
+        </details>
+      </section>
+
+      <!-- ===== stepper ===== -->
+      <nav class="stepper" aria-label="Your progress on this trip">
+        <a class="step is-complete flex" href="#profile" data-show="done">
+          <span class="step-chip"><svg class="icon"><use href="#i-check"/></svg></span>
+          <span class="step-label">Profile</span>
+          <span class="step-hint">Confirmed</span>
+        </a>
+        <a class="step is-current flex" href="#profile" data-show="pending">
+          <span class="step-chip">1</span>
+          <span class="step-label">Profile</span>
+          <span class="step-hint">Take a look</span>
+        </a>
+        <a class="step is-current flex" href="#profile" data-show="new">
+          <span class="step-chip">1</span>
+          <span class="step-label">Profile</span>
+          <span class="step-hint">Get started</span>
+        </a>
+
+        <a class="step is-complete flex" href="#docs" data-show="done pending">
+          <span class="step-chip"><svg class="icon"><use href="#i-check"/></svg></span>
+          <span class="step-label">Documents</span>
+          <span class="step-hint">1 uploaded</span>
+        </a>
+        <a class="step flex" href="#docs" data-show="new">
+          <span class="step-chip">2</span>
+          <span class="step-label">Documents</span>
+          <span class="step-hint">None yet</span>
+        </a>
+
+        <a class="step is-complete flex" href="#checklist" data-show="done">
+          <span class="step-chip"><svg class="icon"><use href="#i-check"/></svg></span>
+          <span class="step-label">Checklist</span>
+          <span class="step-hint">7/7 done</span>
+        </a>
+        <a class="step flex" href="#checklist" data-show="pending new">
+          <span class="step-chip">3</span>
+          <span class="step-label">Checklist</span>
+          <span class="step-hint">0/7 done</span>
+        </a>
+      </nav>
+
+      <!-- ===== finish banner (done only) ===== -->
+      <div class="finish-banner flex" data-show="done" style="margin-bottom: 1rem;">
+        <svg class="icon"><use href="#i-check"/></svg>
+        <span>You're all set for Vietnam &amp; Cambodia 2026. Nothing left to do until departure — we'll see you at the airport.</span>
+      </div>
+
+      <!-- ===== profile — view mode by default when we already know something about you ===== -->
+      <section class="card" id="profile" data-pmode="view">
+        <div class="section-head">
+          <span class="section-badge is-done inline" data-show="done"><svg class="icon"><use href="#i-check"/></svg></span>
+          <span class="section-badge inline" data-show="pending new">1</span>
+          <div class="section-head-text">
+            <h2>Your details</h2>
+            <p data-show="done">Confirmed — thanks!</p>
+            <p data-show="pending">Take thirty seconds to check this is still right</p>
+            <p data-show="new">First time here — takes about a minute</p>
+          </div>
+        </div>
+
+        <div class="callout flex" data-show="pending">
+          <svg class="icon"><use href="#i-info"/></svg>
+          <span>This is what we have from your last trip with the group — still right? Update anything that's changed and hit Save.</span>
+        </div>
+
+        <!-- VIEW PANEL: read-only, shown for done + pending until Edit is tapped -->
+        <div class="view-panel">
+          <div class="fieldset">
+            <h3>Who you are</h3>
+            <div class="field-grid">
+              <div class="view-field span-2" style="grid-column:1/-1;"><span class="vf-label">Name</span><span class="vf-value">Asha Kumar</span></div>
+              <div class="view-field"><span class="vf-label">Phone</span><span class="vf-value">+91 98410 22187</span></div>
+              <div class="view-field"><span class="vf-label">Email</span><span class="vf-value">asha.kumar@gmail.com</span></div>
+              <div class="view-field" style="grid-column:1/-1;"><span class="vf-label"><svg class="icon lock-icon" width="11" height="11"><use href="#i-lock"/></svg> Emergency contact</span><span class="vf-value">Lakshmi Kumar (mother), +91 98400 71120</span></div>
+            </div>
+          </div>
+          <div class="fieldset">
+            <h3>Health &amp; diet <span style="text-transform:none;font-weight:500;color:var(--text-subtle);">— private, only your organiser sees this</span></h3>
+            <div class="field-grid">
+              <div class="view-field"><span class="vf-label">Dietary</span><span class="vf-value">Veg</span></div>
+              <div class="view-field"><span class="vf-label"><svg class="icon lock-icon" width="11" height="11"><use href="#i-lock"/></svg> Allergies</span><span class="vf-value">Peanuts (mild)</span></div>
+              <div class="view-field" style="grid-column:1/-1;"><span class="vf-label"><svg class="icon lock-icon" width="11" height="11"><use href="#i-lock"/></svg> Medical notes</span><span class="vf-value">Carries an inhaler for dust allergy</span></div>
+            </div>
+          </div>
+          <div class="fieldset">
+            <h3>Trip preferences</h3>
+            <div class="field-grid">
+              <div class="view-field"><span class="vf-label">Preferred pace</span><span class="vf-value">Moderate</span></div>
+              <div class="view-field"><span class="vf-label">Budget band</span><span class="vf-value">Medium</span></div>
+              <div class="view-field" style="grid-column:1/-1;"><span class="vf-label">Interests</span><span class="vf-value">temples, street food, photography, markets</span></div>
+              <div class="view-field" style="grid-column:1/-1;"><span class="vf-label">Home city</span><span class="vf-value">Chennai</span></div>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <button class="btn" type="button" data-show="pending" onclick="setPmode('edit')">Confirm, nothing's changed</button>
+            <button class="btn-outline" type="button" data-show="pending" onclick="setPmode('edit')"><svg class="icon"><use href="#i-edit"/></svg> Edit details</button>
+            <button class="btn-outline" type="button" data-show="done" onclick="setPmode('edit')"><svg class="icon"><use href="#i-edit"/></svg> Edit</button>
+            <span class="confirmed-badge" data-show="done"><svg class="icon"><use href="#i-check"/></svg> Profile confirmed</span>
+          </div>
+        </div>
+
+        <!-- EDIT PANEL, pre-filled: reached via "Edit" from view mode (done/pending only) -->
+        <form class="edit-panel-filled" onsubmit="return false">
+          <div class="fieldset">
+            <h3>Who you are</h3>
+            <div class="field-grid">
+              <div class="field span-2"><label for="pf2-name">Name</label><input id="pf2-name" value="Asha Kumar" required></div>
+              <div class="field"><label for="pf2-phone">Phone</label><input id="pf2-phone" value="+91 98410 22187"></div>
+              <div class="field"><label for="pf2-email">Email</label><input id="pf2-email" type="email" value="asha.kumar@gmail.com"></div>
+              <div class="field span-2"><label for="pf2-emergency"><svg class="icon lock-icon" width="12" height="12"><use href="#i-lock"/></svg> Emergency contact</label><input id="pf2-emergency" value="Lakshmi Kumar (mother), +91 98400 71120"></div>
+            </div>
+          </div>
+          <div class="fieldset">
+            <h3>Health &amp; diet <span style="text-transform:none;font-weight:500;color:var(--text-subtle);">— private, only your organiser sees this</span></h3>
+            <div class="field-grid">
+              <div class="field"><label for="pf2-dietary">Dietary</label><select id="pf2-dietary"><option>Veg</option><option>Non-veg</option><option>Vegan</option></select></div>
+              <div class="field"><label for="pf2-allergies"><svg class="icon lock-icon" width="12" height="12"><use href="#i-lock"/></svg> Allergies</label><input id="pf2-allergies" value="Peanuts (mild)"></div>
+              <div class="field span-2"><label for="pf2-medical"><svg class="icon lock-icon" width="12" height="12"><use href="#i-lock"/></svg> Medical notes</label><textarea id="pf2-medical">Carries an inhaler for dust allergy</textarea></div>
+            </div>
+          </div>
+          <div class="fieldset">
+            <h3>Trip preferences</h3>
+            <div class="field-grid">
+              <div class="field"><label for="pf2-pace">Preferred pace</label><select id="pf2-pace"><option>Relaxed</option><option selected>Moderate</option><option>Packed</option></select></div>
+              <div class="field"><label for="pf2-budget">Budget band</label><select id="pf2-budget"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+              <div class="field span-2"><label for="pf2-interests">Interests</label><input id="pf2-interests" value="temples, street food, photography, markets"></div>
+              <div class="field span-2"><label for="pf2-city">Home city</label><input id="pf2-city" value="Chennai"></div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" type="submit" onclick="setPmode('view')">Save</button>
+            <button class="btn-outline" type="button" onclick="setPmode('view')">Cancel</button>
+          </div>
+        </form>
+
+        <!-- EDIT PANEL, blank: the only panel a brand-new person ever sees -->
+        <form class="edit-panel" data-show="new" onsubmit="return false">
+          <div class="fieldset">
+            <h3>Who you are</h3>
+            <div class="field-grid">
+              <div class="field span-2"><label for="pf-name">Name</label><input id="pf-name" value="Marco Rossi" required></div>
+              <div class="field"><label for="pf-phone">Phone</label><input id="pf-phone" placeholder="e.g. +39 345 123 4567"></div>
+              <div class="field"><label for="pf-email">Email</label><input id="pf-email" type="email" placeholder="you@example.com"></div>
+              <div class="field span-2"><label for="pf-emergency"><svg class="icon lock-icon" width="12" height="12"><use href="#i-lock"/></svg> Emergency contact</label><input id="pf-emergency" placeholder="Name + phone number"></div>
+            </div>
+          </div>
+          <div class="fieldset">
+            <h3>Health &amp; diet <span style="text-transform:none;font-weight:500;color:var(--text-subtle);">— private, only your organiser sees this</span></h3>
+            <div class="field-grid">
+              <div class="field"><label for="pf-dietary">Dietary</label><select id="pf-dietary"><option value="">—</option><option>Veg</option><option>Non-veg</option><option>Vegan</option></select></div>
+              <div class="field"><label for="pf-allergies"><svg class="icon lock-icon" width="12" height="12"><use href="#i-lock"/></svg> Allergies</label><input id="pf-allergies" placeholder="None, or list them"></div>
+              <div class="field span-2"><label for="pf-medical"><svg class="icon lock-icon" width="12" height="12"><use href="#i-lock"/></svg> Medical notes</label><textarea id="pf-medical" placeholder="Anything we should know"></textarea></div>
+            </div>
+          </div>
+          <div class="fieldset">
+            <h3>Trip preferences</h3>
+            <div class="field-grid">
+              <div class="field"><label for="pf-pace">Preferred pace</label><select id="pf-pace"><option value="">—</option><option>Relaxed</option><option>Moderate</option><option>Packed</option></select></div>
+              <div class="field"><label for="pf-budget">Budget band</label><select id="pf-budget"><option value="">—</option><option>Low</option><option>Medium</option><option>High</option></select></div>
+              <div class="field span-2"><label for="pf-interests">Interests</label><input id="pf-interests" placeholder="hiking, museums, food"></div>
+              <div class="field span-2"><label for="pf-city">Home city</label><input id="pf-city" placeholder="e.g. Milan"></div>
+            </div>
+          </div>
+          <button class="btn" type="submit">Save</button>
+        </form>
+      </section>
+
+      <!-- ===== documents ===== -->
+      <section class="card" id="docs">
+        <div class="section-head">
+          <span class="section-badge is-done inline" data-show="done pending"><svg class="icon"><use href="#i-check"/></svg></span>
+          <span class="section-badge inline" data-show="new">2</span>
+          <div class="section-head-text">
+            <h2>Your documents</h2>
+            <p data-show="done pending">1 uploaded · nothing expiring soon</p>
+            <p data-show="new">Nothing uploaded yet</p>
+          </div>
+        </div>
+
+        <div class="doc-row" data-show="done pending">
+          <span class="doc-icon"><svg class="icon"><use href="#i-file"/></svg></span>
+          <div class="doc-main">
+            <p class="doc-type">Passport <span class="badge badge-ok" style="margin-left:0.375rem;">Valid</span></p>
+            <p class="doc-sub">№ Z1234567 · expires 18 Apr 2032 · <a href="#" onclick="return false">asha-passport-scan.pdf</a></p>
+          </div>
+          <button class="btn-text btn-sm" type="button"><svg class="icon" width="13" height="13"><use href="#i-trash"/></svg> Delete</button>
+        </div>
+
+        <p class="empty-note" data-show="new">No documents yet — add your passport, visa, or vaccination record once you have them.</p>
+
+        <details class="doc-add">
+          <summary><svg class="icon" width="14" height="14"><use href="#i-plus"/></svg> Add another document</summary>
+          <form class="upload-form" onsubmit="return false">
+            <div class="file-row">
+              <input type="file">
+            </div>
+            <div class="field-grid">
+              <div class="field">
+                <label for="doc-type">Type</label>
+                <select id="doc-type"><option>Passport</option><option>Visa</option><option>National ID</option><option>Driving licence</option><option>Vaccination</option><option>Other</option></select>
+              </div>
+              <div class="field">
+                <label for="doc-number">Number <span style="font-weight:400;color:var(--text-subtle);">(optional)</span></label>
+                <input id="doc-number" placeholder="—">
+              </div>
+              <div class="field span-2">
+                <label for="doc-expiry">Expiry <span style="font-weight:400;color:var(--text-subtle);">(optional)</span></label>
+                <input id="doc-expiry" placeholder="YYYY-MM-DD">
+              </div>
+            </div>
+            <p class="hint-row">Any file type, up to 10 MB. Only you and your organiser can ever open it.</p>
+            <button class="btn" type="submit">Upload</button>
+          </form>
+        </details>
+      </section>
+
+      <!-- ===== checklist ===== -->
+      <section class="card" id="checklist">
+        <div class="section-head">
+          <span class="section-badge is-done inline" data-show="done"><svg class="icon"><use href="#i-check"/></svg></span>
+          <span class="section-badge inline" data-show="pending new">3</span>
+          <div class="section-head-text">
+            <h2>Your checklist</h2>
+            <p data-show="done">Everything's ticked off</p>
+            <p data-show="pending new">5 packing items, 2 tasks — nothing done yet</p>
+          </div>
+        </div>
+
+        <div class="checklist-progress">
+          <div class="progress-track">
+            <div class="progress-fill" data-show="done" style="width:100%;"></div>
+            <div class="progress-fill" data-show="pending new" style="width:0%;"></div>
+          </div>
+          <span class="progress-label inline" data-show="done">7/7 done</span>
+          <span class="progress-label inline" data-show="pending new">0/7 done</span>
+        </div>
+
+        <div class="checklist-group">
+          <h3>Packing <span class="group-count inline" data-show="done">5/5</span><span class="group-count inline" data-show="pending new">0/5</span></h3>
+          <ul class="items">
+            <li class="item is-done flex" data-show="done">
+              <input type="checkbox" checked disabled>
+              <span class="item-title">Passport + 2 photocopies, kept separately</span>
+              <span class="item-tag">Packing</span>
+            </li>
+            <li class="item flex" data-show="pending new">
+              <input type="checkbox">
+              <span class="item-title">Passport + 2 photocopies, kept separately</span>
+              <span class="item-tag">Packing</span>
+            </li>
+
+            <li class="item is-done flex" data-show="done">
+              <input type="checkbox" checked disabled>
+              <span class="item-title">Printed Cambodia e-visa (one per person)</span>
+              <span class="item-tag">Packing</span>
+            </li>
+            <li class="item flex" data-show="pending new">
+              <input type="checkbox">
+              <span class="item-title">Printed Cambodia e-visa (one per person)</span>
+              <span class="item-tag">Packing</span>
+            </li>
+
+            <li class="item is-done flex" data-show="done">
+              <input type="checkbox" checked disabled>
+              <span class="item-title">Rain shell — Hoi An can still get wet in November</span>
+              <span class="item-tag">Packing</span>
+            </li>
+            <li class="item flex" data-show="pending new">
+              <input type="checkbox">
+              <span class="item-title">Rain shell — Hoi An can still get wet in November</span>
+              <span class="item-tag">Packing</span>
+            </li>
+
+            <li class="item is-done flex" data-show="done">
+              <input type="checkbox" checked disabled>
+              <span class="item-title">Long trousers + covered shoulders for temple days</span>
+              <span class="item-tag">Packing</span>
+            </li>
+            <li class="item flex" data-show="pending new">
+              <input type="checkbox">
+              <span class="item-title">Long trousers + covered shoulders for temple days</span>
+              <span class="item-tag">Packing</span>
+            </li>
+
+            <li class="item is-done flex" data-show="done">
+              <input type="checkbox" checked disabled>
+              <span class="item-title">Reef-safe sunscreen SPF50</span>
+              <span class="item-tag">Packing</span>
+            </li>
+            <li class="item flex" data-show="pending new">
+              <input type="checkbox">
+              <span class="item-title">Reef-safe sunscreen SPF50</span>
+              <span class="item-tag">Packing</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="checklist-group">
+          <h3>Tasks <span class="group-count inline" data-show="done">2/2</span><span class="group-count inline" data-show="pending new">0/2</span></h3>
+          <ul class="items">
+            <li class="item is-done flex" data-show="done">
+              <input type="checkbox" checked disabled>
+              <span class="item-title">Pay the Ha Long junk balance</span>
+              <span class="item-tag">done</span>
+            </li>
+            <li class="item flex" data-show="pending new">
+              <input type="checkbox">
+              <span class="item-title">Pay the Ha Long junk balance</span>
+              <span class="item-tag">due 20 Oct</span>
+            </li>
+
+            <li class="item is-done flex" data-show="done">
+              <input type="checkbox" checked disabled>
+              <span class="item-title">Book the MAA→HAN group ticket</span>
+              <span class="item-tag">done</span>
+            </li>
+            <li class="item flex" data-show="pending new">
+              <input type="checkbox">
+              <span class="item-title">Book the MAA→HAN group ticket</span>
+              <span class="item-tag is-overdue">overdue · was due 5 Jul</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // Review tool only. Sets data-state on <body>; every state-dependent node
+    // above is scoped with [data-show~="done|pending|new"] and pure CSS
+    // handles showing/hiding — nothing here touches the product markup.
+    function setPmode(mode) {
+      document.getElementById('profile').setAttribute('data-pmode', mode);
+    }
+    document.querySelectorAll('[data-set-state]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.body.setAttribute('data-state', btn.getAttribute('data-set-state'));
+        setPmode('view'); // switching states always resets the profile card back to view mode
+        document.querySelectorAll('[data-set-state]').forEach(function (b) {
+          b.setAttribute('aria-pressed', String(b === btn));
+        });
+      });
+    });
+  </script>
+</body>
+</html>
