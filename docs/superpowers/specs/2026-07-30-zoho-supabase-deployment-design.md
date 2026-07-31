@@ -139,6 +139,17 @@ feasibility question):
 Net assessment: a real, contained migration — not a lift-and-shift, but not a rewrite of the
 data model either. Bounded mechanical cost, not an open design risk.
 
+**VERIFIED, live, against a real Supabase project (not Tripper's own — splitease's, hostname
+only, no credentials used or needed for a TCP-connect test)**: Supabase's *direct* connection
+hostname (`db.<project-ref>.supabase.co`) resolves to an **IPv6-only address (AAAA record, no
+A record)**. From the AppSail spike, connecting to it failed with `getaddrinfo ENOTFOUND` —
+not a Catalyst egress block, a DNS/IPv6-routing gap. Supabase's **connection pooler
+(Supavisor)** hostname (e.g. `aws-0-<region>.pooler.supabase.com`, shared per-region, real A
+records via an AWS ELB) connected successfully on both port 5432 (session mode) and 6543
+(transaction mode) in under 110ms. **Conclusion: Tripper's Postgres connection string must
+use the Supavisor pooler host, not the direct `db.*.supabase.co` host**, when connecting from
+AppSail. This is no longer an open item — confirmed with the exact fix in hand.
+
 ### 3.5 File storage: Zoho Catalyst Stratus — **recommended** (not File Store)
 
 **File Store (the originally-considered service) is past end-of-life** — deprecated
@@ -158,12 +169,17 @@ URL for the client to fetch directly from Stratus — never proxying file bytes 
 app process. This preserves today's "documents never served as unauthenticated static
 files" rule (the signed URL is itself time-limited and scoped) while being one hop shorter.
 
-**Not yet spiked live**: an actual upload → sign → fetch round trip. The SDK's `bucket()`
-method requires a bucket that already exists, and bucket creation has **no CLI or SDK
-method** — it's console-only. This is a genuine, low-effort Open Item (create one bucket,
-run the same kind of round-trip spike already done for AppSail/Functions) rather than a
-design risk — presigned-URL object storage is an extremely standard pattern and the SDK
-surface matches it exactly.
+**VERIFIED, live**: a bucket named `tripper` was created via the console (its public URL,
+`https://tripper-development.zohostratus.com`, has a `-development` environment suffix that
+is *not* the bucket's actual name — `listBuckets()` was needed to find the real one). A
+sample PDF was uploaded through the console. Direct, unauthenticated access to it
+(`GET https://tripper-development.zohostratus.com/<filename>.pdf`) returned
+`403 {"code":"access_forbidden","message":"request denied by resource access policy"}` —
+confirming objects are private by default, matching the design's assumption. Calling
+`bucket.generatePreSignedUrl(key, 'GET', { expiryIn: 300 })` from the AppSail spike returned
+a signed URL (`.../_signed/<key>?...stsSignature=...`), and fetching that URL directly
+returned `200` with the full `176620` bytes of the uploaded PDF. The full write-then-read
+pattern this design depends on is confirmed end to end, not just documented.
 
 ### 3.6 Auth — unchanged, by design
 
@@ -200,35 +216,32 @@ as an experiment behind the same interface, not a dependency of this migration.
 |---|---|---|
 | Frontend hosting | Zoho **Slate** (static Vue 3 build) | Documented, not spiked |
 | API / business logic | **Catalyst AppSail**, existing Fastify app, persistent process | Verified (spike app; real app not yet ported) |
-| Database | **Supabase Postgres** | Migration scope analyzed at code level; no live connectivity test yet |
-| File storage | **Zoho Catalyst Stratus** (writes via app, reads via signed URL) | Documented + SDK-verified; no live round trip yet |
+| Database | **Supabase Postgres**, connected via the Supavisor **pooler** host, not the direct `db.*` host | Migration scope analyzed at code level; pooler-host connectivity verified live from AppSail |
+| File storage | **Zoho Catalyst Stratus** (writes via app, reads via signed URL) | Verified live end-to-end: upload, 403 on unauthenticated access, signed URL, direct fetch |
 | Auth | Unchanged custom code (bcrypt+JWT organizer, tokenized participant links) | No change required |
 | LLM | Unchanged pluggable `LLM_PROVIDER` | No change required |
 | Portability | Same app process/Docker-shaped deploy targets both Oracle VM (docker-compose, as today) and AppSail (source+command or Docker image) | Direct consequence of choosing AppSail over Functions |
 
 ## 5. Open items (before or during implementation)
 
-1. **Supabase connectivity from AppSail, against the real host.** Arbitrary outbound TCP is
-   verified in general (1.1.1.1, smtp.gmail.com); the actual Supabase Postgres endpoint on
-   5432 has not been dialed from a Catalyst AppSail instance. Needs a live Supabase project
-   for this app (the user has a Supabase *account*, not yet a *project* for Tripper) —
-   creating one is a hands-on step, then a five-minute connectivity spike confirms it.
-2. **Stratus bucket + signed-URL round trip**, live. Needs one bucket created via the
-   Catalyst console (no CLI/SDK path exists for bucket creation) — hands-on, then scriptable
-   the same way the AppSail/Functions spikes were.
-3. **AppSail free-tier usage under real traffic** is a judgment call based on assumed usage
+1. **AppSail free-tier usage under real traffic** is a judgment call based on assumed usage
    patterns, not a guarantee — worth a look at actual GB-hour consumption after the first
    month live, not before.
-4. **Whether the Functions response throttle found in §3.3 is dev-tier-specific** is
+2. **Whether the Functions response throttle found in §3.3 is dev-tier-specific** is
    unresolved and, given AppSail replaces Functions as the API host, no longer load-bearing
    for this design — left unresolved deliberately.
-5. **Slate** hasn't been hands-on verified this session (lower risk, deprioritized in favor
+3. **Slate** hasn't been hands-on verified this session (lower risk, deprioritized in favor
    of the compute/storage/DB questions that were genuinely uncertain).
-6. Two throwaway spike resources (`payloadSpike` function, `spikeappsail` AppSail instance)
-   are still live on the real `project-rainfall` Catalyst project. AppSail's scale-to-zero
-   means no ongoing cost, but they're cruft — no CLI command exists to delete an AppSail
-   instance, so removal (if wanted) is a console action, left to the user rather than done
-   automatically.
+4. **Tripper needs its own Supabase project.** The pooler-host connectivity spike used
+   splitease's project purely for a hostname-level TCP-connect test (no credentials, no data
+   touched). A real Supabase project for Tripper, and its own pooler connection string, is
+   still needed before implementation.
+5. Three throwaway spike resources (`payloadSpike` function, `spikeappsail` AppSail instance,
+   the `tripper` Stratus bucket's one uploaded test PDF) are still live on the real
+   `project-rainfall` Catalyst project. AppSail's scale-to-zero means no ongoing compute
+   cost, but they're cruft — no CLI command exists to delete an AppSail instance or a
+   Stratus object, so removal (if wanted) is a console action, left to the user rather than
+   done automatically.
 
 ## 6. Non-goals of this migration
 
