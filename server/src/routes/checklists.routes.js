@@ -6,14 +6,14 @@ import { buildPackingPrompt } from '../llm/prompts/packing.js'
 const CHECKLIST_FIELDS = ['name', 'trip_type_tags']
 const ITEM_FIELDS = ['title', 'assignee_person_id', 'due_date', 'done']
 
-export function itemsForChecklist(db, checklistId) {
-  return db.prepare(`SELECT ci.id, ci.checklist_id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
+export async function itemsForChecklist(db, checklistId) {
+  return db.all(`SELECT ci.id, ci.checklist_id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
       ci.due_date, ci.done, ci.position
     FROM checklist_items ci LEFT JOIN persons p ON p.id = ci.assignee_person_id
-    WHERE ci.checklist_id = ? ORDER BY ci.position`).all(checklistId)
+    WHERE ci.checklist_id = ? ORDER BY ci.position`, [checklistId])
 }
 
-export function checklistToJson(db, row) {
+export async function checklistToJson(db, row) {
   if (!row) return row
   return {
     id: row.id,
@@ -22,15 +22,15 @@ export function checklistToJson(db, row) {
     kind: row.kind,
     name: row.name,
     trip_type_tags: JSON.parse(row.trip_type_tags || '[]'),
-    items: itemsForChecklist(db, row.id),
+    items: await itemsForChecklist(db, row.id),
   }
 }
 
-function itemToJson(db, itemId) {
-  return db.prepare(`SELECT ci.id, ci.checklist_id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
+async function itemToJson(db, itemId) {
+  return db.get(`SELECT ci.id, ci.checklist_id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
       ci.due_date, ci.done, ci.position
     FROM checklist_items ci LEFT JOIN persons p ON p.id = ci.assignee_person_id
-    WHERE ci.id = ?`).get(itemId)
+    WHERE ci.id = ?`, [itemId])
 }
 
 export default async function routes(app) {
@@ -38,35 +38,33 @@ export default async function routes(app) {
   // Unscoped re-reads for rows whose ownership the handler already verified.
   // Every checklist carries its own organizer_id (003), so templates — which
   // have no trip to inherit ownership from — scope the same way as the rest.
-  const getChecklist = (id) => db.prepare('SELECT * FROM checklists WHERE id = ?').get(id)
-  const getTrip = (id) => db.prepare('SELECT * FROM trips WHERE id = ?').get(id)
-  const getItem = (id) => db.prepare('SELECT * FROM checklist_items WHERE id = ?').get(id)
-  const ownedChecklist = (req, id) => db.prepare(
-    'SELECT * FROM checklists WHERE id = ? AND organizer_id = ?'
-  ).get(id, req.organizer.id)
-  const ownedItem = (req) => db.prepare(
+  const getChecklist = (id) => db.get('SELECT * FROM checklists WHERE id = ?', [id])
+  const getTrip = (id) => db.get('SELECT * FROM trips WHERE id = ?', [id])
+  const getItem = (id) => db.get('SELECT * FROM checklist_items WHERE id = ?', [id])
+  const ownedChecklist = (req, id) => db.get(
+    'SELECT * FROM checklists WHERE id = ? AND organizer_id = ?', [id, req.organizer.id],
+  )
+  const ownedItem = (req) => db.get(
     `SELECT ci.* FROM checklist_items ci JOIN checklists c ON c.id = ci.checklist_id
-     WHERE ci.id = ? AND c.organizer_id = ?`
-  ).get(req.params.itemId, req.organizer.id)
-  const nextPosition = (checklistId) =>
-    db.prepare('SELECT COALESCE(MAX(position), -1) AS maxPos FROM checklist_items WHERE checklist_id = ?')
-      .get(checklistId).maxPos + 1
+     WHERE ci.id = ? AND c.organizer_id = ?`, [req.params.itemId, req.organizer.id],
+  )
+  const nextPosition = async (checklistId) =>
+    (await db.get('SELECT COALESCE(MAX(position), -1) AS maxpos FROM checklist_items WHERE checklist_id = ?', [checklistId])).maxpos + 1
 
   // ---- organizer: checklists ----
   app.get('/checklists', { preHandler: app.requireOrganizer }, async (req) => {
     const templateOnly = req.query?.template === '1' || req.query?.template === 1
     const rows = templateOnly
-      ? db.prepare('SELECT * FROM checklists WHERE is_template = 1 AND organizer_id = ? ORDER BY name')
-          .all(req.organizer.id)
-      : db.prepare('SELECT * FROM checklists WHERE organizer_id = ? ORDER BY name').all(req.organizer.id)
-    return { checklists: rows.map((r) => checklistToJson(db, r)) }
+      ? await db.all('SELECT * FROM checklists WHERE is_template = 1 AND organizer_id = ? ORDER BY name', [req.organizer.id])
+      : await db.all('SELECT * FROM checklists WHERE organizer_id = ? ORDER BY name', [req.organizer.id])
+    return { checklists: await Promise.all(rows.map((r) => checklistToJson(db, r))) }
   })
 
   app.get('/trips/:tripId/checklists', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const trip = app.ownedTrip(req, req.params.tripId)
+    const trip = await app.ownedTrip(req, req.params.tripId)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
-    const rows = db.prepare('SELECT * FROM checklists WHERE trip_id = ? ORDER BY name').all(trip.id)
-    return { checklists: rows.map((r) => checklistToJson(db, r)) }
+    const rows = await db.all('SELECT * FROM checklists WHERE trip_id = ? ORDER BY name', [trip.id])
+    return { checklists: await Promise.all(rows.map((r) => checklistToJson(db, r))) }
   })
 
   app.post('/checklists', {
@@ -90,38 +88,41 @@ export default async function routes(app) {
     if (!isTemplate && !b.trip_id)
       return httpError(reply, 400, 'VALIDATION', 'trip_id is required unless is_template is set')
     if (!isTemplate) {
-      const trip = app.ownedTrip(req, b.trip_id)
+      const trip = await app.ownedTrip(req, b.trip_id)
       if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     }
     const id = randomUUID()
-    db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`)
-      .run(id, isTemplate ? null : b.trip_id, isTemplate ? 1 : 0, b.kind, b.name,
-        JSON.stringify(b.trip_type_tags ?? []), req.organizer.id)
+    await db.run(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, isTemplate ? null : b.trip_id, isTemplate ? 1 : 0, b.kind, b.name,
+        JSON.stringify(b.trip_type_tags ?? []), req.organizer.id])
     reply.code(201)
-    return { checklist: checklistToJson(db, getChecklist(id)) }
+    return { checklist: await checklistToJson(db, await getChecklist(id)) }
   })
 
   app.put('/checklists/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const checklist = ownedChecklist(req, req.params.id)
+    const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     const b = req.body || {}
     const updates = []
-    const params = { id: checklist.id }
+    const params = []
     for (const field of CHECKLIST_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(b, field)) {
-        updates.push(`${field} = @${field}`)
-        params[field] = field === 'trip_type_tags' ? JSON.stringify(b[field] ?? []) : b[field]
+        updates.push(`${field} = ?`)
+        params.push(field === 'trip_type_tags' ? JSON.stringify(b[field] ?? []) : b[field])
       }
     }
-    if (updates.length) db.prepare(`UPDATE checklists SET ${updates.join(', ')} WHERE id = @id`).run(params)
-    return { checklist: checklistToJson(db, getChecklist(checklist.id)) }
+    if (updates.length) {
+      params.push(checklist.id)
+      await db.run(`UPDATE checklists SET ${updates.join(', ')} WHERE id = ?`, params)
+    }
+    return { checklist: await checklistToJson(db, await getChecklist(checklist.id)) }
   })
 
   app.delete('/checklists/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const checklist = ownedChecklist(req, req.params.id)
+    const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
-    db.prepare('DELETE FROM checklists WHERE id = ?').run(checklist.id)
+    await db.run('DELETE FROM checklists WHERE id = ?', [checklist.id])
     reply.code(204)
     return null
   })
@@ -141,37 +142,40 @@ export default async function routes(app) {
       },
     },
   }, async (req, reply) => {
-    const checklist = ownedChecklist(req, req.params.id)
+    const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     const id = randomUUID()
     const b = req.body
-    db.prepare(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
-      VALUES (?, ?, ?, ?, ?, 0, ?)`)
-      .run(id, checklist.id, b.title, b.assignee_person_id ?? null, b.due_date ?? null, nextPosition(checklist.id))
+    await db.run(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
+      VALUES (?, ?, ?, ?, ?, 0, ?)`,
+      [id, checklist.id, b.title, b.assignee_person_id ?? null, b.due_date ?? null, await nextPosition(checklist.id)])
     reply.code(201)
-    return itemToJson(db, id)
+    return await itemToJson(db, id)
   })
 
   app.put('/checklist-items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const item = ownedItem(req)
+    const item = await ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     const b = req.body || {}
     const updates = []
-    const params = { id: item.id }
+    const params = []
     for (const field of ITEM_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(b, field)) {
-        updates.push(`${field} = @${field}`)
-        params[field] = field === 'done' ? (b[field] ? 1 : 0) : b[field]
+        updates.push(`${field} = ?`)
+        params.push(field === 'done' ? (b[field] ? 1 : 0) : b[field])
       }
     }
-    if (updates.length) db.prepare(`UPDATE checklist_items SET ${updates.join(', ')} WHERE id = @id`).run(params)
-    return itemToJson(db, item.id)
+    if (updates.length) {
+      params.push(item.id)
+      await db.run(`UPDATE checklist_items SET ${updates.join(', ')} WHERE id = ?`, params)
+    }
+    return await itemToJson(db, item.id)
   })
 
   app.delete('/checklist-items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const item = ownedItem(req)
+    const item = await ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
-    db.prepare('DELETE FROM checklist_items WHERE id = ?').run(item.id)
+    await db.run('DELETE FROM checklist_items WHERE id = ?', [item.id])
     reply.code(204)
     return null
   })
@@ -181,57 +185,59 @@ export default async function routes(app) {
     preHandler: app.requireOrganizer,
     schema: { body: { type: 'object', required: ['template_id'], properties: { template_id: { type: 'string' } } } },
   }, async (req, reply) => {
-    const trip = app.ownedTrip(req, req.params.tripId)
+    const trip = await app.ownedTrip(req, req.params.tripId)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
-    const template = ownedChecklist(req, req.body.template_id)
+    const template = await ownedChecklist(req, req.body.template_id)
     if (!template || !template.is_template) return httpError(reply, 404, 'NOT_FOUND', 'No such template')
 
     const newId = randomUUID()
-    const tx = db.transaction(() => {
-      db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
-        VALUES (?, ?, 0, ?, ?, ?, ?)`)
-        .run(newId, trip.id, template.kind, template.name, template.trip_type_tags, req.organizer.id)
-      const items = itemsForChecklist(db, template.id)
-      const ins = db.prepare(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
-        VALUES (?, ?, ?, NULL, ?, 0, ?)`)
-      for (const item of items) ins.run(randomUUID(), newId, item.title, item.due_date, item.position)
+    await db.tx(async () => {
+      await db.run(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
+        VALUES (?, ?, 0, ?, ?, ?, ?)`,
+        [newId, trip.id, template.kind, template.name, template.trip_type_tags, req.organizer.id])
+      const items = await itemsForChecklist(db, template.id)
+      for (const item of items) await db.run(
+        `INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
+         VALUES (?, ?, ?, NULL, ?, 0, ?)`,
+        [randomUUID(), newId, item.title, item.due_date, item.position],
+      )
     })
-    tx()
     reply.code(201)
-    return { checklist: checklistToJson(db, getChecklist(newId)) }
+    return { checklist: await checklistToJson(db, await getChecklist(newId)) }
   })
 
   app.post('/checklists/:id/promote-to-template', {
     preHandler: app.requireOrganizer,
     schema: { body: { type: 'object', required: ['name'], properties: { name: { type: 'string', minLength: 1 } } } },
   }, async (req, reply) => {
-    const source = ownedChecklist(req, req.params.id)
+    const source = await ownedChecklist(req, req.params.id)
     if (!source) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
 
     const newId = randomUUID()
-    const tx = db.transaction(() => {
-      db.prepare(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
-        VALUES (?, NULL, 1, ?, ?, ?, ?)`)
-        .run(newId, source.kind, req.body.name, source.trip_type_tags, req.organizer.id)
-      const items = itemsForChecklist(db, source.id)
-      const ins = db.prepare(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
-        VALUES (?, ?, ?, NULL, NULL, 0, ?)`)
-      for (const item of items) ins.run(randomUUID(), newId, item.title, item.position)
+    await db.tx(async () => {
+      await db.run(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
+        VALUES (?, NULL, 1, ?, ?, ?, ?)`,
+        [newId, source.kind, req.body.name, source.trip_type_tags, req.organizer.id])
+      const items = await itemsForChecklist(db, source.id)
+      for (const item of items) await db.run(
+        `INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
+         VALUES (?, ?, ?, NULL, NULL, 0, ?)`,
+        [randomUUID(), newId, item.title, item.position],
+      )
     })
-    tx()
     reply.code(201)
-    return { checklist: checklistToJson(db, getChecklist(newId)) }
+    return { checklist: await checklistToJson(db, await getChecklist(newId)) }
   })
 
   // ---- AI packing suggestion ----
   app.post('/checklists/:id/ai-packing-suggest', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const checklist = ownedChecklist(req, req.params.id)
+    const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     if (checklist.kind !== 'packing') return httpError(reply, 400, 'NOT_PACKING', 'Checklist is not a packing list')
     if (checklist.is_template) return httpError(reply, 404, 'NOT_FOUND', 'Template has no trip context')
     if (aiGuard(reply)) return
 
-    const trip = getTrip(checklist.trip_id)
+    const trip = await getTrip(checklist.trip_id)
     const durationDays = trip?.start_date && trip?.end_date
       ? Math.round((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
       : null
@@ -256,21 +262,21 @@ export default async function routes(app) {
   // ---- participant ----
   app.get('/participant/checklist', { preHandler: app.requireParticipant }, async (req) => {
     const { tripId, personId } = req.participant
-    const packing = db.prepare(`SELECT ci.id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
+    const packing = await db.all(`SELECT ci.id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
         ci.due_date, ci.done, ci.position, cl.name AS checklist_name
       FROM checklist_items ci
       JOIN checklists cl ON cl.id = ci.checklist_id
       LEFT JOIN persons p ON p.id = ci.assignee_person_id
       WHERE cl.trip_id = ? AND cl.kind = 'packing' AND (ci.assignee_person_id = ? OR ci.assignee_person_id IS NULL)
-      ORDER BY cl.name, ci.position`).all(tripId, personId)
+      ORDER BY cl.name, ci.position`, [tripId, personId])
 
-    const tasks = db.prepare(`SELECT ci.id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
+    const tasks = await db.all(`SELECT ci.id, ci.title, ci.assignee_person_id, p.name AS assignee_name,
         ci.due_date, ci.done, ci.position, cl.name AS checklist_name
       FROM checklist_items ci
       JOIN checklists cl ON cl.id = ci.checklist_id
       LEFT JOIN persons p ON p.id = ci.assignee_person_id
       WHERE cl.trip_id = ? AND cl.kind = 'tasks' AND ci.assignee_person_id = ?
-      ORDER BY cl.name, ci.position`).all(tripId, personId)
+      ORDER BY cl.name, ci.position`, [tripId, personId])
 
     return { packing, tasks }
   })
@@ -279,15 +285,15 @@ export default async function routes(app) {
     preHandler: app.requireParticipant,
     schema: { body: { type: 'object', required: ['done'], properties: { done: { type: 'boolean' } } } },
   }, async (req, reply) => {
-    const row = db.prepare(`SELECT ci.*, cl.trip_id AS cl_trip_id, cl.kind AS cl_kind
-      FROM checklist_items ci JOIN checklists cl ON cl.id = ci.checklist_id WHERE ci.id = ?`).get(req.params.itemId)
+    const row = await db.get(`SELECT ci.*, cl.trip_id AS cl_trip_id, cl.kind AS cl_kind
+      FROM checklist_items ci JOIN checklists cl ON cl.id = ci.checklist_id WHERE ci.id = ?`, [req.params.itemId])
     if (!row || row.cl_trip_id !== req.participant.tripId)
       return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     if (row.assignee_person_id && row.assignee_person_id !== req.participant.personId)
       return httpError(reply, 404, 'NOT_FOUND', 'Not assigned to you')
     if (row.cl_kind === 'tasks' && row.assignee_person_id !== req.participant.personId)
       return httpError(reply, 404, 'NOT_FOUND', 'Not assigned to you')
-    db.prepare('UPDATE checklist_items SET done = ? WHERE id = ?').run(req.body.done ? 1 : 0, row.id)
-    return itemToJson(db, row.id)
+    await db.run('UPDATE checklist_items SET done = ? WHERE id = ?', [req.body.done ? 1 : 0, row.id])
+    return await itemToJson(db, row.id)
   })
 }

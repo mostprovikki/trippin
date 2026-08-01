@@ -4,10 +4,10 @@ import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } f
 import { buildPackingPrompt } from '../src/llm/prompts/packing.js'
 import { clearMocks, queueMock } from '../src/llm/drivers/mock.js'
 
-function seedParticipantLink(app, db, tripId, personId) {
+async function seedParticipantLink(app, db, tripId, personId) {
   const raw = randomUUID()
-  db.prepare('INSERT INTO participant_links (id, trip_id, person_id, token_hash) VALUES (?,?,?,?)')
-    .run(randomUUID(), tripId, personId, app.hashToken(raw))
+  await db.run('INSERT INTO participant_links (id, trip_id, person_id, token_hash) VALUES (?,?,?,?)',
+    [randomUUID(), tripId, personId, app.hashToken(raw)])
   return raw
 }
 
@@ -17,12 +17,12 @@ describe('checklists routes', () => {
   beforeEach(async () => {
     clearMocks()
     ;({ app, db } = await makeTestApp())
-    ;({ cookie } = loginOrganizer(app, db))
+    ;({ cookie } = await loginOrganizer(app, db))
   })
 
   it('creates a trip checklist, adds items, and organizer can tick an item', async () => {
-    const trip = createTrip(db, { name: 'Goa Trip' })
-    const person = createPerson(db, { name: 'Alice' })
+    const trip = await createTrip(db, { name: 'Goa Trip' })
+    const person = await createPerson(db, { name: 'Alice' })
 
     const createRes = await authedInject(app, cookie, {
       method: 'POST', url: '/api/checklists',
@@ -88,7 +88,7 @@ describe('checklists routes', () => {
   })
 
   it('from-template copies items with done=0 and assignees cleared', async () => {
-    const person = createPerson(db, { name: 'Bob' })
+    const person = await createPerson(db, { name: 'Bob' })
     const templateRes = await authedInject(app, cookie, {
       method: 'POST', url: '/api/checklists',
       payload: { kind: 'packing', name: 'Beach Template', is_template: true },
@@ -105,10 +105,10 @@ describe('checklists routes', () => {
     // mark one item's would-be assignee/done fields on template shouldn't matter — templates start clean.
     expect(tItem1.json().assignee_person_id).toBeNull()
 
-    const trip = createTrip(db, { name: 'Beach Trip' })
+    const trip = await createTrip(db, { name: 'Beach Trip' })
     // Give the template item an assignee & done state directly to prove copy clears them.
-    db.prepare('UPDATE checklist_items SET assignee_person_id = ?, done = 1 WHERE id = ?')
-      .run(person.id, tItem1.json().id)
+    await db.run('UPDATE checklist_items SET assignee_person_id = ?, done = 1 WHERE id = ?',
+      [person.id, tItem1.json().id])
 
     const copyRes = await authedInject(app, cookie, {
       method: 'POST', url: `/api/trips/${trip.id}/checklists/from-template`,
@@ -126,7 +126,7 @@ describe('checklists routes', () => {
   })
 
   it('from-template 404s for unknown trip or non-template checklist', async () => {
-    const trip = createTrip(db)
+    const trip = await createTrip(db)
     const notTemplateRes = await authedInject(app, cookie, {
       method: 'POST', url: '/api/checklists',
       payload: { kind: 'tasks', name: 'Regular', trip_id: trip.id },
@@ -147,8 +147,8 @@ describe('checklists routes', () => {
   })
 
   it('promote-to-template strips assignee/done/due from copied items', async () => {
-    const person = createPerson(db, { name: 'Cara' })
-    const trip = createTrip(db, { name: 'Ski Trip' })
+    const person = await createPerson(db, { name: 'Cara' })
+    const trip = await createTrip(db, { name: 'Ski Trip' })
     const checklistRes = await authedInject(app, cookie, {
       method: 'POST', url: '/api/checklists',
       payload: { kind: 'tasks', name: 'Ski Tasks', trip_id: trip.id },
@@ -183,7 +183,7 @@ describe('checklists routes', () => {
     beforeEach(() => { delete process.env.LLM_PROVIDER })
 
     it('400 NOT_PACKING when checklist kind is tasks', async () => {
-      const trip = createTrip(db)
+      const trip = await createTrip(db)
       const res = await authedInject(app, cookie, {
         method: 'POST', url: '/api/checklists',
         payload: { kind: 'tasks', name: 'Tasks', trip_id: trip.id },
@@ -212,7 +212,7 @@ describe('checklists routes', () => {
     })
 
     it('503 AI_DISABLED when LLM_PROVIDER is none', async () => {
-      const trip = createTrip(db, { destination: 'Goa', vibe_tags: JSON.stringify(['beach']) })
+      const trip = await createTrip(db, { destination: 'Goa', vibe_tags: JSON.stringify(['beach']) })
       const res = await authedInject(app, cookie, {
         method: 'POST', url: '/api/checklists',
         payload: { kind: 'packing', name: 'Packing', trip_id: trip.id },
@@ -227,7 +227,7 @@ describe('checklists routes', () => {
     })
 
     it('returns mock-suggested item titles as a draft', async () => {
-      const trip = createTrip(db, {
+      const trip = await createTrip(db, {
         destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05',
         vibe_tags: JSON.stringify(['beach', 'relaxed']),
       })
@@ -250,10 +250,10 @@ describe('checklists routes', () => {
 
   describe('participant routes', () => {
     it('sees own packing items (assigned or unassigned) and tasks assigned to them, and can tick', async () => {
-      const trip = createTrip(db, { name: 'Trip A' })
-      const otherTrip = createTrip(db, { name: 'Trip B' })
-      const me = createPerson(db, { name: 'Dee' })
-      const other = createPerson(db, { name: 'Eve' })
+      const trip = await createTrip(db, { name: 'Trip A' })
+      const otherTrip = await createTrip(db, { name: 'Trip B' })
+      const me = await createPerson(db, { name: 'Dee' })
+      const other = await createPerson(db, { name: 'Eve' })
 
       const packingRes = await authedInject(app, cookie, {
         method: 'POST', url: '/api/checklists',
@@ -287,8 +287,8 @@ describe('checklists routes', () => {
         payload: { title: 'Unassigned task' },
       })
 
-      const raw = seedParticipantLink(app, db, trip.id, me.id)
-      const otherRaw = seedParticipantLink(app, db, otherTrip.id, createPerson(db).id)
+      const raw = await seedParticipantLink(app, db, trip.id, me.id)
+      const otherRaw = await seedParticipantLink(app, db, otherTrip.id, (await createPerson(db)).id)
 
       const getRes = await app.inject({
         method: 'GET', url: '/api/participant/checklist',

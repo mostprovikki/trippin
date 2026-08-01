@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } from './helpers.js'
 import { buildBudgetPrompt } from '../src/llm/prompts/budget.js'
 import { draftBudgetLines } from '../src/routes/budget.routes.js'
 
 describe('budget', () => {
   it('GET zero-fills all 8 categories; PUT upserts; equal_share math with overrides', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const t = createTrip(db, { destination: 'Goa' })
-    const [a, b, c] = [createPerson(db), createPerson(db), createPerson(db)]
-    for (const p of [a, b, c]) db.prepare('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)').run(t.id, p.id)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const t = await createTrip(db, { destination: 'Goa' })
+    const [a, b, c] = await Promise.all([createPerson(db), createPerson(db), createPerson(db)])
+    for (const p of [a, b, c]) await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p.id])
     let res = (await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}/budget` })).json()
     expect(res.lines).toHaveLength(8); expect(res.total).toBe(0)
     await authedInject(app, cookie, { method: 'PUT', url: `/api/trips/${t.id}/budget`,
@@ -22,8 +22,8 @@ describe('budget', () => {
   it('ai-draft returns validated lines from mock, saves nothing; 503 when disabled', async () => {
     process.env.LLM_PROVIDER = 'mock'
     const { queueMock } = await import('../src/llm/drivers/mock.js')
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const t = createTrip(db, { destination: 'Goa', start_date: '2026-10-02', end_date: '2026-10-06' })
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const t = await createTrip(db, { destination: 'Goa', start_date: '2026-10-02', end_date: '2026-10-06' })
     const CATS = ['primary_transport','secondary_transport','stay','food','activities','shopping','leisure','misc']
     queueMock({ lines: CATS.map(c => ({ category: c, estimate: 1000, basis: 'guess' })) })
     // Note: @fastify/autoload loads route modules via a runtime dynamic import() that Vitest's
@@ -35,14 +35,14 @@ describe('budget', () => {
     // requirement (it only reads process.env), so it still verifies the real HTTP route end-to-end.
     const result = await draftBudgetLines(app, t)
     expect(result.lines).toHaveLength(8)
-    expect(app.db.prepare('SELECT count(*) c FROM budget_lines').get().c).toBe(0)
+    expect((await app.db.get('SELECT count(*)::int AS c FROM budget_lines')).c).toBe(0)
     process.env.LLM_PROVIDER = 'none'
     const off = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/budget/ai-draft` })
     expect(off.statusCode).toBe(503); expect(off.json().error.code).toBe('AI_DISABLED')
   })
   it('privacy: prompt contains no participant PII', async () => {
     const { db } = await makeTestApp()
-    const t = createTrip(db, { destination: 'Goa' })
+    const t = await createTrip(db, { destination: 'Goa' })
     const { prompt, system } = buildBudgetPrompt(t, 6)
     for (const leak of ['Asha', '@', 'phone']) expect((system + prompt).includes(leak)).toBe(false)
     expect(prompt).toMatch(/6/) // group size present
