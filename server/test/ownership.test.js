@@ -7,13 +7,13 @@ let app, db, aCookie, bCookie, aTrip, aPerson
 
 beforeEach(async () => {
   ;({ app, db } = await makeTestApp())
-  const a = loginOrganizer(app, db) // default organizer owns the fixtures
+  const a = await loginOrganizer(app, db) // default organizer owns the fixtures
   aCookie = a.cookie
-  const orgB = createOrganizer(db, { email: 'b@x.dev' })
+  const orgB = await createOrganizer(db, { email: 'b@x.dev' })
   bCookie = `tp_session=${app.signSession(orgB)}`
-  aTrip = createTrip(db, { name: 'A Trip' })
-  aPerson = createPerson(db, { name: 'A Person' })
-  db.prepare('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)').run(aTrip.id, aPerson.id)
+  aTrip = await createTrip(db, { name: 'A Trip' })
+  aPerson = await createPerson(db, { name: 'A Person' })
+  await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [aTrip.id, aPerson.id])
 })
 
 describe('organizer isolation', () => {
@@ -45,7 +45,7 @@ describe('organizer isolation', () => {
     expect(put.statusCode).toBe(404)
     const status = await authedInject(app, bCookie, { method: 'POST', url: `/api/trips/${aTrip.id}/status`, payload: { status: 'planning' } })
     expect(status.statusCode).toBe(404)
-    expect(db.prepare('SELECT name FROM trips WHERE id = ?').get(aTrip.id).name).toBe('A Trip')
+    expect((await db.get('SELECT name FROM trips WHERE id = ?', [aTrip.id])).name).toBe('A Trip')
   })
 
   it("B's people list excludes A's person; by-id access 404s", async () => {
@@ -76,7 +76,7 @@ describe('organizer isolation', () => {
       method: 'POST', url: `/api/trips/${aTrip.id}/participants/${aPerson.id}/link`,
     })
     expect(real.statusCode).toBe(201)
-    const linkId = db.prepare('SELECT id FROM participant_links WHERE trip_id = ?').get(aTrip.id).id
+    const linkId = (await db.get('SELECT id FROM participant_links WHERE trip_id = ?', [aTrip.id])).id
     const revoke = await authedInject(app, bCookie, { method: 'POST', url: `/api/links/${linkId}/revoke` })
     expect(revoke.statusCode).toBe(404)
   })
@@ -84,7 +84,7 @@ describe('organizer isolation', () => {
   it('trips created via API belong to their creator', async () => {
     const res = await authedInject(app, bCookie, { method: 'POST', url: '/api/trips', payload: { name: 'B Trip' } })
     const id = res.json().trip.id
-    expect(db.prepare('SELECT organizer_id FROM trips WHERE id = ?').get(id).organizer_id).toBeTruthy()
+    expect((await db.get('SELECT organizer_id FROM trips WHERE id = ?', [id])).organizer_id).toBeTruthy()
     const aList = await authedInject(app, aCookie, { method: 'GET', url: '/api/trips' })
     expect(aList.json().trips.map((t) => t.id)).not.toContain(id)
   })
@@ -107,9 +107,9 @@ describe('checklist template isolation', () => {
     })
   })
 
-  it('templates created via API belong to their creator', () => {
-    const row = db.prepare('SELECT organizer_id FROM checklists WHERE id = ?').get(aTemplate.id)
-    expect(row.organizer_id).toBe(db.prepare('SELECT organizer_id FROM trips WHERE id = ?').get(aTrip.id).organizer_id)
+  it('templates created via API belong to their creator', async () => {
+    const row = await db.get('SELECT organizer_id FROM checklists WHERE id = ?', [aTemplate.id])
+    expect(row.organizer_id).toBe((await db.get('SELECT organizer_id FROM trips WHERE id = ?', [aTrip.id])).organizer_id)
   })
 
   it("B's template list excludes A's templates; A still sees them", async () => {
@@ -129,11 +129,11 @@ describe('checklist template isolation', () => {
       method: 'PUT', url: `/api/checklists/${aTemplate.id}`, payload: { name: 'stolen' },
     })
     expect(put.statusCode).toBe(404)
-    expect(db.prepare('SELECT name FROM checklists WHERE id = ?').get(aTemplate.id).name).toBe('A Secret Template')
+    expect((await db.get('SELECT name FROM checklists WHERE id = ?', [aTemplate.id])).name).toBe('A Secret Template')
 
     const del = await authedInject(app, bCookie, { method: 'DELETE', url: `/api/checklists/${aTemplate.id}` })
     expect(del.statusCode).toBe(404)
-    expect(db.prepare('SELECT id FROM checklists WHERE id = ?').get(aTemplate.id)).toBeTruthy()
+    expect(await db.get('SELECT id FROM checklists WHERE id = ?', [aTemplate.id])).toBeTruthy()
   })
 
   it("B cannot add or edit items inside A's template", async () => {
@@ -142,12 +142,12 @@ describe('checklist template isolation', () => {
     })
     expect(add.statusCode).toBe(404)
 
-    const itemId = db.prepare('SELECT id FROM checklist_items WHERE checklist_id = ?').get(aTemplate.id).id
+    const itemId = (await db.get('SELECT id FROM checklist_items WHERE checklist_id = ?', [aTemplate.id])).id
     const edit = await authedInject(app, bCookie, {
       method: 'PUT', url: `/api/checklists/${aTemplate.id}/items/${itemId}`, payload: { title: 'tampered' },
     })
     expect(edit.statusCode).toBe(404)
-    expect(db.prepare('SELECT title FROM checklist_items WHERE id = ?').get(itemId).title).toBe('sunscreen')
+    expect((await db.get('SELECT title FROM checklist_items WHERE id = ?', [itemId])).title).toBe('sunscreen')
   })
 
   it("B cannot clone A's template into B's own trip", async () => {

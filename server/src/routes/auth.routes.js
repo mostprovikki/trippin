@@ -6,7 +6,7 @@ export default async function routes(app) {
   app.post('/auth/login', {
     schema: { body: { type: 'object', required: ['email', 'password'], properties: { email: { type: 'string' }, password: { type: 'string' } } } }
   }, async (req, reply) => {
-    const org = app.db.prepare('SELECT * FROM organizers WHERE email = ?').get(req.body.email)
+    const org = await app.db.get('SELECT * FROM organizers WHERE email = ?', [req.body.email])
     if (!org || !bcrypt.compareSync(req.body.password, org.password_hash))
       return httpError(reply, 401, 'INVALID_CREDENTIALS', 'Wrong email or password')
     reply.setCookie('tp_session', app.signSession(org), cookieOpts)

@@ -17,39 +17,40 @@ export function personToJson(row) {
 
 export default async function routes(app) {
   const opts = (required = []) => ({ preHandler: app.requireOrganizer, schema: { body: bodySchema(required) } })
-  const get = (id) => app.db.prepare('SELECT * FROM persons WHERE id = ?').get(id)
-  const owned = (req) => app.ownedPerson(req, req.params.id)
+  const get = async (id) => app.db.get('SELECT * FROM persons WHERE id = ?', [id])
+  const owned = async (req) => app.ownedPerson(req, req.params.id)
 
   app.get('/people', { preHandler: app.requireOrganizer }, async (req) =>
-    ({ people: app.db.prepare('SELECT * FROM persons WHERE organizer_id = ? ORDER BY name').all(req.organizer.id).map(personToJson) }))
+    ({ people: (await app.db.all('SELECT * FROM persons WHERE organizer_id = ? ORDER BY name', [req.organizer.id])).map(personToJson) }))
 
   app.post('/people', opts(['name']), async (req, reply) => {
     const id = randomUUID()
     const vals = Object.fromEntries(FIELDS.map(f => [f, f === 'interests' ? JSON.stringify(req.body.interests || []) : req.body[f] ?? null]))
-    app.db.prepare(`INSERT INTO persons (id, organizer_id, ${FIELDS.join(',')}) VALUES (?, ?, ${FIELDS.map(() => '?').join(',')})`)
-      .run(id, req.organizer.id, ...FIELDS.map(f => vals[f]))
-    return reply.code(201).send({ person: personToJson(get(id)) })
+    await app.db.run(`INSERT INTO persons (id, organizer_id, ${FIELDS.join(',')}) VALUES (?, ?, ${FIELDS.map(() => '?').join(',')})`,
+      [id, req.organizer.id, ...FIELDS.map(f => vals[f])])
+    return reply.code(201).send({ person: personToJson(await get(id)) })
   })
 
   app.get('/people/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const row = owned(req)
+    const row = await owned(req)
     return row ? { person: personToJson(row) } : httpError(reply, 404, 'NOT_FOUND', 'No such person')
   })
 
   app.put('/people/:id', opts([]), async (req, reply) => {
-    if (!owned(req)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    if (!(await owned(req))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     for (const f of FIELDS) if (f in req.body)
-      app.db.prepare(`UPDATE persons SET ${f} = ?, updated_at = datetime() WHERE id = ?`)
-        .run(f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], req.params.id)
-    return { person: personToJson(get(req.params.id)) }
+      await app.db.run(
+        `UPDATE persons SET ${f} = ?, updated_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
+        [f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], req.params.id])
+    return { person: personToJson(await get(req.params.id)) }
   })
 
   app.delete('/people/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    if (!owned(req)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
-    const inTrip = app.db.prepare(`SELECT 1 FROM trip_participants tp JOIN trips t ON t.id = tp.trip_id
-      WHERE tp.person_id = ? AND t.status != 'archived'`).get(req.params.id)
+    if (!(await owned(req))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    const inTrip = await app.db.get(`SELECT 1 FROM trip_participants tp JOIN trips t ON t.id = tp.trip_id
+      WHERE tp.person_id = ? AND t.status != 'archived'`, [req.params.id])
     if (inTrip) return httpError(reply, 409, 'TRIP_MEMBER', 'Person is part of a non-archived trip')
-    app.db.prepare('DELETE FROM persons WHERE id = ?').run(req.params.id)
+    await app.db.run('DELETE FROM persons WHERE id = ?', [req.params.id])
     return reply.code(204).send()
   })
 }
