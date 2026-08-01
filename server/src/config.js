@@ -16,7 +16,6 @@ const portBase = Number(process.env.PORT_BASE) || 43100
 
 export const config = {
   port: Number(process.env.X_ZOHO_CATALYST_LISTEN_PORT) || Number(process.env.PORT) || portBase + 1,
-  dbPath: process.env.DB_PATH || './data/tripplanner.db',
   databaseUrl: process.env.DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test',
   dbDriver: process.env.DB_DRIVER || 'pg',
   uploadsDir: process.env.UPLOADS_DIR || './data/uploads',

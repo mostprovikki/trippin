@@ -6,40 +6,24 @@ participant links, a readiness dashboard, AI-assisted destination suggestions,
 and a simple shared budget. See [`docs/brief.md`](docs/brief.md) for the full
 product brief and non-functional requirements.
 
-Built for a handful of people and a few trips a year — SQLite + a single Node
-process is the whole backend, no external services required.
+Built for a handful of people and a few trips a year — a single Node process
+against Postgres (Neon in production; local Postgres for dev) is the whole
+backend. File storage goes through a driver seam: local disk in dev, Zoho
+Catalyst Stratus in production (see `docs/superpowers/specs/2026-07-30-zoho-supabase-deployment-design.md`).
 
 ## Quickstart
 
-### Option A: Docker Compose (recommended)
+### Local development
+
+Requires Node ≥20 and a local Postgres (see `scripts/pg-dev.mjs` — no Docker
+needed; it wraps `pg_ctl` against a throwaway data dir).
 
 ```bash
 cp .env.example .env      # edit JWT_SECRET at minimum
-mkdir -p data
-docker compose up --build
-```
-
-The app is served on **http://localhost:43101** — API and the built SPA share
-one port, no separate frontend server. Compose maps host `43101` (this repo's
-allocated block) to a fixed `3000` inside the container; override the host side
-with `API_PORT` if it is taken.
-
-Seed the first organizer account (run once, inside the container):
-
-```bash
-docker compose exec app node server/scripts/seed-organizer.js \
-  --email=you@example.com --name="Your Name" --password=change-me
-```
-
-### Option B: Plain Node
-
-Requires Node ≥20.
-
-```bash
-cp .env.example .env
 npm ci
-npm run build                      # builds web/dist
-node server/scripts/seed-organizer.js --email=you@example.com --name="Your Name" --password=change-me
+npm run db:up              # starts local Postgres on 127.0.0.1:43105 (idempotent)
+npm run build               # builds web/dist (or skip and use `npm run dev` below)
+node scripts/seed-organizer.mjs <email> <password> "<Name>"
 node server/src/server.js
 ```
 
@@ -50,7 +34,8 @@ the server listens on `PORT_BASE + 1`. Set `PORT` to pin it somewhere else.
 
 ```bash
 npm ci
-npm run dev   # runs server (nodemon-style --watch) + Vite dev server together
+npm run db:up
+npm run dev   # runs server (--watch) + Vite dev server together
 ```
 
 Ports are derived from `PORT_BASE` (default `43100`, set in `.env` — see
@@ -62,17 +47,29 @@ In dev mode `web/dist` doesn't exist, so the server's static plugin steps aside
 and Vite serves the SPA with hot module reload; API calls proxy through to the
 server.
 
+### Docker Compose (VM fallback)
+
+`Dockerfile`/`docker-compose.yml` still work as a portable fallback deploy
+target (see the design doc) but now need `DATABASE_URL` pointed at a real
+Postgres (Neon or otherwise) via `.env` — there is no bundled/embedded DB, and
+the `./data` volume in `docker-compose.yml` is no longer needed for the
+database (uploads only, and only when `STORAGE_DRIVER=local`). This path
+hasn't been re-verified since the Postgres migration; see
+`docs/superpowers/specs/2026-07-30-zoho-supabase-deployment-design.md` before
+relying on it.
+
 ## Seeding the first organizer
 
 There's no public signup — organizer accounts are created via a script so the
 app can't be opened up to strangers by accident:
 
 ```bash
-node server/scripts/seed-organizer.js --email=<email> --name=<name> --password=<password>
+node scripts/seed-organizer.mjs <email> <password> "<Name>"
 ```
 
-Running it again with the same `--email` updates that organizer's name/password
-(useful for password resets) rather than creating a duplicate.
+Running it again with the same `--email` is a no-op (`ON CONFLICT DO NOTHING`) —
+it does not update the password. To reset a password, do so directly against
+the `organizers` table for now.
 
 ## Configuration
 
@@ -84,7 +81,8 @@ environment-specific values belong anywhere else.
 | `PORT_BASE` | `43100` | Base of this repo's allocated local port block. The Vite dev server binds `PORT_BASE`, the Node server `PORT_BASE + 1`. Single source of truth for local dev ports. |
 | `PORT` | *(derived: `PORT_BASE + 1`)* | Explicit override for the Node server's port. Takes precedence over `PORT_BASE`. Docker Compose sets it to `3000` so the in-container port is fixed regardless of the host block. |
 | `API_PORT` | `43101` | **Compose only** — host port mapped to the container's `3000`. Not read by the app itself. |
-| `DB_PATH` | `./data/tripplanner.db` | Path to the SQLite database file. Lives under `data/` so it survives container restarts when volume-mounted. |
+| `DATABASE_URL` | `postgres://tripper:tripper@127.0.0.1:43105/tripper_test` | Postgres connection string. Local dev: `npm run db:up` starts one at this address. Production: a Neon connection string. |
+| `DB_DRIVER` | `pg` | `pg` (local/VM Postgres, plain TCP) or `neon` (`@neondatabase/serverless`, WebSocket-based — required for Neon/serverless environments like AppSail). |
 | `UPLOADS_DIR` | `./data/uploads` | Directory where uploaded documents (passports, tickets, etc.) are stored. Never served as static files — only through authenticated API routes. |
 | `JWT_SECRET` | *(none — must be set)* | Secret used to sign organizer sessions / participant tokens. Set to a random string ≥32 characters; never reuse the placeholder in production. |
 | `DEFAULT_CURRENCY` | `INR` | Currency code used as the default for new trip budgets. |
@@ -103,21 +101,26 @@ Compose container.
 
 ## Backups
 
-Everything the app owns lives under `data/` (SQLite DB + uploaded documents).
-See [`docs/backup.md`](docs/backup.md) for the backup/restore procedure.
+The database is Postgres (Neon in production — see Neon's own backup/PITR
+features); uploaded documents live under `UPLOADS_DIR` locally or in Stratus
+in production. `docs/backup.md` predates this and still describes the old
+SQLite-file backup procedure — treat it as historical until it's revised.
 
 ## Smoke test
 
-`e2e/smoke.mjs` is a dependency-free end-to-end check: it boots the real
-server in-process on a random port against a throwaway temp SQLite DB and
-uploads dir, then walks the full organizer + participant golden path (seed →
-login → people → trip → destination decide → confirm dates → participant
-link → profile/doc/checklist as participant → budget → itinerary → readiness
-→ archive → clone). Run it with:
+`e2e/smoke.mjs` is meant to be a dependency-free end-to-end check that boots
+the real server in-process and walks the full organizer + participant golden
+path (seed → login → people → trip → destination decide → confirm dates →
+participant link → profile/doc/checklist as participant → budget → itinerary
+→ readiness → archive → clone):
 
 ```bash
 node e2e/smoke.mjs
 ```
 
-It prints `SMOKE OK` and exits 0 on success, or exits 1 with the failing
-assertion on error. No `npm test` wiring needed — it's a plain Node script.
+**Currently broken** (as of the Postgres migration): it and
+`server/scripts/seed-organizer.js` still call the pre-migration
+`getDb`/`openDb` exports that no longer exist on `server/src/db.js` (which now
+exports async `makeDb`). Tracked as `trip-planner-98t`. Use
+`node scripts/seed-organizer.mjs <email> <password> "<Name>"` (root
+`scripts/`, Postgres-based) to seed an organizer in the meantime.

@@ -268,13 +268,13 @@ as an experiment behind the same interface, not a dependency of this migration.
 
 | Layer | Choice | Status |
 |---|---|---|
-| Frontend hosting | Zoho **Slate** (static Vue 3 build) | Documented, not spiked |
-| API / business logic | **Catalyst AppSail**, existing Fastify app, persistent process | Verified (spike app; real app not yet ported) |
-| Database | **Neon Postgres** (`us-east-2`) via `@neondatabase/serverless` — pg-compatible `Pool`/`Client` over WebSocket (wss/443), auto-suspend/auto-resume | **Verified live from AppSail** (2026-08-01): connectivity both hosts, nested-savepoint tx PASS, ~85-100ms warm queries |
-| File storage | **Zoho Catalyst Stratus** (writes via app, reads via signed URL) | Verified live end-to-end: upload, 403 on unauthenticated access, signed URL, direct fetch |
+| Frontend hosting | Zoho **Slate** (static Vue 3 build) | Dead — user decision; not proceeding (Slate's split-origin model breaks same-origin login, see errata). Frontend continues to ship from the same Fastify process as today. |
+| API / business logic | **Catalyst AppSail**, existing Fastify app, persistent process | **Built, not yet deployed.** Real app code ported: async Postgres throughout (14 tx call sites converted), storage driver seam, build/seed scripts for AppSail (Task 12 steps 1-3). Catalyst instance creation + `deploy:appsail` + live smoke are the user's remaining step — see bead `trip-planner-fpm.12`. |
+| Database | **Neon Postgres** (`us-east-2`) via `@neondatabase/serverless` — pg-compatible `Pool`/`Client` over WebSocket (wss/443), auto-suspend/auto-resume | **Shipped in code.** `server/src/db.js` rewritten to async `makeDb()` (pg driver locally, neon driver in prod via `DB_DRIVER`), migrations rewritten for Postgres syntax, all route/service call sites swept to async. Local suite green (22 files/128 tests) against Postgres on `127.0.0.1:43105`. Spike connectivity from a real AppSail instance verified 2026-08-01 (unchanged from above); the real app talking to the real Neon project from a real AppSail deploy has not happened yet. |
+| File storage | **Zoho Catalyst Stratus** (writes via app, reads via signed URL) | **Shipped in code.** `app.storage` driver seam implemented with a local-disk driver (dev) and a Stratus driver (prod), matching the storage contract designed here. The Stratus driver itself was spike-verified live end-to-end (upload, 403 on unauthenticated access, signed URL, direct fetch) in a throwaway spike app — the real app has not yet been deployed to exercise it in place. |
 | Auth | Unchanged custom code (bcrypt+JWT organizer, tokenized participant links) | No change required |
 | LLM | Unchanged pluggable `LLM_PROVIDER` | No change required |
-| Portability | Same app process/Docker-shaped deploy targets both Oracle VM (docker-compose, as today) and AppSail (source+command or Docker image) | Direct consequence of choosing AppSail over Functions |
+| Portability | Same app process/Docker-shaped deploy targets both Oracle VM (docker-compose, as today) and AppSail (source+command or Docker image) | Direct consequence of choosing AppSail over Functions. Dockerfile/docker-compose left unchanged as the VM-fallback path; not re-verified against Postgres (see Task 13 report). |
 
 ## 5. Open items (before or during implementation)
 
@@ -305,3 +305,23 @@ as an experiment behind the same interface, not a dependency of this migration.
 - Not adopting Catalyst QuickML/any Zoho LLM service now — the pluggable provider stays.
 - Not decommissioning the Oracle VM — the portable design means it remains a valid fallback
   target for the same app, not an either/or decision.
+
+## 7. Postscript (2026-08-02, Task 13 — cutover cleanup)
+
+Code side of the migration is done: async Postgres throughout (`server/src/db.js`, 14 tx
+call sites), the `app.storage` driver seam with local + Stratus drivers, and the AppSail
+build/seed scripts (Task 12 steps 1-3). `better-sqlite3` has been removed from the
+dependency tree (Task 13). Local gates green: server 22 files/128 tests, root/web suite
+270 tests, both against Postgres on `127.0.0.1:43105`.
+
+**The deploy itself has not happened.** Catalyst instance creation, `deploy:appsail`, and
+the live 6-point smoke are reserved for the user (bead `trip-planner-fpm.12`) — this is not
+a "ready to run automatically" step, someone has to do it by hand. Until that happens:
+
+- **AppSail URL:** `TBD (pending deploy — see bead trip-planner-fpm.12)`
+- **First month's GB-hour reading (AppSail free tier):** `TBD (pending deploy — see bead trip-planner-fpm.12)`
+- **First month's Neon-CU reading:** `TBD (pending deploy — see bead trip-planner-fpm.12)`
+
+Do not treat this migration as "complete" until those three lines are filled in from a
+real deploy — the §4 table above distinguishes "shipped in code" from "deployed" for
+exactly this reason.
