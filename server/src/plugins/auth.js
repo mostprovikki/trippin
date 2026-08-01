@@ -22,9 +22,9 @@ export default fp(async function authPlugin(app) {
     const h = req.headers.authorization || ''
     const raw = h.startsWith('Bearer ') ? h.slice(7) : null
     if (!raw) return httpError(reply, 401, 'INVALID_TOKEN', 'Missing token')
-    const row = app.db.prepare(
-      `SELECT id, trip_id, person_id, expires_at, revoked_at FROM participant_links WHERE token_hash = ?`
-    ).get(app.hashToken(raw))
+    const row = await app.db.get(
+      `SELECT id, trip_id, person_id, expires_at, revoked_at FROM participant_links WHERE token_hash = ?`,
+      [app.hashToken(raw)])
     if (!row || row.revoked_at || (row.expires_at && row.expires_at < new Date().toISOString()))
       return httpError(reply, 401, 'INVALID_TOKEN', 'Invalid, revoked or expired link')
     req.participant = { linkId: row.id, tripId: row.trip_id, personId: row.person_id }

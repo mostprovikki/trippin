@@ -7,9 +7,10 @@ import { runMigrations } from './migrate.js'
 const here = dirname(fileURLToPath(import.meta.url))
 
 export async function buildApp({ db }) {
-  runMigrations(db)
+  await runMigrations(db)
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' })
   app.decorate('db', db)
+  app.addHook('onClose', () => db.close())
   await app.register(autoload, { dir: join(here, 'plugins') })
   await app.register(autoload, { dir: join(here, 'routes'), options: { prefix: '/api' } })
   app.setErrorHandler((err, req, reply) => {
