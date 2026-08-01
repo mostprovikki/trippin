@@ -81,6 +81,18 @@ describe('organizer isolation', () => {
     expect(revoke.statusCode).toBe(404)
   })
 
+  it("B cannot upload a document for A's person", async () => {
+    const form = new FormData()
+    form.append('file', new Blob([Buffer.alloc(10, 0x61)], { type: 'application/pdf' }), 'x.pdf')
+    form.append('doc_type', 'passport')
+    const res = await authedInject(app, bCookie, {
+      method: 'POST', url: `/api/people/${aPerson.id}/documents`, payload: form,
+    })
+    expect(res.statusCode).toBe(404)
+    const rows = await db.all('SELECT * FROM documents WHERE person_id = ?', [aPerson.id])
+    expect(rows).toHaveLength(0)
+  })
+
   it('trips created via API belong to their creator', async () => {
     const res = await authedInject(app, bCookie, { method: 'POST', url: '/api/trips', payload: { name: 'B Trip' } })
     const id = res.json().trip.id

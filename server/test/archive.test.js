@@ -43,6 +43,77 @@ describe('archive routes', () => {
     expect(link.revoked_at).toBeTruthy()
   })
 
+  it('archives a trip with a full itinerary and checklists: snapshot preserves day/item order and content', async () => {
+    const trip = await createTrip(db, { name: 'Content Trip', status: 'confirmed' })
+
+    // 3 days x 2 items — day and item order both come from an explicit position column,
+    // so the snapshot must reproduce it regardless of query concurrency/timing.
+    const dayIds = []
+    for (let d = 0; d < 3; d++) {
+      const id = randomUUID()
+      dayIds.push(id)
+      await db.run('INSERT INTO itinerary_days (id, trip_id, day_date, position) VALUES (?, ?, ?, ?)',
+        [id, trip.id, `2026-02-0${d + 1}`, d])
+      for (let i = 0; i < 2; i++) {
+        await db.run(
+          `INSERT INTO itinerary_items (id, day_id, position, title, category)
+           VALUES (?, ?, ?, ?, 'activity')`,
+          [randomUUID(), id, i, `Day${d} Item${i}`]
+        )
+      }
+    }
+
+    // 3 checklists x 2 items — checklist order is not guaranteed (no ORDER BY on that
+    // query), so checklists are matched by name; item order within a checklist is
+    // guaranteed (itemsForChecklist orders by position) and must be verified.
+    const checklistNames = ['Packing A', 'Packing B', 'Tasks C']
+    for (const name of checklistNames) {
+      const checklistId = randomUUID()
+      await db.run('INSERT INTO checklists (id, trip_id, is_template, kind, name, organizer_id) VALUES (?, ?, 0, ?, ?, ?)',
+        [checklistId, trip.id, name === 'Tasks C' ? 'tasks' : 'packing', name, trip.organizer_id])
+      for (let i = 0; i < 2; i++) {
+        await db.run(
+          'INSERT INTO checklist_items (id, checklist_id, title, done, position) VALUES (?, ?, ?, 0, ?)',
+          [randomUUID(), checklistId, `${name} item${i}`, i]
+        )
+      }
+    }
+
+    // Reentrant client.query() inside a tx's single pinned client only shows up as a
+    // process-level DeprecationWarning (pg still serializes and returns correct data),
+    // so a plain content assertion below would not fail on that regression by itself —
+    // capture warnings during the call so this test gates on it directly.
+    const warnings = []
+    const onWarning = (w) => warnings.push(w)
+    process.on('warning', onWarning)
+    let res
+    try {
+      res = await authedInject(app, cookie, {
+        method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {}
+      })
+    } finally {
+      process.off('warning', onWarning)
+    }
+    expect(res.statusCode).toBe(200)
+    const { snapshot } = res.json().archive
+
+    expect(snapshot.itinerary).toHaveLength(3)
+    snapshot.itinerary.forEach((day, d) => {
+      expect(day.day_date).toBe(`2026-02-0${d + 1}`)
+      expect(day.items.map((it) => it.title)).toEqual([`Day${d} Item0`, `Day${d} Item1`])
+    })
+
+    expect(snapshot.checklists).toHaveLength(3)
+    const byName = Object.fromEntries(snapshot.checklists.map((c) => [c.name, c]))
+    for (const name of checklistNames) {
+      expect(byName[name].items.map((it) => it.title)).toEqual([`${name} item0`, `${name} item1`])
+    }
+
+    expect(warnings.map((w) => w.message)).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('already executing a query')])
+    )
+  })
+
   it('409 ALREADY_ARCHIVED on re-archive', async () => {
     const trip = await createTrip(db, { status: 'confirmed' })
     const first = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })

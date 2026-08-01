@@ -18,18 +18,22 @@ async function budgetSnapshot(db, tripId) {
 
 async function itinerarySnapshot(db, tripId) {
   const days = await db.all('SELECT id, day_date, position FROM itinerary_days WHERE trip_id = ? ORDER BY position', [tripId])
-  return Promise.all(days.map(async (day) => ({
-    ...day,
-    items: await db.all(
+  const out = []
+  for (const day of days) {
+    const items = await db.all(
       'SELECT id, position, title, time_range, location, category, est_cost, notes, link FROM itinerary_items WHERE day_id = ? ORDER BY position',
       [day.id]
-    ),
-  })))
+    )
+    out.push({ ...day, items })
+  }
+  return out
 }
 
 async function checklistsSnapshot(db, tripId) {
   const rows = await db.all('SELECT * FROM checklists WHERE trip_id = ?', [tripId])
-  return Promise.all(rows.map((row) => checklistToJson(db, row)))
+  const out = []
+  for (const row of rows) out.push(await checklistToJson(db, row))
+  return out
 }
 
 function archiveToJson(row) {
