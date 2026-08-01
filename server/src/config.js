@@ -22,6 +22,10 @@ export const config = {
   uploadsDir: process.env.UPLOADS_DIR || './data/uploads',
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-do-not-use-in-prod',
   currency: process.env.DEFAULT_CURRENCY || 'INR',
+  storage: {
+    driver: process.env.STORAGE_DRIVER || 'local',
+    stratusBucket: process.env.STRATUS_BUCKET || 'tripper'
+  },
   llm: {
     provider: process.env.LLM_PROVIDER || 'none',
     model: process.env.LLM_MODEL || '',

@@ -3,6 +3,7 @@ import autoload from '@fastify/autoload'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runMigrations } from './migrate.js'
+import { makeStorage } from './storage/index.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -10,6 +11,7 @@ export async function buildApp({ db }) {
   await runMigrations(db)
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' })
   app.decorate('db', db)
+  app.decorate('storage', await makeStorage())
   app.addHook('onClose', () => db.close())
   await app.register(autoload, { dir: join(here, 'plugins') })
   await app.register(autoload, { dir: join(here, 'routes'), options: { prefix: '/api' } })

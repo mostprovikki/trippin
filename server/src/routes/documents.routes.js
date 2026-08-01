@@ -1,10 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { createWriteStream, createReadStream, statSync } from 'node:fs'
-import { mkdir, unlink } from 'node:fs/promises'
-import { pipeline } from 'node:stream/promises'
-import { join } from 'node:path'
 import multipart from '@fastify/multipart'
-import { config } from '../config.js'
 import { httpError } from '../lib/errors.js'
 
 const DOC_TYPES = ['passport', 'visa', 'national_id', 'driving_license', 'vaccination', 'other']
@@ -29,11 +24,9 @@ export default async function routes(app) {
     for await (const part of parts) {
       if (part.type === 'file') {
         const id = randomUUID()
-        const dir = join(config.uploadsDir, personId)
-        await mkdir(dir, { recursive: true })
-        const path = join(dir, id)
-        await pipeline(part.file, createWriteStream(path)) // throws on fileSize limit → 413 via error handler
-        file = { id, path, original_name: part.filename, mime_type: part.mimetype }
+        const key = `${personId}/${id}`
+        const { size } = await app.storage.put(req, key, part.file) // throws on fileSize limit → 413 via error handler
+        file = { id, key, size, original_name: part.filename, mime_type: part.mimetype }
       } else fields[part.fieldname] = part.value
     }
     if (!file || !DOC_TYPES.includes(fields.doc_type)) {
@@ -43,19 +36,21 @@ export default async function routes(app) {
     await app.db.run(`INSERT INTO documents (id,person_id,doc_type,doc_number,expiry_date,file_path,original_name,mime_type,size_bytes)
       VALUES (?,?,?,?,?,?,?,?,?)`,
       [file.id, personId, fields.doc_type, fields.doc_number ?? null,
-        fields.expiry_date ?? null, file.path, file.original_name, file.mime_type, statSync(file.path).size])
+        fields.expiry_date ?? null, file.key, file.original_name, file.mime_type, file.size])
     return getDoc(file.id)
   }
 
-  function sendFile(reply, row) {
-    reply.header('content-disposition', `attachment; filename="${row.original_name.replace(/"/g, '')}"`)
-    reply.type(row.mime_type)
-    return reply.send(createReadStream(row.file_path))
+  async function sendDoc(req, reply, row) {
+    const dl = await app.storage.getDownload(req, { key: row.file_path, filename: row.original_name, mime: row.mime_type })
+    if (dl.url) return reply.redirect(dl.url)
+    reply.header('content-disposition', `attachment; filename="${dl.filename.replace(/"/g, '')}"`)
+    reply.type(dl.mime)
+    return reply.send(dl.stream)
   }
 
-  async function removeDoc(row) {
+  async function removeDoc(req, row) {
     await app.db.run('DELETE FROM documents WHERE id = ?', [row.id])
-    try { await unlink(row.file_path) } catch { /* ignore fs errors */ }
+    await app.storage.remove(req, row.file_path)
   }
 
   // --- organizer routes (scoped to the organizer's own persons) ---
@@ -80,13 +75,13 @@ export default async function routes(app) {
   app.get('/documents/:id/file', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const row = await ownedDoc(req)
     if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
-    return sendFile(reply, row)
+    return sendDoc(req, reply, row)
   })
 
   app.delete('/documents/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const row = await ownedDoc(req)
     if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
-    await removeDoc(row)
+    await removeDoc(req, row)
     return reply.code(204).send()
   })
 
@@ -105,13 +100,13 @@ export default async function routes(app) {
   app.get('/participant/documents/:id/file', { preHandler: app.requireParticipant }, async (req, reply) => {
     const row = await getDoc(req.params.id)
     if (!row || row.person_id !== req.participant.personId) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
-    return sendFile(reply, row)
+    return sendDoc(req, reply, row)
   })
 
   app.delete('/participant/documents/:id', { preHandler: app.requireParticipant }, async (req, reply) => {
     const row = await getDoc(req.params.id)
     if (!row || row.person_id !== req.participant.personId) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
-    await removeDoc(row)
+    await removeDoc(req, row)
     return reply.code(204).send()
   })
 }
