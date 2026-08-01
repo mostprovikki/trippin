@@ -65,6 +65,32 @@ describe('destinations', () => {
     expect(res2.json().candidates).toHaveLength(7) // appended, not replaced
   })
 
+  it('list order tiebreak survives decide() row rewrites (regression: ctid is not insertion order)', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db)
+
+    // Same-second batch: ai-suggest inserts all 3 rows within the same
+    // to_char() second, so created_at alone can't order them — the tiebreak
+    // column must.
+    queueMock({ candidates: AI_CANDIDATES })
+    const suggest = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates/ai-suggest` })
+    const [goa, manali, rishikesh] = suggest.json().candidates
+
+    // Exercise decide()'s transaction repeatedly. Its blanket
+    // "SET decided = 0 WHERE trip_id = ?" rewrites every row's tuple (and
+    // thus its ctid) on each call — a ctid-based tiebreak would have no
+    // guarantee of surviving this in original insertion order.
+    await authedInject(app, cookie, { method: 'POST', url: `/api/candidates/${manali.id}/decide` })
+    await authedInject(app, cookie, { method: 'POST', url: `/api/candidates/${goa.id}/decide` })
+
+    const after = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/candidates` })
+    const names = after.json().candidates.map((c) => c.name)
+    // Goa (decided) sorts first; Manali/Rishikesh are both decided=0 and tie
+    // on created_at, so they must keep their original insertion order.
+    expect(names).toEqual(['Goa', 'Manali', 'Rishikesh'])
+    expect(goa.id).toBeTruthy(); expect(manali.id).toBeTruthy(); expect(rishikesh.id).toBeTruthy()
+  })
+
   it('decide flips trip destination/destination_mode and un-decides others', async () => {
     const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const trip = await createTrip(db)

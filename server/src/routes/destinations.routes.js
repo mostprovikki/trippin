@@ -34,11 +34,13 @@ export default async function routes(app) {
     'SELECT c.* FROM destination_candidates c JOIN trips t ON t.id = c.trip_id WHERE c.id = ? AND t.organizer_id = ?', [id, req.organizer.id]
   )
   // sqlite's implicit rowid tie-broke candidates inserted within the same
-  // to_char() second (e.g. a batch of ai-suggest rows). Postgres has no rowid;
-  // ctid (physical tuple location) is the equivalent stand-in for freshly
-  // inserted, not-yet-updated rows — good enough for this display ordering.
+  // to_char() second (e.g. a batch of ai-suggest rows). Postgres has no rowid,
+  // and ctid (physical tuple location) is NOT a substitute — it reshuffles on
+  // UPDATE (the decide handler below rewrites every row's tuple) and VACUUM.
+  // `seq` (001_init.sql) is a real monotonic identity column, so it keeps
+  // insertion order stable across any number of later decide()/VACUUM events.
   const listCandidates = (tripId) => app.db.all(
-    'SELECT * FROM destination_candidates WHERE trip_id = ? ORDER BY decided DESC, created_at ASC, ctid ASC', [tripId]
+    'SELECT * FROM destination_candidates WHERE trip_id = ? ORDER BY decided DESC, created_at ASC, seq ASC', [tripId]
   )
 
   app.get('/trips/:id/candidates', { preHandler: app.requireOrganizer }, async (req, reply) => {

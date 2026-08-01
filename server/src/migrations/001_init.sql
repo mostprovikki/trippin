@@ -58,7 +58,12 @@ CREATE TABLE destination_candidates (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
   name TEXT NOT NULL, rationale TEXT, best_dates TEXT, est_budget_per_person REAL, caveats TEXT,
   source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('ai','manual')),
-  decided INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+  decided INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  -- Monotonic insertion-order tiebreak for candidates sharing the same
+  -- same-second created_at (e.g. an ai-suggest batch) — sqlite's implicit
+  -- rowid did this for free; Postgres needs an explicit identity column
+  -- (ctid is a physical locator, not insertion order, and reshuffles on UPDATE/VACUUM).
+  seq BIGINT GENERATED ALWAYS AS IDENTITY
 );
 CREATE TABLE budget_lines (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
