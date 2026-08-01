@@ -1,9 +1,14 @@
 node_modules/
 data/
 dist/
+dist-appsail/
 .env
+.env.*
 *.log
 e2e/shots/
+
+# Local dev/test Postgres cluster (scripts/pg-dev.mjs) — throwaway, tests create schemas per run
+.pgdata/
 
 # Design-baseline captures (e2e/capture-screenshots.mjs): 25 MB of PNGs that are
 # regenerable output, so they stay out of git — but baseline/*/README.md records the
