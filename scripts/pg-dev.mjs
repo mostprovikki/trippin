@@ -2,7 +2,7 @@
 // postgresql@18 + pg_ctl (no Docker on this machine). Throwaway cluster in
 // .pgdata/ (git-ignored) — tests create schemas per run, so deleting it is
 // always safe.
-import { existsSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -34,6 +34,12 @@ function isClusterRunning() {
   return run(bin('pg_ctl'), ['-D', PGDATA, 'status']).status === 0
 }
 
+// initdb writes PG_VERSION last; its absence means a prior initdb was interrupted
+// (disk full, permission error, ^C) and .pgdata is a half-written cluster, not a usable one.
+function isIncompleteCluster() {
+  return existsSync(PGDATA) && !existsSync(join(PGDATA, 'PG_VERSION'))
+}
+
 function portReachable() {
   return new Promise((resolve) => {
     const sock = createConnection({ host: HOST, port: PORT })
@@ -50,13 +56,19 @@ async function up() {
     process.exit(1)
   }
 
+  if (isIncompleteCluster()) {
+    console.warn('pg-dev: .pgdata exists but has no PG_VERSION — a previous initdb was interrupted partway. Removing it and reinitializing (cluster is throwaway by design, deleting .pgdata is always safe).')
+    rmSync(PGDATA, { recursive: true, force: true })
+  }
+
   if (!existsSync(PGDATA)) {
     console.log('pg-dev: initializing cluster in .pgdata ...')
     const res = run(bin('initdb'), ['-D', PGDATA, '-U', USER, '--auth=trust', '-E', 'UTF-8'])
     if (res.status !== 0) {
       process.stderr.write(res.stdout || '')
       process.stderr.write(res.stderr || '')
-      console.error('pg-dev: initdb failed')
+      console.error('pg-dev: initdb failed — removing partial .pgdata so the next db:up retries cleanly instead of starting against a broken cluster')
+      rmSync(PGDATA, { recursive: true, force: true })
       process.exit(1)
     }
   }
