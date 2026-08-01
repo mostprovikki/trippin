@@ -8,8 +8,8 @@ async function mkTrip(app, cookie, extra = {}) {
 
 describe('trips', () => {
   it('creates trip with defaults idea/broad/open and participant_ids', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const p = createPerson(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
     const t = await mkTrip(app, cookie, { participant_ids: [p.id] })
     expect(t).toMatchObject({ status: 'idea', date_mode: 'broad', destination_mode: 'open', vibe_tags: ['chill','beach'] })
     expect(t.participants).toEqual([{ person_id: p.id, name: p.name, profile_confirmed: 0 }])
@@ -18,14 +18,14 @@ describe('trips', () => {
   })
 
   it('POST /api/trips returns 201', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const res = await authedInject(app, cookie, { method: 'POST', url: '/api/trips', payload: { name: 'Goa' } })
     expect(res.statusCode).toBe(201)
   })
 
   it('GET /api/trips lists summaries, supports status filter', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const p = createPerson(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
     await mkTrip(app, cookie, { name: 'Goa', participant_ids: [p.id] })
     await mkTrip(app, cookie, { name: 'Manali' })
     const all = await authedInject(app, cookie, { method: 'GET', url: '/api/trips' })
@@ -40,7 +40,7 @@ describe('trips', () => {
   })
 
   it('GET /api/trips/:id returns trip or 404', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const t = await mkTrip(app, cookie)
     const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}` })
     expect(res.statusCode).toBe(200)
@@ -51,7 +51,7 @@ describe('trips', () => {
   })
 
   it('PUT /api/trips/:id partial update', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const t = await mkTrip(app, cookie)
     const res = await authedInject(app, cookie, { method: 'PUT', url: `/api/trips/${t.id}`,
       payload: { description: 'Beach trip', origin_city: 'Chennai' } })
@@ -63,7 +63,7 @@ describe('trips', () => {
   })
 
   it('windows replace-all; goals CRUD with fixed_date hard constraint stored', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const t = await mkTrip(app, cookie)
     const w = await authedInject(app, cookie, { method: 'PUT', url: `/api/trips/${t.id}/windows`,
       payload: { windows: [{ start_date: '2026-10-02', end_date: '2026-10-06' }, { start_date: '2026-10-16', end_date: '2026-10-20', note: 'after payday' }] } })
@@ -95,9 +95,9 @@ describe('trips', () => {
   })
 
   it('participants: add returns trip, 409 on duplicate, delete removes', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const t = await mkTrip(app, cookie)
-    const p = createPerson(db)
+    const p = await createPerson(db)
     const add = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/participants`, payload: { person_id: p.id } })
     expect(add.statusCode).toBe(201)
     expect(add.json().trip.participants).toEqual([{ person_id: p.id, name: p.name, profile_confirmed: 0 }])
@@ -114,7 +114,7 @@ describe('trips', () => {
   })
 
   it('lifecycle: idea→planning ok; planning→confirmed blocked until dates+destination ready; archived rejected here', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const t = await mkTrip(app, cookie)
     const s = (status) => authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/status`, payload: { status } })
     expect((await s('planning')).statusCode).toBe(200)
@@ -130,7 +130,7 @@ describe('trips', () => {
   })
 
   it('status 404 on missing trip', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const res = await authedInject(app, cookie, { method: 'POST', url: '/api/trips/does-not-exist/status', payload: { status: 'planning' } })
     expect(res.statusCode).toBe(404)
   })

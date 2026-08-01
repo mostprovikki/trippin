@@ -14,13 +14,13 @@ const AI_CANDIDATES = [
 describe('destinations', () => {
   it('requires organizer auth', async () => {
     const { app, db } = await makeTestApp()
-    const trip = createTrip(db)
+    const trip = await createTrip(db)
     expect((await app.inject({ method: 'GET', url: `/api/trips/${trip.id}/candidates` })).statusCode).toBe(401)
   })
 
   it('manual candidate CRUD + list order (decided first, then created_at)', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const trip = createTrip(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db)
     const c1 = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates`, payload: { name: 'Goa' } })
     expect(c1.statusCode).toBe(201)
     expect(c1.json().candidate.source).toBe('manual')
@@ -39,14 +39,14 @@ describe('destinations', () => {
   })
 
   it('404 on unknown trip for manual create', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const res = await authedInject(app, cookie, { method: 'POST', url: '/api/trips/nope/candidates', payload: { name: 'X' } })
     expect(res.statusCode).toBe(404)
   })
 
   it('ai-suggest saves rows with source=ai and appends on repeat calls', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const trip = createTrip(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db)
     await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates`, payload: { name: 'Manual Pick' } })
 
     queueMock({ candidates: AI_CANDIDATES })
@@ -66,8 +66,8 @@ describe('destinations', () => {
   })
 
   it('decide flips trip destination/destination_mode and un-decides others', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const trip = createTrip(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db)
     const a = (await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates`, payload: { name: 'Goa' } })).json().candidate
     const b = (await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates`, payload: { name: 'Kerala' } })).json().candidate
 
@@ -86,14 +86,14 @@ describe('destinations', () => {
   })
 
   it('404 decide on unknown candidate', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const res = await authedInject(app, cookie, { method: 'POST', url: '/api/candidates/nope/decide' })
     expect(res.statusCode).toBe(404)
   })
 
   it('delete: 204 for undecided, 400 DECIDED for decided', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const trip = createTrip(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db)
     const a = (await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates`, payload: { name: 'Goa' } })).json().candidate
     const b = (await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates`, payload: { name: 'Kerala' } })).json().candidate
     await authedInject(app, cookie, { method: 'POST', url: `/api/candidates/${b.id}/decide` })
@@ -107,14 +107,14 @@ describe('destinations', () => {
   })
 
   it('404 delete on unknown candidate', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const res = await authedInject(app, cookie, { method: 'DELETE', url: '/api/candidates/nope' })
     expect(res.statusCode).toBe(404)
   })
 
   it('503 AI_DISABLED when LLM_PROVIDER=none', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const trip = createTrip(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db)
     const prev = process.env.LLM_PROVIDER
     process.env.LLM_PROVIDER = 'none'
     try {
@@ -128,17 +128,17 @@ describe('destinations', () => {
 
   it('privacy: buildDestinationPrompt contains only aggregate counts, never participant names/emails', async () => {
     const { db } = await makeTestApp()
-    const trip = createTrip(db, {
+    const trip = await createTrip(db, {
       vibe_tags: JSON.stringify(['relaxing', 'foodie']),
       origin_city: 'Chennai',
       currency: 'INR',
     })
-    const p1 = createPerson(db, { name: 'Zephyrine Quackenbush', email: 'zephyrine.quackenbush@example.com', dietary: 'veg', interests: JSON.stringify(['food', 'trekking']) })
-    const p2 = createPerson(db, { name: 'Thaddeus Winterbottom', email: 'thaddeus.winterbottom@example.com', dietary: 'veg', interests: JSON.stringify(['food']) })
-    const p3 = createPerson(db, { name: 'Bartholomew Fizzlethorpe', email: 'bartholomew.fizzlethorpe@example.com', dietary: 'non_veg', interests: JSON.stringify(['nightlife']) })
-    for (const p of [p1, p2, p3]) db.prepare('INSERT INTO trip_participants (trip_id, person_id) VALUES (?,?)').run(trip.id, p.id)
+    const p1 = await createPerson(db, { name: 'Zephyrine Quackenbush', email: 'zephyrine.quackenbush@example.com', dietary: 'veg', interests: JSON.stringify(['food', 'trekking']) })
+    const p2 = await createPerson(db, { name: 'Thaddeus Winterbottom', email: 'thaddeus.winterbottom@example.com', dietary: 'veg', interests: JSON.stringify(['food']) })
+    const p3 = await createPerson(db, { name: 'Bartholomew Fizzlethorpe', email: 'bartholomew.fizzlethorpe@example.com', dietary: 'non_veg', interests: JSON.stringify(['nightlife']) })
+    for (const p of [p1, p2, p3]) await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?,?)', [trip.id, p.id])
 
-    const prefSummary = buildPrefSummary(db, trip.id)
+    const prefSummary = await buildPrefSummary(db, trip.id)
     expect(prefSummary.total).toBe(3)
     const { system, prompt } = buildDestinationPrompt(
       { ...trip, vibe_tags: ['relaxing', 'foodie'], goals: [], windows: [] },
