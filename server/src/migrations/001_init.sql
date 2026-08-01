@@ -1,6 +1,6 @@
 CREATE TABLE organizers (
   id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL,
-  name TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime())
+  name TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 CREATE TABLE persons (
   id TEXT PRIMARY KEY, name TEXT NOT NULL,
@@ -10,14 +10,15 @@ CREATE TABLE persons (
   interests TEXT NOT NULL DEFAULT '[]',            -- JSON string[]
   budget_band TEXT CHECK (budget_band IN ('low','medium','high')),
   home_city TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime()), updated_at TEXT NOT NULL DEFAULT (datetime())
+  created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'), updated_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  organizer_id TEXT REFERENCES organizers(id)
 );
 CREATE TABLE documents (
   id TEXT PRIMARY KEY, person_id TEXT NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
   doc_type TEXT NOT NULL CHECK (doc_type IN ('passport','visa','national_id','driving_license','vaccination','other')),
   doc_number TEXT, expiry_date TEXT,               -- ISO date or NULL
   file_path TEXT NOT NULL, original_name TEXT NOT NULL, mime_type TEXT NOT NULL, size_bytes INTEGER NOT NULL,
-  uploaded_at TEXT NOT NULL DEFAULT (datetime())
+  uploaded_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 CREATE TABLE trips (
   id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT,
@@ -28,7 +29,8 @@ CREATE TABLE trips (
   start_date TEXT, end_date TEXT, flex_days INTEGER,
   destination_mode TEXT NOT NULL DEFAULT 'open' CHECK (destination_mode IN ('decided','open')),
   destination TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime()), updated_at TEXT NOT NULL DEFAULT (datetime()), archived_at TEXT
+  created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'), updated_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'), archived_at TEXT,
+  organizer_id TEXT REFERENCES organizers(id)
 );
 CREATE TABLE trip_date_windows (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
@@ -42,7 +44,7 @@ CREATE TABLE trip_participants (
   trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
   person_id TEXT NOT NULL REFERENCES persons(id),
   profile_confirmed INTEGER NOT NULL DEFAULT 0,
-  joined_at TEXT NOT NULL DEFAULT (datetime()),
+  joined_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
   PRIMARY KEY (trip_id, person_id)
 );
 CREATE TABLE participant_links (
@@ -50,13 +52,13 @@ CREATE TABLE participant_links (
   trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
   person_id TEXT NOT NULL REFERENCES persons(id),
   token_hash TEXT NOT NULL UNIQUE,
-  expires_at TEXT, revoked_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime())
+  expires_at TEXT, revoked_at TEXT, created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 CREATE TABLE destination_candidates (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
   name TEXT NOT NULL, rationale TEXT, best_dates TEXT, est_budget_per_person REAL, caveats TEXT,
   source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('ai','manual')),
-  decided INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (datetime())
+  decided INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 CREATE TABLE budget_lines (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
@@ -87,7 +89,8 @@ CREATE TABLE checklists (
   is_template INTEGER NOT NULL DEFAULT 0,
   kind TEXT NOT NULL CHECK (kind IN ('packing','tasks')),
   name TEXT NOT NULL, trip_type_tags TEXT NOT NULL DEFAULT '[]',
-  created_at TEXT NOT NULL DEFAULT (datetime()),
+  created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  organizer_id TEXT REFERENCES organizers(id),
   CHECK (is_template = 1 OR trip_id IS NOT NULL)
 );
 CREATE TABLE checklist_items (
@@ -98,7 +101,7 @@ CREATE TABLE checklist_items (
 CREATE TABLE archives (
   trip_id TEXT PRIMARY KEY REFERENCES trips(id) ON DELETE CASCADE,
   snapshot_json TEXT NOT NULL, notes TEXT, photo_links TEXT NOT NULL DEFAULT '[]',
-  archived_at TEXT NOT NULL DEFAULT (datetime())
+  archived_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 CREATE TABLE actuals (
   trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
@@ -108,3 +111,6 @@ CREATE TABLE actuals (
 CREATE INDEX idx_documents_person ON documents(person_id);
 CREATE INDEX idx_links_trip ON participant_links(trip_id);
 CREATE INDEX idx_items_day ON itinerary_items(day_id);
+CREATE INDEX idx_trips_organizer ON trips(organizer_id);
+CREATE INDEX idx_persons_organizer ON persons(organizer_id);
+CREATE INDEX idx_checklists_organizer ON checklists(organizer_id);
