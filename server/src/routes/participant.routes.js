@@ -18,10 +18,10 @@ export default async function routes(app) {
 
   app.get('/participant/me', { preHandler: app.requireParticipant }, async (req) => {
     const { tripId, personId } = req.participant
-    const trip = app.db.prepare('SELECT * FROM trips WHERE id = ?').get(tripId)
-    const goals = app.db.prepare('SELECT title, fixed_date, fixed_place FROM trip_goals WHERE trip_id = ?').all(tripId)
-    const tp = app.db.prepare('SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?').get(tripId, personId)
-    const person = personToJson(app.db.prepare('SELECT * FROM persons WHERE id = ?').get(personId))
+    const trip = await app.db.get('SELECT * FROM trips WHERE id = ?', [tripId])
+    const goals = await app.db.all('SELECT title, fixed_date, fixed_place FROM trip_goals WHERE trip_id = ?', [tripId])
+    const tp = await app.db.get('SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?', [tripId, personId])
+    const person = personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId]))
     return {
       trip: {
         id: trip.id, name: trip.name, description: trip.description, status: trip.status,
@@ -40,9 +40,11 @@ export default async function routes(app) {
   }, async (req) => {
     const { tripId, personId } = req.participant
     for (const f of FIELDS) if (f in req.body)
-      app.db.prepare(`UPDATE persons SET ${f} = ?, updated_at = datetime() WHERE id = ?`)
-        .run(f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], personId)
-    app.db.prepare('UPDATE trip_participants SET profile_confirmed = 1 WHERE trip_id = ? AND person_id = ?').run(tripId, personId)
-    return { person: personToJson(app.db.prepare('SELECT * FROM persons WHERE id = ?').get(personId)) }
+      await app.db.run(
+        `UPDATE persons SET ${f} = ?, updated_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
+        [f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], personId]
+      )
+    await app.db.run('UPDATE trip_participants SET profile_confirmed = 1 WHERE trip_id = ? AND person_id = ?', [tripId, personId])
+    return { person: personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])) }
   })
 }

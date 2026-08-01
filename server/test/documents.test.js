@@ -12,8 +12,8 @@ describe('documents', () => {
   })
 
   it('organizer uploads, list omits file_path, downloads same bytes, deletes', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const p = createPerson(db, { name: 'Asha' })
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db, { name: 'Asha' })
 
     const form = new FormData()
     form.append('file', pdfBlob(50, 0x62), 'passport.pdf')
@@ -52,8 +52,8 @@ describe('documents', () => {
   })
 
   it('rejects bad doc_type with 400 BAD_DOC_TYPE, accepts "other"', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const p = createPerson(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
 
     const badForm = new FormData()
     badForm.append('file', pdfBlob(10), 'x.pdf')
@@ -71,8 +71,8 @@ describe('documents', () => {
   })
 
   it('rejects oversize upload (11 MB) with 413', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
-    const p = createPerson(db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
     const form = new FormData()
     form.append('file', pdfBlob(11 * 1024 * 1024), 'big.pdf')
     form.append('doc_type', 'other')
@@ -82,14 +82,14 @@ describe('documents', () => {
 
   it('participant can upload/list/download own docs, 404s for another person\'s doc', async () => {
     const { app, db } = await makeTestApp()
-    const t = createTrip(db)
-    const p1 = createPerson(db, { name: 'Me' })
-    const p2 = createPerson(db, { name: 'Other' })
-    db.prepare('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)').run(t.id, p1.id)
-    db.prepare('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)').run(t.id, p2.id)
+    const t = await createTrip(db)
+    const p1 = await createPerson(db, { name: 'Me' })
+    const p2 = await createPerson(db, { name: 'Other' })
+    await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p1.id])
+    await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p2.id])
     const raw = 'y'.repeat(43)
-    db.prepare('INSERT INTO participant_links (id,trip_id,person_id,token_hash) VALUES (?,?,?,?)')
-      .run('l1', t.id, p1.id, app.hashToken(raw))
+    await db.run('INSERT INTO participant_links (id,trip_id,person_id,token_hash) VALUES (?,?,?,?)',
+      ['l1', t.id, p1.id, app.hashToken(raw)])
     const headers = { authorization: `Bearer ${raw}` }
 
     const form = new FormData()
@@ -110,8 +110,8 @@ describe('documents', () => {
 
     // seed a document belonging to another person directly
     const otherId = 'doc-other'
-    db.prepare(`INSERT INTO documents (id,person_id,doc_type,file_path,original_name,mime_type,size_bytes)
-      VALUES (?,?,?,?,?,?,?)`).run(otherId, p2.id, 'passport', '/nonexistent/path', 'x.pdf', 'application/pdf', 1)
+    await db.run(`INSERT INTO documents (id,person_id,doc_type,file_path,original_name,mime_type,size_bytes)
+      VALUES (?,?,?,?,?,?,?)`, [otherId, p2.id, 'passport', '/nonexistent/path', 'x.pdf', 'application/pdf', 1])
 
     const dl404 = await app.inject({ method: 'GET', url: `/api/participant/documents/${otherId}/file`, headers })
     expect(dl404.statusCode).toBe(404)

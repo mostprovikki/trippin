@@ -5,46 +5,55 @@ import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } f
 describe('readiness', () => {
   it('returns full readiness shape', async () => {
     const { app, db } = await makeTestApp()
-    const { cookie } = loginOrganizer(app, db)
-    const t = createTrip(db, {
+    const { cookie } = await loginOrganizer(app, db)
+    const t = await createTrip(db, {
       date_mode: 'confirmed', start_date: '2026-10-02', end_date: '2026-10-06',
       destination_mode: 'decided', destination: 'Goa',
     })
 
-    const asha = createPerson(db, { name: 'Asha' })
-    const ravi = createPerson(db, { name: 'Ravi' })
-    const priya = createPerson(db, { name: 'Priya' })
+    const asha = await createPerson(db, { name: 'Asha' })
+    const ravi = await createPerson(db, { name: 'Ravi' })
+    const priya = await createPerson(db, { name: 'Priya' })
 
-    db.prepare('INSERT INTO trip_participants (trip_id,person_id,profile_confirmed) VALUES (?,?,1)').run(t.id, asha.id)
-    db.prepare('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)').run(t.id, ravi.id)
-    db.prepare('INSERT INTO trip_participants (trip_id,person_id,profile_confirmed) VALUES (?,?,1)').run(t.id, priya.id)
+    await db.run('INSERT INTO trip_participants (trip_id,person_id,profile_confirmed) VALUES (?,?,1)', [t.id, asha.id])
+    await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, ravi.id])
+    await db.run('INSERT INTO trip_participants (trip_id,person_id,profile_confirmed) VALUES (?,?,1)', [t.id, priya.id])
 
-    const insDoc = db.prepare(`INSERT INTO documents (id,person_id,doc_type,expiry_date,file_path,original_name,mime_type,size_bytes)
-      VALUES (?,?,?,?,'x','x','application/pdf',1)`)
-    insDoc.run('d1', asha.id, 'passport', '2030-01-01')   // healthy, beyond horizon
-    insDoc.run('d2', priya.id, 'visa', '2026-09-01')      // expired, before trip end
+    const insDoc = async (id, personId, docType, expiryDate) => db.run(
+      `INSERT INTO documents (id,person_id,doc_type,expiry_date,file_path,original_name,mime_type,size_bytes)
+       VALUES (?,?,?,?,'x','x','application/pdf',1)`,
+      [id, personId, docType, expiryDate]
+    )
+    await insDoc('d1', asha.id, 'passport', '2030-01-01')   // healthy, beyond horizon
+    await insDoc('d2', priya.id, 'visa', '2026-09-01')      // expired, before trip end
 
-    db.prepare('INSERT INTO participant_links (id,trip_id,person_id,token_hash) VALUES (?,?,?,?)')
-      .run('l1', t.id, asha.id, 'hash1')
-    db.prepare('INSERT INTO participant_links (id,trip_id,person_id,token_hash,revoked_at) VALUES (?,?,?,?,datetime())')
-      .run('l2', t.id, priya.id, 'hash2')
+    await db.run('INSERT INTO participant_links (id,trip_id,person_id,token_hash) VALUES (?,?,?,?)',
+      ['l1', t.id, asha.id, 'hash1'])
+    await db.run(
+      `INSERT INTO participant_links (id,trip_id,person_id,token_hash,revoked_at)
+       VALUES (?,?,?,?,to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))`,
+      ['l2', t.id, priya.id, 'hash2']
+    )
 
-    db.prepare('INSERT INTO budget_lines (id,trip_id,category,estimate) VALUES (?,?,?,?)')
-      .run(randomUUID(), t.id, 'stay', 12000)
+    await db.run('INSERT INTO budget_lines (id,trip_id,category,estimate) VALUES (?,?,?,?)',
+      [randomUUID(), t.id, 'stay', 12000])
 
     for (let i = 0; i < 4; i++) {
-      db.prepare('INSERT INTO itinerary_days (id,trip_id,day_date,position) VALUES (?,?,?,?)')
-        .run(randomUUID(), t.id, `2026-10-0${2 + i}`, i)
+      await db.run('INSERT INTO itinerary_days (id,trip_id,day_date,position) VALUES (?,?,?,?)',
+        [randomUUID(), t.id, `2026-10-0${2 + i}`, i])
     }
 
     const checklistId = randomUUID()
-    db.prepare('INSERT INTO checklists (id,trip_id,kind,name,organizer_id) VALUES (?,?,?,?,?)')
-      .run(checklistId, t.id, 'tasks', 'Trip tasks', t.organizer_id)
-    const insItem = db.prepare(`INSERT INTO checklist_items (id,checklist_id,title,assignee_person_id,due_date,done,position)
-      VALUES (?,?,?,?,?,?,?)`)
-    insItem.run(randomUUID(), checklistId, 'Book bus', asha.id, '2020-01-01', 0, 0)   // overdue
-    insItem.run(randomUUID(), checklistId, 'Pack bags', asha.id, null, 1, 1)          // done
-    insItem.run(randomUUID(), checklistId, 'Buy snacks', null, '2030-01-01', 0, 2)    // future
+    await db.run('INSERT INTO checklists (id,trip_id,kind,name,organizer_id) VALUES (?,?,?,?,?)',
+      [checklistId, t.id, 'tasks', 'Trip tasks', t.organizer_id])
+    const insItem = async (id, title, assigneeId, dueDate, done, position) => db.run(
+      `INSERT INTO checklist_items (id,checklist_id,title,assignee_person_id,due_date,done,position)
+       VALUES (?,?,?,?,?,?,?)`,
+      [id, checklistId, title, assigneeId, dueDate, done, position]
+    )
+    await insItem(randomUUID(), 'Book bus', asha.id, '2020-01-01', 0, 0)   // overdue
+    await insItem(randomUUID(), 'Pack bags', asha.id, null, 1, 1)          // done
+    await insItem(randomUUID(), 'Buy snacks', null, '2030-01-01', 0, 2)    // future
 
     const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}/readiness` })
     expect(res.statusCode).toBe(200)
@@ -77,7 +86,7 @@ describe('readiness', () => {
   })
 
   it('404s for unknown trip', async () => {
-    const { app, db } = await makeTestApp(); const { cookie } = loginOrganizer(app, db)
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const res = await authedInject(app, cookie, { method: 'GET', url: '/api/trips/nope/readiness' })
     expect(res.statusCode).toBe(404)
   })

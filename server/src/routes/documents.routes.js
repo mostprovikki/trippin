@@ -14,7 +14,7 @@ export default async function routes(app) {
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024, files: 1 } })
 
   function getDoc(id) {
-    return app.db.prepare('SELECT * FROM documents WHERE id = ?').get(id)
+    return app.db.get('SELECT * FROM documents WHERE id = ?', [id])
   }
   function docJson(row) {
     if (!row) return row
@@ -40,9 +40,10 @@ export default async function routes(app) {
       httpError(reply, 400, 'BAD_DOC_TYPE', 'file and valid doc_type required')
       return null
     }
-    app.db.prepare(`INSERT INTO documents (id,person_id,doc_type,doc_number,expiry_date,file_path,original_name,mime_type,size_bytes)
-      VALUES (?,?,?,?,?,?,?,?,?)`).run(file.id, personId, fields.doc_type, fields.doc_number ?? null,
-      fields.expiry_date ?? null, file.path, file.original_name, file.mime_type, statSync(file.path).size)
+    await app.db.run(`INSERT INTO documents (id,person_id,doc_type,doc_number,expiry_date,file_path,original_name,mime_type,size_bytes)
+      VALUES (?,?,?,?,?,?,?,?,?)`,
+      [file.id, personId, fields.doc_type, fields.doc_number ?? null,
+        fields.expiry_date ?? null, file.path, file.original_name, file.mime_type, statSync(file.path).size])
     return getDoc(file.id)
   }
 
@@ -53,37 +54,37 @@ export default async function routes(app) {
   }
 
   async function removeDoc(row) {
-    app.db.prepare('DELETE FROM documents WHERE id = ?').run(row.id)
+    await app.db.run('DELETE FROM documents WHERE id = ?', [row.id])
     try { await unlink(row.file_path) } catch { /* ignore fs errors */ }
   }
 
   // --- organizer routes (scoped to the organizer's own persons) ---
-  const ownedDoc = (req) => app.db.prepare(
-    'SELECT d.* FROM documents d JOIN persons p ON p.id = d.person_id WHERE d.id = ? AND p.organizer_id = ?'
-  ).get(req.params.id, req.organizer.id)
+  const ownedDoc = (req) => app.db.get(
+    'SELECT d.* FROM documents d JOIN persons p ON p.id = d.person_id WHERE d.id = ? AND p.organizer_id = ?',
+    [req.params.id, req.organizer.id]
+  )
 
   app.post('/people/:personId/documents', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    if (!app.ownedPerson(req, req.params.personId)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    if (!(await app.ownedPerson(req, req.params.personId))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     const doc = await saveUpload(req, req.params.personId, reply)
     if (!doc) return
     return reply.code(201).send({ document: docJson(doc) })
   })
 
   app.get('/people/:personId/documents', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    if (!app.ownedPerson(req, req.params.personId)) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
-    const documents = app.db.prepare('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at')
-      .all(req.params.personId).map(docJson)
-    return { documents }
+    if (!(await app.ownedPerson(req, req.params.personId))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    const rows = await app.db.all('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at', [req.params.personId])
+    return { documents: rows.map(docJson) }
   })
 
   app.get('/documents/:id/file', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const row = ownedDoc(req)
+    const row = await ownedDoc(req)
     if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     return sendFile(reply, row)
   })
 
   app.delete('/documents/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    const row = ownedDoc(req)
+    const row = await ownedDoc(req)
     if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     await removeDoc(row)
     return reply.code(204).send()
@@ -97,19 +98,18 @@ export default async function routes(app) {
   })
 
   app.get('/participant/documents', { preHandler: app.requireParticipant }, async (req) => {
-    const documents = app.db.prepare('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at')
-      .all(req.participant.personId).map(docJson)
-    return { documents }
+    const rows = await app.db.all('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at', [req.participant.personId])
+    return { documents: rows.map(docJson) }
   })
 
   app.get('/participant/documents/:id/file', { preHandler: app.requireParticipant }, async (req, reply) => {
-    const row = getDoc(req.params.id)
+    const row = await getDoc(req.params.id)
     if (!row || row.person_id !== req.participant.personId) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     return sendFile(reply, row)
   })
 
   app.delete('/participant/documents/:id', { preHandler: app.requireParticipant }, async (req, reply) => {
-    const row = getDoc(req.params.id)
+    const row = await getDoc(req.params.id)
     if (!row || row.person_id !== req.participant.personId) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     await removeDoc(row)
     return reply.code(204).send()

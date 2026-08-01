@@ -2,25 +2,25 @@ import { randomUUID } from 'node:crypto'
 import { describe, it, expect, beforeEach } from 'vitest'
 import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } from './helpers.js'
 
-function seedParticipantLink(app, db, tripId, personId) {
-  db.prepare('INSERT INTO participant_links (id, trip_id, person_id, token_hash) VALUES (?,?,?,?)')
-    .run(randomUUID(), tripId, personId, app.hashToken(randomUUID()))
+async function seedParticipantLink(app, db, tripId, personId) {
+  await db.run('INSERT INTO participant_links (id, trip_id, person_id, token_hash) VALUES (?,?,?,?)',
+    [randomUUID(), tripId, personId, app.hashToken(randomUUID())])
 }
 
 describe('archive routes', () => {
   let app, db, cookie
   beforeEach(async () => {
     ;({ app, db } = await makeTestApp())
-    ;({ cookie } = loginOrganizer(app, db))
+    ;({ cookie } = await loginOrganizer(app, db))
   })
 
   it('archives a trip: builds snapshot, sets status/archived_at, revokes links', async () => {
-    const trip = createTrip(db, { name: 'Goa Trip', vibe_tags: JSON.stringify(['beach']), status: 'confirmed' })
-    const person = createPerson(db, { name: 'Alice' })
-    db.prepare('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)').run(trip.id, person.id)
-    seedParticipantLink(app, db, trip.id, person.id)
-    db.prepare('INSERT INTO budget_lines (id, trip_id, category, estimate) VALUES (?, ?, ?, ?)')
-      .run(randomUUID(), trip.id, 'stay', 1000)
+    const trip = await createTrip(db, { name: 'Goa Trip', vibe_tags: JSON.stringify(['beach']), status: 'confirmed' })
+    const person = await createPerson(db, { name: 'Alice' })
+    await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [trip.id, person.id])
+    await seedParticipantLink(app, db, trip.id, person.id)
+    await db.run('INSERT INTO budget_lines (id, trip_id, category, estimate) VALUES (?, ?, ?, ?)',
+      [randomUUID(), trip.id, 'stay', 1000])
 
     const res = await authedInject(app, cookie, {
       method: 'POST', url: `/api/trips/${trip.id}/archive`,
@@ -35,16 +35,16 @@ describe('archive routes', () => {
     expect(archive.snapshot.itinerary).toEqual([])
     expect(archive.snapshot.checklists).toEqual([])
 
-    const updated = db.prepare('SELECT status, archived_at FROM trips WHERE id = ?').get(trip.id)
+    const updated = await db.get('SELECT status, archived_at FROM trips WHERE id = ?', [trip.id])
     expect(updated.status).toBe('archived')
     expect(updated.archived_at).toBeTruthy()
 
-    const link = db.prepare('SELECT revoked_at FROM participant_links WHERE trip_id = ?').get(trip.id)
+    const link = await db.get('SELECT revoked_at FROM participant_links WHERE trip_id = ?', [trip.id])
     expect(link.revoked_at).toBeTruthy()
   })
 
   it('409 ALREADY_ARCHIVED on re-archive', async () => {
-    const trip = createTrip(db, { status: 'confirmed' })
+    const trip = await createTrip(db, { status: 'confirmed' })
     const first = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
     expect(first.statusCode).toBe(200)
     const second = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
@@ -53,14 +53,14 @@ describe('archive routes', () => {
   })
 
   it('GET archive 404 NOT_ARCHIVED when no archive exists', async () => {
-    const trip = createTrip(db)
+    const trip = await createTrip(db)
     const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/archive` })
     expect(res.statusCode).toBe(404)
     expect(res.json().error.code).toBe('NOT_ARCHIVED')
   })
 
   it('GET archive returns snapshot + notes + photo_links + actuals', async () => {
-    const trip = createTrip(db, { status: 'confirmed' })
+    const trip = await createTrip(db, { status: 'confirmed' })
     await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: { notes: 'n', photo_links: [] } })
     const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/archive` })
     expect(res.statusCode).toBe(200)
@@ -71,7 +71,7 @@ describe('archive routes', () => {
   })
 
   it('PUT archive updates notes/photo_links only', async () => {
-    const trip = createTrip(db, { status: 'confirmed' })
+    const trip = await createTrip(db, { status: 'confirmed' })
     await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
     const res = await authedInject(app, cookie, {
       method: 'PUT', url: `/api/trips/${trip.id}/archive`,
@@ -83,7 +83,7 @@ describe('archive routes', () => {
   })
 
   it('PUT actuals replaces-all and validates category', async () => {
-    const trip = createTrip(db, { status: 'confirmed' })
+    const trip = await createTrip(db, { status: 'confirmed' })
     await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
 
     const bad = await authedInject(app, cookie, {
@@ -110,22 +110,22 @@ describe('archive routes', () => {
   })
 
   it('clones a trip as a new idea trip, copying only allowed fields', async () => {
-    const trip = createTrip(db, {
+    const trip = await createTrip(db, {
       name: 'Original', status: 'confirmed', vibe_tags: JSON.stringify(['chill']),
       origin_city: 'Chennai', currency: 'INR', destination: 'Goa',
       start_date: '2026-01-01', end_date: '2026-01-05'
     })
-    const person = createPerson(db, { name: 'Bob' })
-    db.prepare('INSERT INTO trip_participants (trip_id, person_id, profile_confirmed) VALUES (?, ?, 1)').run(trip.id, person.id)
-    db.prepare('INSERT INTO trip_goals (id, trip_id, title, fixed_date, fixed_place, notes) VALUES (?, ?, ?, ?, ?, ?)')
-      .run(randomUUID(), trip.id, 'See waterfalls', '2026-01-02', 'Dudhsagar', 'bring shoes')
-    db.prepare('INSERT INTO budget_lines (id, trip_id, category, estimate, basis) VALUES (?, ?, ?, ?, ?)')
-      .run(randomUUID(), trip.id, 'stay', 5000, '4n')
+    const person = await createPerson(db, { name: 'Bob' })
+    await db.run('INSERT INTO trip_participants (trip_id, person_id, profile_confirmed) VALUES (?, ?, 1)', [trip.id, person.id])
+    await db.run('INSERT INTO trip_goals (id, trip_id, title, fixed_date, fixed_place, notes) VALUES (?, ?, ?, ?, ?, ?)',
+      [randomUUID(), trip.id, 'See waterfalls', '2026-01-02', 'Dudhsagar', 'bring shoes'])
+    await db.run('INSERT INTO budget_lines (id, trip_id, category, estimate, basis) VALUES (?, ?, ?, ?, ?)',
+      [randomUUID(), trip.id, 'stay', 5000, '4n'])
     const checklistId = randomUUID()
-    db.prepare('INSERT INTO checklists (id, trip_id, is_template, kind, name, organizer_id) VALUES (?, ?, 0, ?, ?, ?)')
-      .run(checklistId, trip.id, 'packing', 'Packing', trip.organizer_id)
-    db.prepare('INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position) VALUES (?, ?, ?, ?, ?, 1, 0)')
-      .run(randomUUID(), checklistId, 'Pack sunscreen', person.id, '2025-12-31')
+    await db.run('INSERT INTO checklists (id, trip_id, is_template, kind, name, organizer_id) VALUES (?, ?, 0, ?, ?, ?)',
+      [checklistId, trip.id, 'packing', 'Packing', trip.organizer_id])
+    await db.run('INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position) VALUES (?, ?, ?, ?, ?, 1, 0)',
+      [randomUUID(), checklistId, 'Pack sunscreen', person.id, '2025-12-31'])
 
     const res = await authedInject(app, cookie, {
       method: 'POST', url: `/api/trips/${trip.id}/clone`, payload: { name: 'Original (Clone)' }
@@ -150,18 +150,18 @@ describe('archive routes', () => {
     expect(cloned.participants.length).toBe(1)
     expect(cloned.participants[0].profile_confirmed).toBe(0)
 
-    const clonedBudget = db.prepare('SELECT * FROM budget_lines WHERE trip_id = ?').all(cloned.id)
+    const clonedBudget = await db.all('SELECT * FROM budget_lines WHERE trip_id = ?', [cloned.id])
     expect(clonedBudget.some((l) => l.category === 'stay' && l.estimate === 5000)).toBe(true)
 
-    const clonedChecklists = db.prepare('SELECT * FROM checklists WHERE trip_id = ?').all(cloned.id)
+    const clonedChecklists = await db.all('SELECT * FROM checklists WHERE trip_id = ?', [cloned.id])
     expect(clonedChecklists.length).toBe(1)
-    const clonedItems = db.prepare('SELECT * FROM checklist_items WHERE checklist_id = ?').all(clonedChecklists[0].id)
+    const clonedItems = await db.all('SELECT * FROM checklist_items WHERE checklist_id = ?', [clonedChecklists[0].id])
     expect(clonedItems.length).toBe(1)
     expect(clonedItems[0].done).toBe(0)
     expect(clonedItems[0].assignee_person_id).toBeFalsy()
     expect(clonedItems[0].due_date).toBeFalsy()
 
-    const originalStillThere = db.prepare('SELECT * FROM trips WHERE id = ?').get(trip.id)
+    const originalStillThere = await db.get('SELECT * FROM trips WHERE id = ?', [trip.id])
     expect(originalStillThere.name).toBe('Original')
   })
 })
