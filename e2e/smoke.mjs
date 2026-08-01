@@ -1,5 +1,5 @@
 // E2E smoke test: full organizer + participant golden path against a real,
-// in-process server instance on a random port with a throwaway temp DB.
+// in-process server instance on a random port with a throwaway Postgres schema.
 // Run: node e2e/smoke.mjs
 //
 // No test framework, no mocks beyond LLM_PROVIDER=none (which is the real
@@ -17,10 +17,22 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(here, '..')
 
 const tmpDir = mkdtempSync(path.join(tmpdir(), 'tp-smoke-'))
-const dbPath = path.join(tmpDir, 'smoke.db')
 const uploadsDir = path.join(tmpDir, 'uploads')
 
-process.env.DB_PATH = dbPath
+// Postgres has no throwaway-file equivalent to a temp SQLite db. Instead:
+// a throwaway schema on the same local dev Postgres, same idea as
+// server/test/helpers.js's makeTestApp (CREATE SCHEMA, then search_path).
+// The schema is embedded in the connection string via the standard libpq
+// `options=-c search_path=...` query param (verified directly against `pg`'s
+// Pool: `SHOW search_path` reflects it) so the spawned seed-organizer.js
+// subprocess -- which only knows how to read DATABASE_URL from its env, has
+// no flag for a schema -- lands in the same schema as the in-process app
+// without server/src/db.js or config.js needing any new plumbing.
+const BASE_URL = process.env.TEST_DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test'
+const SCHEMA = `tp_smoke_${process.pid}_${Date.now()}`
+const SCHEMA_URL = `${BASE_URL}${BASE_URL.includes('?') ? '&' : '?'}options=${encodeURIComponent(`-c search_path=${SCHEMA}`)}`
+
+process.env.DATABASE_URL = SCHEMA_URL
 process.env.UPLOADS_DIR = uploadsDir
 process.env.LLM_PROVIDER = 'none'
 process.env.JWT_SECRET = 'smoke-test-secret-do-not-use-elsewhere-0000000000'
@@ -29,7 +41,7 @@ process.env.NODE_ENV = 'test' // silences fastify's logger
 const ORGANIZER = { email: 'smoke-organizer@example.com', name: 'Smoke Organizer', password: 'smoke-pass-1234' }
 
 let BASE // set once the server is listening
-let app, db
+let app, db, adminDb
 
 function req(method, urlPath, { cookie, token, body, form } = {}) {
   const headers = {}
@@ -60,18 +72,23 @@ function pdfBlob(sizeBytes = 64, byte = 0x25) {
 const state = {}
 
 async function stage1_seedAndLogin() {
+  const { makeDb } = await import(path.join(root, 'server/src/db.js'))
+  // Schema must exist before any connection sets search_path to it (mirrors
+  // makeTestApp: an admin connection with the plain URL creates the schema).
+  adminDb = await makeDb({ url: BASE_URL })
+  await adminDb.exec(`CREATE SCHEMA ${SCHEMA}`)
+
   const seed = spawnSync(process.execPath, [
     path.join(root, 'server/scripts/seed-organizer.js'),
     `--email=${ORGANIZER.email}`,
     `--name=${ORGANIZER.name}`,
     `--password=${ORGANIZER.password}`,
-  ], { env: { ...process.env, DB_PATH: dbPath }, encoding: 'utf8' })
+  ], { env: { ...process.env, DATABASE_URL: SCHEMA_URL }, encoding: 'utf8' })
   assert.equal(seed.status, 0, `seed-organizer.js failed: ${seed.stderr}`)
 
-  const { openDb } = await import(path.join(root, 'server/src/db.js'))
   const { buildApp } = await import(path.join(root, 'server/src/app.js'))
-  db = openDb(dbPath)
-  app = await buildApp({ db })
+  db = await makeDb({ url: BASE_URL, searchPath: SCHEMA })
+  app = await buildApp({ db }) // buildApp runs migrations itself (idempotent; seed-organizer.js already ran them once)
   await app.listen({ port: 0, host: '127.0.0.1' })
   BASE = `http://127.0.0.1:${app.server.address().port}/api`
 
@@ -258,6 +275,19 @@ async function stage10_archiveAndClone() {
   console.log('ok 10 - archive (status archived, link 401) + clone (idea trip, participants + budget carried over)')
 }
 
+async function cleanupSchema() {
+  // Drop the throwaway schema so repeated runs don't accumulate tp_smoke_*
+  // schemas on the shared local dev Postgres (unlike the old temp sqlite
+  // file, this is real server state that won't get swept by OS tmp cleanup).
+  try {
+    const admin = adminDb || (await (await import(path.join(root, 'server/src/db.js'))).makeDb({ url: BASE_URL }))
+    await admin.exec(`DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE`)
+    await admin.close()
+  } catch (e) {
+    console.warn(`cleanup - could not drop schema ${SCHEMA}: ${e.message}`)
+  }
+}
+
 async function main() {
   try {
     await stage1_seedAndLogin()
@@ -271,11 +301,13 @@ async function main() {
     await stage9_readiness()
     await stage10_archiveAndClone()
     console.log('SMOKE OK')
-    await app.close()
+    await app.close() // closes db too (see src/app.js's onClose hook)
+    await cleanupSchema()
     process.exit(0)
   } catch (err) {
     console.error('SMOKE FAILED:', err)
     try { await app?.close() } catch { /* ignore */ }
+    await cleanupSchema()
     process.exit(1)
   }
 }

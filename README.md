@@ -108,19 +108,19 @@ SQLite-file backup procedure — treat it as historical until it's revised.
 
 ## Smoke test
 
-`e2e/smoke.mjs` is meant to be a dependency-free end-to-end check that boots
-the real server in-process and walks the full organizer + participant golden
-path (seed → login → people → trip → destination decide → confirm dates →
-participant link → profile/doc/checklist as participant → budget → itinerary
-→ readiness → archive → clone):
+`e2e/smoke.mjs` is a dependency-free end-to-end check that boots the real
+server in-process on a random port against a throwaway Postgres schema (on
+the same local dev Postgres — `npm run db:up` first), then walks the full
+organizer + participant golden path (seed → login → people → trip →
+destination decide → confirm dates → participant link → profile/doc/checklist
+as participant → budget → itinerary → readiness → archive → clone). Run it
+with:
 
 ```bash
 node e2e/smoke.mjs
 ```
 
-**Currently broken** (as of the Postgres migration): it and
-`server/scripts/seed-organizer.js` still call the pre-migration
-`getDb`/`openDb` exports that no longer exist on `server/src/db.js` (which now
-exports async `makeDb`). Tracked as `trip-planner-98t`. Use
-`node scripts/seed-organizer.mjs <email> <password> "<Name>"` (root
-`scripts/`, Postgres-based) to seed an organizer in the meantime.
+It prints `SMOKE OK` and exits 0 on success, or exits 1 with the failing
+assertion on error. No `npm test` wiring needed — it's a plain Node script.
+It creates and drops its own `tp_smoke_*` schema, so it's safe to run
+repeatedly against the same dev database.
