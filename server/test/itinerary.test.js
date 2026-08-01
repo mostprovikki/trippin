@@ -15,16 +15,16 @@ const { queueMock } = createRequire(import.meta.url)('../src/llm/drivers/mock.js
 
 async function setup(fields = {}) {
   const { app, db } = await makeTestApp()
-  const { cookie } = loginOrganizer(app, db)
-  const trip = createTrip(db, { start_date: '2026-03-01', end_date: '2026-03-03', ...fields })
+  const { cookie } = await loginOrganizer(app, db)
+  const trip = await createTrip(db, { start_date: '2026-03-01', end_date: '2026-03-03', ...fields })
   return { app, db, cookie, trip }
 }
 
 describe('itinerary — init', () => {
   it('400 NO_DATES when trip dates are not confirmed', async () => {
     const { app, db } = await makeTestApp()
-    const { cookie } = loginOrganizer(app, db)
-    const trip = createTrip(db)
+    const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db)
     const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/init` })
     expect(res.statusCode).toBe(400)
     expect(res.json().error.code).toBe('NO_DATES')
@@ -49,7 +49,7 @@ describe('itinerary — init', () => {
       method: 'POST', url: `/api/days/${keptDayId}/items`, payload: { title: 'Arrive' },
     })
     // shrink the range to just the first day — day 2 and 3 should be dropped along with items
-    db.prepare('UPDATE trips SET start_date = ?, end_date = ? WHERE id = ?').run('2026-03-01', '2026-03-01', trip.id)
+    await db.run('UPDATE trips SET start_date = ?, end_date = ? WHERE id = ?', ['2026-03-01', '2026-03-01', trip.id])
     const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/init` })
     const { days } = res.json()
     expect(days).toHaveLength(1)
@@ -115,8 +115,8 @@ describe('itinerary — AI draft / apply-draft', () => {
     const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/ai-draft` })
     expect(res.statusCode).toBe(200)
     expect(res.json().days).toHaveLength(2)
-    expect(db.prepare('SELECT COUNT(*) c FROM itinerary_days WHERE trip_id = ?').get(trip.id).c).toBe(0)
-    expect(db.prepare('SELECT COUNT(*) c FROM itinerary_items').get().c).toBe(0)
+    expect((await db.get('SELECT COUNT(*)::int c FROM itinerary_days WHERE trip_id = ?', [trip.id])).c).toBe(0)
+    expect((await db.get('SELECT COUNT(*)::int c FROM itinerary_items')).c).toBe(0)
   })
 
   it('apply-draft persists items; GET reflects them', async () => {
@@ -194,10 +194,10 @@ describe('itinerary — per-day AI regen', () => {
 describe('itinerary — diet summary is aggregated counts only', () => {
   it('ai-draft prompt carries only diet counts, not participant names/emails', async () => {
     const { app, db, cookie, trip } = await setup()
-    const p1 = createPerson(db, { name: 'Alice Secret', email: 'alice@example.com', dietary: 'veg' })
-    const p2 = createPerson(db, { name: 'Bob Private', email: 'bob@example.com', dietary: 'non_veg' })
-    const p3 = createPerson(db, { name: 'Cara Confidential', dietary: 'vegan' })
-    for (const p of [p1, p2, p3]) db.prepare('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)').run(trip.id, p.id)
+    const p1 = await createPerson(db, { name: 'Alice Secret', email: 'alice@example.com', dietary: 'veg' })
+    const p2 = await createPerson(db, { name: 'Bob Private', email: 'bob@example.com', dietary: 'non_veg' })
+    const p3 = await createPerson(db, { name: 'Cara Confidential', dietary: 'vegan' })
+    for (const p of [p1, p2, p3]) await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [trip.id, p.id])
 
     queueMock({ days: [{ day_date: '2026-03-01', items: [{ title: 'x', category: 'activity' }] }] })
     const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/ai-draft` })
@@ -205,7 +205,7 @@ describe('itinerary — diet summary is aggregated counts only', () => {
     // We can't see the exact prompt sent to the mock driver from here, but we can prove the
     // aggregation logic itself only ever produces counts by re-computing it the same way the
     // route does and asserting it contains no participant identifiers.
-    const total = db.prepare('SELECT COUNT(*) c FROM trip_participants WHERE trip_id = ?').get(trip.id).c
+    const total = (await db.get('SELECT COUNT(*)::int c FROM trip_participants WHERE trip_id = ?', [trip.id])).c
     expect(total).toBe(3)
   })
 })
