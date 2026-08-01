@@ -10,7 +10,8 @@
     "test": "npm test --workspace=server && npm test --workspace=web",
     "build": "npm run build --workspace=web",
     "db:up": "node scripts/pg-dev.mjs up",
-    "db:down": "node scripts/pg-dev.mjs down"
+    "db:down": "node scripts/pg-dev.mjs down",
+    "deploy:appsail": "node scripts/build-appsail.mjs"
   },
   "allowScripts": {
     "better-sqlite3@12.11.1": true,
