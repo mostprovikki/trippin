@@ -1,7 +1,9 @@
-# Deployment redesign: Zoho Catalyst + Supabase
+# Deployment redesign: Zoho Catalyst + Neon
 
 Status: draft, pending implementation plan
 Date: 2026-07-30
+Revised 2026-08-01: database host changed from Supabase to **Neon** (§3.4); transaction
+count corrected (§3.4). Filename kept for link stability.
 
 ## 1. Motivation
 
@@ -89,11 +91,11 @@ framework, deployed with `catalyst appsail:add --stack node18 --source <dir> --c
   (`uptime=0.2s` reported by the process itself at response time).
 - **Arbitrary outbound TCP works, not just HTTPS**: raw TCP connects to `1.1.1.1:443`,
   `1.1.1.1:53`, and `smtp.gmail.com:587` (a non-web TCP service, chosen as a closer analog
-  to Postgres's 5432 than an HTTP(S) port) all succeeded in 16-34ms. This is the load-bearing
-  fact for the Supabase decision below — Postgres's wire protocol needs a raw TCP connection
-  on port 5432, not an HTTP call, and nothing in Catalyst's egress rules blocked that pattern
-  in this spike. (Reachability to the *actual* Supabase host specifically is still **OPEN** —
-  see Open Items — but the general capability is no longer a guess.)
+  to Postgres's 5432 than an HTTP(S) port) all succeeded in 16-34ms. This was the
+  load-bearing fact for the original raw-TCP Supabase plan; with the 2026-08-01 revision to
+  Neon's serverless driver the DB path rides wss/443 instead, so this finding is now
+  general egress evidence rather than load-bearing. (Reachability to Neon's endpoint
+  specifically is **OPEN** — see Open Items.)
 
 **DOCUMENTED**: AppSail bills by **wall-clock instance uptime** (GB-hours), not per-request,
 scaling down after **5 minutes of inactivity per instance**. Free tier: **15 GB-hours/month**,
@@ -112,12 +114,58 @@ that runs on the Oracle VM today via docker-compose can, with the DB/storage cli
 target AppSail instead. This is a materially smaller migration than the original
 Functions-based plan.
 
-### 3.4 Database: Supabase Postgres — **recommended**
+### 3.4 Database: **Neon Postgres** — recommended (revised 2026-08-01; was Supabase)
 
-Real Postgres: proper transactions, real joins, no rewrite of the relational model. The
-user already maintains a Supabase account for another app, and Tripper's scale won't come
-close to Supabase's free tier (500MB DB / 50k MAU-equivalent limits are far beyond a
-handful-of-people app).
+Real Postgres: proper transactions, real joins, no rewrite of the relational model — that
+reasoning is unchanged; only the host changed.
+
+**Why Supabase was dropped (2026-08-01)**: its free tier pauses projects after ~7 days
+without activity, resume is a **manual dashboard action**, and projects left paused long
+enough are **permanently deleted**. For an app whose normal state is months of silence,
+that's a standing outage-plus-data-loss risk requiring a mandatory keepalive cron; a
+long-lived `pg.Pool` against Supavisor also inherits a stale-idle-socket error class across
+AppSail scale-to-zero. Nothing else in this design was Supabase-specific (auth stays custom,
+storage is Stratus, no supabase-js anywhere) — its entire role was a connection string, so
+the swap is contained.
+
+**Neon** (DOCUMENTED, 2026-08-01): serverless Postgres that autosuspends after 5 idle
+minutes and **auto-resumes on the next connection in under ~1s** — no manual action, no
+keepalive, no pause-then-delete policy. Free plan: 100 CU-hours/project/month, 0.5 GB
+storage — both far beyond Tripper's scale, and scale-to-zero matches the app's bursty shape
+exactly (AppSail and the DB now wake the same way).
+
+**Driver decision**: `@neondatabase/serverless`, using its **pg-compatible `Pool`/`Client`
+API over WebSocket for everything** — not the HTTP `neon()` mode. Interactive transactions
+and savepoints (needed by the 14 `db.transaction` sites, including nesting) are only
+supported over WebSocket; HTTP mode does single queries and non-interactive batches only.
+One API keeps the route sweep uniform, and the pg-compatible surface means the `$1`
+placeholders and async patterns below apply as written. Acquire connections per request (or
+a pool with a short idle timeout) — never held idle — and the WebSocket transport rides
+wss/443, sidestepping the raw-5432/IPv6 egress questions that bit the Supabase path (§ below).
+Node needs a WebSocket constructor configured (`neonConfig.webSocketConstructor` — Node 22
+native WebSocket or the `ws` package).
+
+**VERIFIED, live (2026-08-01), against Tripper's real Neon project (`us-east-2`) from both
+this machine and the actual `spikeappsail` AppSail instance** (spike redeployed with the
+driver; results from AppSail itself, node22 stack, native WebSocket, no `ws` package):
+
+- wss connectivity from AppSail to **both** Neon hosts (direct and `-pooler`): OK.
+- **Interactive transaction with a nested savepoint: PASS** from AppSail (rolled back only
+  the inner savepoint, committed the rest — the exact better-sqlite3 nesting analog).
+- Latency from AppSail: warm HTTP-mode query **~85-100ms** (pooler), WebSocket connect
+  ~316ms, 9-statement savepoint transaction ~720ms (~80ms/statement RTT) — AppSail runs
+  US-side, so `us-east-2` is the right region.
+- **AppSail env vars work via `app-config.json` → `env_variables`**: both connection
+  strings arrived in `process.env` on the deployed instance.
+- **AppSail `node22` stack exists and runs** (v22.22.2 observed; CLI supports node12-24) —
+  clears Fastify 5's Node ≥ 20 requirement, which node18 (the old spike default) would
+  have blocked.
+- **AppSail terminates TLS**: app listens plain HTTP on `X_ZOHO_CATALYST_LISTEN_PORT`,
+  public URL is HTTPS — matches the current "app never terminates TLS" assumption.
+- **Cookies round-trip the gateway untouched**: a `Set-Cookie: ...; HttpOnly; SameSite=Lax`
+  set by the app came back on the next request. (The gateway adds its own `zalb_*`
+  load-balancer and `ZD_CSRF_TOKEN` cookies alongside — the app ignores unknown cookies.)
+- Postgres 18.4.
 
 **Code-level migration analysis** (read directly from `server/src/migrations/*.sql` and
 representative route files, not a spike — this is a mechanical-cost estimate, not a
@@ -131,15 +179,20 @@ feasibility question):
   mechanical, but it touches all ~13 route files, not a contained change.
 - Placeholder style changes (`?` positional → `$1, $2, ...` named), which most route files
   use extensively.
-- One genuine SQLite-transaction-helper usage (`app.db.transaction((windows) => {...})` in
-  `trips.routes.js`) needs a small async equivalent (`BEGIN`/commit/rollback wrapper) —
-  a single reusable helper, not a design problem, since Postgres has real transactions
-  (the exact thing Data Store lacked).
+- **Correction (2026-08-01, grepped against code)**: not one but **14 `db.transaction(...)`
+  call sites across 7 route files** (trips, itinerary ×5, destinations, budget ×2,
+  checklists ×2, archive ×3), and `itinerary.routes.js` deliberately relies on
+  better-sqlite3's nested-transaction-via-savepoint behavior — so the async replacement
+  helper must support savepoint nesting, not just flat `BEGIN`/commit/rollback. Still one
+  reusable helper (Postgres has both transactions and savepoints), but a real design item
+  and a larger mechanical sweep (~148 `prepare()` calls go async overall).
 
 Net assessment: a real, contained migration — not a lift-and-shift, but not a rewrite of the
 data model either. Bounded mechanical cost, not an open design risk.
 
-**VERIFIED, live, against a real Supabase project (not Tripper's own — splitease's, hostname
+**Historical — superseded by the Neon decision, kept because it documents AppSail's real
+egress behavior (IPv6-only hosts unreachable, IPv4 fine), which any future direct-TCP
+database path would hit again.** VERIFIED, live, against a real Supabase project (not Tripper's own — splitease's, hostname
 only, no credentials used or needed for a TCP-connect test)**: Supabase's *direct* connection
 hostname (`db.<project-ref>.supabase.co`) resolves to an **IPv6-only address (AAAA record, no
 A record)**. From the AppSail spike, connecting to it failed with `getaddrinfo ENOTFOUND` —
@@ -183,15 +236,16 @@ pattern this design depends on is confirmed end to end, not just documented.
 
 ### 3.6 Auth — unchanged, by design
 
-Neither Supabase Auth nor Catalyst Authentication models Tripper's participant-link scheme
+Neither hosted auth product evaluated (Supabase Auth back when Supabase was the DB pick,
+Catalyst Authentication; Neon has none) models Tripper's participant-link scheme
 (opaque bearer token, no email, no identity, organizer-issued/revocable) — both platforms'
 auth products are built around email/OAuth identity flows, which is a different problem
 ("prove you own this email") from "here's a scoped capability for whoever holds this link."
 Verified directly against the actual code (`server/src/routes/links.routes.js`,
 `server/src/plugins/auth.js`), not assumed. Decision: **keep all current auth code
-unchanged**, running inside the AppSail-hosted process exactly as it runs today. Organizer
-login *could* optionally move to Supabase Auth's custom-token flow later since organizers do
-have real emails — noted as a future option, not part of this migration.
+unchanged**, running inside the AppSail-hosted process exactly as it runs today. (An earlier
+note about optionally moving organizer login to Supabase Auth lapsed with the Neon revision —
+Neon ships no auth product, which is fine: none was wanted.)
 
 ### 3.7 Frontend hosting: Zoho Slate — recommended, not yet spiked
 
@@ -216,7 +270,7 @@ as an experiment behind the same interface, not a dependency of this migration.
 |---|---|---|
 | Frontend hosting | Zoho **Slate** (static Vue 3 build) | Documented, not spiked |
 | API / business logic | **Catalyst AppSail**, existing Fastify app, persistent process | Verified (spike app; real app not yet ported) |
-| Database | **Supabase Postgres**, connected via the Supavisor **pooler** host, not the direct `db.*` host | Migration scope analyzed at code level; pooler-host connectivity verified live from AppSail |
+| Database | **Neon Postgres** (`us-east-2`) via `@neondatabase/serverless` — pg-compatible `Pool`/`Client` over WebSocket (wss/443), auto-suspend/auto-resume | **Verified live from AppSail** (2026-08-01): connectivity both hosts, nested-savepoint tx PASS, ~85-100ms warm queries |
 | File storage | **Zoho Catalyst Stratus** (writes via app, reads via signed URL) | Verified live end-to-end: upload, 403 on unauthenticated access, signed URL, direct fetch |
 | Auth | Unchanged custom code (bcrypt+JWT organizer, tokenized participant links) | No change required |
 | LLM | Unchanged pluggable `LLM_PROVIDER` | No change required |
@@ -232,10 +286,11 @@ as an experiment behind the same interface, not a dependency of this migration.
    for this design — left unresolved deliberately.
 3. **Slate** hasn't been hands-on verified this session (lower risk, deprioritized in favor
    of the compute/storage/DB questions that were genuinely uncertain).
-4. **Tripper needs its own Supabase project.** The pooler-host connectivity spike used
-   splitease's project purely for a hostname-level TCP-connect test (no credentials, no data
-   touched). A real Supabase project for Tripper, and its own pooler connection string, is
-   still needed before implementation.
+4. ~~Tripper needs its own Neon project, plus a small spike.~~ **DONE 2026-08-01** — project
+   created (`us-east-2`), full spike run from the real AppSail instance; all results VERIFIED
+   in §3.4 (connectivity, nested savepoints, env vars, node22 stack, TLS termination, cookie
+   round-trip). (The earlier Supavisor pooler-host spike is superseded — kept in §3.4 as an
+   egress-behavior record.)
 5. Three throwaway spike resources (`payloadSpike` function, `spikeappsail` AppSail instance,
    the `tripper` Stratus bucket's one uploaded test PDF) are still live on the real
    `project-rainfall` Catalyst project. AppSail's scale-to-zero means no ongoing compute
@@ -245,8 +300,8 @@ as an experiment behind the same interface, not a dependency of this migration.
 
 ## 6. Non-goals of this migration
 
-- Not adopting Supabase Auth or Catalyst Authentication for organizer or participant login —
-  the current custom scheme stays.
+- Not adopting any platform auth (Catalyst Authentication; Neon has no auth product) for
+  organizer or participant login — the current custom scheme stays.
 - Not adopting Catalyst QuickML/any Zoho LLM service now — the pluggable provider stays.
 - Not decommissioning the Oracle VM — the portable design means it remains a valid fallback
   target for the same app, not an either/or decision.

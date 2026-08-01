@@ -1,12 +1,17 @@
-# Next steps: Zoho Catalyst + Supabase migration
+# Next steps: Zoho Catalyst + Neon migration
 
-Status: pre-plan — this is a scoping/checklist document, **not** an implementation plan.
-Read this, then write the actual task-by-task plan (per `superpowers:writing-plans`) once
-the items below are resolved or explicitly deferred.
+(Revised 2026-08-01: database host changed from Supabase to Neon — see the design doc's
+§3.4 for the rationale. Filename kept for link stability.)
+
+Status: **superseded 2026-08-01** — the implementation plan now exists:
+`2026-08-01-neon-appsail-migration-plan.md`. Everything below is either resolved (marked
+inline), encoded in that plan, or explicitly deferred there. Kept as the record of what was
+checked and decided.
 
 **Read first:** `docs/superpowers/specs/2026-07-30-zoho-supabase-deployment-design.md`. It
-records the architecture decision (AppSail for the API, Supabase Postgres for the DB, Zoho
-Stratus for file storage, Slate for the frontend, auth unchanged) and what's already been
+records the architecture decision (AppSail for the API, **Neon** Postgres for the DB —
+revised from Supabase 2026-08-01, see its §3.4 — Zoho Stratus for file storage, Slate for
+the frontend, auth unchanged) and what's already been
 verified live vs. only documented vs. still open. Don't re-derive any of that — this doc
 picks up where it left off.
 
@@ -24,46 +29,52 @@ don't reason from docs alone when the docs have already proven incomplete once).
   `web/dist` (or even a placeholder) and confirm it actually serves and routes correctly
   (SPA fallback routing in particular — does Slate need config for that, the way most static
   hosts do?).
-- Tripper doesn't have its own Supabase project yet — the pooler-host DNS fix was verified
-  against a different app's project, hostname only. Creating Tripper's own project and its
-  real connection string is still pending.
+- ~~Tripper doesn't have its own Neon project yet.~~ **DONE 2026-08-01** — project created
+  (`us-east-2`), spike run from the real AppSail instance, all green: wss connectivity (both
+  hosts), nested-savepoint transaction PASS, node22 stack + native WebSocket. Full results
+  in the design doc §3.4. Connection strings live in `server/.env.spike` (git-ignored).
 - Three throwaway spike resources are still sitting on the real Catalyst project
   (`payloadSpike` function, `spikeappsail` AppSail instance, one test PDF in the `tripper`
   Stratus bucket) — decide whether to clean these up before or after the real build starts.
 
 ## 2. Things nobody has checked yet at all
 
-- **How does AppSail actually receive environment variables / secrets?** The Supabase
-  connection string, `JWT_SECRET`, LLM API keys, etc. all need to reach the running process
-  somehow. Not researched this session — check Catalyst's docs and/or just try it against
-  the existing spike AppSail instance before assuming a mechanism.
-- **Does AppSail terminate TLS for you**, or does it hand you plain HTTP the way the current
-  Oracle/docker-compose setup does (where a separate reverse proxy handles HTTPS)? The
-  README's current "the app never terminates TLS itself" assumption may or may not still
-  hold — check before assuming either way.
+- ~~How does AppSail actually receive environment variables / secrets?~~ **VERIFIED
+  2026-08-01**: `app-config.json` → `env_variables` map lands in `process.env` on the
+  deployed instance (both Neon connection strings arrived). Note: the values sit in
+  plaintext in `app-config.json`, so that file must stay out of git for the real app.
+- ~~Does AppSail terminate TLS for you?~~ **VERIFIED 2026-08-01**: yes — app listens plain
+  HTTP on `X_ZOHO_CATALYST_LISTEN_PORT`, public URL is HTTPS. Current "app never terminates
+  TLS" assumption holds unchanged.
 - **What does the AppSail deployment config actually look like** for the real app (not the
   spike) — memory allocation, any health-check path, `app-config.json`/`catalyst-config.json`
   contents, how a Docker-image deploy differs operationally from the source+command mode the
   spike used. The spike used the simplest possible mode; the real app may want the Docker
   image path instead, given it already has a working multi-stage `Dockerfile`.
-- **Cookie/session behavior through Catalyst's gateway** — the organizer login flow relies on
-  an httpOnly cookie (`tp_session`). Confirm cookies round-trip correctly through whatever
-  proxying AppSail/API Gateway does, rather than assuming it's transparent.
-- **Region choice** — pick a Supabase region and confirm it's sensible relative to wherever
-  AppSail actually runs, for latency. Not discussed at all yet.
+- ~~Cookie/session behavior through Catalyst's gateway~~ **VERIFIED 2026-08-01**: an
+  app-set `HttpOnly; SameSite=Lax` cookie passed the gateway unmodified and rode back on
+  the next request. The gateway injects its own `zalb_*`/`ZD_CSRF_TOKEN` cookies alongside —
+  harmless, the app ignores unknown cookies.
+- ~~Region choice~~ **DONE 2026-08-01**: Neon `us-east-2`; measured ~85-100ms warm queries
+  from AppSail (AppSail runs US-side), ~80ms/statement in transactions. Acceptable; noted
+  that N-statement transactions cost ~N×80ms — keep hot paths to few statements.
 
 ## 3. Mechanical migration scope (sizing, not solving)
 
 The design doc already did a code-level read of this; treat the estimate below as a starting
 point to confirm or correct, not to re-derive from scratch:
 
-- Every route file's DB calls go from synchronous (`better-sqlite3`) to async (`pg` via the
-  Supavisor pooler) — touches all ~13 files under `server/src/routes/`.
+- Every route file's DB calls go from synchronous (`better-sqlite3`) to async
+  (`@neondatabase/serverless`, pg-compatible `Pool`/`Client` over WebSocket — WebSocket mode
+  is required for interactive transactions/savepoints; don't mix in the HTTP `neon()` mode) —
+  touches all ~15 files under `server/src/routes/`, ~148 `prepare()` calls.
 - `?`-positional SQL placeholders need to become `$1, $2, ...`.
-- The one existing `db.transaction(...)` usage (`trips.routes.js`, date windows) needs a
-  small async transaction helper — confirm whether any *other* route relies on
-  better-sqlite3's implicit synchronous consistency in a way that isn't obvious from a
-  first read (e.g. read-after-write within one handler).
+- **14 `db.transaction(...)` call sites across 7 route files** (not one — the design doc's
+  original count was wrong; corrected there 2026-08-01): trips, itinerary ×5, destinations,
+  budget ×2, checklists ×2, archive ×3. The async helper must support **savepoint nesting**
+  (`itinerary.routes.js` nests transactions deliberately). Also confirm whether any route
+  relies on better-sqlite3's implicit synchronous consistency in a way that isn't obvious
+  from a first read (e.g. read-after-write within one handler).
 - `documents.routes.js` (or wherever uploads/downloads currently touch local disk) needs to
   move to Stratus: writes go through the app, reads return a signed URL instead of proxying
   bytes — confirm every current call site that touches `UPLOADS_DIR` or serves a file.
