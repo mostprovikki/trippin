@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
+import { mkdtempSync, existsSync, readdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { makeTestApp, loginOrganizer, authedInject, createPerson, createTrip } from './helpers.js'
+import { makeLocalStorage } from '../src/storage/local.js'
 
 function pdfBlob(sizeBytes = 20, byte = 0x61) {
   return new Blob([Buffer.alloc(sizeBytes, byte)], { type: 'application/pdf' })
@@ -68,6 +72,76 @@ describe('documents', () => {
     const ok = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: okForm })
     expect(ok.statusCode).toBe(201)
     expect(ok.json().document.doc_type).toBe('other')
+  })
+
+  // app.storage.put() runs inside the multipart parts loop, before doc_type can be
+  // validated, so a 400 used to leave the object sitting in the bucket forever with no
+  // documents row pointing at it and nothing that would ever clean it up.
+  it('a rejected upload leaves no stored object behind', async () => {
+    const uploadsDir = mkdtempSync(join(tmpdir(), 'tp-orphan-'))
+    const { app, db } = await makeTestApp({ storage: makeLocalStorage({ uploadsDir }) })
+    const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
+
+    const badForm = new FormData()
+    badForm.append('file', pdfBlob(10), 'x.pdf')
+    badForm.append('doc_type', 'junk')
+    const bad = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: badForm })
+    expect(bad.statusCode).toBe(400)
+    expect(bad.json().error.code).toBe('BAD_DOC_TYPE')
+
+    const personDir = join(uploadsDir, p.id)
+    expect(existsSync(personDir) ? readdirSync(personDir) : []).toEqual([])
+    expect((await db.get('SELECT COUNT(*)::int AS c FROM documents')).c).toBe(0)
+
+    // and a good upload through the same storage still lands
+    const okForm = new FormData()
+    okForm.append('file', pdfBlob(10), 'x.pdf')
+    okForm.append('doc_type', 'other')
+    const ok = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: okForm })
+    expect(ok.statusCode).toBe(201)
+    expect(readdirSync(personDir)).toHaveLength(1)
+  })
+
+  // The prod driver (Stratus) returns a signed URL instead of a stream, and no test has
+  // ever run that branch — sendDoc's redirect was reachable only on AppSail.
+  it('sendDoc 302-redirects when the storage driver returns a {url}, and file_path holds the storage key', async () => {
+    const seen = {}
+    const fakeSignedUrlStorage = {
+      // A driver MUST drain the part stream — @fastify/multipart will not advance to the
+      // next part until it is consumed (both real drivers do this).
+      async put(_req, key, readable) {
+        seen.putKey = key
+        let size = 0
+        for await (const c of readable) size += c.length
+        return { size }
+      },
+      async getDownload(_req, args) { seen.getArgs = args; return { url: 'https://stratus.example/signed?sig=abc' } },
+      async remove() {},
+    }
+    const { app, db } = await makeTestApp({ storage: fakeSignedUrlStorage })
+    const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
+
+    const form = new FormData()
+    form.append('file', pdfBlob(10), 'passport.pdf')
+    form.append('doc_type', 'passport')
+    const up = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: form })
+    expect(up.statusCode).toBe(201)
+    const doc = up.json().document
+
+    // Contract change from the sqlite build: file_path is a storage key, not a filesystem path.
+    const row = await db.get('SELECT file_path FROM documents WHERE id = ?', [doc.id])
+    expect(row.file_path).toBe(`${p.id}/${doc.id}`)
+    expect(seen.putKey).toBe(`${p.id}/${doc.id}`)
+
+    const dl = await authedInject(app, cookie, { method: 'GET', url: `/api/documents/${doc.id}/file` })
+    expect(dl.statusCode).toBe(302)
+    expect(dl.headers.location).toBe('https://stratus.example/signed?sig=abc')
+    // sendDoc hands the driver the filename and mime it would need to set download
+    // headers. The Stratus SDK has no way to attach them to a signed URL (see the
+    // KNOWN GAP note in src/storage/stratus.js), so the redirect currently drops both.
+    expect(seen.getArgs).toEqual({ key: `${p.id}/${doc.id}`, filename: 'passport.pdf', mime: 'application/pdf' })
   })
 
   it('rejects oversize upload (11 MB) with 413', async () => {

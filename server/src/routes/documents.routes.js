@@ -30,6 +30,10 @@ export default async function routes(app) {
       } else fields[part.fieldname] = part.value
     }
     if (!file || !DOC_TYPES.includes(fields.doc_type)) {
+      // Multipart field order is the client's choice, so the file part can arrive — and
+      // therefore be stored — before doc_type is even readable. Validate-then-write is
+      // not available here; the next best thing is that a refusal leaves nothing behind.
+      if (file) await app.storage.remove(req, file.key)
       httpError(reply, 400, 'BAD_DOC_TYPE', 'file and valid doc_type required')
       return null
     }

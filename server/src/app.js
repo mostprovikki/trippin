@@ -7,11 +7,12 @@ import { makeStorage } from './storage/index.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
-export async function buildApp({ db }) {
+// `storage` is an injection seam for tests only — prod/dev always take makeStorage().
+export async function buildApp({ db, storage }) {
   await runMigrations(db)
   const app = Fastify({ logger: process.env.NODE_ENV !== 'test' })
   app.decorate('db', db)
-  app.decorate('storage', await makeStorage())
+  app.decorate('storage', storage ?? await makeStorage())
   app.addHook('onClose', () => db.close())
   await app.register(autoload, { dir: join(here, 'plugins') })
   await app.register(autoload, { dir: join(here, 'routes'), options: { prefix: '/api' } })
