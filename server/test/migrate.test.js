@@ -39,4 +39,27 @@ describe('runMigrations', () => {
     const row = await db.get('SELECT applied_at FROM _migrations LIMIT 1')
     expect(row.applied_at).toMatch(TS_RE)
   })
+
+  // Two AppSail instances boot at once against the same fresh database. Without
+  // pg_advisory_xact_lock both read an empty ledger, both run 001_init.sql, and the
+  // loser dies on `relation "organizers" already exists`.
+  it('two concurrent boots apply the migration exactly once (advisory lock)', async () => {
+    const raceSchema = `migrace_${process.pid}`
+    const admin = await makeDb({ url: TEST_URL, driver: 'pg' })
+    await admin.exec(`DROP SCHEMA IF EXISTS ${raceSchema} CASCADE`)
+    await admin.exec(`CREATE SCHEMA ${raceSchema}`)
+    // Separate pools = separate backends, so these really do overlap.
+    const a = await makeDb({ url: TEST_URL, driver: 'pg', searchPath: raceSchema })
+    const b = await makeDb({ url: TEST_URL, driver: 'pg', searchPath: raceSchema })
+    try {
+      const results = await Promise.allSettled([runMigrations(a), runMigrations(b)])
+      expect(results.filter((r) => r.status === 'rejected').map((r) => String(r.reason))).toEqual([])
+      expect(await a.all('SELECT name FROM _migrations')).toHaveLength(1)
+      expect((await a.get('SELECT COUNT(*)::int AS c FROM organizers')).c).toBe(0)
+    } finally {
+      await a.close(); await b.close()
+      await admin.exec(`DROP SCHEMA IF EXISTS ${raceSchema} CASCADE`)
+      await admin.close()
+    }
+  })
 })

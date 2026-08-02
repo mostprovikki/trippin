@@ -38,7 +38,12 @@ CREATE TABLE trip_date_windows (
 );
 CREATE TABLE trip_goals (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  title TEXT NOT NULL, fixed_date TEXT, fixed_place TEXT, notes TEXT
+  title TEXT NOT NULL, fixed_date TEXT, fixed_place TEXT, notes TEXT,
+  -- Goals have no position/created_at, so insertion order — which is what the
+  -- organizer typed and what sqlite's rowid returned for free — is otherwise
+  -- unrecoverable in Postgres. Same reason and same shape as
+  -- destination_candidates.seq below; every trip_goals read ORDERs BY it.
+  seq BIGINT GENERATED ALWAYS AS IDENTITY
 );
 CREATE TABLE trip_participants (
   trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
@@ -56,7 +61,7 @@ CREATE TABLE participant_links (
 );
 CREATE TABLE destination_candidates (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  name TEXT NOT NULL, rationale TEXT, best_dates TEXT, est_budget_per_person REAL, caveats TEXT,
+  name TEXT NOT NULL, rationale TEXT, best_dates TEXT, est_budget_per_person DOUBLE PRECISION, caveats TEXT,
   source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('ai','manual')),
   decided INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
   -- Monotonic insertion-order tiebreak for candidates sharing the same
@@ -65,16 +70,20 @@ CREATE TABLE destination_candidates (
   -- (ctid is a physical locator, not insertion order, and reshuffles on UPDATE/VACUUM).
   seq BIGINT GENERATED ALWAYS AS IDENTITY
 );
+-- Money columns are DOUBLE PRECISION, never REAL and never NUMERIC. sqlite's REAL
+-- was a double; Postgres REAL is float4 (~7 significant digits), which silently
+-- rounds INR budgets above ~131k. NUMERIC would be exact but node-postgres returns
+-- it as a *string*, which breaks the byte-identical JSON contract this migration exists to protect.
 CREATE TABLE budget_lines (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
   category TEXT NOT NULL CHECK (category IN ('primary_transport','secondary_transport','stay','food','activities','shopping','leisure','misc')),
-  estimate REAL NOT NULL DEFAULT 0, basis TEXT,
+  estimate DOUBLE PRECISION NOT NULL DEFAULT 0, basis TEXT,
   UNIQUE (trip_id, category)
 );
 CREATE TABLE budget_overrides (
   id TEXT PRIMARY KEY, trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
   person_id TEXT NOT NULL REFERENCES persons(id),
-  amount REAL NOT NULL, note TEXT,
+  amount DOUBLE PRECISION NOT NULL, note TEXT,
   UNIQUE (trip_id, person_id)
 );
 CREATE TABLE itinerary_days (
@@ -86,7 +95,7 @@ CREATE TABLE itinerary_items (
   id TEXT PRIMARY KEY, day_id TEXT NOT NULL REFERENCES itinerary_days(id) ON DELETE CASCADE,
   position INTEGER NOT NULL, title TEXT NOT NULL, time_range TEXT, location TEXT,
   category TEXT NOT NULL DEFAULT 'activity' CHECK (category IN ('travel','food','activity','rest','logistics')),
-  est_cost REAL, notes TEXT, link TEXT
+  est_cost DOUBLE PRECISION, notes TEXT, link TEXT
 );
 CREATE TABLE checklists (
   id TEXT PRIMARY KEY,
@@ -110,7 +119,7 @@ CREATE TABLE archives (
 );
 CREATE TABLE actuals (
   trip_id TEXT NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
-  category TEXT NOT NULL, amount REAL NOT NULL,
+  category TEXT NOT NULL, amount DOUBLE PRECISION NOT NULL,
   PRIMARY KEY (trip_id, category)
 );
 CREATE INDEX idx_documents_person ON documents(person_id);

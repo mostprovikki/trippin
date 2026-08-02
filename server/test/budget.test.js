@@ -19,6 +19,36 @@ describe('budget', () => {
     expect(res.total).toBe(18000)
     expect(res.equal_share).toBe(7500)   // (18000-3000)/2
   })
+  // Money columns must be DOUBLE PRECISION. Postgres REAL is float4 (~7 significant
+  // digits), so a routine seven-figure INR budget would come back as 1234567.875 —
+  // silently wrong, and wrong in the JSON body this whole migration exists to keep
+  // byte-identical. NUMERIC is not the fix either: node-postgres returns numeric as a
+  // string, so `typeof` would stop being 'number'.
+  it('round-trips a 7-figure amount through the budget API without precision loss', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const t = await createTrip(db)
+    const AMOUNT = 1234567.89
+
+    const put = await authedInject(app, cookie, { method: 'PUT', url: `/api/trips/${t.id}/budget`,
+      payload: { lines: [{ category: 'stay', estimate: AMOUNT }] } })
+    expect(put.statusCode).toBe(200)
+    const stay = put.json().lines.find((l) => l.category === 'stay')
+    expect(typeof stay.estimate).toBe('number')
+    expect(stay.estimate).toBe(AMOUNT)
+    expect(put.json().total).toBe(AMOUNT)
+
+    const get = (await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}/budget` })).json()
+    expect(get.lines.find((l) => l.category === 'stay').estimate).toBe(AMOUNT)
+    expect(get.total).toBe(AMOUNT)
+
+    // actuals.amount and destination_candidates.est_budget_per_person are the same
+    // hazard on the same kind of number.
+    await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/archive`, payload: {} })
+    const actuals = await authedInject(app, cookie, { method: 'PUT', url: `/api/trips/${t.id}/actuals`,
+      payload: { actuals: [{ category: 'stay', amount: AMOUNT }] } })
+    expect(actuals.json().actuals).toEqual([{ category: 'stay', amount: AMOUNT }])
+  })
+
   it('ai-draft returns validated lines from mock, saves nothing; 503 when disabled', async () => {
     process.env.LLM_PROVIDER = 'mock'
     const { queueMock } = await import('../src/llm/drivers/mock.js')
