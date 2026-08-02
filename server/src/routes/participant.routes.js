@@ -19,7 +19,7 @@ export default async function routes(app) {
   app.get('/participant/me', { preHandler: app.requireParticipant }, async (req) => {
     const { tripId, personId } = req.participant
     const trip = await app.db.get('SELECT * FROM trips WHERE id = ?', [tripId])
-    const goals = await app.db.all('SELECT title, fixed_date, fixed_place FROM trip_goals WHERE trip_id = ?', [tripId])
+    const goals = await app.db.all('SELECT title, fixed_date, fixed_place FROM trip_goals WHERE trip_id = ? ORDER BY seq', [tripId])
     const tp = await app.db.get('SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?', [tripId, personId])
     const person = personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId]))
     return {

@@ -10,7 +10,7 @@ export async function tripToJson(db, row) {
     ...row,
     vibe_tags: JSON.parse(row.vibe_tags || '[]'),
     windows: await db.all('SELECT id,start_date,end_date,note FROM trip_date_windows WHERE trip_id = ? ORDER BY start_date', [row.id]),
-    goals: await db.all('SELECT id,title,fixed_date,fixed_place,notes FROM trip_goals WHERE trip_id = ?', [row.id]),
+    goals: await db.all('SELECT id,title,fixed_date,fixed_place,notes FROM trip_goals WHERE trip_id = ? ORDER BY seq', [row.id]),
     participants: await db.all(`SELECT tp.person_id, p.name, tp.profile_confirmed FROM trip_participants tp
       JOIN persons p ON p.id = tp.person_id WHERE tp.trip_id = ? ORDER BY p.name`, [row.id]),
   }
@@ -27,8 +27,8 @@ export default async function routes(app) {
   app.get('/trips', { preHandler: app.requireOrganizer }, async (req) => {
     const { status } = req.query || {}
     const rows = status
-      ? await app.db.all('SELECT * FROM trips WHERE organizer_id = ? AND status = ? ORDER BY created_at DESC', [req.organizer.id, status])
-      : await app.db.all('SELECT * FROM trips WHERE organizer_id = ? ORDER BY created_at DESC', [req.organizer.id])
+      ? await app.db.all('SELECT * FROM trips WHERE organizer_id = ? AND status = ? ORDER BY created_at DESC, id', [req.organizer.id, status])
+      : await app.db.all('SELECT * FROM trips WHERE organizer_id = ? ORDER BY created_at DESC, id', [req.organizer.id])
     const trips = []
     for (const row of rows) {
       const { count } = await app.db.get('SELECT COUNT(*)::int AS count FROM trip_participants WHERE trip_id = ?', [row.id])

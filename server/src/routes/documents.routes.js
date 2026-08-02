@@ -68,7 +68,7 @@ export default async function routes(app) {
 
   app.get('/people/:personId/documents', { preHandler: app.requireOrganizer }, async (req, reply) => {
     if (!(await app.ownedPerson(req, req.params.personId))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
-    const rows = await app.db.all('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at', [req.params.personId])
+    const rows = await app.db.all('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at, id', [req.params.personId])
     return { documents: rows.map(docJson) }
   })
 
@@ -93,7 +93,7 @@ export default async function routes(app) {
   })
 
   app.get('/participant/documents', { preHandler: app.requireParticipant }, async (req) => {
-    const rows = await app.db.all('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at', [req.participant.personId])
+    const rows = await app.db.all('SELECT * FROM documents WHERE person_id = ? ORDER BY uploaded_at, id', [req.participant.personId])
     return { documents: rows.map(docJson) }
   })
 

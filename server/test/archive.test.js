@@ -63,9 +63,9 @@ describe('archive routes', () => {
       }
     }
 
-    // 3 checklists x 2 items — checklist order is not guaranteed (no ORDER BY on that
-    // query), so checklists are matched by name; item order within a checklist is
-    // guaranteed (itemsForChecklist orders by position) and must be verified.
+    // 3 checklists x 2 items. The archive snapshot is a write-once immutable blob, so
+    // its checklist order is frozen forever and cannot be re-derived — checklistsSnapshot
+    // therefore ORDER BYs, and this asserts the exact order, not a name-keyed match.
     const checklistNames = ['Packing A', 'Packing B', 'Tasks C']
     for (const name of checklistNames) {
       const checklistId = randomUUID()
@@ -79,21 +79,13 @@ describe('archive routes', () => {
       }
     }
 
-    // Reentrant client.query() inside a tx's single pinned client only shows up as a
-    // process-level DeprecationWarning (pg still serializes and returns correct data),
-    // so a plain content assertion below would not fail on that regression by itself —
-    // capture warnings during the call so this test gates on it directly.
-    const warnings = []
-    const onWarning = (w) => warnings.push(w)
-    process.on('warning', onWarning)
-    let res
-    try {
-      res = await authedInject(app, cookie, {
-        method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {}
-      })
-    } finally {
-      process.off('warning', onWarning)
-    }
+    // This handler builds its whole snapshot inside db.tx(). db.tx() now rejects any
+    // reentrant query on its pinned client (see src/db.js `pinned`), so reintroducing a
+    // Promise.all of db calls anywhere under this route turns this 200 into a 500 —
+    // no process-level warning sniffing required.
+    const res = await authedInject(app, cookie, {
+      method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {}
+    })
     expect(res.statusCode).toBe(200)
     const { snapshot } = res.json().archive
 
@@ -103,15 +95,31 @@ describe('archive routes', () => {
       expect(day.items.map((it) => it.title)).toEqual([`Day${d} Item0`, `Day${d} Item1`])
     })
 
-    expect(snapshot.checklists).toHaveLength(3)
-    const byName = Object.fromEntries(snapshot.checklists.map((c) => [c.name, c]))
-    for (const name of checklistNames) {
-      expect(byName[name].items.map((it) => it.title)).toEqual([`${name} item0`, `${name} item1`])
-    }
+    expect(snapshot.checklists.map((c) => c.name)).toEqual(checklistNames)
+    snapshot.checklists.forEach((c) => {
+      expect(c.items.map((it) => it.title)).toEqual([`${c.name} item0`, `${c.name} item1`])
+    })
+  })
 
-    expect(warnings.map((w) => w.message)).not.toEqual(
-      expect.arrayContaining([expect.stringContaining('already executing a query')])
-    )
+  // The gate the test above relies on, asserted directly. This used to be a
+  // process.on('warning') sniff for pg's "already executing a query" deprecation, which
+  // util.deprecate emits once per process no matter how many times it fires — so it only
+  // ever worked by accident of test ordering and per-file process isolation, and pg v9
+  // removes the warning entirely. The guard now lives in db.tx itself.
+  it('db.tx rejects concurrent queries on its pinned client', async () => {
+    await expect(db.tx(async () => {
+      await Promise.all([
+        db.get('SELECT 1 AS a'),
+        db.get('SELECT 2 AS b'),
+      ])
+    })).rejects.toThrow(/concurrent query on the transaction client/)
+
+    // ...and the same statements awaited one at a time are still fine.
+    await expect(db.tx(async () => {
+      await db.get('SELECT 1 AS a')
+      await db.get('SELECT 2 AS b')
+      return 'ok'
+    })).resolves.toBe('ok')
   })
 
   it('409 ALREADY_ARCHIVED on re-archive', async () => {

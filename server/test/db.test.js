@@ -53,6 +53,37 @@ describe('makeDb (pg driver)', () => {
     expect(await db.get('SELECT * FROM kv WHERE k = ?', ['after'])).toBeTruthy()
   })
 
+  // A serial test suite cannot tell correct AsyncLocalStorage client pinning apart from
+  // one connection handed to two requests — both look fine when nothing overlaps. Under
+  // real Fastify concurrency the second failure mode is cross-transaction corruption:
+  // one request's ROLLBACK would discard the other's committed work. So overlap them.
+  it('overlapping db.tx() calls get different clients (commit and rollback do not bleed)', async () => {
+    let releaseCommitter
+    const committerReachedBarrier = new Promise((r) => { releaseCommitter = r })
+    let releaseRoller
+    const rollerReachedBarrier = new Promise((r) => { releaseRoller = r })
+
+    // Both transactions are open at the same time, each having already written, before
+    // either finishes — so they must be holding two distinct clients.
+    const committing = db.tx(async () => {
+      await db.run('INSERT INTO kv (k, v) VALUES (?, ?)', ['tx_commit', 1])
+      releaseRoller()
+      await committerReachedBarrier
+    })
+    const rollingBack = db.tx(async () => {
+      await db.run('INSERT INTO kv (k, v) VALUES (?, ?)', ['tx_rollback', 2])
+      releaseCommitter()
+      await rollerReachedBarrier
+      throw new Error('roll me back')
+    }).catch((e) => e)
+
+    await committing
+    expect((await rollingBack).message).toBe('roll me back')
+
+    expect(await db.get('SELECT * FROM kv WHERE k = ?', ['tx_commit'])).toBeTruthy()
+    expect(await db.get('SELECT * FROM kv WHERE k = ?', ['tx_rollback'])).toBeUndefined()
+  })
+
   it('statements inside tx share one connection (temp table visible)', async () => {
     await db.tx(async () => {
       await db.exec('CREATE TEMP TABLE tmp_tx (i INT) ON COMMIT DROP')

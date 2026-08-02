@@ -25,7 +25,7 @@ export default async function routes(app) {
     const links = await app.db.all(
       `SELECT l.id, l.person_id, p.name AS person_name, l.created_at, l.expires_at, l.revoked_at
        FROM participant_links l JOIN persons p ON p.id = l.person_id
-       WHERE l.trip_id = ? ORDER BY l.created_at DESC`,
+       WHERE l.trip_id = ? ORDER BY l.created_at DESC, l.id`,
       [req.params.tripId]
     )
     return { links }

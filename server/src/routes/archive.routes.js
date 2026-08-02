@@ -30,7 +30,12 @@ async function itinerarySnapshot(db, tripId) {
 }
 
 async function checklistsSnapshot(db, tripId) {
-  const rows = await db.all('SELECT * FROM checklists WHERE trip_id = ?', [tripId])
+  // The archive snapshot is a write-once immutable JSON blob: whatever order this
+  // captures is frozen forever and cannot be re-derived. Postgres heap order is
+  // unspecified and shifts after any UPDATE, so order explicitly. `name` matches how
+  // checklists.routes.js lists checklists everywhere else; `id` (a UUID) breaks ties,
+  // since checklists.name carries no uniqueness constraint.
+  const rows = await db.all('SELECT * FROM checklists WHERE trip_id = ? ORDER BY name, id', [tripId])
   const out = []
   for (const row of rows) out.push(await checklistToJson(db, row))
   return out
@@ -88,7 +93,7 @@ export default async function routes(app) {
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const archive = await getArchive(trip.id)
     if (!archive) return httpError(reply, 404, 'NOT_ARCHIVED', 'Trip has not been archived')
-    const actuals = await db.all('SELECT category, amount FROM actuals WHERE trip_id = ?', [trip.id])
+    const actuals = await db.all('SELECT category, amount FROM actuals WHERE trip_id = ? ORDER BY category', [trip.id])
     return { archive: archiveToJson(archive), actuals }
   })
 
@@ -120,7 +125,7 @@ export default async function routes(app) {
       await db.run('DELETE FROM actuals WHERE trip_id = ?', [trip.id])
       for (const a of actuals) await db.run('INSERT INTO actuals (trip_id, category, amount) VALUES (?, ?, ?)', [trip.id, a.category, a.amount])
     })
-    return { actuals: await db.all('SELECT category, amount FROM actuals WHERE trip_id = ?', [trip.id]) }
+    return { actuals: await db.all('SELECT category, amount FROM actuals WHERE trip_id = ? ORDER BY category', [trip.id]) }
   })
 
   app.post('/trips/:id/clone', { preHandler: app.requireOrganizer }, async (req, reply) => {
@@ -135,7 +140,7 @@ export default async function routes(app) {
         VALUES (?, ?, ?, 'idea', ?, ?, ?, 'open')`,
         [newId, req.organizer.id, name, trip.vibe_tags, trip.origin_city, trip.currency])
 
-      const goals = await db.all('SELECT title, notes FROM trip_goals WHERE trip_id = ?', [trip.id])
+      const goals = await db.all('SELECT title, notes FROM trip_goals WHERE trip_id = ? ORDER BY seq', [trip.id])
       for (const g of goals) await db.run(
         'INSERT INTO trip_goals (id, trip_id, title, fixed_date, fixed_place, notes) VALUES (?, ?, ?, NULL, NULL, ?)',
         [randomUUID(), newId, g.title, g.notes]

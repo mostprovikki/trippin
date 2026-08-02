@@ -55,15 +55,15 @@ export default async function routes(app) {
   app.get('/checklists', { preHandler: app.requireOrganizer }, async (req) => {
     const templateOnly = req.query?.template === '1' || req.query?.template === 1
     const rows = templateOnly
-      ? await db.all('SELECT * FROM checklists WHERE is_template = 1 AND organizer_id = ? ORDER BY name', [req.organizer.id])
-      : await db.all('SELECT * FROM checklists WHERE organizer_id = ? ORDER BY name', [req.organizer.id])
+      ? await db.all('SELECT * FROM checklists WHERE is_template = 1 AND organizer_id = ? ORDER BY name, id', [req.organizer.id])
+      : await db.all('SELECT * FROM checklists WHERE organizer_id = ? ORDER BY name, id', [req.organizer.id])
     return { checklists: await Promise.all(rows.map((r) => checklistToJson(db, r))) }
   })
 
   app.get('/trips/:tripId/checklists', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await app.ownedTrip(req, req.params.tripId)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
-    const rows = await db.all('SELECT * FROM checklists WHERE trip_id = ? ORDER BY name', [trip.id])
+    const rows = await db.all('SELECT * FROM checklists WHERE trip_id = ? ORDER BY name, id', [trip.id])
     return { checklists: await Promise.all(rows.map((r) => checklistToJson(db, r))) }
   })
 
