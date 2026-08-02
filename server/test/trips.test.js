@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { makeTestApp, loginOrganizer, authedInject, createPerson } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createPerson, createOrganizer } from './helpers.js'
 
 async function mkTrip(app, cookie, extra = {}) {
   return (await authedInject(app, cookie, { method: 'POST', url: '/api/trips',
@@ -15,6 +15,24 @@ describe('trips', () => {
     expect(t.participants).toEqual([{ person_id: p.id, name: p.name, profile_confirmed: 0 }])
     expect(t.windows).toEqual([])
     expect(t.goals).toEqual([])
+  })
+
+  // The ownership check used to run inside the participant insert loop with no enclosing
+  // transaction, so an unowned id 404'd only after the trip — and any participants listed
+  // before it — had already been committed. A refusal must leave no partial state.
+  it('POST /trips with one owned and one unowned participant 404s and creates nothing', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const mine = await createPerson(db, { name: 'Mine' })
+    const rival = await createOrganizer(db, { email: 'rival@x.dev', name: 'Rival' })
+    const other = await createPerson(db, { name: 'Theirs', organizer_id: rival.id })
+
+    const res = await authedInject(app, cookie, { method: 'POST', url: '/api/trips',
+      payload: { name: 'Half-written', participant_ids: [mine.id, other.id] } })
+    expect(res.statusCode).toBe(404)
+    expect(res.json().error.code).toBe('NOT_FOUND')
+
+    expect((await db.get('SELECT COUNT(*)::int AS c FROM trips')).c).toBe(0)
+    expect((await db.get('SELECT COUNT(*)::int AS c FROM trip_participants')).c).toBe(0)
   })
 
   it('POST /api/trips returns 201', async () => {

@@ -74,7 +74,16 @@ describe('destinations', () => {
     // column must.
     queueMock({ candidates: AI_CANDIDATES })
     const suggest = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates/ai-suggest` })
-    const [goa, manali, rishikesh] = suggest.json().candidates
+    const [goa, manali] = suggest.json().candidates
+
+    // The premise of this test is that all 3 rows land inside the same to_char() second.
+    // If the batch straddles a second boundary, created_at alone decides the order, the
+    // seq tiebreak is never exercised, and the assertions below pass without testing
+    // anything. Fail loudly on the straddle instead of passing vacuously.
+    const createdAts = (await db.all(
+      'SELECT created_at FROM destination_candidates WHERE trip_id = ?', [trip.id])).map((r) => r.created_at)
+    expect(createdAts).toHaveLength(3)
+    expect(new Set(createdAts).size).toBe(1)
 
     // Exercise decide()'s transaction repeatedly. Its blanket
     // "SET decided = 0 WHERE trip_id = ?" rewrites every row's tuple (and
@@ -88,7 +97,6 @@ describe('destinations', () => {
     // Goa (decided) sorts first; Manali/Rishikesh are both decided=0 and tie
     // on created_at, so they must keep their original insertion order.
     expect(names).toEqual(['Goa', 'Manali', 'Rishikesh'])
-    expect(goa.id).toBeTruthy(); expect(manali.id).toBeTruthy(); expect(rishikesh.id).toBeTruthy()
   })
 
   it('decide flips trip destination/destination_mode and un-decides others', async () => {

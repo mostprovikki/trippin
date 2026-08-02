@@ -1,18 +1,41 @@
 import bcrypt from 'bcryptjs'
 import { randomUUID } from 'node:crypto'
+import { afterAll } from 'vitest'
 import { makeDb } from '../src/db.js'
 import { buildApp } from '../src/app.js'
 
 const TEST_URL = process.env.TEST_DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test'
 let n = 0
 
-export async function makeTestApp() {
+// One admin connection per test file, not one per makeTestApp() call. Each makeDb() is
+// a real pg Pool; a file with a dozen makeTestApp() calls was opening (and never closing)
+// two dozen of them against a cluster whose max_connections is 100.
+let adminDb = null
+const admin = async () => (adminDb ||= await makeDb({ url: TEST_URL, driver: 'pg' }))
+
+// Every schema and pool this file hands out, so they can be torn down at file end.
+// vitest hooks registered at module scope attach to the importing test file's suite,
+// and `isolate: true` (the default) gives each file its own module instance.
+const created = []
+
+afterAll(async () => {
+  for (const { db, schema } of created.splice(0)) {
+    await db.close().catch(() => {})
+    await (await admin()).exec(`DROP SCHEMA IF EXISTS ${schema} CASCADE`).catch(() => {})
+  }
+  if (adminDb) { await adminDb.close().catch(() => {}); adminDb = null }
+})
+
+export async function makeTestApp({ storage } = {}) {
+  // macOS recycles PIDs, so `tp_<pid>_<n>` collides with a leftover schema from an
+  // earlier run often enough to matter — and a bare CREATE SCHEMA turns that into a
+  // red test file with an error that reads like a migration bug.
   const schema = `tp_${process.pid}_${++n}`
-  const admin = await makeDb({ url: TEST_URL, driver: 'pg' })
-  await admin.exec(`CREATE SCHEMA ${schema}`)
-  await admin.close()
+  await (await admin()).exec(`DROP SCHEMA IF EXISTS ${schema} CASCADE`)
+  await (await admin()).exec(`CREATE SCHEMA ${schema}`)
   const db = await makeDb({ url: TEST_URL, driver: 'pg', searchPath: schema })
-  const app = await buildApp({ db }) // migrations land in the schema via search_path
+  created.push({ db, schema })
+  const app = await buildApp({ db, storage }) // migrations land in the schema via search_path
   return { app, db }
 }
 export async function createOrganizer(db, { email = 'test@x.dev', password = 'pass1234', name = 'Tester' } = {}) {

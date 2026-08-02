@@ -13,10 +13,18 @@ export default async function routes(app) {
       [tripId, personId]
     )
     const token = randomBytes(32).toString('base64url')
-    const expiresAt = req.body?.expires_in_days
-      ? new Date(Date.now() + req.body.expires_in_days * 86400e3).toISOString() : null
-    await app.db.run('INSERT INTO participant_links (id,trip_id,person_id,token_hash,expires_at) VALUES (?,?,?,?,?)',
-      [randomUUID(), tripId, personId, app.hashToken(token), expiresAt])
+    // expires_at is TEXT in 'YYYY-MM-DD HH24:MI:SS' UTC like every other timestamp in
+    // this schema — NOT ISO-8601. It used to be written with .toISOString(), and since
+    // 'T' (0x54) sorts above ' ' (0x20), a dead link compared as still-alive against a
+    // to_char() stamp for the whole of its expiry date. Computing it here in SQL keeps
+    // the clock and the format identical to what plugins/auth.js and readiness.routes.js
+    // compare it against.
+    const days = req.body?.expires_in_days || null
+    await app.db.run(
+      `INSERT INTO participant_links (id,trip_id,person_id,token_hash,expires_at)
+       VALUES (?,?,?,?, CASE WHEN ?::double precision IS NULL THEN NULL ELSE
+         to_char((now() AT TIME ZONE 'UTC') + (?::double precision * INTERVAL '1 day'), 'YYYY-MM-DD HH24:MI:SS') END)`,
+      [randomUUID(), tripId, personId, app.hashToken(token), days, days])
     return reply.code(201).send({ token, url: `/p/${token}` })
   })
 

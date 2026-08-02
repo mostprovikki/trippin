@@ -85,6 +85,34 @@ describe('readiness', () => {
     expect(body.checklists.overdue).toEqual([{ title: 'Book bus', due_date: '2020-01-01', assignee_name: 'Asha' }])
   })
 
+  // The readiness view compares expires_at against
+  // to_char(now() ..., 'YYYY-MM-DD HH24:MI:SS'). While links.routes.js wrote ISO-8601,
+  // 'T' (0x54) sorted above ' ' (0x20), so on its own expiry date a dead link still read
+  // as active here for up to ~24h. A probe using dates that differ before index 10 can
+  // never see that — hence the same-date pair below.
+  it('has_active_link: true for a link expiring later today, false for one that expired earlier today', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const t = await createTrip(db)
+    const alive = await createPerson(db, { name: 'Alive' })
+    const dead = await createPerson(db, { name: 'Dead' })
+    for (const p of [alive, dead])
+      await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p.id])
+
+    // Created through the real route, so the stored value is whatever the app writes.
+    const mk = (person, days) => authedInject(app, cookie, {
+      method: 'POST', url: `/api/trips/${t.id}/participants/${person.id}/link`,
+      payload: { expires_in_days: days },
+    })
+    await mk(alive, 0.01)   // ~14 min from now, same UTC date
+    await mk(dead, -0.01)   // ~14 min ago, same UTC date
+
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}/readiness` })
+    expect(res.statusCode).toBe(200)
+    const byName = Object.fromEntries(res.json().participants.map((p) => [p.name, p]))
+    expect(byName.Alive.has_active_link).toBe(true)
+    expect(byName.Dead.has_active_link).toBe(false)
+  })
+
   it('404s for unknown trip', async () => {
     const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const res = await authedInject(app, cookie, { method: 'GET', url: '/api/trips/nope/readiness' })

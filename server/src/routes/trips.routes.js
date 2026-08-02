@@ -46,28 +46,39 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const id = randomUUID()
     const b = req.body
-    await app.db.run(`INSERT INTO trips (id, organizer_id, name, description, vibe_tags, origin_city, date_mode, start_date, end_date, flex_days, destination_mode, destination)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        req.organizer.id,
-        b.name,
-        b.description ?? null,
-        JSON.stringify(b.vibe_tags ?? []),
-        b.origin_city ?? null,
-        b.date_mode ?? 'broad',
-        b.start_date ?? null,
-        b.end_date ?? null,
-        b.flex_days ?? null,
-        b.destination_mode ?? 'open',
-        b.destination ?? null,
-      ])
-    if (Array.isArray(b.participant_ids)) {
-      for (const personId of b.participant_ids) {
-        if (!(await app.ownedPerson(req, personId))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    const participantIds = Array.isArray(b.participant_ids) ? b.participant_ids : []
+
+    // validate → authorize → write. Every participant id is ownership-checked before the
+    // first insert: this used to check them one at a time *inside* the insert loop with
+    // no enclosing transaction, so an unowned id 404'd only after the trip and the
+    // earlier participants had already been committed.
+    for (const personId of participantIds) {
+      if (!(await app.ownedPerson(req, personId))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
+    }
+
+    // ...and the writes go in one transaction, so a failure part-way (or a person deleted
+    // between the check above and here) still leaves nothing behind.
+    await app.db.tx(async () => {
+      await app.db.run(`INSERT INTO trips (id, organizer_id, name, description, vibe_tags, origin_city, date_mode, start_date, end_date, flex_days, destination_mode, destination)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          req.organizer.id,
+          b.name,
+          b.description ?? null,
+          JSON.stringify(b.vibe_tags ?? []),
+          b.origin_city ?? null,
+          b.date_mode ?? 'broad',
+          b.start_date ?? null,
+          b.end_date ?? null,
+          b.flex_days ?? null,
+          b.destination_mode ?? 'open',
+          b.destination ?? null,
+        ])
+      for (const personId of participantIds) {
         await app.db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [id, personId])
       }
-    }
+    })
     reply.code(201)
     return { trip: await tripToJson(app.db, await get(id)) }
   })

@@ -14,12 +14,29 @@ dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 // manual override for contexts outside this scheme (e.g. Docker Compose).
 const portBase = Number(process.env.PORT_BASE) || 43100
 
+export const DEV_JWT_SECRET = 'dev-secret-do-not-use-in-prod'
+
+// A bad DATABASE_URL fails loudly on the first query. A missing JWT_SECRET does not: it
+// falls back to a secret that is committed to this repo, and anyone who can read it can
+// forge an organizer session. scripts/build-appsail.mjs inlines .env.appsail verbatim
+// with no validation, so one absent line ships that. Refuse to boot instead.
+export function assertSecureConfig(cfg, env = process.env) {
+  const isProd = cfg.storage.driver === 'stratus' || env.NODE_ENV === 'production'
+  if (isProd && cfg.jwtSecret === DEV_JWT_SECRET) {
+    throw new Error(
+      'JWT_SECRET is still the built-in development default in a production-shaped config ' +
+      `(STORAGE_DRIVER=${cfg.storage.driver}, NODE_ENV=${env.NODE_ENV}). Set a real JWT_SECRET ` +
+      'before deploying — the default is public and lets anyone forge an organizer session.')
+  }
+  return cfg
+}
+
 export const config = {
   port: Number(process.env.X_ZOHO_CATALYST_LISTEN_PORT) || Number(process.env.PORT) || portBase + 1,
   databaseUrl: process.env.DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test',
   dbDriver: process.env.DB_DRIVER || 'pg',
   uploadsDir: process.env.UPLOADS_DIR || './data/uploads',
-  jwtSecret: process.env.JWT_SECRET || 'dev-secret-do-not-use-in-prod',
+  jwtSecret: process.env.JWT_SECRET || DEV_JWT_SECRET,
   currency: process.env.DEFAULT_CURRENCY || 'INR',
   storage: {
     driver: process.env.STORAGE_DRIVER || 'local',
@@ -32,3 +49,8 @@ export const config = {
     baseUrl: process.env.LLM_BASE_URL || ''
   }
 }
+
+// Fires at import time, so nothing — server, migrate script, seed script — can start
+// with a public signing key in a production-shaped environment. Local dev
+// (STORAGE_DRIVER unset → 'local') and tests (NODE_ENV=test) are unaffected.
+assertSecureConfig(config)

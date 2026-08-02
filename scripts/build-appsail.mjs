@@ -21,6 +21,11 @@ execSync('npm ci --omit=dev', { cwd: join(out, 'server'), stdio: 'inherit' })
 const env = Object.fromEntries(readFileSync(join(root, 'server/.env.appsail'), 'utf8')
   .split('\n').filter(l => l.includes('=') && !l.startsWith('#'))
   .map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).trim()]))
+// The bundle below inlines these values verbatim. A missing JWT_SECRET line would ship
+// the public dev default as the session signing key — src/config.js refuses to boot on
+// that, but failing here is cheaper than failing after a deploy.
+if (!env.JWT_SECRET || env.JWT_SECRET === 'dev-secret-do-not-use-in-prod')
+  throw new Error('server/.env.appsail has no real JWT_SECRET — refusing to build a bundle with a public signing key')
 writeFileSync(join(out, 'app-config.json'), JSON.stringify({
   command: 'node server/src/server.js', build_path: '.', stack: 'node22',
   env_variables: env, memory: 256, scripts: {}

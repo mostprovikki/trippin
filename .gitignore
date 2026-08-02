@@ -4,6 +4,12 @@ dist/
 dist-appsail/
 .env
 .env.*
+# ...but never the example files. Without these negations both .env.example and
+# server/.env.appsail.example are tracked-but-ignored, so editing either needs
+# `git add -f` — and `git add -f server/.env.*` typed in a hurry force-adds the real
+# server/.env.appsail, which holds live Neon credentials. Keep `-f` away from this path.
+!.env.example
+!**/.env.*.example
 *.log
 e2e/shots/
 
