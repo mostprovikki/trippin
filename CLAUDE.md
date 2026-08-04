@@ -60,13 +60,20 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 
 ## Build & Test
 
-_Add your build and test commands here_
+Requires local Postgres (brew `postgresql@18`, see `~/.claude/projects/.../memory/no-docker-brew-pg18.md`).
+Always run `npm run db:up` first — the server (and its test suite) connects to
+`127.0.0.1:43105` and there is no SQLite fallback any more.
 
 ```bash
-# Example:
-# npm install
-# npm test
+npm install
+npm run db:up              # idempotent — starts the dev/test Postgres if not already up
+npm test                   # server (vitest, 23 files/142 tests) + web (34/270)
+npm run build               # builds web/dist
+npm run db:down             # stop the dev/test Postgres when done
 ```
+
+Server-only: `npm test --workspace=server`. Web-only: `npm test --workspace=web`.
+Local dev servers: `npm run dev` (after `npm run db:up`).
 
 ## Architecture Overview
 
@@ -88,3 +95,12 @@ Two of its rules do not apply on this machine:
   title cannot.
 
 Finished work is recorded in git history and `NOTES.md`, not as closed beads.
+
+**Plans executed via `superpowers:subagent-driven-development` (or `executing-plans`) also get
+mirrored into beads before implementation starts:** one epic bead for the plan, one child bead
+per plan Task (`--parent=<epic>`), chained in sequence with `bd dep add`. The SDD ledger
+(`.superpowers/sdd/<plan>/progress.md`) stays the detailed execution log — reviews, parked
+findings, fix rounds, carry-forward notes; beads stays the queryable status (`bd ready`,
+`bd blocked`) so it doesn't silently drift from what's actually done. Close each child bead as
+its Task completes, citing the commit range from the ledger. Example: `trip-planner-fpm` (Neon +
+AppSail migration plan).
