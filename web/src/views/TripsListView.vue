@@ -9,6 +9,7 @@ import { useNotify } from '../composables/useNotify.js'
 import EmptyState from '../components/EmptyState.vue'
 import Tag from 'primevue/tag'
 import { tripCountdown } from '../utils/dates.js'
+import { vibeAccentColor } from '../utils/vibeAccent.js'
 
 const store = useTripsStore()
 const router = useRouter()
@@ -72,7 +73,8 @@ onMounted(load)
           :key="trip.id"
           :to="{ name: 'trip-overview', params: { id: trip.id } }"
           class="card trip-card"
-          :class="`trip-card-${trip.status}`"
+          :class="{ 'trip-card-archived': trip.status === 'archived' }"
+          :style="{ borderLeftColor: vibeAccentColor(trip.vibe_tags) }"
         >
           <h3>{{ trip.name }}</h3>
           <p class="trip-meta"><i class="pi pi-map-marker" /> {{ trip.destination || 'Destination TBD' }}</p>
@@ -102,11 +104,9 @@ onMounted(load)
 }
 .trip-card:hover { box-shadow: var(--app-shadow-md); transform: translateY(-1px); }
 .trip-card h3 { margin-bottom: 0.5rem; }
-.trip-card-idea { border-left-color: var(--app-text-muted); }
-.trip-card-planning { border-left-color: var(--app-accent); }
-.trip-card-confirmed { border-left-color: var(--app-primary); }
-.trip-card-active { border-left-color: var(--app-success); }
-.trip-card-archived { border-left-color: var(--app-border); opacity: 0.75; }
+/* Color now comes from the inline style (vibeAccentColor) rather than
+   status — the group heading above already says the status. */
+.trip-card-archived { opacity: 0.75; }
 .trip-meta { margin: 0.125rem 0; color: var(--app-text-muted); font-size: 0.8438rem; display: flex; align-items: center; gap: 0.375rem; }
 .trip-countdown { margin-top: 0.375rem; }
 </style>

@@ -63,4 +63,33 @@ describe('TripsListView', () => {
     expect(wrapper.findAll('.trip-countdown')).toHaveLength(1)
     vi.useRealTimers()
   })
+
+  it('gives cards a vibe-tag accent color, deterministic per tag, absent with no tags', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', name: 'trips', component: TripsListView },
+        { path: '/trips/new', name: 'trip-new', component: { template: '<div/>' } },
+        { path: '/trips/:id', name: 'trip-overview', component: { template: '<div/>' } }
+      ]
+    })
+    await router.push('/')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTripsStore()
+    store.fetchTrips = vi.fn().mockImplementation(async () => {
+      store.trips = [
+        { id: 't1', name: 'Goa', status: 'planning', vibe_tags: ['beach'], participant_count: 1 },
+        { id: 't2', name: 'Kerala', status: 'planning', vibe_tags: ['beach'], participant_count: 1 },
+        { id: 't3', name: 'No vibe', status: 'planning', participant_count: 1 }
+      ]
+    })
+    const wrapper = mountWithBase(TripsListView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    const cards = wrapper.findAll('.trip-card')
+    expect(cards[0].attributes('style')).toContain('border-left-color: var(--app-text-muted)')
+    expect(cards[0].attributes('style')).toBe(cards[1].attributes('style'))
+    expect(cards[2].attributes('style') || '').not.toContain('border-left-color')
+  })
 })
