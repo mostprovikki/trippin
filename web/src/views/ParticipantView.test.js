@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
@@ -21,6 +21,12 @@ async function mountView(state) {
   await flushPromises()
   return { wrapper }
 }
+
+afterEach(() => {
+  vi.restoreAllMocks()
+  delete global.fetch
+  if (global.URL) { delete global.URL.createObjectURL; delete global.URL.revokeObjectURL }
+})
 
 describe('ParticipantView', () => {
   it('renders trip hero and three step cards with completion state', async () => {
@@ -61,6 +67,13 @@ describe('ParticipantView', () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(blob) })
     global.URL.createObjectURL = vi.fn().mockReturnValue('blob:x')
     global.URL.revokeObjectURL = vi.fn()
+    // The download <a> is created, clicked, and removed synchronously inside
+    // downloadIcs() — it's gone from the DOM by the time this test can
+    // inspect it, so capture its .download filename at click-time instead.
+    let downloadedName = null
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function () {
+      downloadedName = this.download
+    })
     const { wrapper } = await mountView({
       token: 'tok1',
       trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },
@@ -73,5 +86,7 @@ describe('ParticipantView', () => {
     expect(global.fetch).toHaveBeenCalledWith('/api/participant/itinerary.ics', {
       headers: { Authorization: expect.stringContaining('Bearer ') }
     })
+    expect(downloadedName).toBe('Goa 2026.ics')
+    expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:x')
   })
 })

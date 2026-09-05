@@ -93,11 +93,11 @@ export default async function routes(app) {
   app.get('/participant/itinerary.ics', { preHandler: app.requireParticipant }, async (req, reply) => {
     const { tripId } = req.participant
     const trip = await app.db.get('SELECT * FROM trips WHERE id = ?', [tripId])
-    const dayRows = await app.db.all('SELECT id, day_date FROM itinerary_days WHERE trip_id = ? ORDER BY position', [tripId])
+    const dayRows = await app.db.all('SELECT id, day_date FROM itinerary_days WHERE trip_id = ? ORDER BY position, day_date', [tripId])
     const days = []
     for (const day of dayRows) {
       const items = await app.db.all(
-        'SELECT id, title, time_range, location, notes, link FROM itinerary_items WHERE day_id = ? ORDER BY position',
+        'SELECT id, title, time_range, location, notes, link FROM itinerary_items WHERE day_id = ? ORDER BY position, id',
         [day.id]
       )
       days.push({ day_date: day.day_date, items })

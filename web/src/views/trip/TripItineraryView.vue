@@ -140,7 +140,7 @@ function discardWholeDraft() {
 
     <template v-else>
       <div class="card export-actions">
-        <a class="p-button p-button-outlined" :href="`/api/trips/${tripId}/itinerary.ics`">Add to calendar (.ics)</a>
+        <a class="p-button p-button-outlined p-component" :href="`/api/trips/${tripId}/itinerary.ics`">Add to calendar (.ics)</a>
       </div>
       <div class="card">
         <div v-if="auth.aiEnabled">
@@ -184,4 +184,5 @@ function discardWholeDraft() {
 <style scoped>
 .ai-draft-card { background: var(--app-primary-soft); }
 .export-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.export-actions a.p-button { text-decoration: none; }
 </style>

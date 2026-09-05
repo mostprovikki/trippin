@@ -67,14 +67,16 @@ export default async function routes(app) {
   )
 
   async function listItems(dayId) {
-    const rows = await app.db.all('SELECT * FROM itinerary_items WHERE day_id = ? ORDER BY position', [dayId])
+    // position alone isn't a total order (no UNIQUE constraint) — id as tiebreaker,
+    // same pattern as participant.routes.js's itinerary read.
+    const rows = await app.db.all('SELECT * FROM itinerary_items WHERE day_id = ? ORDER BY position, id', [dayId])
     return rows.map(itemToJson)
   }
   async function dayToJson(row) {
     return { id: row.id, day_date: row.day_date, position: row.position, items: await listItems(row.id) }
   }
   async function listDays(tripId) {
-    const rows = await app.db.all('SELECT * FROM itinerary_days WHERE trip_id = ? ORDER BY position', [tripId])
+    const rows = await app.db.all('SELECT * FROM itinerary_days WHERE trip_id = ? ORDER BY position, day_date', [tripId])
     const days = []
     for (const row of rows) days.push(await dayToJson(row))
     return days
