@@ -8,17 +8,29 @@ import { useAuthStore } from '../stores/auth.js'
 import ItineraryItemForm from './ItineraryItemForm.vue'
 import { formatMoney } from '../utils/format.js'
 import { dayHeader, formatDayDate } from '../utils/dates.js'
-import { categoryIcon } from '../utils/itinerary.js'
+import { categoryIcon, parseTimeRange } from '../utils/itinerary.js'
 
 const props = defineProps({
   day: { type: Object, required: true },
   index: { type: Number, required: true },
-  currency: { type: String, default: 'INR' }
+  currency: { type: String, default: 'INR' },
+  isToday: { type: Boolean, default: false }
 })
 const store = useItineraryStore()
 const auth = useAuthStore()
 const confirm = useConfirm()
 const aiEnabled = computed(() => auth.aiEnabled)
+
+function isItemNow(item) {
+  if (!props.isToday) return false
+  const range = parseTimeRange(item.time_range)
+  if (!range) return false
+  const now = new Date()
+  const mins = now.getHours() * 60 + now.getMinutes()
+  const [sh, sm] = range.start.split(':').map(Number)
+  const [eh, em] = range.end.split(':').map(Number)
+  return mins >= sh * 60 + sm && mins <= eh * 60 + em
+}
 
 const adding = ref(false)
 const editingId = ref(null)
@@ -73,9 +85,9 @@ function discardDayDraft() {
 
 <template>
   <div class="card">
-    <h3>{{ dayHeader(day.day_date, index) }}</h3>
+    <h3>{{ dayHeader(day.day_date, index) }} <Tag v-if="isToday" value="Today" severity="success" /></h3>
     <ul class="day-items">
-      <li v-for="(item, idx) in day.items" :key="item.id" class="day-item">
+      <li v-for="(item, idx) in day.items" :key="item.id" class="day-item" :class="{ 'day-item-now': isItemNow(item) }">
         <span>{{ categoryIcon(item.category) }}</span>
         <Tag v-if="item.time_range" :value="item.time_range" severity="secondary" />
         <strong>{{ item.title }}</strong>
@@ -135,6 +147,7 @@ function discardDayDraft() {
    auto was already trying to put it. */
 .day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--app-border); flex-wrap: wrap; }
 .day-item-actions { margin-left: auto; display: flex; gap: 0.25rem; }
+.day-item-now { background: var(--app-primary-soft); border-radius: var(--app-radius-sm); }
 .day-ai { margin-top: 1rem; }
 .day-draft { background: var(--app-surface-alt); }
 </style>

@@ -23,6 +23,33 @@ const notify = useNotify()
 
 const loading = ref(true)
 
+const todayDayId = computed(() => {
+  const trip = trips.current
+  if (!trip || trip.status !== 'active') return null
+  const today = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  const iso = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+  if (trip.start_date && trip.end_date && (iso < trip.start_date || iso > trip.end_date)) return null
+  const day = store.days.find((d) => d.day_date === iso)
+  return day ? day.id : null
+})
+
+const todayCardRef = ref(null)
+// Named function rather than an inline `el => { todayCardRef.value = el }` in
+// the template: script-setup's template compiler auto-unwraps top-level refs,
+// so an assignment to `todayCardRef.value` written directly inside a template
+// expression compiles as `unref(todayCardRef).value = el` — which throws
+// ("Cannot set properties of null") because unref(todayCardRef) is the ref's
+// *current* (null) inner value, not the ref itself. Keeping the assignment in
+// a plain script-setup function sidesteps that transform (see
+// ParticipantItinerary.vue's setDayRef for the same pattern).
+function setTodayCardRef(dayId, el) {
+  if (dayId === todayDayId.value) todayCardRef.value = el
+}
+watch(todayDayId, (id) => {
+  if (id && todayCardRef.value?.$el?.scrollIntoView) todayCardRef.value.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+})
+
 // Getter key: this view is reused across :id changes, so the AI draft has to
 // follow the trip rather than freeze on whichever one was open at setup.
 const aiDraftStore = useDraft(() => `trip:${tripId.value}:itinerary-ai`, () => ({ ai: null }))
@@ -128,6 +155,8 @@ function discardWholeDraft() {
         :day="day"
         :index="idx + 1"
         :currency="trips.current?.currency"
+        :is-today="day.id === todayDayId"
+        :ref="el => setTodayCardRef(day.id, el)"
       />
     </template>
   </div>

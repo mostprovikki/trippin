@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import { mountWithBase } from '../../test-utils.js'
 import TripItineraryView from './TripItineraryView.vue'
+import DayCard from '../../components/DayCard.vue'
 import { useItineraryStore } from '../../stores/itinerary.js'
 import { useTripsStore } from '../../stores/trips.js'
 
@@ -57,5 +58,26 @@ describe('TripItineraryView', () => {
     const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
     await flushPromises()
     expect(wrapper.text()).toContain('₫500,000')
+  })
+
+  it('marks today\'s DayCard as isToday when trip is active and today is in range', async () => {
+    vi.useFakeTimers().setSystemTime(new Date(2026, 7, 1)) // Aug 1, 2026 local — matches store.days[0].day_date
+    const { wrapper, store } = await mountView()
+    // mountView() hard-codes trips.current.status = 'planning' — override for this test
+    const trips = useTripsStore()
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'active', start_date: '2026-08-01', end_date: '2026-08-05' }
+    store.days = [{ id: 'd1', day_date: '2026-08-01', items: [] }]
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+    const dayCard = wrapper.findComponent(DayCard)
+    expect(dayCard.props('isToday')).toBe(true)
+    vi.useRealTimers()
+  })
+
+  it('leaves isToday false for every day when trip is not active', async () => {
+    const { wrapper } = await mountView() // default status: 'planning'
+    await flushPromises()
+    const dayCard = wrapper.findComponent(DayCard)
+    expect(dayCard.props('isToday')).toBe(false)
   })
 })

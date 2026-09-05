@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { mountWithBase } from '../test-utils.js'
 import DayCard from './DayCard.vue'
 import { useItineraryStore } from '../stores/itinerary.js'
+import { useAuthStore } from '../stores/auth.js'
 
 describe('DayCard', () => {
   it('renders an item est_cost with formatMoney for the given currency', () => {
@@ -69,5 +70,36 @@ describe('DayCard', () => {
     await new Promise((r) => setTimeout(r, 0))
     expect(store.deleteItem).toHaveBeenCalledWith('i1')
     dialogWrapper.unmount()
+  })
+})
+
+afterEach(() => vi.useRealTimers())
+
+function baseDay() {
+  return { id: 'd1', day_date: '2026-08-02', items: [
+    { id: 'i1', title: 'Breakfast', time_range: '08:00–09:00', category: 'food', location: null, est_cost: null },
+    { id: 'i2', title: 'Museum', time_range: '11:00–13:00', category: 'activity', location: null, est_cost: null },
+  ] }
+}
+
+describe('DayCard today view', () => {
+  it('shows a Today chip and highlights the item whose time range contains now, only when isToday is true', () => {
+    vi.useFakeTimers().setSystemTime(new Date(2026, 7, 2, 8, 30)) // 08:30 local
+    const pinia = createPinia(); setActivePinia(pinia)
+    useAuthStore().aiEnabled = false
+    const wrapper = mountWithBase(DayCard, { props: { day: baseDay(), index: 1, currency: 'INR', isToday: true }, pinia })
+    expect(wrapper.text()).toContain('Today')
+    const items = wrapper.findAll('.day-item')
+    expect(items[0].classes()).toContain('day-item-now')  // Breakfast 08:00–09:00 contains 08:30
+    expect(items[1].classes()).not.toContain('day-item-now')
+  })
+
+  it('shows no Today chip or now-highlight when isToday is false', () => {
+    vi.useFakeTimers().setSystemTime(new Date(2026, 7, 2, 8, 30))
+    const pinia = createPinia(); setActivePinia(pinia)
+    useAuthStore().aiEnabled = false
+    const wrapper = mountWithBase(DayCard, { props: { day: baseDay(), index: 1, currency: 'INR', isToday: false }, pinia })
+    expect(wrapper.text()).not.toContain('Today')
+    expect(wrapper.findAll('.day-item-now')).toHaveLength(0)
   })
 })
