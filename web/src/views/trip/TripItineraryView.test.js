@@ -80,4 +80,35 @@ describe('TripItineraryView', () => {
     const dayCard = wrapper.findComponent(DayCard)
     expect(dayCard.props('isToday')).toBe(false)
   })
+
+  it('scrolls the today card into view exactly once when the trip loads as active', async () => {
+    // Sets trips.current to 'active' BEFORE mount (unlike the isToday test above,
+    // which overrides it post-mount) so this exercises the real race: store.days
+    // and loading both flip inside load()'s single synchronous `finally` block,
+    // and the today DayCard mounts for the first time in that same pass.
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {})
+    vi.useFakeTimers().setSystemTime(new Date(2026, 7, 1)) // Aug 1, 2026 local
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView }]
+    })
+    await router.push('/trips/t1/itinerary')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    const trips = useTripsStore()
+    store.fetchItinerary = vi.fn().mockImplementation(async () => {
+      store.days = [{ id: 'd1', day_date: '2026-08-01', items: [] }]
+    })
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'active', start_date: '2026-08-01', end_date: '2026-08-05' }
+    const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+    expect(scrollSpy).toHaveBeenCalledTimes(1)
+    const dayCard = wrapper.findComponent(DayCard)
+    expect(scrollSpy.mock.instances[0]).toBe(dayCard.element)
+    scrollSpy.mockRestore()
+    vi.useRealTimers()
+  })
 })

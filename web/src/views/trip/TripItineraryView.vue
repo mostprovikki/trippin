@@ -13,6 +13,7 @@ import EmptyState from '../../components/EmptyState.vue'
 import DayCard from '../../components/DayCard.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 import { formatMoney } from '../../utils/format.js'
+import { toIsoDate } from '../../utils/dates.js'
 
 const route = useRoute()
 const tripId = computed(() => route.params.id)
@@ -26,15 +27,18 @@ const loading = ref(true)
 const todayDayId = computed(() => {
   const trip = trips.current
   if (!trip || trip.status !== 'active') return null
-  const today = new Date()
-  const pad = (n) => String(n).padStart(2, '0')
-  const iso = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`
+  const iso = toIsoDate(new Date())
   if (trip.start_date && trip.end_date && (iso < trip.start_date || iso > trip.end_date)) return null
   const day = store.days.find((d) => d.day_date === iso)
   return day ? day.id : null
 })
 
 const todayCardRef = ref(null)
+// Guards the scroll to once per load(): the inline `:ref="el => ..."` arrow
+// is a fresh function every render, so Vue re-invokes it (and would re-fire
+// a naive scroll) on every unrelated re-render of the list, not just the one
+// where today's card first appears.
+let scrolledThisLoad = false
 // Named function rather than an inline `el => { todayCardRef.value = el }` in
 // the template: script-setup's template compiler auto-unwraps top-level refs,
 // so an assignment to `todayCardRef.value` written directly inside a template
@@ -43,12 +47,23 @@ const todayCardRef = ref(null)
 // *current* (null) inner value, not the ref itself. Keeping the assignment in
 // a plain script-setup function sidesteps that transform (see
 // ParticipantItinerary.vue's setDayRef for the same pattern).
+//
+// Scrolling is triggered from here too, rather than from a `watch(todayDayId,
+// ...)`: a `loading` skeleton hides the DayCard list until `load()`'s
+// `finally` flips both `store.days` and `loading` in the same synchronous
+// tick, so a watcher on `todayDayId` alone (even with `flush: 'post'`) can
+// run before the v-else branch has actually mounted the DayCard whose ref
+// it wants — todayCardRef is still null when the callback fires. Setting the
+// ref *is* the signal that the card actually exists in the DOM, so scrolling
+// right there can't observe a null ref.
 function setTodayCardRef(dayId, el) {
-  if (dayId === todayDayId.value) todayCardRef.value = el
+  if (dayId !== todayDayId.value) return
+  todayCardRef.value = el
+  if (el && !scrolledThisLoad && el.$el?.scrollIntoView) {
+    scrolledThisLoad = true
+    el.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
-watch(todayDayId, (id) => {
-  if (id && todayCardRef.value?.$el?.scrollIntoView) todayCardRef.value.$el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-})
 
 // Getter key: this view is reused across :id changes, so the AI draft has to
 // follow the trip rather than freeze on whichever one was open at setup.
@@ -59,6 +74,7 @@ watch(() => store.draft, (d) => { aiDraftStore.draft.ai = d ?? null })
 
 async function load() {
   loading.value = true
+  scrolledThisLoad = false
   // Read the stored draft before fetching: fetchItinerary clears store.draft on
   // a trip change, which feeds a null back through the mirror watcher above.
   // useDraft has already re-keyed by the time this runs, so this is the *new*

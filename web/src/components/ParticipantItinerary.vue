@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import Tag from 'primevue/tag'
 import { categoryIcon } from '../utils/itinerary.js'
-import { dayHeader, tripCountdown } from '../utils/dates.js'
+import { dayHeader, tripCountdown, toIsoDate } from '../utils/dates.js'
 import { formatMoney } from '../utils/format.js'
 
 const props = defineProps({
@@ -13,11 +13,7 @@ const props = defineProps({
   companionCount: { type: Number, default: 0 },
 })
 
-const todayIso = computed(() => {
-  const d = new Date()
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-})
+const todayIso = computed(() => toIsoDate(new Date()))
 function isToday(dayDate) { return dayDate === todayIso.value }
 
 const companionsLine = computed(() => {

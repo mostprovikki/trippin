@@ -102,4 +102,16 @@ describe('DayCard today view', () => {
     expect(wrapper.text()).not.toContain('Today')
     expect(wrapper.findAll('.day-item-now')).toHaveLength(0)
   })
+
+  it('highlights an overnight item (end before start) from its start time until midnight', () => {
+    vi.useFakeTimers().setSystemTime(new Date(2026, 7, 2, 23, 30)) // 23:30 local
+    const pinia = createPinia(); setActivePinia(pinia)
+    useAuthStore().aiEnabled = false
+    const day = { id: 'd1', day_date: '2026-08-02', items: [
+      { id: 'i1', title: 'Night bus', time_range: '22:00–02:00', category: 'travel', location: null, est_cost: null },
+    ] }
+    const wrapper = mountWithBase(DayCard, { props: { day, index: 1, currency: 'INR', isToday: true }, pinia })
+    const items = wrapper.findAll('.day-item')
+    expect(items[0].classes()).toContain('day-item-now')
+  })
 })
