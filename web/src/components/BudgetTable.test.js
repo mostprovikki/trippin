@@ -14,4 +14,16 @@ describe('BudgetTable', () => {
     const wrapper = mountWithBase(BudgetTable, { props: { modelValue: [{ category: 'stay', estimate: 100, basis: '' }] } })
     expect(wrapper.text()).toContain('₹100')
   })
+
+  it('renders the AI-draft column estimate with formatMoney, not a bare number', () => {
+    const wrapper = mountWithBase(BudgetTable, {
+      props: {
+        modelValue: [{ category: 'stay', estimate: 50000, basis: '' }],
+        draft: [{ category: 'stay', estimate: 60000, basis: 'hotel avg' }],
+        currency: 'THB'
+      }
+    })
+    expect(wrapper.text()).toContain('฿60,000')
+    expect(wrapper.text()).not.toContain('60000 —')
+  })
 })

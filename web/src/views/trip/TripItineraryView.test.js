@@ -38,4 +38,24 @@ describe('TripItineraryView', () => {
     expect(store.draft).toEqual([{ day_date: '2026-08-01', items: [{ title: 'Beach walk' }] }])
     expect(wrapper.text()).toContain('Beach walk')
   })
+
+  it('threads the trip currency down to DayCard for est_cost display', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView }]
+    })
+    await router.push('/trips/t1/itinerary')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    const trips = useTripsStore()
+    store.fetchItinerary = vi.fn().mockImplementation(async () => {
+      store.days = [{ id: 'd1', day_date: '2026-08-01', items: [{ id: 'i1', title: 'Boat trip', category: 'activity', est_cost: 500000 }] }]
+    })
+    trips.current = { id: 't1', name: 'Vietnam 2026', status: 'planning', currency: 'VND' }
+    const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('₫500,000')
+  })
 })

@@ -61,7 +61,7 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
     <Column v-if="draft" header="AI draft">
       <template #body="{ data }">
         <span v-if="draftFor(data.category)">
-          {{ draftFor(data.category).estimate }} — {{ draftFor(data.category).basis }}
+          {{ formatMoney(draftFor(data.category).estimate, currency) }} — {{ draftFor(data.category).basis }}
         </span>
       </template>
     </Column>
