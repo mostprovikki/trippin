@@ -7,6 +7,7 @@ import { useItineraryStore } from '../stores/itinerary.js'
 import { useAuthStore } from '../stores/auth.js'
 import ItineraryItemForm from './ItineraryItemForm.vue'
 import { formatMoney } from '../utils/format.js'
+import { dayHeader, formatDayDate } from '../utils/dates.js'
 
 const props = defineProps({
   day: { type: Object, required: true },
@@ -74,7 +75,7 @@ function discardDayDraft() {
 
 <template>
   <div class="card">
-    <h3>{{ day.day_date }}</h3>
+    <h3>{{ dayHeader(day.day_date, index) }}</h3>
     <ul class="day-items">
       <li v-for="(item, idx) in day.items" :key="item.id" class="day-item">
         <span>{{ categoryIcon(item.category) }}</span>
@@ -112,7 +113,7 @@ function discardDayDraft() {
     </div>
 
     <div v-if="dayDraft" class="card day-draft">
-      <h4>Draft for {{ day.day_date }}</h4>
+      <h4>Draft for {{ formatDayDate(day.day_date) }}</h4>
       <ul class="day-items">
         <li v-for="(it, i) in dayDraft" :key="i">
           {{ categoryIcon(it.category) }}

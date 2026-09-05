@@ -7,6 +7,8 @@ import Skeleton from 'primevue/skeleton'
 import { useTripsStore } from '../stores/trips.js'
 import { useNotify } from '../composables/useNotify.js'
 import EmptyState from '../components/EmptyState.vue'
+import Tag from 'primevue/tag'
+import { tripCountdown } from '../utils/dates.js'
 
 const store = useTripsStore()
 const router = useRouter()
@@ -76,6 +78,7 @@ onMounted(load)
           <p class="trip-meta"><i class="pi pi-map-marker" /> {{ trip.destination || 'Destination TBD' }}</p>
           <p class="trip-meta"><i class="pi pi-calendar" /> {{ trip.start_date && trip.end_date ? `${trip.start_date} – ${trip.end_date}` : 'Dates TBD' }}</p>
           <p class="trip-meta"><i class="pi pi-users" /> {{ trip.participant_count }} participant{{ trip.participant_count === 1 ? '' : 's' }}</p>
+          <Tag v-if="tripCountdown(trip)" class="trip-countdown" :value="tripCountdown(trip).label" severity="info" />
         </RouterLink>
       </div>
     </section>
@@ -105,4 +108,5 @@ onMounted(load)
 .trip-card-active { border-left-color: var(--app-success); }
 .trip-card-archived { border-left-color: var(--app-border); opacity: 0.75; }
 .trip-meta { margin: 0.125rem 0; color: var(--app-text-muted); font-size: 0.8438rem; display: flex; align-items: center; gap: 0.375rem; }
+.trip-countdown { margin-top: 0.375rem; }
 </style>

@@ -34,4 +34,33 @@ describe('TripsListView', () => {
     expect(cards[0].attributes('href')).toBe('/trips/t2') // idea group first
     expect(wrapper.text()).toContain('Destination TBD')
   })
+
+  it('shows a countdown chip only for confirmed/active trips with dates', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 5)) // Oct 5 2026
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', name: 'trips', component: TripsListView },
+        { path: '/trips/new', name: 'trip-new', component: { template: '<div/>' } },
+        { path: '/trips/:id', name: 'trip-overview', component: { template: '<div/>' } }
+      ]
+    })
+    await router.push('/')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTripsStore()
+    store.fetchTrips = vi.fn().mockImplementation(async () => {
+      store.trips = [
+        { id: 't1', name: 'Goa', status: 'confirmed', start_date: '2026-11-06', end_date: '2026-11-10', participant_count: 1 },
+        { id: 't2', name: 'Alps idea', status: 'idea', participant_count: 0 }
+      ]
+    })
+    const wrapper = mountWithBase(TripsListView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('32 days to go')
+    expect(wrapper.findAll('.trip-countdown')).toHaveLength(1)
+    vi.useRealTimers()
+  })
 })

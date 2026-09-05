@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso } from './dates.js'
+import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso, formatDayDate, dayHeader, tripCountdown } from './dates.js'
 
 afterEach(() => { vi.useRealTimers() })
 
@@ -66,5 +66,52 @@ describe('startOfToday', () => {
     const t = startOfToday()
     expect([t.getFullYear(), t.getMonth(), t.getDate()]).toEqual([2026, 6, 25])
     expect([t.getHours(), t.getMinutes(), t.getSeconds()]).toEqual([0, 0, 0])
+  })
+})
+
+describe('formatDayDate', () => {
+  it('renders weekday, day, month — no year, no leading zero', () => {
+    expect(formatDayDate('2026-11-06')).toBe('Fri 6 Nov')
+    expect(formatDayDate('2026-01-01')).toBe('Thu 1 Jan')
+  })
+  it('falls back to the raw string for malformed input', () => {
+    expect(formatDayDate('nope')).toBe('nope')
+    expect(formatDayDate('')).toBe('')
+  })
+})
+
+describe('dayHeader', () => {
+  it('appends a 1-based day index', () => {
+    expect(dayHeader('2026-11-06', 1)).toBe('Fri 6 Nov · Day 1')
+    expect(dayHeader('2026-11-07', 2)).toBe('Sat 7 Nov · Day 2')
+  })
+  it('omits the day index when none is given', () => {
+    expect(dayHeader('2026-11-06')).toBe('Fri 6 Nov')
+  })
+})
+
+describe('tripCountdown', () => {
+  const T = (y, m, d) => new Date(y, m, d)
+
+  it('is null for idea/planning status regardless of dates', () => {
+    expect(tripCountdown({ status: 'idea', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 1))).toBeNull()
+    expect(tripCountdown({ status: 'planning', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 1))).toBeNull()
+  })
+  it('is null with no dates, even if confirmed', () => {
+    expect(tripCountdown({ status: 'confirmed' }, T(2026, 10, 1))).toBeNull()
+  })
+  it('counts down before the trip starts', () => {
+    expect(tripCountdown({ status: 'confirmed', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 9, 5))).toEqual({ label: '32 days to go' })
+  })
+  it('says "Starts tomorrow" exactly one day out', () => {
+    expect(tripCountdown({ status: 'confirmed', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 5))).toEqual({ label: 'Starts tomorrow' })
+  })
+  it('shows Day N of M on the start day and through the trip', () => {
+    expect(tripCountdown({ status: 'active', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 6))).toEqual({ label: 'Day 1 of 5' })
+    expect(tripCountdown({ status: 'active', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 8))).toEqual({ label: 'Day 3 of 5' })
+    expect(tripCountdown({ status: 'active', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 10))).toEqual({ label: 'Day 5 of 5' })
+  })
+  it('says "Ended" the day after end_date', () => {
+    expect(tripCountdown({ status: 'active', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 11))).toEqual({ label: 'Ended' })
   })
 })

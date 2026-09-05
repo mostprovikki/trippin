@@ -87,4 +87,32 @@ describe('TripOverviewView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('₹12,000')
   })
+
+  it('shows a countdown chip in the hero for a confirmed trip with dates', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 9, 5))
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/trips/:id', name: 'trip-overview', component: TripOverviewView },
+        ...SECTIONS.map((name) => ({ path: `/trips/:id/${name.slice(5)}`, name, component: { template: '<div/>' } }))
+      ]
+    })
+    await router.push('/trips/t1')
+    await router.isReady()
+    const trips = useTripsStore()
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'confirmed', start_date: '2026-11-06', end_date: '2026-11-10', participants: [] }
+    const r = useReadinessStore()
+    r.data = { decisions: {}, participants: [], checklists: { total_items: 0, done_items: 0, overdue: [] } }
+    r.lastTripId = 't1'
+    r.fetch = vi.fn().mockResolvedValue()
+    const budget = useBudgetStore()
+    budget.fetchBudget = vi.fn().mockResolvedValue()
+    const wrapper = mountWithBase(TripOverviewView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('32 days to go')
+    vi.useRealTimers()
+  })
 })

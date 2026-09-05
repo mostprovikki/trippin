@@ -6,6 +6,7 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { nextActions, readinessPercent } from '../../utils/tripNav.js'
+import { tripCountdown } from '../../utils/dates.js'
 import { formatMoney } from '../../utils/format.js'
 
 const STATUSES = ['idea', 'planning', 'confirmed', 'active']
@@ -25,6 +26,7 @@ const confirmedCount = computed(() => participants.value.filter((p) => p.profile
 const dateRange = computed(() =>
   trip.value?.start_date && trip.value?.end_date ? `${trip.value.start_date} – ${trip.value.end_date}` : null
 )
+const countdown = computed(() => (trip.value ? tripCountdown(trip.value) : null))
 const statusIndex = computed(() => STATUSES.indexOf(trip.value?.status))
 
 async function load() {
@@ -63,7 +65,8 @@ watch(tripId, load)
           <span class="hero-sep" aria-hidden="true">·</span>
           <i class="pi pi-calendar" /> {{ dateRange || 'Dates TBD' }}
         </p>
-        <div v-if="(trip.vibe_tags || []).length" class="hero-tags">
+        <div v-if="(trip.vibe_tags || []).length || countdown" class="hero-tags">
+          <Tag v-if="countdown" :value="countdown.label" severity="info" />
           <Tag v-for="tag in trip.vibe_tags" :key="tag" :value="tag" severity="secondary" />
         </div>
       </div>

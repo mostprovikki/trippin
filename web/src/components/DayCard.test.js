@@ -30,4 +30,21 @@ describe('DayCard', () => {
     const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1 } })
     expect(wrapper.text()).toContain('₹500')
   })
+
+  it('renders a humane day header with a 1-based index', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
+    expect(wrapper.find('h3').text()).toBe('Fri 6 Nov · Day 1')
+  })
+
+  it('renders est_cost with the currency symbol, not a bare $', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [{ id: 'i1', title: 'Snorkeling', est_cost: 1500 }] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
+    expect(wrapper.text()).toContain('₹1,500')
+    expect(wrapper.text()).not.toMatch(/\$1,?500/)
+  })
 })

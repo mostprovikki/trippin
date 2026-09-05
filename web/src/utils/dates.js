@@ -32,3 +32,40 @@ export function isExpiredIso(iso) {
   const expiry = parseIsoDate(iso)
   return !!expiry && expiry < startOfToday()
 }
+
+const WEEKDAY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'short' })
+const MONTH_FMT = new Intl.DateTimeFormat('en-US', { month: 'short' })
+const MS_PER_DAY = 86400000
+
+// 'Fri 6 Nov' — no year (this app never shows a day header far enough out for
+// the year to be ambiguous) and no leading zero on the day-of-month, unlike
+// the ISO string it replaces.
+export function formatDayDate(iso) {
+  const d = parseIsoDate(iso)
+  if (!d) return iso || ''
+  return `${WEEKDAY_FMT.format(d)} ${d.getDate()} ${MONTH_FMT.format(d)}`
+}
+
+export function dayHeader(iso, index) {
+  const date = formatDayDate(iso)
+  return index != null ? `${date} · Day ${index}` : date
+}
+
+// Countdown chip. Pre-trip status only (idea/planning have no committed
+// dates worth counting down to); date math is inclusive of both the start
+// and end day, so a single-day trip reads "Day 1 of 1" rather than "of 0".
+export function tripCountdown(trip, today = startOfToday()) {
+  if (!trip || !['confirmed', 'active'].includes(trip.status)) return null
+  const start = parseIsoDate(trip.start_date)
+  const end = parseIsoDate(trip.end_date)
+  if (!start || !end) return null
+  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const daysToStart = Math.round((start - t) / MS_PER_DAY)
+  const daysToEnd = Math.round((end - t) / MS_PER_DAY)
+  if (daysToEnd < 0) return { label: 'Ended' }
+  if (daysToStart > 1) return { label: `${daysToStart} days to go` }
+  if (daysToStart === 1) return { label: 'Starts tomorrow' }
+  const totalDays = Math.round((end - start) / MS_PER_DAY) + 1
+  const dayNum = Math.round((t - start) / MS_PER_DAY) + 1
+  return { label: `Day ${dayNum} of ${totalDays}` }
+}
