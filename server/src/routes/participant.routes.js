@@ -1,5 +1,6 @@
 import rateLimit from '@fastify/rate-limit'
 import { personToJson } from './people.routes.js'
+import { budgetShape } from './budget.routes.js'
 
 const FIELDS = ['name', 'phone', 'email', 'emergency_contact', 'dietary', 'allergies', 'medical_notes', 'pace', 'interests', 'budget_band', 'home_city']
 const bodySchema = {
@@ -22,6 +23,42 @@ export default async function routes(app) {
     const goals = await app.db.all('SELECT title, fixed_date, fixed_place FROM trip_goals WHERE trip_id = ? ORDER BY seq', [tripId])
     const tp = await app.db.get('SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?', [tripId, personId])
     const person = personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId]))
+
+    // Itinerary: a day always appears even with zero items (LEFT JOIN), so an
+    // empty day isn't silently dropped from the guest's read-only view.
+    const itineraryRows = await app.db.all(
+      `SELECT d.day_date, d.position AS day_position, i.title, i.time_range, i.location, i.category, i.est_cost, i.notes, i.link
+       FROM itinerary_days d LEFT JOIN itinerary_items i ON i.day_id = d.id
+       WHERE d.trip_id = ? ORDER BY d.position, i.position`, [tripId])
+    const itinerary = []
+    for (const row of itineraryRows) {
+      let day = itinerary[itinerary.length - 1]
+      if (!day || day.day_date !== row.day_date) { day = { day_date: row.day_date, items: [] }; itinerary.push(day) }
+      if (row.title != null) day.items.push({
+        title: row.title, time_range: row.time_range, location: row.location,
+        category: row.category, est_cost: row.est_cost, notes: row.notes, link: row.link,
+      })
+    }
+
+    // Budget: null when the organizer hasn't set up budget lines at all, so the
+    // guest page can distinguish "no budget yet" from "your share is 0".
+    const hasBudget = await app.db.get('SELECT 1 AS x FROM budget_lines WHERE trip_id = ? LIMIT 1', [tripId])
+    let budget = null
+    if (hasBudget) {
+      const shape = await budgetShape(app, tripId)
+      const mine = shape.overrides.find((o) => o.person_id === personId)
+      budget = { currency: trip.currency, equal_share: shape.equal_share, my_amount: mine ? mine.amount : shape.equal_share }
+    }
+
+    // Companions: first names only, never email/phone/full name of anyone else —
+    // this response goes to a bearer-token guest link, not an authenticated organizer.
+    const others = await app.db.all(
+      `SELECT p.name FROM trip_participants tp JOIN persons p ON p.id = tp.person_id
+       WHERE tp.trip_id = ? AND tp.person_id != ? ORDER BY p.name`, [tripId, personId])
+    const companions = others.map((o) => String(o.name).trim().split(/\s+/)[0])
+    const { count: companion_count } = await app.db.get(
+      'SELECT COUNT(*)::int AS count FROM trip_participants WHERE trip_id = ?', [tripId])
+
     return {
       trip: {
         id: trip.id, name: trip.name, description: trip.description, status: trip.status,
@@ -31,6 +68,10 @@ export default async function routes(app) {
       },
       person,
       profile_confirmed: tp?.profile_confirmed ?? 0,
+      itinerary,
+      budget,
+      companions,
+      companion_count,
     }
   })
 

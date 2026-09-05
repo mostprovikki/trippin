@@ -3,7 +3,7 @@ import { httpError } from '../lib/errors.js'
 import { generate, aiGuard, LlmValidationError } from '../llm/index.js'
 import { buildBudgetPrompt, CATEGORIES } from '../llm/prompts/budget.js'
 
-export { CATEGORIES }
+export { CATEGORIES, budgetShape }
 
 function round2(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100
