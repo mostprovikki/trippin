@@ -8,6 +8,7 @@ import { useAuthStore } from '../stores/auth.js'
 import ItineraryItemForm from './ItineraryItemForm.vue'
 import { formatMoney } from '../utils/format.js'
 import { dayHeader, formatDayDate } from '../utils/dates.js'
+import { categoryIcon } from '../utils/itinerary.js'
 
 const props = defineProps({
   day: { type: Object, required: true },
@@ -25,9 +26,6 @@ const instruction = ref('')
 
 const editingItem = computed(() => props.day.items.find((it) => it.id === editingId.value) || null)
 const dayDraft = computed(() => store.dayDrafts[props.day.id] || null)
-
-const ICONS = { travel: '✈️', food: '🍽️', activity: '🎟️', rest: '🛌', logistics: '🧳' }
-function categoryIcon(cat) { return ICONS[cat] || '•' }
 
 async function move(idx, dir) {
   const items = [...props.day.items]

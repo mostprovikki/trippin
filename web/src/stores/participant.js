@@ -10,6 +10,10 @@ export const useParticipantStore = defineStore('participant', {
     documents: [],
     packing: [],
     tasks: [],
+    itinerary: [],
+    budget: null,
+    companions: [],
+    companionCount: 0,
     error: null
   }),
   actions: {
@@ -25,6 +29,10 @@ export const useParticipantStore = defineStore('participant', {
         this.trip = me.trip
         this.person = me.person
         this.profileConfirmed = !!me.profile_confirmed
+        this.itinerary = me.itinerary || []
+        this.budget = me.budget || null
+        this.companions = me.companions || []
+        this.companionCount = me.companion_count || 0
         const docs = await capi.get('/api/participant/documents')
         this.documents = docs.documents
         const checklist = await capi.get('/api/participant/checklist')

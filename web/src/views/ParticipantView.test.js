@@ -30,12 +30,29 @@ describe('ParticipantView', () => {
       profileConfirmed: true,
       documents: [],
       packing: [{ id: 'i1', done: 0 }],
-      tasks: []
+      tasks: [],
+      itinerary: [],
+      budget: null,
+      companions: [],
+      companionCount: 0
     })
     const steps = wrapper.findAll('.step-card')
     expect(steps).toHaveLength(3)
     expect(steps[0].classes()).toContain('step-done')      // profile confirmed
     expect(steps[1].classes()).not.toContain('step-done')  // no documents
     expect(wrapper.text()).toContain('Goa 2026')
+  })
+
+  it('passes itinerary/budget/companions through to ParticipantItinerary', async () => {
+    const { wrapper } = await mountView({
+      trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },
+      person: { name: 'Asha' },
+      profileConfirmed: true, documents: [], packing: [], tasks: [],
+      itinerary: [{ day_date: '2026-08-01', items: [{ title: 'Arrival', time_range: null, location: null, category: 'travel', est_cost: null, notes: null, link: null }] }],
+      budget: { currency: 'INR', equal_share: 1000, my_amount: 1000 },
+      companions: ['Priya'], companionCount: 2,
+    })
+    expect(wrapper.text()).toContain('Arrival')
+    expect(wrapper.text()).toContain('Travelling with: Priya')
   })
 })

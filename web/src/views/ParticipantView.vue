@@ -9,6 +9,7 @@ import { useParticipantStore } from '../stores/participant.js'
 import ParticipantProfileForm from '../components/ParticipantProfileForm.vue'
 import ParticipantDocs from '../components/ParticipantDocs.vue'
 import ParticipantChecklist from '../components/ParticipantChecklist.vue'
+import ParticipantItinerary from '../components/ParticipantItinerary.vue'
 
 const route = useRoute()
 const store = useParticipantStore()
@@ -103,6 +104,15 @@ const dateRange = computed(() =>
           </li>
         </ul>
       </section>
+
+      <ParticipantItinerary
+        v-if="store.trip"
+        :itinerary="store.itinerary"
+        :trip="store.trip"
+        :budget="store.budget"
+        :companions="store.companions"
+        :companion-count="store.companionCount"
+      />
 
       <section
         v-for="step in steps"
