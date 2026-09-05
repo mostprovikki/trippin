@@ -8,6 +8,8 @@ import TripPeopleView from './TripPeopleView.vue'
 import { useTripsStore } from '../../stores/trips.js'
 import { usePeopleStore } from '../../stores/people.js'
 
+vi.mock('qrcode', () => ({ default: { toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,ZmFrZQ==') } }))
+
 async function mountView() {
   const router = createRouter({
     history: createMemoryHistory(),
@@ -52,5 +54,34 @@ describe('TripPeopleView', () => {
     await new Promise((r) => setTimeout(r, 0))
     expect(trips.removeParticipant).toHaveBeenCalledWith('t1', 'p1')
     dialogWrapper.unmount()
+  })
+
+  it('reveals a copyable invite message and a QR code alongside a newly created link', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    await wrapper.findAll('button').find((b) => b.text().includes('Create link')).trigger('click')
+    await flushPromises()
+    const textarea = wrapper.find('textarea')
+    expect(textarea.exists()).toBe(true)
+    expect(textarea.element.value).toContain('Goa 2026')
+    expect(textarea.element.value).toContain('/p/tok123')
+    const img = wrapper.find('img[alt="QR code for invite link"]')
+    expect(img.exists()).toBe(true)
+    expect(img.attributes('src')).toBe('data:image/png;base64,ZmFrZQ==')
+  })
+
+  it('copies the invite message via clipboard', async () => {
+    const writeText = vi.fn().mockResolvedValue()
+    // navigator.clipboard is a getter-only accessor in happy-dom (mirrors real
+    // browsers) — Object.assign can't set it; defineProperty can.
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true, writable: true })
+    const { wrapper, trips } = await mountView()
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    await wrapper.findAll('button').find((b) => b.text().includes('Create link')).trigger('click')
+    await flushPromises()
+    const copyMsgBtn = wrapper.findAll('button').find((b) => b.text().includes('Copy message'))
+    await copyMsgBtn.trigger('click')
+    expect(writeText).toHaveBeenCalled()
+    expect(writeText.mock.calls[0][0]).toContain('Goa 2026')
   })
 })

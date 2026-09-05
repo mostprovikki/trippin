@@ -10,6 +10,7 @@ import { usePeopleStore } from '../../stores/people.js'
 import { useNotify } from '../../composables/useNotify.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 import EmptyState from '../../components/EmptyState.vue'
+import QRCode from 'qrcode'
 
 const route = useRoute()
 const trips = useTripsStore()
@@ -76,6 +77,7 @@ async function createLink(personId) {
   try {
     const result = await trips.createLink(tripId.value, personId)
     revealedLink.value = { personId, url: result.url }
+    qrDataUrl.value = await QRCode.toDataURL(origin + result.url)
     await trips.fetchLinks(tripId.value)
   } catch (e) { notify.error(e.message) }
 }
@@ -86,6 +88,26 @@ async function copyLink(url) {
     notify.success('Link copied')
   } catch {
     notify.error('Could not access clipboard — copy the link manually')
+  }
+}
+
+const qrDataUrl = ref(null)
+
+function inviteMessage(personId) {
+  if (!trips.current) return ''
+  const dates = trips.current.start_date && trips.current.end_date
+    ? `${trips.current.start_date} – ${trips.current.end_date}` : 'Dates TBD'
+  const url = revealedLink.value && revealedLink.value.personId === personId
+    ? origin + revealedLink.value.url : ''
+  return `You're in for ${trips.current.name}! 🎒 ${dates}. Tap to confirm your details: ${url}`
+}
+
+async function copyMessage(personId) {
+  try {
+    await navigator.clipboard.writeText(inviteMessage(personId))
+    notify.success('Message copied')
+  } catch {
+    notify.error('Could not access clipboard — copy the message manually')
   }
 }
 
@@ -144,6 +166,9 @@ function activeLink(personId) {
         <p><strong>Shown only once — copy it now:</strong></p>
         <code>{{ origin + revealedLink.url }}</code>
         <Button label="Copy" size="small" icon="pi pi-copy" @click="copyLink(revealedLink.url)" />
+        <textarea readonly class="invite-message" :value="inviteMessage(p.person_id)"></textarea>
+        <Button label="Copy message" size="small" outlined icon="pi pi-copy" @click="copyMessage(p.person_id)" />
+        <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR code for invite link" class="invite-qr" />
       </div>
 
       <ul v-if="linksFor(p.person_id).length" class="links-list">
@@ -171,6 +196,8 @@ function activeLink(personId) {
   overflow-wrap: anywhere;
 }
 .link-reveal code { display: block; margin: 0.25rem 0 0.5rem; font-size: 0.8125rem; }
+.invite-message { display: block; width: 100%; margin-top: 0.5rem; font: inherit; resize: vertical; min-height: 4rem; }
+.invite-qr { display: block; margin-top: 0.5rem; width: 8rem; height: 8rem; }
 .links-list { list-style: none; padding: 0; margin: 0.75rem 0 0; }
 .links-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
 .link-meta { color: var(--app-text-muted); font-size: 0.8125rem; }
