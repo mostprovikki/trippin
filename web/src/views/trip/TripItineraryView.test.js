@@ -8,14 +8,22 @@ import DayCard from '../../components/DayCard.vue'
 import { useItineraryStore } from '../../stores/itinerary.js'
 import { useTripsStore } from '../../stores/trips.js'
 
-async function mountView() {
-  const router = createRouter({
+// Shared by every test below: TripItineraryView's "Print / PDF" router-link
+// resolves against 'trip-itinerary-print', so any memory router that doesn't
+// register it throws mid-render (RouterLink resolution failure), not just a
+// broken link.
+function makeRouter() {
+  return createRouter({
     history: createMemoryHistory(),
     routes: [
       { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView },
       { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } }
     ]
   })
+}
+
+async function mountView() {
+  const router = makeRouter()
   await router.push('/trips/t1/itinerary')
   await router.isReady()
   // Stub BEFORE mount — the view's onMounted fires during mount.
@@ -44,13 +52,7 @@ describe('TripItineraryView', () => {
   })
 
   it('threads the trip currency down to DayCard for est_cost display', async () => {
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-      { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView },
-      { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } }
-    ]
-    })
+    const router = makeRouter()
     await router.push('/trips/t1/itinerary')
     await router.isReady()
     const pinia = createPinia()
@@ -94,13 +96,7 @@ describe('TripItineraryView', () => {
     // and the today DayCard mounts for the first time in that same pass.
     const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {})
     vi.useFakeTimers().setSystemTime(new Date(2026, 7, 1)) // Aug 1, 2026 local
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-      { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView },
-      { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } }
-    ]
-    })
+    const router = makeRouter()
     await router.push('/trips/t1/itinerary')
     await router.isReady()
     const pinia = createPinia()
