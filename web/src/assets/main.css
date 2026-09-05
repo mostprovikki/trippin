@@ -276,3 +276,28 @@ input[type='file']::file-selector-button:hover {
   text-transform: capitalize;
   border-radius: 999px;
 }
+
+/* Icon-only destructive row actions (DayCard item rows, ChecklistCard items,
+   TripPeopleView remove/revoke, TripBudgetView override Remove). A bare
+   outlined-red "Delete" on every row read as an alarm before anything was
+   touched; muted at rest, danger-red only on hover/focus-visible.
+   !important: PrimeVue's `text`/`outlined` variants set color from their own
+   custom-property chain (--p-button-text-secondary-color etc.), which plain
+   selector specificity does not reliably beat. */
+.icon-danger-btn {
+  color: var(--app-text-muted) !important;
+}
+.icon-danger-btn:hover,
+.icon-danger-btn:focus-visible {
+  color: var(--app-danger) !important;
+}
+@media (max-width: 767px) {
+  /* Same 44px minimum AppNav.vue already holds its icon-only controls to
+     (.app-theme-toggle, .app-search-trigger) — this is the same shape of
+     control (icon-only, only ever tapped on a phone), just in a list row
+     instead of the nav bar. */
+  .icon-danger-btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+}

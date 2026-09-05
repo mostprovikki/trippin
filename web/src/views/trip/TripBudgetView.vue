@@ -176,7 +176,7 @@ onBeforeRouteLeave(async () => {
           </Column>
           <Column>
             <template #body="{ data }">
-              <Button label="Remove" size="small" severity="danger" text @click="removeOverrideRow(data.person_id)" />
+              <Button icon="pi pi-times" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Remove override for ${data.person_name}`" @click="removeOverrideRow(data.person_id)" />
             </template>
           </Column>
         </DataTable>

@@ -57,4 +57,12 @@ describe('TripBudgetView', () => {
     expect(wrapper.text()).toContain('₫500,000')
     expect(wrapper.text()).toContain('₫250,000')
   })
+
+  it('override Remove button is icon-only with an aria-label', async () => {
+    localStorage.setItem('tripper:draft:trip:t1:budget-overrides', JSON.stringify({
+      overrides: [{ person_id: 'p1', person_name: 'Asha', amount: 100, note: '' }]
+    }))
+    const { wrapper } = await mountView()
+    expect(wrapper.find('[aria-label="Remove override for Asha"]').exists()).toBe(true)
+  })
 })

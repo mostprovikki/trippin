@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import ConfirmDialog from 'primevue/confirmdialog'
 import { mountWithBase } from '../test-utils.js'
 import DayCard from './DayCard.vue'
 import { useItineraryStore } from '../stores/itinerary.js'
@@ -46,5 +47,27 @@ describe('DayCard', () => {
     const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
     expect(wrapper.text()).toContain('₹1,500')
     expect(wrapper.text()).not.toMatch(/\$1,?500/)
+  })
+
+  it('keeps an aria-label and still confirms before deleting an item', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    const day = { id: 'd1', day_date: '2026-11-06', items: [{ id: 'i1', title: 'Snorkeling', est_cost: null }] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
+    store.deleteItem = vi.fn().mockResolvedValue()
+    const delBtn = wrapper.find('[aria-label="Delete Snorkeling"]')
+    expect(delBtn.exists()).toBe(true)
+    // ConfirmDialog isn't mounted by DayCard itself (App.vue owns the global
+    // one) — mount it alongside so confirm.require()'s dialog actually renders.
+    const dialogWrapper = mountWithBase(ConfirmDialog, { attachTo: document.body })
+    await delBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(document.body.textContent).toContain('Delete "Snorkeling" from Fri 6 Nov?')
+    const acceptBtn = [...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Delete')
+    acceptBtn.click()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(store.deleteItem).toHaveBeenCalledWith('i1')
+    dialogWrapper.unmount()
   })
 })

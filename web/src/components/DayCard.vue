@@ -43,7 +43,7 @@ async function move(idx, dir) {
 // beside Edit, which is the misclick this catches.
 function remove(item) {
   confirm.require({
-    message: `Delete "${item.title}" from ${props.day.day_date}? Its time, location, cost and notes go with it.`,
+    message: `Delete "${item.title}" from ${formatDayDate(props.day.day_date)}? Its time, location, cost and notes go with it.`,
     header: 'Delete itinerary item', icon: 'pi pi-exclamation-triangle',
     acceptLabel: 'Delete', acceptClass: 'p-button-danger', rejectLabel: 'Cancel',
     accept: async () => { try { await store.deleteItem(item.id) } catch { /* store.error is rendered by the parent view */ } }
@@ -87,7 +87,7 @@ function discardDayDraft() {
           <Button type="button" severity="secondary" outlined :disabled="idx === 0" @click="move(idx, -1)">↑</Button>
           <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" @click="move(idx, 1)">↓</Button>
           <Button type="button" label="Edit" severity="secondary" outlined @click="editingId = item.id" />
-          <Button type="button" label="Delete" severity="danger" outlined @click="remove(item)" />
+          <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="remove(item)" />
         </span>
       </li>
     </ul>

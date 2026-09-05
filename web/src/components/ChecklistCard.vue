@@ -132,7 +132,7 @@ function discardDraft() {
           />
         </template>
 
-        <Button type="button" label="Delete" severity="danger" outlined @click="removeItem(item.id)" />
+        <Button type="button" icon="pi pi-times" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="removeItem(item.id)" />
       </li>
     </ul>
 
