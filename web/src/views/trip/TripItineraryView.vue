@@ -11,6 +11,7 @@ import { useDraft } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
 import EmptyState from '../../components/EmptyState.vue'
 import DayCard from '../../components/DayCard.vue'
+import DraftReview from '../../components/DraftReview.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 import { formatMoney } from '../../utils/format.js'
 import { toIsoDate } from '../../utils/dates.js'
@@ -152,8 +153,7 @@ function discardWholeDraft() {
         <Tag v-else severity="secondary" value="AI suggestions are turned off" />
       </div>
 
-      <div v-if="store.draft" class="card ai-draft-card">
-        <h2>AI draft preview</h2>
+      <DraftReview v-if="store.draft" title="AI draft preview" :busy="store.aiBusy" @apply="applyWholeDraft" @discard="discardWholeDraft">
         <div v-for="d in store.draft" :key="d.day_date" style="margin-bottom:1rem">
           <h3>{{ d.day_date }}</h3>
           <ul style="list-style:none;padding:0;margin:0">
@@ -165,9 +165,7 @@ function discardWholeDraft() {
             </li>
           </ul>
         </div>
-        <Button type="button" @click="applyWholeDraft">Apply</Button>
-        <Button type="button" severity="secondary" outlined @click="discardWholeDraft">Discard</Button>
-      </div>
+      </DraftReview>
 
       <DayCard
         v-for="(day, idx) in store.days"
@@ -183,7 +181,6 @@ function discardWholeDraft() {
 </template>
 
 <style scoped>
-.ai-draft-card { background: var(--app-primary-soft); }
 .export-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .export-actions a.p-button { text-decoration: none; }
 </style>

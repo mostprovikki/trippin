@@ -6,6 +6,7 @@ import Tag from 'primevue/tag'
 import { useItineraryStore } from '../stores/itinerary.js'
 import { useAuthStore } from '../stores/auth.js'
 import ItineraryItemForm from './ItineraryItemForm.vue'
+import DraftReview from './DraftReview.vue'
 import { formatMoney } from '../utils/format.js'
 import { dayHeader, formatDayDate } from '../utils/dates.js'
 import { categoryIcon, parseTimeRange } from '../utils/itinerary.js'
@@ -131,8 +132,7 @@ function discardDayDraft() {
       <Tag v-else severity="secondary" value="AI suggestions are turned off" />
     </div>
 
-    <div v-if="dayDraft" class="card day-draft">
-      <h4>Draft for {{ formatDayDate(day.day_date) }}</h4>
+    <DraftReview v-if="dayDraft" :title="`Draft for ${formatDayDate(day.day_date)}`" :busy="store.aiBusy" @apply="applyDayDraft" @discard="discardDayDraft">
       <ul class="day-items">
         <li v-for="(it, i) in dayDraft" :key="i">
           {{ categoryIcon(it.category) }}
@@ -142,9 +142,7 @@ function discardDayDraft() {
           <span v-if="it.est_cost != null">{{ formatMoney(it.est_cost, currency) }}</span>
         </li>
       </ul>
-      <Button type="button" label="Apply" @click="applyDayDraft" />
-      <Button type="button" label="Discard" severity="secondary" outlined @click="discardDayDraft" />
-    </div>
+    </DraftReview>
   </div>
 </template>
 
@@ -162,5 +160,4 @@ function discardDayDraft() {
    fill color is. */
 .day-item-now { background: var(--app-primary-soft); border-left: 3px solid var(--app-primary); border-radius: var(--app-radius-sm); padding-left: 0.5rem; }
 .day-ai { margin-top: 1rem; }
-.day-draft { background: var(--app-surface-alt); }
 </style>

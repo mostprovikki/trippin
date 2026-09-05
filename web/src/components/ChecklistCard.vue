@@ -6,6 +6,7 @@ import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import DateField from './DateField.vue'
+import DraftReview from './DraftReview.vue'
 import { useChecklistsStore } from '../stores/checklists.js'
 import { useAuthStore } from '../stores/auth.js'
 
@@ -154,14 +155,11 @@ function discardDraft() {
       <p>AI suggestions are turned off</p>
     </div>
 
-    <div v-if="draft" class="card">
-      <h4>AI packing draft</h4>
+    <DraftReview v-if="draft" title="AI packing draft" :busy="store.aiBusy" @apply="applyDraft" @discard="discardDraft">
       <ul>
         <li v-for="(item, idx) in draft.items" :key="idx">{{ item.title }}</li>
       </ul>
-      <Button type="button" label="Apply" @click="applyDraft" />
-      <Button type="button" label="Discard" severity="secondary" outlined @click="discardDraft" />
-    </div>
+    </DraftReview>
 
     <div class="checklist-footer">
       <Button

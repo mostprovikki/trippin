@@ -16,6 +16,7 @@ import { useBudgetStore } from '../../stores/budget.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
 import BudgetTable from '../../components/BudgetTable.vue'
+import DraftReview from '../../components/DraftReview.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
@@ -141,12 +142,11 @@ onBeforeRouteLeave(async () => {
         <h2>AI draft</h2>
         <Button v-if="auth.aiEnabled" :label="store.aiBusy ? 'Generating…' : 'AI draft'" :disabled="store.aiBusy" @click="runAiDraft" />
         <p v-else>AI suggestions are turned off</p>
-        <div v-if="store.draft">
-          <p>Compare the "AI draft" column above against your estimates, then apply or discard.</p>
-          <Button label="Apply" @click="applyDraft" />
-          <Button label="Discard" severity="secondary" outlined @click="discardDraft" />
-        </div>
       </div>
+
+      <DraftReview v-if="store.draft" title="AI draft" :busy="store.aiBusy" @apply="applyDraft" @discard="discardDraft">
+        <p>Compare the "AI draft" column above against your estimates, then apply or discard.</p>
+      </DraftReview>
 
       <div class="card">
         <h2>Per-person split</h2>
