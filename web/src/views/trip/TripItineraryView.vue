@@ -14,7 +14,7 @@ import DayCard from '../../components/DayCard.vue'
 import DraftReview from '../../components/DraftReview.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
 import { formatMoney } from '../../utils/format.js'
-import { toIsoDate } from '../../utils/dates.js'
+import { toIsoDate, formatDayDate } from '../../utils/dates.js'
 
 const route = useRoute()
 const tripId = computed(() => route.params.id)
@@ -154,9 +154,9 @@ function discardWholeDraft() {
       </div>
 
       <DraftReview v-if="store.draft" title="AI draft preview" :busy="store.aiBusy" @apply="applyWholeDraft" @discard="discardWholeDraft">
-        <div v-for="d in store.draft" :key="d.day_date" style="margin-bottom:1rem">
-          <h3>{{ d.day_date }}</h3>
-          <ul style="list-style:none;padding:0;margin:0">
+        <div v-for="d in store.draft" :key="d.day_date" class="draft-day">
+          <div class="draft-day-heading">{{ formatDayDate(d.day_date) }}</div>
+          <ul class="draft-day-items">
             <li v-for="(it, i) in d.items" :key="i">
               <Tag v-if="it.time_range" :value="it.time_range" severity="secondary" />
               <strong>{{ it.title }}</strong>
@@ -183,4 +183,11 @@ function discardWholeDraft() {
 <style scoped>
 .export-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .export-actions a.p-button { text-decoration: none; }
+.draft-day { margin-bottom: 1rem; }
+/* A non-inverting level: DraftReview's own header is an h4, so a day heading
+   nested inside its slot renders as a styled div (not h3/h5) rather than
+   creating an h3-inside-h4 (or h5-inside-h4-then-back-up-to-h3) heading-order
+   inversion for anyone navigating by heading level. */
+.draft-day-heading { font-weight: 600; margin-bottom: 0.5rem; }
+.draft-day-items { list-style: none; padding: 0; margin: 0; }
 </style>

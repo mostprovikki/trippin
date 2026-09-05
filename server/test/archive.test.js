@@ -291,5 +291,19 @@ describe('archive routes', () => {
       const after = await db.get('SELECT archived_at FROM archives WHERE trip_id = ?', [trip.id])
       expect(after.archived_at).not.toBe(before.archived_at)
     })
+
+    it('preserves notes/photo_links on a bodyless re-archive after unarchive', async () => {
+      const trip = await createTrip(db, { status: 'confirmed' })
+      await authedInject(app, cookie, {
+        method: 'POST', url: `/api/trips/${trip.id}/archive`,
+        payload: { notes: 'saved notes', photo_links: ['http://x.com/1.jpg'] }
+      })
+      await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
+      expect(res.statusCode).toBe(200)
+      expect(res.json().archive.notes).toBe('saved notes')
+      expect(res.json().archive.photo_links).toEqual(['http://x.com/1.jpg'])
+    })
   })
 })

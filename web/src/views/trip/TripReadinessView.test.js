@@ -42,4 +42,22 @@ describe('TripReadinessView', () => {
     expect(links.filter((a) => a.attributes('href') === '/trips/t1/people').length).toBeGreaterThanOrEqual(2)
     expect(links.some((a) => a.attributes('href') === '/trips/t1/checklists')).toBe(true)
   })
+
+  it('gives readiness links a contextual accessible name, not a bare glyph', async () => {
+    const { wrapper } = await mountView({
+      decisions: { dates_confirmed: 0, destination_decided: 1, budget_drafted: 0, itinerary_days: 0 },
+      participants: [{ person_id: 'p1', name: 'Asha', profile_confirmed: 0, docs_count: 1, doc_warnings: [{ doc_type: 'passport', level: 'expired', expiry_date: '2026-01-01' }], has_active_link: true }],
+      checklists: { total_items: 2, done_items: 0, overdue: [{ title: 'Book flights', due_date: '2026-01-01' }] }
+    })
+    const links = wrapper.findAll('a.tag-link')
+    const profileLink = links.find((a) => a.attributes('href') === '/trips/t1/people' && a.attributes('aria-label')?.includes('Asha'))
+    expect(profileLink).toBeTruthy()
+    expect(profileLink.attributes('aria-label')).toContain('profile')
+
+    const docWarningLink = links.find((a) => a.attributes('aria-label')?.toLowerCase().includes('passport'))
+    expect(docWarningLink).toBeTruthy()
+
+    const overdueLink = links.find((a) => a.attributes('aria-label')?.includes('Book flights'))
+    expect(overdueLink).toBeTruthy()
+  })
 })

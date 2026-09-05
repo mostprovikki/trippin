@@ -64,6 +64,11 @@ export default async function routes(app) {
 
     const b = req.body || {}
     const notes = b.notes ?? null
+    const photoLinksProvided = Object.prototype.hasOwnProperty.call(b, 'photo_links')
+    // photo_links is NOT NULL DEFAULT '[]', so the VALUES() slot always carries
+    // a valid string (Postgres validates that against the constraint on every
+    // INSERT attempt, conflict or not) — whether a bodyless re-archive should
+    // actually keep the old value is decided separately below via photoLinksProvided.
     const photoLinks = JSON.stringify(b.photo_links ?? [])
 
     await db.tx(async () => {
@@ -81,10 +86,10 @@ export default async function routes(app) {
          VALUES (?, ?, ?, ?)
          ON CONFLICT (trip_id) DO UPDATE SET
            snapshot_json = EXCLUDED.snapshot_json,
-           notes = EXCLUDED.notes,
-           photo_links = EXCLUDED.photo_links,
+           notes = COALESCE(EXCLUDED.notes, archives.notes),
+           photo_links = CASE WHEN ? THEN EXCLUDED.photo_links ELSE archives.photo_links END,
            archived_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')`,
-        [trip.id, JSON.stringify(snapshot), notes, photoLinks]
+        [trip.id, JSON.stringify(snapshot), notes, photoLinks, photoLinksProvided]
       )
       await db.run(
         `UPDATE trips SET status = 'archived', archived_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,

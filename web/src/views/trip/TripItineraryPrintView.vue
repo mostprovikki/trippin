@@ -77,7 +77,7 @@ function print() { window.print() }
    waste toner and read badly on paper. min-height keeps the light card
    filling the whole screen-preview viewport too, so a short itinerary
    doesn't leave the app's dark --app-bg showing as a frame below it. */
-.print-page { background: #fff; color: #111; padding: 1.5rem; font-family: system-ui, sans-serif; min-height: 100vh; }
+.print-page { color-scheme: light; background: #fff; color: #111; padding: 1.5rem; font-family: system-ui, sans-serif; min-height: 100vh; }
 .print-header { margin-bottom: 1.5rem; }
 .print-day { margin-bottom: 1.5rem; page-break-inside: avoid; break-inside: avoid; }
 .state-banner { color: #111; }
@@ -85,6 +85,27 @@ function print() { window.print() }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 0.375rem 0.5rem; border-bottom: 1px solid #ddd; font-size: 0.875rem; }
 .print-toolbar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+/* Screen-preview only (.no-print) — this page is otherwise print output, so it
+   never inherits the app's dark-mode tokens. Without literal colors here the
+   PrimeVue-styled back-link and the raw <button> both pick up whatever the
+   surrounding (possibly dark) theme supplies — measured #2dd4bf-on-#fff at
+   1.86:1 in dark mode. Pin both controls to the same light literals as the
+   rest of this file (#111 text, #ddd borders, white bg). */
+.back-link.no-print,
+.print-trigger {
+  color: #111;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.back-link.no-print:hover,
+.print-trigger:hover {
+  background: #f5f5f5;
+}
 @media print {
   .no-print { display: none; }
   .print-page { padding: 0; }

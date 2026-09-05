@@ -66,6 +66,7 @@ function chipText(chip) {
             :key="chip.label"
             :to="{ name: chip.to, params: { id: tripId } }"
             class="tag-link"
+            :aria-label="`${chip.label} ${chip.ok ? 'confirmed' : 'not confirmed'} — open ${chip.label}`"
           >
             <Tag :value="chipText(chip)" :severity="chip.ok ? 'success' : 'warn'" />
           </RouterLink>
@@ -78,7 +79,11 @@ function chipText(chip) {
           <Column field="name" header="Name" />
           <Column header="Profile">
             <template #body="{ data }">
-              <RouterLink :to="{ name: 'trip-people', params: { id: tripId } }" class="tag-link">
+              <RouterLink
+                :to="{ name: 'trip-people', params: { id: tripId } }"
+                class="tag-link"
+                :aria-label="`${data.name} profile ${data.profile_confirmed ? 'confirmed' : 'not confirmed'} — open People`"
+              >
                 <Tag :value="data.profile_confirmed ? '✓' : '✗'" :severity="data.profile_confirmed ? 'success' : 'warn'" />
               </RouterLink>
             </template>
@@ -87,16 +92,22 @@ function chipText(chip) {
           <Column header="Doc warnings">
             <template #body="{ data }">
               <span v-if="!data.doc_warnings.length">—</span>
-              <div v-else class="tag-row">
-                <RouterLink
+              <!-- One link wraps the whole warning group (not one per Tag): every
+                   warning already routes to the same People section, so a link
+                   per Tag was N identical-destination tab stops for N warnings. -->
+              <RouterLink
+                v-else
+                :to="{ name: 'trip-people', params: { id: tripId } }"
+                class="tag-link tag-row"
+                :aria-label="`${data.name} document warnings: ${data.doc_warnings.map((w) => `${w.doc_type} ${w.level}`).join(', ')} — open People`"
+              >
+                <Tag
                   v-for="(w, i) in data.doc_warnings"
                   :key="i"
-                  :to="{ name: 'trip-people', params: { id: tripId } }"
-                  class="tag-link"
-                >
-                  <Tag :value="`${w.doc_type} ${w.level} (${w.expiry_date})`" :severity="w.level === 'expired' ? 'danger' : 'warn'" />
-                </RouterLink>
-              </div>
+                  :value="`${w.doc_type} ${w.level} (${w.expiry_date})`"
+                  :severity="w.level === 'expired' ? 'danger' : 'warn'"
+                />
+              </RouterLink>
             </template>
           </Column>
           <Column header="Link">
@@ -115,7 +126,11 @@ function chipText(chip) {
         <p v-if="!store.data.checklists.overdue.length">No overdue items.</p>
         <ul v-else>
           <li v-for="(item, i) in store.data.checklists.overdue" :key="i">
-            <RouterLink :to="{ name: 'trip-checklists', params: { id: tripId } }" class="tag-link">
+            <RouterLink
+              :to="{ name: 'trip-checklists', params: { id: tripId } }"
+              class="tag-link"
+              :aria-label="`${item.title}, overdue, due ${item.due_date}${item.assignee_name ? `, assigned to ${item.assignee_name}` : ''} — open Checklists`"
+            >
               {{ item.title }} — due {{ item.due_date }}<template v-if="item.assignee_name"> ({{ item.assignee_name }})</template>
             </RouterLink>
           </li>
@@ -131,5 +146,18 @@ function chipText(chip) {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-.tag-link { color: inherit; text-decoration: none; }
+.tag-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--app-border);
+  text-underline-offset: 3px;
+  border-radius: var(--app-radius-xs);
+}
+.tag-link:hover {
+  text-decoration-color: var(--app-primary);
+}
+.tag-link:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
 </style>
