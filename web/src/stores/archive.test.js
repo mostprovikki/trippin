@@ -86,6 +86,17 @@ describe('archive store', () => {
     expect(newId).toBe('t2')
   })
 
+  it('unarchive() clears local archive state and returns the updated trip', async () => {
+    fetch.mockImplementation(() => jsonResponse({ trip: { id: 't1', status: 'active', archived_at: null } }))
+    const store = useArchiveStore()
+    store.$patch({ ...archiveBody })
+    const trip = await store.unarchive('t1')
+    expect(fetch).toHaveBeenCalledWith('/api/trips/t1/unarchive', expect.objectContaining({ method: 'POST' }))
+    expect(trip.status).toBe('active')
+    expect(store.snapshot).toBeNull()
+    expect(store.archived_at).toBeNull()
+  })
+
   it('rethrows ApiError and sets this.error on failure', async () => {
     fetch.mockImplementation(() =>
       Promise.resolve(new Response(JSON.stringify({ error: { code: 'NOT_ARCHIVED', message: 'Trip has not been archived' } }), { status: 404 }))

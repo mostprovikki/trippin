@@ -60,7 +60,7 @@ export default async function routes(app) {
   app.post('/trips/:id/archive', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
-    if (await getArchive(trip.id)) return httpError(reply, 409, 'ALREADY_ARCHIVED', 'Trip is already archived')
+    if (trip.status === 'archived') return httpError(reply, 409, 'ALREADY_ARCHIVED', 'Trip is already archived')
 
     const b = req.body || {}
     const notes = b.notes ?? null
@@ -73,8 +73,19 @@ export default async function routes(app) {
         itinerary: await itinerarySnapshot(db, trip.id),
         checklists: await checklistsSnapshot(db, trip.id),
       }
-      await db.run('INSERT INTO archives (trip_id, snapshot_json, notes, photo_links) VALUES (?, ?, ?, ?)',
-        [trip.id, JSON.stringify(snapshot), notes, photoLinks])
+      // Upsert: archives.trip_id is a PRIMARY KEY, and a trip archived a second
+      // time (after being unarchived) reuses the same row rather than erroring
+      // on a duplicate key.
+      await db.run(
+        `INSERT INTO archives (trip_id, snapshot_json, notes, photo_links)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT (trip_id) DO UPDATE SET
+           snapshot_json = EXCLUDED.snapshot_json,
+           notes = EXCLUDED.notes,
+           photo_links = EXCLUDED.photo_links,
+           archived_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')`,
+        [trip.id, JSON.stringify(snapshot), notes, photoLinks]
+      )
       await db.run(
         `UPDATE trips SET status = 'archived', archived_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
         [trip.id]
@@ -86,6 +97,14 @@ export default async function routes(app) {
     })
 
     return { archive: archiveToJson(await getArchive(trip.id)) }
+  })
+
+  app.post('/trips/:id/unarchive', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (trip.status !== 'archived') return httpError(reply, 400, 'NOT_ARCHIVED', 'Trip is not archived')
+    await db.run(`UPDATE trips SET status = 'active', archived_at = NULL WHERE id = ?`, [trip.id])
+    return { trip: await tripToJson(db, await get(trip.id)) }
   })
 
   app.get('/trips/:id/archive', { preHandler: app.requireOrganizer }, async (req, reply) => {

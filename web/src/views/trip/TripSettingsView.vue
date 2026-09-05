@@ -129,6 +129,21 @@ function doArchive() {
   })
 }
 
+function doUnarchive() {
+  confirm.require({
+    message: 'Unarchive this trip? It becomes editable again, but revoked participant links stay revoked — reissue them from People if needed.',
+    header: 'Unarchive trip', icon: 'pi pi-box',
+    acceptLabel: 'Unarchive', rejectLabel: 'Cancel',
+    accept: async () => {
+      try {
+        await archiveStore.unarchive(tripId.value)
+        await trips.fetchTrip(tripId.value)
+        notify.success('Trip unarchived')
+      } catch (e) { notify.error(e.message) }
+    }
+  })
+}
+
 async function saveMeta() {
   try {
     const photo_links = photoLinksDraft.value.split('\n').map((l) => l.trim()).filter(Boolean)
@@ -192,6 +207,7 @@ async function cloneTrip() {
         <div class="field"><label for="ts-notes">Notes</label><Textarea id="ts-notes" v-model="notesDraft" rows="3" fluid /></div>
         <div class="field"><label for="ts-photos">Photo links (one per line)</label><Textarea id="ts-photos" v-model="photoLinksDraft" rows="3" fluid /></div>
         <Button label="Save notes & links" @click="saveMeta" />
+        <Button label="Unarchive trip" severity="secondary" outlined icon="pi pi-box" class="unarchive-btn" @click="doUnarchive" />
       </section>
 
       <section class="card">

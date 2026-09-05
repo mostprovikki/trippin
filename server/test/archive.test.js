@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { describe, it, expect, beforeEach } from 'vitest'
-import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer } from './helpers.js'
 
 async function seedParticipantLink(app, db, tripId, personId) {
   await db.run('INSERT INTO participant_links (id, trip_id, person_id, token_hash) VALUES (?,?,?,?)',
@@ -242,5 +242,54 @@ describe('archive routes', () => {
 
     const originalStillThere = await db.get('SELECT * FROM trips WHERE id = ?', [trip.id])
     expect(originalStillThere.name).toBe('Original')
+  })
+
+  describe('unarchive', () => {
+    it('flips status back to active, keeps archived_at cleared, keeps the archives row, keeps links revoked', async () => {
+      const trip = await createTrip(db, { status: 'confirmed' })
+      const person = await createPerson(db, { name: 'Alice' })
+      await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [trip.id, person.id])
+      await seedParticipantLink(app, db, trip.id, person.id)
+      await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
+
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+      expect(res.statusCode).toBe(200)
+      expect(res.json().trip.status).toBe('active')
+      expect(res.json().trip.archived_at).toBeFalsy()
+
+      const archiveRow = await db.get('SELECT trip_id FROM archives WHERE trip_id = ?', [trip.id])
+      expect(archiveRow).toBeTruthy()
+
+      const link = await db.get('SELECT revoked_at FROM participant_links WHERE trip_id = ?', [trip.id])
+      expect(link.revoked_at).toBeTruthy()
+    })
+
+    it('400 NOT_ARCHIVED when the trip is not archived', async () => {
+      const trip = await createTrip(db, { status: 'confirmed' })
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+      expect(res.statusCode).toBe(400)
+      expect(res.json().error.code).toBe('NOT_ARCHIVED')
+    })
+
+    it('404 for another organizer\'s trip', async () => {
+      const other = await createOrganizer(db, { email: 'other2@x.dev' })
+      const trip = await createTrip(db, { organizer_id: other.id, status: 'archived' })
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+      expect(res.statusCode).toBe(404)
+    })
+
+    it('allows re-archiving a trip after it was unarchived, replacing the old snapshot row', async () => {
+      const trip = await createTrip(db, { status: 'confirmed' })
+      await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
+      await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+
+      const before = await db.get('SELECT archived_at FROM archives WHERE trip_id = ?', [trip.id])
+      await new Promise((r) => setTimeout(r, 1100)) // archived_at has 1-second text resolution
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
+      expect(res.statusCode).toBe(200)
+
+      const after = await db.get('SELECT archived_at FROM archives WHERE trip_id = ?', [trip.id])
+      expect(after.archived_at).not.toBe(before.archived_at)
+    })
   })
 })

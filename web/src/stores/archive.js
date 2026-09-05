@@ -124,6 +124,13 @@ export const useArchiveStore = defineStore('archive', {
         const res = await api.post(`/api/trips/${tripId}/clone`, { name })
         return res.trip.id
       } catch (e) { this.error = e.message; throw e }
+    },
+    async unarchive(tripId) {
+      try {
+        const res = await api.post(`/api/trips/${tripId}/unarchive`)
+        this.clear()
+        return res.trip
+      } catch (e) { this.error = e.message; throw e }
     }
   }
 })
