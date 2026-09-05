@@ -57,6 +57,16 @@ describe('trips', () => {
     expect(none.json().trips).toHaveLength(0)
   })
 
+  // The list projection is hand-built (unlike tripToJson) and was silently dropping
+  // vibe_tags, so the web list view's per-card vibe accent had nothing to hash on.
+  it('GET /api/trips list summaries include parsed vibe_tags', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    await mkTrip(app, cookie, { name: 'Goa', vibe_tags: ['beach', 'chill'] })
+    const res = await authedInject(app, cookie, { method: 'GET', url: '/api/trips' })
+    const summary = res.json().trips.find(t => t.name === 'Goa')
+    expect(summary.vibe_tags).toEqual(['beach', 'chill'])
+  })
+
   it('GET /api/trips/:id returns trip or 404', async () => {
     const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const t = await mkTrip(app, cookie)

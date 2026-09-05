@@ -17,4 +17,9 @@ describe('vibeAccentColor', () => {
   it('only the first tag matters', () => {
     expect(vibeAccentColor(['beach', 'relax'])).toBe(vibeAccentColor(['beach']))
   })
+  it('normalizes case and surrounding whitespace before hashing', () => {
+    expect(vibeAccentColor(['Beach'])).toBe(vibeAccentColor(['beach']))
+    expect(vibeAccentColor([' beach '])).toBe(vibeAccentColor(['beach']))
+    expect(vibeAccentColor(['BEACH'])).toBe('var(--app-text-muted)')
+  })
 })

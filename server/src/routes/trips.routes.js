@@ -35,6 +35,7 @@ export default async function routes(app) {
       trips.push({
         id: row.id, name: row.name, status: row.status, destination: row.destination,
         start_date: row.start_date, end_date: row.end_date, participant_count: count,
+        vibe_tags: JSON.parse(row.vibe_tags || '[]'),
       })
     }
     return { trips }

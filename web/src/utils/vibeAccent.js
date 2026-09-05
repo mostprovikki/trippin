@@ -5,7 +5,8 @@
 const PALETTE = ['var(--app-primary)', 'var(--app-accent-strong)', 'var(--app-success)', 'var(--app-text-muted)']
 
 export function vibeAccentColor(vibeTags) {
-  const tag = (vibeTags || [])[0]
+  const raw = (vibeTags || [])[0]
+  const tag = raw && raw.trim().toLowerCase()
   if (!tag) return null
   let hash = 0
   for (let i = 0; i < tag.length; i++) hash = (hash * 31 + tag.charCodeAt(i)) >>> 0
