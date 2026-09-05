@@ -5,16 +5,19 @@ import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
 import Tag from 'primevue/tag'
 import { useItineraryStore } from '../../stores/itinerary.js'
+import { useTripsStore } from '../../stores/trips.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useDraft } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
 import EmptyState from '../../components/EmptyState.vue'
 import DayCard from '../../components/DayCard.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
+import { formatMoney } from '../../utils/format.js'
 
 const route = useRoute()
 const tripId = computed(() => route.params.id)
 const store = useItineraryStore()
+const trips = useTripsStore()
 const auth = useAuthStore()
 const notify = useNotify()
 
@@ -111,7 +114,7 @@ function discardWholeDraft() {
               <Tag v-if="it.time_range" :value="it.time_range" severity="secondary" />
               <strong>{{ it.title }}</strong>
               <span v-if="it.location">— {{ it.location }}</span>
-              <span v-if="it.est_cost != null">${{ it.est_cost }}</span>
+              <span v-if="it.est_cost != null">{{ formatMoney(it.est_cost, trips.current?.currency) }}</span>
             </li>
           </ul>
         </div>
@@ -119,7 +122,13 @@ function discardWholeDraft() {
         <Button type="button" severity="secondary" outlined @click="discardWholeDraft">Discard</Button>
       </div>
 
-      <DayCard v-for="day in store.days" :key="day.id" :day="day" />
+      <DayCard
+        v-for="(day, idx) in store.days"
+        :key="day.id"
+        :day="day"
+        :index="idx + 1"
+        :currency="trips.current?.currency"
+      />
     </template>
   </div>
 </template>

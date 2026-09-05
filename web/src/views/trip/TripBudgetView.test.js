@@ -39,4 +39,22 @@ describe('TripBudgetView', () => {
     await flushPromises()
     expect(wrapper.find('h1').text()).toBe('Budget')
   })
+
+  it('renders totals and equal share with the currency symbol', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({ trip: { name: 'Goa 2026', currency: 'VND', participants: [] } })
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useBudgetStore()
+    store.fetchBudget = vi.fn().mockImplementation(async () => { store.total = 500000; store.equal_share = 250000 })
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/trips/:id/budget', name: 'trip-budget', component: TripBudgetView }]
+    })
+    await router.push('/trips/t1/budget')
+    await router.isReady()
+    const wrapper = mountWithBase(TripBudgetView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('₫500,000')
+    expect(wrapper.text()).toContain('₫250,000')
+  })
 })

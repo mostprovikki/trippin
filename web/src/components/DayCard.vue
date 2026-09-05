@@ -6,8 +6,13 @@ import Tag from 'primevue/tag'
 import { useItineraryStore } from '../stores/itinerary.js'
 import { useAuthStore } from '../stores/auth.js'
 import ItineraryItemForm from './ItineraryItemForm.vue'
+import { formatMoney } from '../utils/format.js'
 
-const props = defineProps({ day: { type: Object, required: true } })
+const props = defineProps({
+  day: { type: Object, required: true },
+  index: { type: Number, required: true },
+  currency: { type: String, default: 'INR' }
+})
 const store = useItineraryStore()
 const auth = useAuthStore()
 const confirm = useConfirm()
@@ -76,7 +81,7 @@ function discardDayDraft() {
         <Tag v-if="item.time_range" :value="item.time_range" severity="secondary" />
         <strong>{{ item.title }}</strong>
         <span v-if="item.location">— {{ item.location }}</span>
-        <span v-if="item.est_cost != null">${{ item.est_cost }}</span>
+        <span v-if="item.est_cost != null">{{ formatMoney(item.est_cost, currency) }}</span>
         <span class="day-item-actions">
           <Button type="button" severity="secondary" outlined :disabled="idx === 0" @click="move(idx, -1)">↑</Button>
           <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" @click="move(idx, 1)">↓</Button>
@@ -114,7 +119,7 @@ function discardDayDraft() {
           <Tag v-if="it.time_range" :value="it.time_range" severity="secondary" />
           <strong>{{ it.title }}</strong>
           <span v-if="it.location">— {{ it.location }}</span>
-          <span v-if="it.est_cost != null">${{ it.est_cost }}</span>
+          <span v-if="it.est_cost != null">{{ formatMoney(it.est_cost, currency) }}</span>
         </li>
       </ul>
       <Button type="button" label="Apply" @click="applyDayDraft" />

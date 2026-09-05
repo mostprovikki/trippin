@@ -7,7 +7,7 @@ import Skeleton from 'primevue/skeleton'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-import { formatAmount } from '../../utils/format.js'
+import { formatMoney } from '../../utils/format.js'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import { api } from '../../api/client.js'
@@ -27,6 +27,7 @@ const notify = useNotify()
 
 const loading = ref(true)
 const participants = ref([])
+const tripCurrency = ref('INR')
 const newOverride = reactive({ person_id: '', amount: 0, note: '' })
 
 // Getter keys: this view is reused across :id changes, so the drafts have to
@@ -52,6 +53,7 @@ async function load() {
   try {
     const trip = (await api.get(`/api/trips/${tripId.value}`)).trip
     participants.value = trip?.participants || []
+    tripCurrency.value = trip?.currency || 'INR'
   } catch { participants.value = [] }
   try { await store.fetchBudget(tripId.value) } catch (e) { notify.error(e.message) } finally { loading.value = false }
 }
@@ -130,8 +132,8 @@ onBeforeRouteLeave(async () => {
 
       <div class="card">
         <h2>Category estimates</h2>
-        <BudgetTable v-model="linesDraft.draft.lines" :draft="store.draft" />
-        <p><strong>Total: {{ formatAmount(store.total) }}</strong></p>
+        <BudgetTable v-model="linesDraft.draft.lines" :draft="store.draft" :currency="tripCurrency" />
+        <p><strong>Total: {{ formatMoney(store.total, tripCurrency) }}</strong></p>
         <Button label="Save budget" @click="saveLines" />
       </div>
 
@@ -149,7 +151,7 @@ onBeforeRouteLeave(async () => {
       <div class="card">
         <h2>Per-person split</h2>
         <p>Participants: {{ store.participant_count }}</p>
-        <p>Equal share: {{ store.equal_share }}</p>
+        <p>Equal share: {{ formatMoney(store.equal_share, tripCurrency) }}</p>
 
         <div class="override-add">
           <Select v-model="newOverride.person_id" :options="participants" option-label="name" option-value="id" placeholder="Select person…" />

@@ -61,4 +61,30 @@ describe('TripOverviewView', () => {
     })
     expect(wrapper.text()).toContain('All set')
   })
+
+  it('renders the budget stat with the trip currency (defaults to INR)', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/trips/:id', name: 'trip-overview', component: TripOverviewView },
+        ...SECTIONS.map((name) => ({ path: `/trips/:id/${name.slice(5)}`, name, component: { template: '<div/>' } }))
+      ]
+    })
+    await router.push('/trips/t1')
+    await router.isReady()
+    const trips = useTripsStore()
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'planning', participants: [] }
+    const r = useReadinessStore()
+    r.data = { decisions: {}, participants: [], checklists: { total_items: 0, done_items: 0, overdue: [] } }
+    r.lastTripId = 't1'
+    r.fetch = vi.fn().mockResolvedValue()
+    const budget = useBudgetStore()
+    budget.total = 12000
+    budget.fetchBudget = vi.fn().mockResolvedValue()
+    const wrapper = mountWithBase(TripOverviewView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('₹12,000')
+  })
 })
