@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
 import { generate, aiGuard } from '../llm/index.js'
 import { buildItineraryPrompt, buildDayRegenPrompt } from '../llm/prompts/itinerary.js'
+import { buildTripIcs, slugify } from '../lib/ics.js'
 
 const ITEM_CATEGORIES = ['travel', 'food', 'activity', 'rest', 'logistics']
 
@@ -131,6 +132,15 @@ export default async function routes(app) {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     return { days: await listDays(trip.id) }
+  })
+
+  app.get('/trips/:id/itinerary.ics', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    const ics = buildTripIcs({ trip, days: await listDays(trip.id) })
+    reply.header('content-disposition', `attachment; filename="${slugify(trip.name)}.ics"`)
+    reply.type('text/calendar; charset=utf-8')
+    return ics
   })
 
   app.post('/trips/:id/itinerary/init', { preHandler: app.requireOrganizer }, async (req, reply) => {

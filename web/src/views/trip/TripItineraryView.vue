@@ -139,6 +139,9 @@ function discardWholeDraft() {
     <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
 
     <template v-else>
+      <div class="card export-actions">
+        <a class="p-button p-button-outlined" :href="`/api/trips/${tripId}/itinerary.ics`">Add to calendar (.ics)</a>
+      </div>
       <div class="card">
         <div v-if="auth.aiEnabled">
           <Button type="button" :loading="store.aiBusy" @click="draftWholeTrip">
@@ -180,4 +183,5 @@ function discardWholeDraft() {
 
 <style scoped>
 .ai-draft-card { background: var(--app-primary-soft); }
+.export-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 </style>

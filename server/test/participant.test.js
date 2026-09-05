@@ -153,4 +153,27 @@ describe('participant self-service', () => {
     expect(res.payload).not.toContain('9990001111')
     expect(res.payload).not.toContain('Asha Rao') // full name never leaks, only "Asha"
   })
+
+  it('GET /participant/itinerary.ics returns a calendar for the linked trip', async () => {
+    const { app, db } = await makeTestApp()
+    const p = await createPerson(db)
+    const t = await createTrip(db, { start_date: '2026-03-01', end_date: '2026-03-01' })
+    const dayId = 'd1'
+    await db.run('INSERT INTO itinerary_days (id, trip_id, day_date, position) VALUES (?,?,?,0)', [dayId, t.id, '2026-03-01'])
+    await db.run(
+      `INSERT INTO itinerary_items (id, day_id, position, title, time_range) VALUES ('it1', ?, 0, 'Beach', '18:00–21:00')`,
+      [dayId]
+    )
+    const raw = await seedLink(app, db, t, p)
+    const res = await app.inject({ method: 'GET', url: '/api/participant/itinerary.ics', headers: { authorization: `Bearer ${raw}` } })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toMatch(/text\/calendar/)
+    expect(res.body).toContain('SUMMARY:Beach')
+  })
+
+  it('401 without a valid token', async () => {
+    const { app } = await makeTestApp()
+    const res = await app.inject({ method: 'GET', url: '/api/participant/itinerary.ics' })
+    expect(res.statusCode).toBe(401)
+  })
 })

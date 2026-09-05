@@ -1,6 +1,7 @@
 import rateLimit from '@fastify/rate-limit'
 import { personToJson } from './people.routes.js'
 import { budgetShape } from './budget.routes.js'
+import { buildTripIcs, slugify } from '../lib/ics.js'
 
 const FIELDS = ['name', 'phone', 'email', 'emergency_contact', 'dietary', 'allergies', 'medical_notes', 'pace', 'interests', 'budget_band', 'home_city']
 const bodySchema = {
@@ -87,5 +88,23 @@ export default async function routes(app) {
       )
     await app.db.run('UPDATE trip_participants SET profile_confirmed = 1 WHERE trip_id = ? AND person_id = ?', [tripId, personId])
     return { person: personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])) }
+  })
+
+  app.get('/participant/itinerary.ics', { preHandler: app.requireParticipant }, async (req, reply) => {
+    const { tripId } = req.participant
+    const trip = await app.db.get('SELECT * FROM trips WHERE id = ?', [tripId])
+    const dayRows = await app.db.all('SELECT id, day_date FROM itinerary_days WHERE trip_id = ? ORDER BY position', [tripId])
+    const days = []
+    for (const day of dayRows) {
+      const items = await app.db.all(
+        'SELECT id, title, time_range, location, notes, link FROM itinerary_items WHERE day_id = ? ORDER BY position',
+        [day.id]
+      )
+      days.push({ day_date: day.day_date, items })
+    }
+    const ics = buildTripIcs({ trip, days })
+    reply.header('content-disposition', `attachment; filename="${slugify(trip.name)}.ics"`)
+    reply.type('text/calendar; charset=utf-8')
+    return ics
   })
 }

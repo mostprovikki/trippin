@@ -52,6 +52,25 @@ const steps = computed(() => [
 const dateRange = computed(() =>
   store.trip?.start_date && store.trip?.end_date ? `${store.trip.start_date} – ${store.trip.end_date}` : 'Dates TBD'
 )
+
+// Mirrors ParticipantDocs.vue's download() exactly — a bearer token can't
+// ride a plain <a href>, so this fetches with the Authorization header and
+// hands the browser a blob: URL instead.
+async function downloadIcs() {
+  const res = await fetch('/api/participant/itinerary.ics', {
+    headers: { Authorization: `Bearer ${store.token}` }
+  })
+  if (!res.ok) return
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${store.trip.name || 'trip'}.ics`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <template>
@@ -103,6 +122,7 @@ const dateRange = computed(() =>
             <span v-if="goal.fixed_place"> @ {{ goal.fixed_place }}</span>
           </li>
         </ul>
+        <Button label="Add to calendar (.ics)" icon="pi pi-calendar-plus" outlined size="small" class="p-ics-btn" @click="downloadIcs" />
       </section>
 
       <ParticipantItinerary
@@ -167,6 +187,7 @@ const dateRange = computed(() =>
 .p-goals { list-style: none; padding: 0; margin: 0.75rem 0 0; }
 .p-goals li { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.125rem 0; font-size: 0.875rem; }
 .p-goals i { color: var(--app-primary); font-size: 0.75rem; }
+.p-ics-btn { margin-top: 0.75rem; }
 
 .step-head { display: flex; gap: 0.75rem; align-items: flex-start; margin-bottom: 0.75rem; }
 .step-head h2 { margin: 0; }

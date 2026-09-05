@@ -1,7 +1,7 @@
 process.env.LLM_PROVIDER = 'mock'
 import { describe, it, expect } from 'vitest'
 import { createRequire } from 'node:module'
-import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer } from './helpers.js'
 import { buildItineraryPrompt } from '../src/llm/prompts/itinerary.js'
 
 // NOTE: routes are loaded by @fastify/autoload via a genuine native dynamic import()
@@ -207,6 +207,26 @@ describe('itinerary — diet summary is aggregated counts only', () => {
     // route does and asserting it contains no participant identifiers.
     const total = (await db.get('SELECT COUNT(*)::int c FROM trip_participants WHERE trip_id = ?', [trip.id])).c
     expect(total).toBe(3)
+  })
+})
+
+describe('itinerary — .ics export', () => {
+  it('organizer downloads text/calendar with content-disposition', async () => {
+    const { app, cookie, trip } = await setup({})
+    await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/init` })
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/itinerary.ics` })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toMatch(/text\/calendar/)
+    expect(res.headers['content-disposition']).toMatch(/attachment; filename="trip-\w+\.ics"/)
+    expect(res.body).toContain('BEGIN:VCALENDAR')
+  })
+  it('404 NOT_FOUND for another organizer\'s trip', async () => {
+    const { app, db } = await makeTestApp()
+    const { cookie } = await loginOrganizer(app, db)
+    const other = await createOrganizer(db, { email: 'other@x.dev' })
+    const trip = await createTrip(db, { organizer_id: other.id })
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/itinerary.ics` })
+    expect(res.statusCode).toBe(404)
   })
 })
 

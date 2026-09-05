@@ -55,4 +55,23 @@ describe('ParticipantView', () => {
     expect(wrapper.text()).toContain('Arrival')
     expect(wrapper.text()).toContain('Travelling with: Priya')
   })
+
+  it('downloads the .ics with the participant bearer token', async () => {
+    const blob = new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' })
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(blob) })
+    global.URL.createObjectURL = vi.fn().mockReturnValue('blob:x')
+    global.URL.revokeObjectURL = vi.fn()
+    const { wrapper } = await mountView({
+      token: 'tok1',
+      trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },
+      person: { name: 'Asha' },
+      profileConfirmed: true, documents: [], packing: [], tasks: [],
+      itinerary: [], budget: null, companions: [], companionCount: 0,
+    })
+    await wrapper.find('.p-ics-btn').trigger('click')
+    await flushPromises()
+    expect(global.fetch).toHaveBeenCalledWith('/api/participant/itinerary.ics', {
+      headers: { Authorization: expect.stringContaining('Bearer ') }
+    })
+  })
 })
