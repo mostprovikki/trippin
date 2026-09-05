@@ -41,4 +41,37 @@ describe('ParticipantItinerary', () => {
     })
     expect(wrapper.find('.pi-share').exists()).toBe(false)
   })
+
+  it('shows no budget line when budget exists but my_amount is not yet known', () => {
+    const wrapper = mountWithBase(ParticipantItinerary, {
+      props: { itinerary, trip, budget: { currency: 'INR', equal_share: 5000, my_amount: null }, companions: [], companionCount: 1 },
+    })
+    expect(wrapper.find('.pi-share').exists()).toBe(false)
+  })
+
+  it('hides the essentials strip entirely when there is no countdown, share or companions line', () => {
+    const wrapper = mountWithBase(ParticipantItinerary, {
+      props: { itinerary, trip, budget: null, companions: [], companionCount: 1 },
+    })
+    expect(wrapper.find('.pi-essentials').exists()).toBe(false)
+  })
+
+  it('shows a friendly empty state when the organizer has not shared a day-by-day plan', () => {
+    const wrapper = mountWithBase(ParticipantItinerary, {
+      props: { itinerary: [], trip, budget: null, companions: [], companionCount: 1 },
+    })
+    expect(wrapper.text()).toContain("hasn't shared a day-by-day plan yet")
+    expect(wrapper.find('.pi-day').exists()).toBe(false)
+  })
+
+  it('scrolls the today section into view exactly once on mount', () => {
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {})
+    vi.useFakeTimers().setSystemTime(new Date(2026, 7, 2)) // Aug 2, 2026 local
+    const wrapper = mountWithBase(ParticipantItinerary, {
+      props: { itinerary, trip, budget: null, companions: [], companionCount: 1 },
+    })
+    expect(scrollSpy).toHaveBeenCalledTimes(1)
+    expect(scrollSpy.mock.instances[0]).toBe(wrapper.get('.pi-today').element)
+    scrollSpy.mockRestore()
+  })
 })
