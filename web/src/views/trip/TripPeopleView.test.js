@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
@@ -7,6 +7,7 @@ import { mountWithBase } from '../../test-utils.js'
 import TripPeopleView from './TripPeopleView.vue'
 import { useTripsStore } from '../../stores/trips.js'
 import { usePeopleStore } from '../../stores/people.js'
+import QRCode from 'qrcode'
 
 vi.mock('qrcode', () => ({ default: { toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,ZmFrZQ==') } }))
 
@@ -30,6 +31,13 @@ async function mountView() {
 }
 
 describe('TripPeopleView', () => {
+  afterEach(() => {
+    // Undo the getter-only override below so it doesn't leak into other
+    // test files' navigator — deleting the own property restores happy-dom's
+    // prototype accessor.
+    delete navigator.clipboard
+  })
+
   it('lists participants with actions', async () => {
     const { wrapper } = await mountView()
     expect(wrapper.find('h1').text()).toBe('People')
@@ -83,5 +91,45 @@ describe('TripPeopleView', () => {
     await copyMsgBtn.trigger('click')
     expect(writeText).toHaveBeenCalled()
     expect(writeText.mock.calls[0][0]).toContain('Goa 2026')
+  })
+
+  it('still reveals the link and refreshes link status when QR generation fails', async () => {
+    QRCode.toDataURL.mockRejectedValueOnce(new Error('boom'))
+    const { wrapper, trips } = await mountView()
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    await wrapper.findAll('button').find((b) => b.text().includes('Create link')).trigger('click')
+    await flushPromises()
+    expect(wrapper.find('img[alt="QR code for invite link"]').exists()).toBe(false)
+    expect(wrapper.find('textarea').exists()).toBe(true)
+    expect(wrapper.find('code').text()).toContain('/p/tok123')
+    // fetchLinks runs before QR generation, so a QR failure doesn't skip it
+    expect(trips.fetchLinks).toHaveBeenCalledTimes(2) // once on mount, once after createLink
+  })
+
+  it('formats the invite message dates with formatDayDate, not raw ISO', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.current = { ...trips.current, start_date: '2026-11-06', end_date: '2026-11-15' }
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    await wrapper.findAll('button').find((b) => b.text().includes('Create link')).trigger('click')
+    await flushPromises()
+    expect(wrapper.find('textarea').element.value).toContain('Fri 6 Nov – Sun 15 Nov')
+  })
+
+  it('says "from <date>" in the invite message when only a start date is known', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.current = { ...trips.current, start_date: '2026-11-06' }
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    await wrapper.findAll('button').find((b) => b.text().includes('Create link')).trigger('click')
+    await flushPromises()
+    expect(wrapper.find('textarea').element.value).toContain('from Fri 6 Nov')
+  })
+
+  it('falls back to "the trip" in the invite message when the trip has no name', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.current = { ...trips.current, name: null }
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    await wrapper.findAll('button').find((b) => b.text().includes('Create link')).trigger('click')
+    await flushPromises()
+    expect(wrapper.find('textarea').element.value).toContain('You\'re in for the trip!')
   })
 })

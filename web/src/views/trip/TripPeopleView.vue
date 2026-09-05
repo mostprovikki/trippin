@@ -11,6 +11,7 @@ import { useNotify } from '../../composables/useNotify.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 import EmptyState from '../../components/EmptyState.vue'
 import QRCode from 'qrcode'
+import { formatDayDate } from '../../utils/dates.js'
 
 const route = useRoute()
 const trips = useTripsStore()
@@ -21,6 +22,7 @@ const notify = useNotify()
 const tripId = computed(() => route.params.id)
 const newParticipantId = ref(null)
 const revealedLink = ref(null)
+const qrDataUrl = ref(null)
 // window globals aren't reachable from template expression scope
 const origin = location.origin
 
@@ -74,12 +76,25 @@ function removeParticipant(personId) {
 }
 
 async function createLink(personId) {
+  let result
   try {
-    const result = await trips.createLink(tripId.value, personId)
+    result = await trips.createLink(tripId.value, personId)
     revealedLink.value = { personId, url: result.url }
-    qrDataUrl.value = await QRCode.toDataURL(origin + result.url)
+    qrDataUrl.value = null
     await trips.fetchLinks(tripId.value)
-  } catch (e) { notify.error(e.message) }
+    notify.success('Link created')
+  } catch (e) {
+    notify.error(e.message)
+    return
+  }
+  // Separate try/catch: a QR-rendering failure shouldn't look like the mint
+  // itself failed, and mustn't leave the previous person's QR image showing
+  // under this person's name (qrDataUrl was already cleared above).
+  try {
+    qrDataUrl.value = await QRCode.toDataURL(origin + result.url)
+  } catch {
+    notify.error('Could not generate a QR code — the link above still works')
+  }
 }
 
 async function copyLink(url) {
@@ -91,15 +106,17 @@ async function copyLink(url) {
   }
 }
 
-const qrDataUrl = ref(null)
-
 function inviteMessage(personId) {
   if (!trips.current) return ''
-  const dates = trips.current.start_date && trips.current.end_date
-    ? `${trips.current.start_date} – ${trips.current.end_date}` : 'Dates TBD'
+  const tripName = trips.current.name || 'the trip'
+  const { start_date: start, end_date: end } = trips.current
+  let dates
+  if (start && end) dates = `${formatDayDate(start)} – ${formatDayDate(end)}`
+  else if (start) dates = `from ${formatDayDate(start)}`
+  else dates = 'Dates TBD'
   const url = revealedLink.value && revealedLink.value.personId === personId
     ? origin + revealedLink.value.url : ''
-  return `You're in for ${trips.current.name}! 🎒 ${dates}. Tap to confirm your details: ${url}`
+  return `You're in for ${tripName}! 🎒 ${dates}. Tap to confirm your details: ${url}`
 }
 
 async function copyMessage(personId) {
@@ -166,7 +183,7 @@ function activeLink(personId) {
         <p><strong>Shown only once — copy it now:</strong></p>
         <code>{{ origin + revealedLink.url }}</code>
         <Button label="Copy" size="small" icon="pi pi-copy" @click="copyLink(revealedLink.url)" />
-        <textarea readonly class="invite-message" :value="inviteMessage(p.person_id)"></textarea>
+        <textarea readonly class="invite-message" aria-label="Invite message" :value="inviteMessage(p.person_id)"></textarea>
         <Button label="Copy message" size="small" outlined icon="pi pi-copy" @click="copyMessage(p.person_id)" />
         <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR code for invite link" class="invite-qr" />
       </div>
@@ -196,7 +213,26 @@ function activeLink(personId) {
   overflow-wrap: anywhere;
 }
 .link-reveal code { display: block; margin: 0.25rem 0 0.5rem; font-size: 0.8125rem; }
-.invite-message { display: block; width: 100%; margin-top: 0.5rem; font: inherit; resize: vertical; min-height: 4rem; }
+.invite-message {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-sm);
+  font: inherit;
+  font-size: 0.9375rem;
+  background: var(--app-surface);
+  color: var(--app-text);
+  resize: vertical;
+  min-height: 4rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.invite-message:focus {
+  outline: none;
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 3px var(--app-focus-ring);
+}
 .invite-qr { display: block; margin-top: 0.5rem; width: 8rem; height: 8rem; }
 .links-list { list-style: none; padding: 0; margin: 0.75rem 0 0; }
 .links-list li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
