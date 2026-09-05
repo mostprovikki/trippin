@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
+import ConfirmDialog from 'primevue/confirmdialog'
 import { mountWithBase } from '../../test-utils.js'
 import TripPeopleView from './TripPeopleView.vue'
 import { useTripsStore } from '../../stores/trips.js'
@@ -34,16 +35,22 @@ describe('TripPeopleView', () => {
     expect(wrapper.text()).toContain('Create link')
   })
 
-  it('keeps aria-labels on Remove/Revoke and still confirms before acting', async () => {
+  it('keeps an aria-label on Remove and actually confirms before removing', async () => {
     const { wrapper, trips } = await mountView()
     trips.removeParticipant = vi.fn().mockResolvedValue()
     const removeBtn = wrapper.find('[aria-label="Remove Asha"]')
     expect(removeBtn.exists()).toBe(true)
     // TripPeopleView renders no <ConfirmDialog/> of its own (App.vue owns the
-    // global one) — assert the click reaches confirm.require by checking the
-    // handler fires without throwing; the end-to-end accept flow is covered by
-    // DayCard.test.js's ConfirmDialog-mounted case, so this test only needs to
-    // prove the button and its handler are still wired, with the label intact.
+    // global one) — mount it alongside so confirm.require()'s dialog actually
+    // renders, same pattern as DayCard.test.js.
+    const dialogWrapper = mountWithBase(ConfirmDialog, { attachTo: document.body })
     await removeBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(document.body.textContent).toContain('Remove this participant?')
+    const acceptBtn = [...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Remove')
+    acceptBtn.click()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(trips.removeParticipant).toHaveBeenCalledWith('t1', 'p1')
+    dialogWrapper.unmount()
   })
 })

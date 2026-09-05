@@ -108,7 +108,7 @@ async function download(doc) {
             <Tag :value="doc.expiry_date || '-'" :severity="isExpired(doc) ? 'warn' : 'secondary'" />
           </td>
           <td data-label="File"><a href="#" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
-          <td><Button label="Delete" size="small" severity="danger" text @click="remove(doc)" /></td>
+          <td><Button icon="pi pi-trash" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" /></td>
         </tr>
       </tbody>
     </table>

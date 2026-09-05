@@ -136,7 +136,7 @@ function activeLink(personId) {
         </div>
         <div class="participant-actions">
           <Button label="Create link" size="small" outlined icon="pi pi-link" @click="createLink(p.person_id)" />
-          <Button icon="pi pi-trash" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Remove ${p.name}`" @click="removeParticipant(p.person_id)" />
+          <Button icon="pi pi-trash" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Remove ${p.name || 'this person'}`" @click="removeParticipant(p.person_id)" />
         </div>
       </div>
 

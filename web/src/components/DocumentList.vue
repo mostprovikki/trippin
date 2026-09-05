@@ -90,7 +90,7 @@ function isExpired(doc) {
             <Tag :severity="isExpired(doc) ? 'warn' : 'secondary'" :value="doc.expiry_date || '-'" />
           </td>
           <td data-label="File"><a :href="`/api/documents/${doc.id}/file`" target="_blank">{{ doc.original_name }}</a></td>
-          <td><Button type="button" label="Delete" severity="danger" outlined @click="remove(doc)" /></td>
+          <td><Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" /></td>
         </tr>
       </tbody>
     </table>

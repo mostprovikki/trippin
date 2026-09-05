@@ -92,7 +92,7 @@ async function submitManual() {
       <p v-if="c.est_budget_per_person != null"><strong>Est. budget/person:</strong> {{ c.est_budget_per_person }}</p>
       <p v-if="c.caveats"><strong>Caveats:</strong> {{ c.caveats }}</p>
       <Button type="button" label="Mark decided" :disabled="!!c.decided" @click="markDecided(c.id)" />
-      <Button type="button" label="Delete" severity="danger" outlined :disabled="!!c.decided" @click="removeCandidate(c.id)" />
+      <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${c.name}`" :disabled="!!c.decided" @click="removeCandidate(c.id)" />
     </div>
 
     <form class="card dest-add-form" @submit.prevent="submitManual">

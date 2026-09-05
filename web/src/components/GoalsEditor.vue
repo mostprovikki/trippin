@@ -70,7 +70,7 @@ function remove(id) {
           <span v-if="goal.fixed_place"> @ {{ goal.fixed_place }}</span>
           <p v-if="goal.notes">{{ goal.notes }}</p>
           <Button type="button" label="Edit" severity="secondary" outlined @click="startEdit(goal)" />
-          <Button type="button" label="Delete" severity="danger" outlined @click="remove(goal.id)" />
+          <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${goal.title}`" @click="remove(goal.id)" />
         </template>
       </li>
     </ul>
