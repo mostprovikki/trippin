@@ -27,9 +27,9 @@ export default async function routes(app) {
     // Itinerary: a day always appears even with zero items (LEFT JOIN), so an
     // empty day isn't silently dropped from the guest's read-only view.
     const itineraryRows = await app.db.all(
-      `SELECT d.day_date, d.position AS day_position, i.title, i.time_range, i.location, i.category, i.est_cost, i.notes, i.link
+      `SELECT d.day_date, i.title, i.time_range, i.location, i.category, i.est_cost, i.notes, i.link
        FROM itinerary_days d LEFT JOIN itinerary_items i ON i.day_id = d.id
-       WHERE d.trip_id = ? ORDER BY d.position, i.position`, [tripId])
+       WHERE d.trip_id = ? ORDER BY d.position, d.day_date, i.position, i.id`, [tripId])
     const itinerary = []
     for (const row of itineraryRows) {
       let day = itinerary[itinerary.length - 1]

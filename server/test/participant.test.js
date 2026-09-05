@@ -82,6 +82,37 @@ describe('participant self-service', () => {
     ])
   })
 
+  it('GET /participant/me keeps each day distinct when two days share the same position (no UNIQUE on itinerary_days.position)', async () => {
+    const { app, db } = await makeTestApp()
+    const p = await createPerson(db)
+    const t = await createTrip(db)
+    const raw = await seedLink(app, db, t, p)
+    // Direct-SQL fixture: constructing a genuine position tie through the app's
+    // itinerary-write routes isn't feasible (they assign the next position
+    // sequentially), so this reproduces the heap-order hazard directly.
+    await db.run('INSERT INTO itinerary_days (id, trip_id, day_date, position) VALUES (?,?,?,?)', ['dA', t.id, '2026-08-01', 0])
+    await db.run('INSERT INTO itinerary_days (id, trip_id, day_date, position) VALUES (?,?,?,?)', ['dB', t.id, '2026-08-02', 0])
+    await db.run(
+      `INSERT INTO itinerary_items (id, day_id, position, title, time_range, location, category, est_cost, notes, link)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      ['iA', 'dA', 0, 'Morning walk', null, null, 'activity', null, null, null])
+    await db.run(
+      `INSERT INTO itinerary_items (id, day_id, position, title, time_range, location, category, est_cost, notes, link)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      ['iB', 'dB', 0, 'Ferry', null, null, 'travel', null, null, null])
+
+    const res = await app.inject({ method: 'GET', url: '/api/participant/me', headers: { authorization: `Bearer ${raw}` } })
+    const body = res.json()
+    expect(body.itinerary).toEqual([
+      { day_date: '2026-08-01', items: [
+        { title: 'Morning walk', time_range: null, location: null, category: 'activity', est_cost: null, notes: null, link: null },
+      ] },
+      { day_date: '2026-08-02', items: [
+        { title: 'Ferry', time_range: null, location: null, category: 'travel', est_cost: null, notes: null, link: null },
+      ] },
+    ])
+  })
+
   it('GET /participant/me returns budget with my_amount from override, falling back to equal_share', async () => {
     const { app, db } = await makeTestApp()
     const p1 = await createPerson(db, { name: 'Asha Rao' })
