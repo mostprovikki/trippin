@@ -33,10 +33,10 @@ const decisionChips = computed(() => {
   const d = store.data?.decisions
   if (!d) return []
   return [
-    { label: 'Dates', ok: !!d.dates_confirmed },
-    { label: 'Destination', ok: !!d.destination_decided },
-    { label: 'Budget', ok: !!d.budget_drafted },
-    { label: 'Itinerary', ok: d.itinerary_days > 0, detail: `${d.itinerary_days} day(s)` }
+    { label: 'Dates', ok: !!d.dates_confirmed, to: 'trip-dates' },
+    { label: 'Destination', ok: !!d.destination_decided, to: 'trip-destination' },
+    { label: 'Budget', ok: !!d.budget_drafted, to: 'trip-budget' },
+    { label: 'Itinerary', ok: d.itinerary_days > 0, detail: `${d.itinerary_days} day(s)`, to: 'trip-itinerary' }
   ]
 })
 
@@ -61,12 +61,14 @@ function chipText(chip) {
       <div class="card">
         <h2>Decisions</h2>
         <div class="tag-row">
-          <Tag
+          <RouterLink
             v-for="chip in decisionChips"
             :key="chip.label"
-            :value="chipText(chip)"
-            :severity="chip.ok ? 'success' : 'warn'"
-          />
+            :to="{ name: chip.to, params: { id: tripId } }"
+            class="tag-link"
+          >
+            <Tag :value="chipText(chip)" :severity="chip.ok ? 'success' : 'warn'" />
+          </RouterLink>
         </div>
       </div>
 
@@ -76,7 +78,9 @@ function chipText(chip) {
           <Column field="name" header="Name" />
           <Column header="Profile">
             <template #body="{ data }">
-              <Tag :value="data.profile_confirmed ? '✓' : '✗'" :severity="data.profile_confirmed ? 'success' : 'warn'" />
+              <RouterLink :to="{ name: 'trip-people', params: { id: tripId } }" class="tag-link">
+                <Tag :value="data.profile_confirmed ? '✓' : '✗'" :severity="data.profile_confirmed ? 'success' : 'warn'" />
+              </RouterLink>
             </template>
           </Column>
           <Column field="docs_count" header="Docs" />
@@ -84,12 +88,14 @@ function chipText(chip) {
             <template #body="{ data }">
               <span v-if="!data.doc_warnings.length">—</span>
               <div v-else class="tag-row">
-                <Tag
+                <RouterLink
                   v-for="(w, i) in data.doc_warnings"
                   :key="i"
-                  :value="`${w.doc_type} ${w.level} (${w.expiry_date})`"
-                  :severity="w.level === 'expired' ? 'danger' : 'warn'"
-                />
+                  :to="{ name: 'trip-people', params: { id: tripId } }"
+                  class="tag-link"
+                >
+                  <Tag :value="`${w.doc_type} ${w.level} (${w.expiry_date})`" :severity="w.level === 'expired' ? 'danger' : 'warn'" />
+                </RouterLink>
               </div>
             </template>
           </Column>
@@ -109,7 +115,9 @@ function chipText(chip) {
         <p v-if="!store.data.checklists.overdue.length">No overdue items.</p>
         <ul v-else>
           <li v-for="(item, i) in store.data.checklists.overdue" :key="i">
-            {{ item.title }} — due {{ item.due_date }}<template v-if="item.assignee_name"> ({{ item.assignee_name }})</template>
+            <RouterLink :to="{ name: 'trip-checklists', params: { id: tripId } }" class="tag-link">
+              {{ item.title }} — due {{ item.due_date }}<template v-if="item.assignee_name"> ({{ item.assignee_name }})</template>
+            </RouterLink>
           </li>
         </ul>
       </div>
@@ -123,4 +131,5 @@ function chipText(chip) {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+.tag-link { color: inherit; text-decoration: none; }
 </style>

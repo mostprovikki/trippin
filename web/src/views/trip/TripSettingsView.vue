@@ -60,19 +60,6 @@ onBeforeRouteLeave(async () => {
   return ok
 })
 
-// --- Status lifecycle ---
-const NEXT_STATUS = {
-  idea: { label: 'Start planning', target: 'planning' },
-  planning: { label: 'Confirm trip', target: 'confirmed' },
-  confirmed: { label: 'Activate', target: 'active' }
-}
-const nextTransition = computed(() => trips.current ? NEXT_STATUS[trips.current.status] : null)
-
-async function advanceStatus() {
-  if (!nextTransition.value) return
-  try { await trips.setStatus(tripId.value, nextTransition.value.target) } catch (e) { notify.error(e.message) }
-}
-
 // --- Archive / clone (ported from TripArchiveView) ---
 const archiveLoading = ref(true)
 const isArchived = computed(() => !!archiveStore.snapshot)
@@ -188,7 +175,7 @@ async function cloneTrip() {
         Current: <Tag class="status-tag" :value="trips.current?.status || '…'" severity="info" />
       </p>
       <p class="muted">Lifecycle: idea → planning → confirmed → active → archived. Confirming locks dates for participants; archiving (below) snapshots everything and revokes links.</p>
-      <Button v-if="nextTransition" :label="nextTransition.label" outlined @click="advanceStatus" />
+      <p class="muted">Advance the status from the quick action in the sidebar.</p>
     </section>
 
     <section v-if="!archiveLoading && !isArchived" class="card">

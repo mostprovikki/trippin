@@ -28,11 +28,13 @@ async function mountView() {
 beforeEach(() => { localStorage.clear() })
 
 describe('TripSettingsView', () => {
-  it('renders basics form seeded from trip and status control', async () => {
+  it('renders basics form seeded from trip and a read-only status (advance moved to the sidebar)', async () => {
     const { wrapper } = await mountView()
     expect(wrapper.find('h1').text()).toBe('Settings')
     expect(wrapper.find('#ts-name').element.value).toBe('Goa 2026')
-    expect(wrapper.text()).toContain('Confirm trip')
+    expect(wrapper.findAll('button').some((b) => b.text().match(/Advance|Confirm trip|Activate|Start planning/))).toBe(false)
+    expect(wrapper.text()).not.toContain('Confirm trip')
+    expect(wrapper.text()).toContain('quick action in the sidebar')
   })
 
   it('restores unsaved basics draft after remount (same key as before)', async () => {
