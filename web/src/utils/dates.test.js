@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso, formatDayDate, dayHeader, tripCountdown } from './dates.js'
+import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso, formatDayDate, dayHeader, tripCountdown, formatLongDate } from './dates.js'
 
 afterEach(() => { vi.useRealTimers() })
 
@@ -113,5 +113,15 @@ describe('tripCountdown', () => {
   })
   it('says "Ended" the day after end_date', () => {
     expect(tripCountdown({ status: 'active', start_date: '2026-11-06', end_date: '2026-11-10' }, T(2026, 10, 11))).toEqual({ label: 'Ended' })
+  })
+})
+
+describe('formatLongDate', () => {
+  it('formats a local-parsed long date', () => {
+    expect(formatLongDate('2026-03-02')).toMatch(/Monday.*March.*2.*2026/)
+  })
+  it('returns invalid input unchanged rather than "Invalid Date"', () => {
+    expect(formatLongDate('not-a-date')).toBe('not-a-date')
+    expect(formatLongDate(null)).toBe(null)
   })
 })

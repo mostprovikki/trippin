@@ -141,6 +141,7 @@ function discardWholeDraft() {
     <template v-else>
       <div class="card export-actions">
         <a class="p-button p-button-outlined p-component" :href="`/api/trips/${tripId}/itinerary.ics`">Add to calendar (.ics)</a>
+        <router-link class="p-button p-button-outlined p-component" :to="{ name: 'trip-itinerary-print', params: { id: tripId } }" target="_blank">Print / PDF</router-link>
       </div>
       <div class="card">
         <div v-if="auth.aiEnabled">

@@ -11,7 +11,10 @@ import { useTripsStore } from '../../stores/trips.js'
 async function mountView() {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView }]
+    routes: [
+      { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView },
+      { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } }
+    ]
   })
   await router.push('/trips/t1/itinerary')
   await router.isReady()
@@ -43,7 +46,10 @@ describe('TripItineraryView', () => {
   it('threads the trip currency down to DayCard for est_cost display', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: [{ path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView }]
+      routes: [
+      { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView },
+      { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } }
+    ]
     })
     await router.push('/trips/t1/itinerary')
     await router.isReady()
@@ -90,7 +96,10 @@ describe('TripItineraryView', () => {
     vi.useFakeTimers().setSystemTime(new Date(2026, 7, 1)) // Aug 1, 2026 local
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: [{ path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView }]
+      routes: [
+      { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView },
+      { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } }
+    ]
     })
     await router.push('/trips/t1/itinerary')
     await router.isReady()

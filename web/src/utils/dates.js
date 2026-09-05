@@ -33,6 +33,18 @@ export function isExpiredIso(iso) {
   return !!expiry && expiry < startOfToday()
 }
 
+// 'Monday, March 2, 2026' — for the printable day-sheet header, where a full
+// weekday/month spells out unambiguously on a page with no other context.
+export function formatLongDate(iso) {
+  const d = parseIsoDate(iso)
+  if (!d) return iso
+  // Locale pinned to 'en-US' rather than the runtime default: a system
+  // locale of e.g. 'en-IN' reorders to "2 March 2026", which broke this
+  // exact string on a dev machine — a printed sheet should read the same
+  // regardless of the server/browser's locale.
+  return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+}
+
 const WEEKDAY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'short' })
 const MONTH_FMT = new Intl.DateTimeFormat('en-US', { month: 'short' })
 const MS_PER_DAY = 86400000
