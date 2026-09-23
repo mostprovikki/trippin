@@ -74,6 +74,14 @@ export const useParticipantStore = defineStore('participant', {
         throw e
       }
     },
+    // Step 1 of the download flow (see utils/downloadDoc.js): {url, direct}. Routed
+    // through participantApi so a dead/expired link's 401 gets the same ApiError
+    // shape as every other participant call — not a store-level `this.error`, since
+    // a download failure belongs on the row/toast the component shows, not the
+    // page-level banner.
+    getDocumentUrl(id) {
+      return participantApi(this.token).get(`/api/participant/documents/${id}/file-url`)
+    },
     async tickItem(itemId, done) {
       const capi = participantApi(this.token)
       try {

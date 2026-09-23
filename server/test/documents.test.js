@@ -220,10 +220,24 @@ describe('documents', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ url: `/api/participant/documents/${doc.id}/file`, direct: false })
 
-    const otherId = 'doc-other-2'
-    await db.run(`INSERT INTO documents (id,person_id,doc_type,file_path,original_name,mime_type,size_bytes)
-      VALUES (?,?,?,?,?,?,?)`, [otherId, p2.id, 'passport', '/nonexistent/path', 'x.pdf', 'application/pdf', 1])
-    const res404 = await app.inject({ method: 'GET', url: `/api/participant/documents/${otherId}/file-url`, headers })
+    // Cross-person 404: uses a REAL document uploaded under p2's own link, fetched
+    // with p1's token. A raw INSERT with a bogus file_path here would still 404 if
+    // the ownership guard were ever removed by mutation — a missing storage object
+    // 404s on its own — so this fixture uploads for real: only the guard can produce
+    // the 404 the test asserts, and a guard-removal mutant would surface as a 200.
+    const rawOther = 'q'.repeat(43)
+    await db.run('INSERT INTO participant_links (id,trip_id,person_id,token_hash) VALUES (?,?,?,?)',
+      ['l2b', t.id, p2.id, app.hashToken(rawOther)])
+    const otherForm = new FormData()
+    otherForm.append('file', pdfBlob(10), 'other.pdf')
+    otherForm.append('doc_type', 'passport')
+    const otherUp = await app.inject({
+      method: 'POST', url: '/api/participant/documents',
+      headers: { authorization: `Bearer ${rawOther}` }, payload: otherForm
+    })
+    const otherDoc = otherUp.json().document
+
+    const res404 = await app.inject({ method: 'GET', url: `/api/participant/documents/${otherDoc.id}/file-url`, headers })
     expect(res404.statusCode).toBe(404)
 
     const noAuth = await app.inject({ method: 'GET', url: `/api/participant/documents/${doc.id}/file-url` })

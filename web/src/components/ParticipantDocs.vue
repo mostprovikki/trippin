@@ -8,7 +8,7 @@ import DateField from './DateField.vue'
 import { isExpiredIso } from '../utils/dates.js'
 import { useParticipantStore } from '../stores/participant.js'
 import { useNotify } from '../composables/useNotify.js'
-import { downloadDocument, triggerBlobDownload } from '../utils/downloadDoc.js'
+import { fetchDocumentBlob, triggerBlobDownload } from '../utils/downloadDoc.js'
 
 const store = useParticipantStore()
 const confirm = useConfirm()
@@ -71,12 +71,21 @@ function isExpired(doc) {
   return isExpiredIso(doc.expiry_date)
 }
 
+// A Set, not a single flag: several rows can each be downloading independently.
+const downloadingIds = ref(new Set())
+
 async function download(doc) {
-  const blob = await downloadDocument(`/api/participant/documents/${doc.id}/file-url`, {
-    headers: { Authorization: `Bearer ${store.token}` }
-  })
-  if (!blob) return
-  triggerBlobDownload(blob, doc.original_name)
+  if (downloadingIds.value.has(doc.id)) return // in-flight guard: a double-click must not double-download
+  downloadingIds.value.add(doc.id)
+  try {
+    const { url, direct } = await store.getDocumentUrl(doc.id)
+    const blob = await fetchDocumentBlob({ url, direct }, { headers: { Authorization: `Bearer ${store.token}` } })
+    triggerBlobDownload(blob, doc.original_name)
+  } catch (e) {
+    notify.error(e.message)
+  } finally {
+    downloadingIds.value.delete(doc.id)
+  }
 }
 </script>
 
@@ -100,7 +109,7 @@ async function download(doc) {
           <td data-label="Expiry">
             <Tag :value="doc.expiry_date || '-'" :severity="isExpired(doc) ? 'warn' : 'secondary'" />
           </td>
-          <td data-label="File"><a href="#" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
+          <td data-label="File"><a href="#" :aria-disabled="downloadingIds.has(doc.id)" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
           <td><Button icon="pi pi-trash" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" /></td>
         </tr>
       </tbody>

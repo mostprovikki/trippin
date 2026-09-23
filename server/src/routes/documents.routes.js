@@ -71,7 +71,11 @@ export default async function routes(app) {
   async function sendDocUrl(req, reply, row, sameOriginPath) {
     let dl
     try {
-      dl = await app.storage.getDownload(req, { key: row.file_path, filename: row.original_name, mime: row.mime_type })
+      // streamless: true — this route only ever reports back {url, direct}, so on the
+      // local driver there is no reader for a stream and opening one anyway leaks an fd
+      // (see local.js). Existence is still checked (statSync), so 404-on-missing-object
+      // still fires the same way as the streaming route.
+      dl = await app.storage.getDownload(req, { key: row.file_path, filename: row.original_name, mime: row.mime_type, streamless: true })
     } catch (e) {
       if (e instanceof StorageNotFoundError) return httpError(reply, 404, 'NOT_FOUND', 'Document file is missing')
       throw e

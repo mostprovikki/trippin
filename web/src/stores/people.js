@@ -62,6 +62,13 @@ export const usePeopleStore = defineStore('people', {
         await api.del(`/api/documents/${docId}`)
         this.documents = this.documents.filter(d => d.id !== docId)
       } catch (e) { this.error = e.message; throw e }
+    },
+    // Step 1 of the download flow (see utils/downloadDoc.js): {url, direct}. Via
+    // the plain `api` client so an expired cookie session's 401 fires the usual
+    // tripper:unauthorized redirect, same as every other organizer call — not
+    // stored on `this.error`, a download failure belongs on the row/toast instead.
+    getDocumentUrl(docId) {
+      return api.get(`/api/documents/${docId}/file-url`)
     }
   }
 })

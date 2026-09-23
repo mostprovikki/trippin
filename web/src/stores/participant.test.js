@@ -128,4 +128,26 @@ describe('participant store', () => {
     await expect(store.deleteDocument('missing')).rejects.toThrow('No such document')
     expect(store.error).toBe('No such document')
   })
+
+  it('getDocumentUrl() GETs /api/participant/documents/:id/file-url with Bearer auth and returns {url, direct}', async () => {
+    const store = useParticipantStore()
+    store.token = 'tok-123'
+    fetch.mockImplementation((path, opts) => {
+      expect(path).toBe('/api/participant/documents/d1/file-url')
+      expect(opts.method).toBe('GET')
+      expect(opts.headers.Authorization).toBe('Bearer tok-123')
+      return jsonResponse({ url: 'https://stratus.example/signed', direct: true, expires_in: 300 })
+    })
+    await expect(store.getDocumentUrl('d1')).resolves.toEqual({ url: 'https://stratus.example/signed', direct: true, expires_in: 300 })
+  })
+
+  it('getDocumentUrl() 401 rejects with an ApiError, without touching this.error (not a page-level failure)', async () => {
+    const store = useParticipantStore()
+    store.token = 'expired-tok'
+    fetch.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ error: { code: 'INVALID_TOKEN', message: 'Invalid, revoked or expired link' } }), { status: 401 }))
+    )
+    await expect(store.getDocumentUrl('d1')).rejects.toThrow('Invalid, revoked or expired link')
+    expect(store.error).toBeNull()
+  })
 })

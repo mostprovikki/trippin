@@ -116,4 +116,21 @@ describe('people store', () => {
     await store.deleteDocument('d1')
     expect(store.documents).toEqual([])
   })
+
+  it('getDocumentUrl() GETs /api/documents/:id/file-url and returns {url, direct}', async () => {
+    fetch.mockImplementation((path, opts) => {
+      expect(path).toBe('/api/documents/d1/file-url')
+      expect(opts.method).toBe('GET')
+      return res({ url: '/api/documents/d1/file', direct: false })
+    })
+    const store = usePeopleStore()
+    await expect(store.getDocumentUrl('d1')).resolves.toEqual({ url: '/api/documents/d1/file', direct: false })
+  })
+
+  it('getDocumentUrl() 401 rejects with an ApiError (routes through the plain api client, not this.error)', async () => {
+    fetch.mockImplementation(() => res({ error: { code: 'UNAUTHORIZED', message: 'Login required' } }, 401))
+    const store = usePeopleStore()
+    await expect(store.getDocumentUrl('d1')).rejects.toThrow('Login required')
+    expect(store.error).toBeNull()
+  })
 })

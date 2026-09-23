@@ -13,9 +13,15 @@ export function makeLocalStorage({ uploadsDir = config.uploadsDir } = {}) {
       await pipeline(readable, createWriteStream(abs(key)))
       return { size: statSync(abs(key)).size }
     },
-    async getDownload(_req, { key, filename, mime }) {
+    async getDownload(_req, { key, filename, mime, streamless }) {
       try { statSync(abs(key)) }
       catch (e) { if (e.code === 'ENOENT') throw new StorageNotFoundError(key); throw e }
+      // `streamless: true` is the file-url (JSON) route's existence check — it only
+      // ever reports {url, direct:false} back to the client and never touches the
+      // stream itself. Opening one anyway (fs.createReadStream opens a real fd in
+      // its constructor, autoClose or not) leaked a file descriptor on every hit
+      // before this, since nothing was ever reading or destroying it.
+      if (streamless) return { filename, mime }
       return { stream: createReadStream(abs(key)), filename, mime }
     },
     async remove(_req, key) {

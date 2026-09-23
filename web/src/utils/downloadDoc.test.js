@@ -1,77 +1,79 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { downloadDocument, triggerBlobDownload } from './downloadDoc.js'
+import { describe, it, expect, vi } from 'vitest'
+import { fetchDocumentBlob, triggerBlobDownload, DownloadError } from './downloadDoc.js'
 
-function jsonResponse(body, status = 200) {
-  return Promise.resolve(new Response(JSON.stringify(body), { status }))
-}
-
-describe('downloadDocument', () => {
-  beforeEach(() => { global.fetch = vi.fn() })
-
-  it('direct:true — fetches the file-url with the caller headers, then the presigned URL with NO headers', async () => {
+describe('fetchDocumentBlob', () => {
+  it('direct:true — fetches the presigned url with NO headers, even when the caller passed some', async () => {
     const calls = []
-    fetch.mockImplementation((path, opts) => {
-      calls.push({ path, opts })
-      if (path === '/api/participant/documents/d1/file-url') {
-        return jsonResponse({ url: 'https://stratus.example/signed?sig=abc', direct: true })
-      }
-      if (path === 'https://stratus.example/signed?sig=abc') {
-        return Promise.resolve(new Response(new Blob(['pdf-bytes']), { status: 200 }))
-      }
-      throw new Error(`unexpected fetch ${path}`)
+    global.fetch = vi.fn((url, opts) => {
+      calls.push({ url, opts })
+      return Promise.resolve(new Response(new Blob(['pdf-bytes']), { status: 200 }))
     })
 
-    const blob = await downloadDocument('/api/participant/documents/d1/file-url', {
-      headers: { Authorization: 'Bearer tok-123' }
-    })
+    const blob = await fetchDocumentBlob(
+      { url: 'https://stratus.example/signed?sig=abc', direct: true },
+      { headers: { Authorization: 'Bearer tok-123' } }
+    )
 
     expect(blob).toBeInstanceOf(Blob)
-    expect(calls).toHaveLength(2)
-    expect(calls[0].path).toBe('/api/participant/documents/d1/file-url')
-    expect(calls[0].opts.headers.Authorization).toBe('Bearer tok-123')
-    expect(calls[1].path).toBe('https://stratus.example/signed?sig=abc')
+    expect(calls).toHaveLength(1)
+    expect(calls[0].url).toBe('https://stratus.example/signed?sig=abc')
     // The presigned URL IS the auth — the bearer token must never ride along.
-    expect(calls[1].opts?.headers).toBeUndefined()
+    expect(calls[0].opts?.headers).toBeUndefined()
   })
 
-  it('direct:false — fetches the returned same-origin url WITH the caller headers', async () => {
+  it('direct:false — fetches the same-origin url WITH the caller headers', async () => {
     const calls = []
-    fetch.mockImplementation((path, opts) => {
-      calls.push({ path, opts })
-      if (path === '/api/documents/d1/file-url') {
-        return jsonResponse({ url: '/api/documents/d1/file', direct: false })
-      }
-      if (path === '/api/documents/d1/file') {
-        return Promise.resolve(new Response(new Blob(['pdf-bytes']), { status: 200 }))
-      }
-      throw new Error(`unexpected fetch ${path}`)
+    global.fetch = vi.fn((url, opts) => {
+      calls.push({ url, opts })
+      return Promise.resolve(new Response(new Blob(['pdf-bytes']), { status: 200 }))
     })
 
-    const blob = await downloadDocument('/api/documents/d1/file-url')
+    const blob = await fetchDocumentBlob(
+      { url: '/api/documents/d1/file', direct: false },
+      { headers: { Authorization: 'Bearer tok-123' } }
+    )
 
     expect(blob).toBeInstanceOf(Blob)
-    expect(calls[1].path).toBe('/api/documents/d1/file')
+    expect(calls[0].url).toBe('/api/documents/d1/file')
+    expect(calls[0].opts.headers.Authorization).toBe('Bearer tok-123')
+    expect(calls[0].opts.credentials).toBe('same-origin')
   })
 
-  it('returns null when the file-url request fails, without a second fetch', async () => {
-    fetch.mockImplementation(() => Promise.resolve(new Response('', { status: 404 })))
-    const blob = await downloadDocument('/api/documents/missing/file-url')
-    expect(blob).toBeNull()
-    expect(fetch).toHaveBeenCalledTimes(1)
+  it('direct:true failure throws DownloadError("url_expired")', async () => {
+    global.fetch = vi.fn(() => Promise.resolve(new Response('', { status: 403 })))
+    await expect(fetchDocumentBlob({ url: 'https://stratus.example/signed', direct: true }))
+      .rejects.toMatchObject({ reason: 'url_expired' })
   })
 
-  it('returns null when the second (presigned/streaming) fetch fails', async () => {
-    fetch.mockImplementation((path) => {
-      if (path.endsWith('file-url')) return jsonResponse({ url: '/api/documents/d1/file', direct: false })
-      return Promise.resolve(new Response('', { status: 500 }))
-    })
-    const blob = await downloadDocument('/api/documents/d1/file-url')
-    expect(blob).toBeNull()
+  it('direct:false 401 throws DownloadError("auth")', async () => {
+    global.fetch = vi.fn(() => Promise.resolve(new Response('', { status: 401 })))
+    await expect(fetchDocumentBlob({ url: '/api/documents/d1/file', direct: false }))
+      .rejects.toMatchObject({ reason: 'auth' })
+  })
+
+  it('direct:false 404 throws DownloadError("not_found")', async () => {
+    global.fetch = vi.fn(() => Promise.resolve(new Response('', { status: 404 })))
+    await expect(fetchDocumentBlob({ url: '/api/documents/d1/file', direct: false }))
+      .rejects.toMatchObject({ reason: 'not_found' })
+  })
+
+  it('direct:false 500 throws DownloadError("server")', async () => {
+    global.fetch = vi.fn(() => Promise.resolve(new Response('', { status: 500 })))
+    await expect(fetchDocumentBlob({ url: '/api/documents/d1/file', direct: false }))
+      .rejects.toMatchObject({ reason: 'server' })
+  })
+
+  it('a thrown fetch (network/CORS failure) becomes DownloadError("network"), not an unhandled rejection', async () => {
+    global.fetch = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
+    await expect(fetchDocumentBlob({ url: 'https://stratus.example/signed', direct: true }))
+      .rejects.toBeInstanceOf(DownloadError)
+    await expect(fetchDocumentBlob({ url: 'https://stratus.example/signed', direct: true }))
+      .rejects.toMatchObject({ reason: 'network' })
   })
 })
 
 describe('triggerBlobDownload', () => {
-  it('creates an anchor with the given filename, clicks it, and revokes the object URL', () => {
+  it('creates an anchor with the given filename, clicks it, and revokes the object URL (async, not before the click returns)', async () => {
     const createSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:fake-url')
     const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
     const clickSpy = vi.fn()
@@ -86,6 +88,10 @@ describe('triggerBlobDownload', () => {
 
     expect(createSpy).toHaveBeenCalled()
     expect(clickSpy).toHaveBeenCalled()
+    // Not revoked synchronously — WebKit can abort the download if the object URL
+    // is torn down before it has finished handing off to the OS/save dialog.
+    expect(revokeSpy).not.toHaveBeenCalled()
+    await new Promise((r) => setTimeout(r, 0))
     expect(revokeSpy).toHaveBeenCalledWith('blob:fake-url')
 
     createSpy.mockRestore(); revokeSpy.mockRestore(); createElSpy.mockRestore()
