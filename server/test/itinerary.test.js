@@ -1,6 +1,8 @@
 process.env.LLM_PROVIDER = 'mock'
 import { describe, it, expect } from 'vitest'
 import { createRequire } from 'node:module'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer } from './helpers.js'
 import { buildItineraryPrompt } from '../src/llm/prompts/itinerary.js'
 
@@ -135,6 +137,14 @@ describe('itinerary — AI draft / apply-draft', () => {
     expect(days).toHaveLength(3)
     expect(days[0].items.map((i) => i.title)).toEqual(['Arrive'])
     expect(days[1].items.map((i) => i.title)).toEqual(['Beach', 'Dinner'])
+  })
+
+  it('trip_goals read for the ai-draft prompt is ORDER BY seq (heap order is not insertion order)', () => {
+    const routesPath = fileURLToPath(new URL('../src/routes/itinerary.routes.js', import.meta.url))
+    const src = readFileSync(routesPath, 'utf8')
+    const stmt = src.match(/SELECT title, fixed_date, fixed_place, notes FROM trip_goals WHERE trip_id = \?[^`'"]*/)
+    expect(stmt).not.toBeNull()
+    expect(stmt[0]).toMatch(/ORDER BY seq\b/)
   })
 
   it('apply-draft 400 BAD_DAY on unknown day_date', async () => {

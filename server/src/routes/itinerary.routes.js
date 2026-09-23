@@ -209,7 +209,7 @@ export default async function routes(app) {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
-    const goals = await app.db.all('SELECT title, fixed_date, fixed_place, notes FROM trip_goals WHERE trip_id = ?', [trip.id])
+    const goals = await app.db.all('SELECT title, fixed_date, fixed_place, notes FROM trip_goals WHERE trip_id = ? ORDER BY seq', [trip.id])
     const dietSummary = await computeDietSummary(trip.id)
     const paceSummary = await computePaceSummary(trip.id)
     const days = dateRange(trip.start_date, trip.end_date)
