@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { makeDb } from '../src/db.js'
 import { runMigrations } from '../src/migrate.js'
+import { TEST_URL } from './test-db-url.js'
 
-const TEST_URL = process.env.TEST_DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test'
 const schema = `mig_${process.pid}`
 
 describe('runMigrations', () => {
@@ -19,13 +19,18 @@ describe('runMigrations', () => {
     await runMigrations(db)
     await runMigrations(db) // second run: no-op, no throw
     for (const t of ['organizers', 'persons', 'documents', 'trips', 'trip_date_windows', 'participant_links'])
-      expect(await db.get('SELECT 1 AS ok FROM ' + t + ' LIMIT 1').then(() => true, () => false), t).toBe(true)
+      // A resolved undefined (table exists, just empty) is success, same as before;
+      // only a rejection (table missing) should fail this — and now with the real
+      // Postgres error surfaced instead of collapsed to a bare `false`.
+      await db.get('SELECT 1 AS ok FROM ' + t + ' LIMIT 1')
+        .catch((e) => { throw new Error(`${t}: ${e.message}`, { cause: e }) })
     expect((await db.all('SELECT name FROM _migrations'))).toHaveLength(1)
   })
 
   it('folds the organizer_id columns from 002/003 onto persons, trips, and checklists', async () => {
     for (const t of ['persons', 'trips', 'checklists'])
-      expect(await db.get(`SELECT organizer_id FROM ${t} LIMIT 1`).then(() => true, () => false), t).toBe(true)
+      await db.get(`SELECT organizer_id FROM ${t} LIMIT 1`)
+        .catch((e) => { throw new Error(`${t}: ${e.message}`, { cause: e }) })
   })
 
   it('produces a real UTC timestamp string from the translated DEFAULT on insert', async () => {

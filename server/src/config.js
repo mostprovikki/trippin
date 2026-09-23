@@ -21,12 +21,13 @@ export const DEV_JWT_SECRET = 'dev-secret-do-not-use-in-prod'
 // forge an organizer session. scripts/build-appsail.mjs inlines .env.appsail verbatim
 // with no validation, so one absent line ships that. Refuse to boot instead.
 export function assertSecureConfig(cfg, env = process.env) {
-  const isProd = cfg.storage.driver === 'stratus' || env.NODE_ENV === 'production'
+  const isProd = cfg.storage.driver === 'stratus' || env.NODE_ENV === 'production' || cfg.dbDriver === 'neon'
   if (isProd && cfg.jwtSecret === DEV_JWT_SECRET) {
     throw new Error(
       'JWT_SECRET is still the built-in development default in a production-shaped config ' +
-      `(STORAGE_DRIVER=${cfg.storage.driver}, NODE_ENV=${env.NODE_ENV}). Set a real JWT_SECRET ` +
-      'before deploying — the default is public and lets anyone forge an organizer session.')
+      `(STORAGE_DRIVER=${cfg.storage.driver}, NODE_ENV=${env.NODE_ENV}, DB_DRIVER=${cfg.dbDriver}). ` +
+      'Set a real JWT_SECRET before deploying — the default is public and lets anyone forge an ' +
+      'organizer session.')
   }
   return cfg
 }

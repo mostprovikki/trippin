@@ -2,7 +2,7 @@ export async function expiryWarnings(db, tripId) {
   const trip = await db.get('SELECT * FROM trips WHERE id = ?', [tripId])
   if (!trip) return []
   const tripEnd = trip.end_date
-    || (await db.get('SELECT max(end_date) e FROM trip_date_windows WHERE trip_id = ?', [tripId])).e
+    || (await db.get('SELECT max(end_date) AS e FROM trip_date_windows WHERE trip_id = ?', [tripId])).e
     || new Date().toISOString().slice(0, 10)
   const horizon = new Date(tripEnd); horizon.setMonth(horizon.getMonth() + 6)
   const horizonIso = horizon.toISOString().slice(0, 10)

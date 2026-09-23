@@ -76,14 +76,14 @@ describe('destinations', () => {
     const suggest = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates/ai-suggest` })
     const [goa, manali] = suggest.json().candidates
 
-    // The premise of this test is that all 3 rows land inside the same to_char() second.
-    // If the batch straddles a second boundary, created_at alone decides the order, the
-    // seq tiebreak is never exercised, and the assertions below pass without testing
-    // anything. Fail loudly on the straddle instead of passing vacuously.
+    // Pin all 3 rows to the same created_at instead of relying on the batch landing
+    // inside one to_char() second (that premise flaked when the insert straddled a
+    // second boundary) — this makes created_at alone unable to order them, so the
+    // seq tiebreak is always exercised.
     const createdAts = (await db.all(
       'SELECT created_at FROM destination_candidates WHERE trip_id = ?', [trip.id])).map((r) => r.created_at)
     expect(createdAts).toHaveLength(3)
-    expect(new Set(createdAts).size).toBe(1)
+    await db.run('UPDATE destination_candidates SET created_at = ? WHERE trip_id = ?', [createdAts[0], trip.id])
 
     // Exercise decide()'s transaction repeatedly. Its blanket
     // "SET decided = 0 WHERE trip_id = ?" rewrites every row's tuple (and

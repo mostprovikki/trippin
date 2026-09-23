@@ -12,6 +12,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { TEST_URL } from '../server/test/test-db-url.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const root = path.join(here, '..')
@@ -28,7 +29,7 @@ const uploadsDir = path.join(tmpDir, 'uploads')
 // subprocess -- which only knows how to read DATABASE_URL from its env, has
 // no flag for a schema -- lands in the same schema as the in-process app
 // without server/src/db.js or config.js needing any new plumbing.
-const BASE_URL = process.env.TEST_DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test'
+const BASE_URL = TEST_URL
 const SCHEMA = `tp_smoke_${process.pid}_${Date.now()}`
 const SCHEMA_URL = `${BASE_URL}${BASE_URL.includes('?') ? '&' : '?'}options=${encodeURIComponent(`-c search_path=${SCHEMA}`)}`
 
@@ -111,7 +112,7 @@ async function stage2_peopleAndTrip() {
 
   const trip = await req('POST', '/trips', {
     cookie: state.cookie,
-    body: { name: 'Goa Getaway', vibe_tags: ['beach', 'chill'], origin_city: 'Chennai', participant_ids: [state.p1.id, state.p2.id] },
+    body: { name: 'Smoke Goa Getaway', vibe_tags: ['beach', 'chill'], origin_city: 'Chennai', participant_ids: [state.p1.id, state.p2.id] },
   })
   assert.equal(trip.status, 201, `trip create failed: ${JSON.stringify(trip.json)}`)
   const t = trip.json.trip
@@ -263,7 +264,7 @@ async function stage10_archiveAndClone() {
   const meAfterArchive = await req('GET', '/participant/me', { token: state.token })
   assert.equal(meAfterArchive.status, 401, 'participant link should be revoked after archive')
 
-  const clone = await req('POST', `/trips/${state.tripId}/clone`, { cookie: state.cookie, body: { name: 'Goa Getaway (Clone)' } })
+  const clone = await req('POST', `/trips/${state.tripId}/clone`, { cookie: state.cookie, body: { name: 'Smoke Goa Getaway (Clone)' } })
   assert.equal(clone.status, 201)
   const cloned = clone.json.trip
   assert.equal(cloned.status, 'idea')

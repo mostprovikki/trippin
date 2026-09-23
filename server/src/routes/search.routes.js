@@ -49,7 +49,15 @@ function bindNamed(sql, named) {
       // mistaken for a ':int'-style named param.
       if (sql[i + 1] === ':') { text += '::'; i++; continue }
       const m = /^:(\w+)/.exec(sql.slice(i))
-      if (m) { values.push(named[m[1]]); text += '?'; i += m[0].length - 1; continue }
+      // Every ':' in this file's six queries is either '::' (above) or a
+      // named bind (':org', ':like', ':lim', ':q' — verified by inspection
+      // 2026-09-23: no other colon shape occurs). A bare ':' with nothing
+      // word-like after it would mean a new query introduced SQL this
+      // compiler doesn't understand — fail loudly instead of silently
+      // passing it through as literal text, which would compile to broken
+      // or subtly wrong SQL.
+      if (!m) throw new Error(`bindNamed: ':' not followed by a name at position ${i} in: ${sql}`)
+      values.push(named[m[1]]); text += '?'; i += m[0].length - 1; continue
     }
     text += c
   }

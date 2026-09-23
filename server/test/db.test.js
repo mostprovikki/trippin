@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { makeDb, compileSql } from '../src/db.js'
-
-const TEST_URL = process.env.TEST_DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test'
+import { TEST_URL } from './test-db-url.js'
 
 describe('compileSql', () => {
   it('numbers ? placeholders', () => {

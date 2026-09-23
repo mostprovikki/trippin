@@ -25,7 +25,7 @@ const { makeStratusStorage } = await import('../src/storage/stratus.js')
 const { StorageNotFoundError } = await import('../src/storage/errors.js')
 
 describe('stratus storage driver', () => {
-  beforeEach(() => { putObject.mockClear(); generatePreSignedUrl.mockClear() })
+  beforeEach(() => { putObject.mockClear(); generatePreSignedUrl.mockClear(); deleteObject.mockClear() })
   const cfg = { storage: { stratusBucket: 'b1' } }
 
   it('put() passes contentType through to putObject', async () => {
@@ -56,5 +56,25 @@ describe('stratus storage driver', () => {
     generatePreSignedUrl.mockRejectedValueOnce(err)
     const storage = makeStratusStorage(cfg)
     await expect(storage.getDownload(null, { key: 'k' })).rejects.toBe(err)
+  })
+
+  it('remove() swallows a 404 (already-gone object) from the SDK', async () => {
+    deleteObject.mockRejectedValueOnce({ statusCode: 404, code: 'stratus/object_not_found', message: 'not found' })
+    const storage = makeStratusStorage(cfg)
+    await expect(storage.remove(null, 'p1/gone')).resolves.toBeUndefined()
+  })
+
+  it('remove() rethrows a non-404 SDK error', async () => {
+    const err = { statusCode: 500, message: 'boom' }
+    deleteObject.mockRejectedValueOnce(err)
+    const storage = makeStratusStorage(cfg)
+    await expect(storage.remove(null, 'p1/k')).rejects.toBe(err)
+  })
+
+  it('remove() rethrows a plain Error (not the SDK\'s not-found shape)', async () => {
+    const err = new Error('network blip')
+    deleteObject.mockRejectedValueOnce(err)
+    const storage = makeStratusStorage(cfg)
+    await expect(storage.remove(null, 'p1/k')).rejects.toBe(err)
   })
 })

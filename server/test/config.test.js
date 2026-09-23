@@ -24,6 +24,13 @@ describe('assertSecureConfig', () => {
       .toThrow(/JWT_SECRET is still the built-in development default/)
   })
 
+  // A Neon-backed deploy is prod-shaped even when neither STORAGE_DRIVER=stratus nor
+  // NODE_ENV=production got set — dbDriver alone must fail this closed.
+  it('throws when dbDriver is neon, even with local storage and no NODE_ENV', () => {
+    expect(() => assertSecureConfig(shaped({ dbDriver: 'neon' }), { NODE_ENV: undefined }))
+      .toThrow(/JWT_SECRET is still the built-in development default/)
+  })
+
   it('stays quiet for local dev, for tests, and for prod with a real secret', () => {
     expect(() => assertSecureConfig(shaped(), { NODE_ENV: undefined })).not.toThrow()
     expect(() => assertSecureConfig(shaped(), { NODE_ENV: 'test' })).not.toThrow()

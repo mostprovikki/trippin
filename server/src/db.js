@@ -122,8 +122,12 @@ export async function makeDb({ url = config.databaseUrl, driver = config.dbDrive
       const cur = als.getStore()
       if (cur) { // nested: savepoint, mirroring better-sqlite3's nesting semantics
         const name = `sp${++cur.depth}`
-        await pinned(cur, () => cur.client.query(`SAVEPOINT ${name}`))
-        try { const r = await fn(); await pinned(cur, () => cur.client.query(`RELEASE SAVEPOINT ${name}`)); return r }
+        try {
+          await pinned(cur, () => cur.client.query(`SAVEPOINT ${name}`))
+          const r = await fn()
+          await pinned(cur, () => cur.client.query(`RELEASE SAVEPOINT ${name}`))
+          return r
+        }
         catch (e) { await pinned(cur, () => cur.client.query(`ROLLBACK TO SAVEPOINT ${name}`)).catch(() => {}); throw e }
       }
       const client = await pool.connect()

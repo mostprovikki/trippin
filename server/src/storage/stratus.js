@@ -90,7 +90,12 @@ export function makeStratusStorage(cfg) {
       }
     },
     async remove(req, key) {
-      try { await bucket(req).deleteObject(key) } catch { /* orphan object beats a failed API delete */ }
+      // Same not-found shape as getDownload above ({statusCode: 404} — verified against
+      // the SDK source, NOT a live bucket). Only swallow that: an already-gone object is
+      // fine to no-op on (orphan-delete beats a failed API delete); anything else
+      // (network blip, auth, 5xx) should surface, mirroring local.js's ENOENT narrowing.
+      try { await bucket(req).deleteObject(key) }
+      catch (e) { if (!(e && e.statusCode === 404)) throw e }
     }
   }
 }

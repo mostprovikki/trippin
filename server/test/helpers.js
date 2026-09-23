@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto'
 import { afterAll } from 'vitest'
 import { makeDb } from '../src/db.js'
 import { buildApp } from '../src/app.js'
+import { TEST_URL } from './test-db-url.js'
 
-const TEST_URL = process.env.TEST_DATABASE_URL || 'postgres://tripper:tripper@127.0.0.1:43105/tripper_test'
 let n = 0
 
 // One admin connection per test file, not one per makeTestApp() call. Each makeDb() is

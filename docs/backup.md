@@ -1,59 +1,48 @@
 # Backup & Restore
 
-All application state lives under one directory: **`data/`**.
+The app has no bundled database or file store — both live in whatever
+Postgres and object storage `.env` points at. What "backup" means depends on
+which environment you're in.
 
-- `data/tripplanner.db` — the SQLite database (organizers, trips, people,
-  budgets, checklists, everything except file bytes).
-- `data/uploads/` — uploaded document files (passports, tickets, visas, etc.),
-  referenced from rows in the database.
+## Dev / test — nothing to back up
 
-There is nothing else to back up. No external services, no other stateful
-directories.
+Local Postgres (`npm run db:up`, via `scripts/pg-dev.mjs`) is a throwaway
+cluster in `.pgdata/` (git-ignored) on `127.0.0.1:43105`. It's recreated from
+scratch on demand and tests create/drop their own schemas — there is nothing
+in it worth preserving. Uploaded documents in dev land on local disk under
+`UPLOADS_DIR` (default `./data/uploads`, `server/src/storage/local.js`); if
+you want to keep local test uploads, just copy that directory, but it isn't
+part of any backup process.
 
-## Backup
+## Production — database (Neon Postgres)
 
-Pick one of these; both are safe (SQLite handles the "app still writing" case
-correctly with `.backup`, and stopping the app removes any doubt).
+Production's `DATABASE_URL` points at Neon. Backup/restore there is Neon's
+job, not ours:
 
-**Option A — stop the app, copy the directory** (simplest, brief downtime):
+- Neon keeps continuous point-in-time restore (PITR) automatically — see
+  [Neon's backup & restore docs](https://neon.tech/docs/manage/backups) for
+  the current retention window and how to restore to a point in time from the
+  console.
+- For an out-of-band snapshot (e.g. before a risky migration), a plain
+  `pg_dump "$DATABASE_URL" > backup.sql` against the Neon connection string
+  works like any other Postgres — this repo has no wrapper script for it and
+  the procedure is untested here; treat it as a starting point, not a
+  verified runbook.
 
-```bash
-docker compose stop            # or: kill the plain-node process
-cp -r data/ /path/to/backups/data-$(date +%Y%m%d-%H%M%S)
-docker compose start
-```
+## Production — uploaded documents (Zoho Stratus)
 
-**Option B — live backup with `sqlite3 .backup`** (no downtime):
+When `STORAGE_DRIVER=stratus` (see `server/src/storage/stratus.js`), uploaded
+files go straight to a Zoho Catalyst Stratus bucket (`STRATUS_BUCKET`, default
+`tripper`) — the app never keeps a local copy, so the bucket *is* the source
+of truth. Backing it up means whatever Stratus/Catalyst offers for bucket
+export or versioning; this repo doesn't script anything for it and that
+hasn't been investigated — check Catalyst's own docs before relying on
+anything here.
 
-```bash
-sqlite3 data/tripplanner.db ".backup /path/to/backups/tripplanner-$(date +%Y%m%d-%H%M%S).db"
-cp -r data/uploads/ /path/to/backups/uploads-$(date +%Y%m%d-%H%M%S)
-```
+## What this doesn't cover
 
-`.backup` uses SQLite's online backup API, so it produces a consistent
-snapshot even while the app is running and writing to the database.
-
-## Restore
-
-1. Stop the app.
-2. Replace `data/tripplanner.db` with the backed-up `.db` file, and replace
-   `data/uploads/` with the backed-up uploads directory.
-3. Start the app back up.
-
-```bash
-docker compose stop
-rm -rf data/tripplanner.db data/uploads
-cp /path/to/backups/tripplanner-<timestamp>.db data/tripplanner.db
-cp -r /path/to/backups/uploads-<timestamp> data/uploads
-docker compose start
-```
-
-## Suggested cron line
-
-Nightly backup at 2am, keeping the same `sqlite3 .backup` approach, writing
-into a dated file so old backups aren't overwritten (prune old ones with your
-own retention policy):
-
-```cron
-0 2 * * * cd /path/to/trip-planner && sqlite3 data/tripplanner.db ".backup /path/to/backups/tripplanner-$(date +\%Y\%m\%d).db" && cp -r data/uploads /path/to/backups/uploads-$(date +\%Y\%m\%d)
-```
+There is no combined "one command backs up everything" story across Neon +
+Stratus — they're backed up (or not) independently, on their own schedules,
+by their own tooling. If you need a coordinated snapshot of both, you'd have
+to script `pg_dump` + a Stratus export yourself and keep them at the same
+point in time; nothing in this repo does that today.

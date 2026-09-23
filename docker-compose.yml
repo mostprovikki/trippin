@@ -1,3 +1,9 @@
+# UNTESTED / UNSUPPORTED post-Postgres-migration: this compose file has no
+# Postgres service (the old bundled/embedded DB is gone) and hasn't been
+# re-verified since the migration. The app dies at startup unless you supply
+# an external DATABASE_URL (Neon or otherwise) via .env before `docker compose
+# up`. See README's "Docker Compose (VM fallback)" section and
+# docs/superpowers/specs/2026-07-30-zoho-supabase-deployment-design.md.
 services:
   app:
     build: .

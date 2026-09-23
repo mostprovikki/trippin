@@ -15,7 +15,7 @@ Catalyst Stratus in production (see `docs/superpowers/specs/2026-07-30-zoho-supa
 
 ### Local development
 
-Requires Node ≥20 and a local Postgres (see `scripts/pg-dev.mjs` — no Docker
+Requires Node ≥22 and a local Postgres (see `scripts/pg-dev.mjs` — no Docker
 needed; it wraps `pg_ctl` against a throwaway data dir).
 
 ```bash
@@ -103,8 +103,8 @@ Compose container.
 
 The database is Postgres (Neon in production — see Neon's own backup/PITR
 features); uploaded documents live under `UPLOADS_DIR` locally or in Stratus
-in production. `docs/backup.md` predates this and still describes the old
-SQLite-file backup procedure — treat it as historical until it's revised.
+in production. See `docs/backup.md` for the current (Postgres/Neon/Stratus)
+backup story.
 
 ## Smoke test
 
