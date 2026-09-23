@@ -211,4 +211,15 @@ function discardDraft() {
   font-size: 0.9375rem;
   line-height: 1.125rem;
 }
+/* The row's Delete button is PrimeVue's icon-only rounded text Button, which
+   defaults to 2.5rem (40px) — 4px taller than the Select/DateField it sits
+   beside. Pin it to their 36px on this row only; main.css's own
+   `.icon-danger-btn` media rule sets min-width/min-height: 2.75rem (44px)
+   under 768px, and a min-* property always wins over a smaller width/height
+   regardless of selector specificity, so the mobile tap-target floor is
+   untouched by this. */
+.checklist-items .icon-danger-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+}
 </style>
