@@ -8,6 +8,7 @@ import DateField from './DateField.vue'
 import { isExpiredIso } from '../utils/dates.js'
 import { useParticipantStore } from '../stores/participant.js'
 import { useNotify } from '../composables/useNotify.js'
+import { downloadDocument, triggerBlobDownload } from '../utils/downloadDoc.js'
 
 const store = useParticipantStore()
 const confirm = useConfirm()
@@ -71,19 +72,11 @@ function isExpired(doc) {
 }
 
 async function download(doc) {
-  const res = await fetch(`/api/participant/documents/${doc.id}/file`, {
+  const blob = await downloadDocument(`/api/participant/documents/${doc.id}/file-url`, {
     headers: { Authorization: `Bearer ${store.token}` }
   })
-  if (!res.ok) return
-  const blob = await res.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = doc.original_name
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
+  if (!blob) return
+  triggerBlobDownload(blob, doc.original_name)
 }
 </script>
 

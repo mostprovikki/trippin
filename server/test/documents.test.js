@@ -151,6 +151,110 @@ describe('documents', () => {
     expect(seen.getArgs).toEqual({ key: `${p.id}/${doc.id}`, filename: 'passport.pdf', mime: 'application/pdf' })
   })
 
+  // Option (c): an authenticated JSON endpoint hands back the signed/streaming URL
+  // instead of the route itself doing a 302 (fetch can't follow a cross-origin
+  // redirect + read the body, and a bare navigation carries no Authorization header).
+  it('organizer file-url on local driver returns {direct:false, url: same-origin streaming path}', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
+    const form = new FormData()
+    form.append('file', pdfBlob(10), 'passport.pdf')
+    form.append('doc_type', 'passport')
+    const up = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: form })
+    const doc = up.json().document
+
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/documents/${doc.id}/file-url` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ url: `/api/documents/${doc.id}/file`, direct: false })
+
+    // no auth → 401, same guard as the streaming route
+    const noAuth = await app.inject({ method: 'GET', url: `/api/documents/${doc.id}/file-url` })
+    expect(noAuth.statusCode).toBe(401)
+  })
+
+  it('organizer file-url 404s when the document does not exist', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const res = await authedInject(app, cookie, { method: 'GET', url: '/api/documents/nope/file-url' })
+    expect(res.statusCode).toBe(404)
+    expect(res.json().error.code).toBe('NOT_FOUND')
+  })
+
+  it('organizer file-url on a stratus-like driver returns {direct:true, url: presigned}', async () => {
+    const fakeSignedUrlStorage = {
+      async put(_req, key, readable) { let size = 0; for await (const c of readable) size += c.length; return { size } },
+      async getDownload() { return { url: 'https://stratus.example/signed?sig=abc' } },
+      async remove() {},
+    }
+    const { app, db } = await makeTestApp({ storage: fakeSignedUrlStorage })
+    const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
+    const form = new FormData()
+    form.append('file', pdfBlob(10), 'passport.pdf')
+    form.append('doc_type', 'passport')
+    const up = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: form })
+    const doc = up.json().document
+
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/documents/${doc.id}/file-url` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ url: 'https://stratus.example/signed?sig=abc', direct: true, expires_in: 300 })
+  })
+
+  it('participant file-url on local driver returns {direct:false, url: same-origin path}, 404 for another person\'s doc, 401 without token', async () => {
+    const { app, db } = await makeTestApp()
+    const t = await createTrip(db)
+    const p1 = await createPerson(db, { name: 'Me' })
+    const p2 = await createPerson(db, { name: 'Other' })
+    await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p1.id])
+    const raw = 'z'.repeat(43)
+    await db.run('INSERT INTO participant_links (id,trip_id,person_id,token_hash) VALUES (?,?,?,?)',
+      ['l2', t.id, p1.id, app.hashToken(raw)])
+    const headers = { authorization: `Bearer ${raw}` }
+
+    const form = new FormData()
+    form.append('file', pdfBlob(10), 'visa.pdf')
+    form.append('doc_type', 'visa')
+    const up = await app.inject({ method: 'POST', url: '/api/participant/documents', headers, payload: form })
+    const doc = up.json().document
+
+    const res = await app.inject({ method: 'GET', url: `/api/participant/documents/${doc.id}/file-url`, headers })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ url: `/api/participant/documents/${doc.id}/file`, direct: false })
+
+    const otherId = 'doc-other-2'
+    await db.run(`INSERT INTO documents (id,person_id,doc_type,file_path,original_name,mime_type,size_bytes)
+      VALUES (?,?,?,?,?,?,?)`, [otherId, p2.id, 'passport', '/nonexistent/path', 'x.pdf', 'application/pdf', 1])
+    const res404 = await app.inject({ method: 'GET', url: `/api/participant/documents/${otherId}/file-url`, headers })
+    expect(res404.statusCode).toBe(404)
+
+    const noAuth = await app.inject({ method: 'GET', url: `/api/participant/documents/${doc.id}/file-url` })
+    expect(noAuth.statusCode).toBe(401)
+  })
+
+  it('participant file-url on a stratus-like driver returns {direct:true, url: presigned}', async () => {
+    const fakeSignedUrlStorage = {
+      async put(_req, key, readable) { let size = 0; for await (const c of readable) size += c.length; return { size } },
+      async getDownload() { return { url: 'https://stratus.example/signed?sig=xyz' } },
+      async remove() {},
+    }
+    const { app, db } = await makeTestApp({ storage: fakeSignedUrlStorage })
+    const t = await createTrip(db)
+    const p1 = await createPerson(db)
+    await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p1.id])
+    const raw = 'w'.repeat(43)
+    await db.run('INSERT INTO participant_links (id,trip_id,person_id,token_hash) VALUES (?,?,?,?)',
+      ['l3', t.id, p1.id, app.hashToken(raw)])
+    const headers = { authorization: `Bearer ${raw}` }
+    const form = new FormData()
+    form.append('file', pdfBlob(10), 'visa.pdf')
+    form.append('doc_type', 'visa')
+    const up = await app.inject({ method: 'POST', url: '/api/participant/documents', headers, payload: form })
+    const doc = up.json().document
+
+    const res = await app.inject({ method: 'GET', url: `/api/participant/documents/${doc.id}/file-url`, headers })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ url: 'https://stratus.example/signed?sig=xyz', direct: true, expires_in: 300 })
+  })
+
   it('download 404s with the standard NOT_FOUND shape when the DB row survives but the object is gone', async () => {
     const missingStorage = {
       // Must drain the part stream — @fastify/multipart won't advance otherwise.

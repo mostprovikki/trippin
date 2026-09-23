@@ -62,6 +62,24 @@ export default async function routes(app) {
     return reply.send(dl.stream)
   }
 
+  // Same-shape sibling of sendDoc, for both guards: instead of the route itself
+  // streaming/redirecting, hand the client JSON it can act on. `direct: true` means
+  // "cross-origin presigned URL — fetch it with no Authorization header" (stratus);
+  // `direct: false` means "same-origin, still needs the bearer/cookie — use the
+  // existing streaming route unchanged" (local). See OWNER DECISION on trip-planner-a17:
+  // keep signed URLs, never put the bearer token in a query string.
+  async function sendDocUrl(req, reply, row, sameOriginPath) {
+    let dl
+    try {
+      dl = await app.storage.getDownload(req, { key: row.file_path, filename: row.original_name, mime: row.mime_type })
+    } catch (e) {
+      if (e instanceof StorageNotFoundError) return httpError(reply, 404, 'NOT_FOUND', 'Document file is missing')
+      throw e
+    }
+    if (dl.url) return reply.send({ url: dl.url, direct: true, expires_in: 300 })
+    return reply.send({ url: sameOriginPath, direct: false })
+  }
+
   async function removeDoc(req, row) {
     await app.db.run('DELETE FROM documents WHERE id = ?', [row.id])
     await app.storage.remove(req, row.file_path)
@@ -92,6 +110,12 @@ export default async function routes(app) {
     return sendDoc(req, reply, row)
   })
 
+  app.get('/documents/:id/file-url', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const row = await ownedDoc(req)
+    if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
+    return sendDocUrl(req, reply, row, `/api/documents/${row.id}/file`)
+  })
+
   app.delete('/documents/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const row = await ownedDoc(req)
     if (!row) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
@@ -115,6 +139,12 @@ export default async function routes(app) {
     const row = await getDoc(req.params.id)
     if (!row || row.person_id !== req.participant.personId) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     return sendDoc(req, reply, row)
+  })
+
+  app.get('/participant/documents/:id/file-url', { preHandler: app.requireParticipant }, async (req, reply) => {
+    const row = await getDoc(req.params.id)
+    if (!row || row.person_id !== req.participant.personId) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
+    return sendDocUrl(req, reply, row, `/api/participant/documents/${row.id}/file`)
   })
 
   app.delete('/participant/documents/:id', { preHandler: app.requireParticipant }, async (req, reply) => {

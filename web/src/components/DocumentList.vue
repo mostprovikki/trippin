@@ -9,6 +9,7 @@ import DateField from './DateField.vue'
 import { isExpiredIso } from '../utils/dates.js'
 import { usePeopleStore } from '../stores/people.js'
 import { useNotify } from '../composables/useNotify.js'
+import { downloadDocument, triggerBlobDownload } from '../utils/downloadDoc.js'
 
 const props = defineProps({ personId: { type: String, required: true } })
 const store = usePeopleStore()
@@ -67,6 +68,19 @@ function isExpired(doc) {
   // expiring today showed as expired for anyone west of Greenwich.
   return isExpiredIso(doc.expiry_date)
 }
+
+async function download(doc) {
+  // Was a plain same-origin `<a href>` — that alone works for cookie auth, but a
+  // presigned Stratus URL behind a 302 only preserves the document's original
+  // filename if the client fetches it as a blob (see downloadDoc.js).
+  try {
+    const blob = await downloadDocument(`/api/documents/${doc.id}/file-url`)
+    if (!blob) { notify.error('Download failed'); return }
+    triggerBlobDownload(blob, doc.original_name)
+  } catch (e) {
+    notify.error(e.message)
+  }
+}
 </script>
 
 <template>
@@ -89,7 +103,7 @@ function isExpired(doc) {
           <td data-label="Expiry">
             <Tag :severity="isExpired(doc) ? 'warn' : 'secondary'" :value="doc.expiry_date || '-'" />
           </td>
-          <td data-label="File"><a :href="`/api/documents/${doc.id}/file`" target="_blank">{{ doc.original_name }}</a></td>
+          <td data-label="File"><a href="#" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
           <td><Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" /></td>
         </tr>
       </tbody>
