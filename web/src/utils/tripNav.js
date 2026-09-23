@@ -21,6 +21,20 @@ function parts(data) {
   return { d, participants, checklists, unconfirmed, overdue: (checklists.overdue || []).length }
 }
 
+// count badges across sections (People, Checklists) are all "items needing
+// attention" counts, never totals — trip-dates/trip-destination use a
+// separate ok:boolean shape for done/not-done, so there's no total-count
+// precedent to switch People to. Disambiguate instead: carry a label
+// alongside count so the badge's accessible name (title/aria-label in
+// TripLayout.vue) states what's being counted, wording reused from
+// nextActions below so the sidebar and the guided next-step list agree.
+function unconfirmedLabel(n) {
+  return `${n} participant profile${n === 1 ? '' : 's'} unconfirmed`
+}
+function overdueLabel(n) {
+  return `${n} overdue checklist item${n === 1 ? '' : 's'}`
+}
+
 export function sectionHints(data) {
   if (!data) return {}
   const { d, unconfirmed, overdue } = parts(data)
@@ -29,8 +43,8 @@ export function sectionHints(data) {
     'trip-destination': { ok: !!d.destination_decided },
     'trip-readiness': { text: `${readinessPercent(data)}%` }
   }
-  if (unconfirmed > 0) hints['trip-people'] = { count: unconfirmed }
-  if (overdue > 0) hints['trip-checklists'] = { count: overdue }
+  if (unconfirmed > 0) hints['trip-people'] = { count: unconfirmed, label: unconfirmedLabel(unconfirmed) }
+  if (overdue > 0) hints['trip-checklists'] = { count: overdue, label: overdueLabel(overdue) }
   return hints
 }
 
@@ -64,7 +78,7 @@ export function nextActions(data) {
   if (!d.budget_drafted) actions.push({ label: 'Draft a budget', to: 'trip-budget' })
   if (!(d.itinerary_days > 0)) actions.push({ label: 'Build the itinerary', to: 'trip-itinerary' })
   if (!participants.length) actions.push({ label: 'Add participants', to: 'trip-people' })
-  if (unconfirmed > 0) actions.push({ label: `${unconfirmed} participant profile${unconfirmed === 1 ? '' : 's'} unconfirmed`, to: 'trip-people' })
-  if (overdue > 0) actions.push({ label: `${overdue} overdue checklist item${overdue === 1 ? '' : 's'}`, to: 'trip-checklists' })
+  if (unconfirmed > 0) actions.push({ label: unconfirmedLabel(unconfirmed), to: 'trip-people' })
+  if (overdue > 0) actions.push({ label: overdueLabel(overdue), to: 'trip-checklists' })
   return actions
 }

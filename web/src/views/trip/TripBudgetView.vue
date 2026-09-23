@@ -39,6 +39,13 @@ const overridesDraft = useDraft(() => `trip:${tripId.value}:budget-overrides`, (
 watch(() => store.lines, (lines) => { linesDraft.load({ lines: lines.map((l) => ({ ...l })) }) }, { immediate: true })
 watch(() => store.overrides, (overrides) => { overridesDraft.load({ overrides: overrides.map((o) => ({ ...o })) }) }, { immediate: true })
 
+// store.total only updates from server responses (fetch/save), so it stays
+// stale while the user is mid-edit — even after BudgetTable's own per-keystroke
+// fix, because that fix updates linesDraft, not the store. Deriving the
+// displayed total straight from the live draft rows keeps it in sync with what
+// the estimate fields show, pre-save.
+const draftTotal = computed(() => linesDraft.draft.lines.reduce((sum, l) => sum + (Number(l.estimate) || 0), 0))
+
 function resetNewOverride() {
   newOverride.person_id = ''
   newOverride.amount = 0
@@ -134,7 +141,7 @@ onBeforeRouteLeave(async () => {
       <div class="card">
         <h2>Category estimates</h2>
         <BudgetTable v-model="linesDraft.draft.lines" :draft="store.draft" :currency="tripCurrency" />
-        <p><strong>Total: {{ formatMoney(store.total, tripCurrency) }}</strong></p>
+        <p><strong>Total: {{ formatMoney(draftTotal, tripCurrency) }}</strong></p>
         <Button label="Save budget" @click="saveLines" />
       </div>
 

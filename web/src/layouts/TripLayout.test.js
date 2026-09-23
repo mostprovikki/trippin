@@ -76,6 +76,15 @@ describe('TripLayout', () => {
     expect(peopleItem.text()).toContain('1')
   })
 
+  it('labels the People badge as an unconfirmed-profile count, not a total, so it cannot be misread as "someone was removed"', async () => {
+    const { wrapper } = await mountLayout()
+    const peopleItem = wrapper.findAll('.trip-nav-item').find((n) => n.text().includes('People'))
+    const badge = peopleItem.find('.trip-nav-badge')
+    expect(badge.exists()).toBe(true)
+    expect(badge.attributes('aria-label')).toBe('1 participant profile unconfirmed')
+    expect(badge.attributes('title')).toBe('1 participant profile unconfirmed')
+  })
+
   it('shows not-found panel when the trip fails to load', async () => {
     const { wrapper } = await mountLayout({ fetchTrip: vi.fn().mockRejectedValue(new Error('nope')) })
     expect(wrapper.text()).toContain('Trip not found')

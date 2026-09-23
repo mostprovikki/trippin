@@ -45,7 +45,15 @@ describe('TripBudgetView', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const store = useBudgetStore()
-    store.fetchBudget = vi.fn().mockImplementation(async () => { store.total = 500000; store.equal_share = 250000 })
+    // The displayed Total is derived from the live draft (trip-planner-0jz),
+    // not store.total, so it has to come from server-fetched lines here —
+    // store.total is set too, to prove a stale/divergent server total is not
+    // what ends up on screen.
+    store.fetchBudget = vi.fn().mockImplementation(async () => {
+      store.lines = [{ category: 'stay', estimate: 500000, basis: '' }]
+      store.total = 999999
+      store.equal_share = 250000
+    })
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/trips/:id/budget', name: 'trip-budget', component: TripBudgetView }]
@@ -56,6 +64,21 @@ describe('TripBudgetView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('₫500,000')
     expect(wrapper.text()).toContain('₫250,000')
+    expect(wrapper.text()).not.toContain('₫999,999')
+  })
+
+  it('shows the Total from the live draft, not the stale store total, before saving (trip-planner-0jz)', async () => {
+    const { wrapper, store } = await mountView()
+    // Server-set total left stale — nothing here should render it.
+    store.total = 999
+    const budgetTable = wrapper.findComponent({ name: 'BudgetTable' })
+    budgetTable.vm.$emit('update:modelValue', [
+      { category: 'stay', estimate: 15000, basis: '' },
+      { category: 'food', estimate: 8000, basis: '' }
+    ])
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('₹23,000')
+    expect(wrapper.text()).not.toContain('₹999')
   })
 
   it('override Remove button is icon-only with an aria-label', async () => {

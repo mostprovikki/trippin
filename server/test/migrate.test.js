@@ -24,7 +24,7 @@ describe('runMigrations', () => {
       // Postgres error surfaced instead of collapsed to a bare `false`.
       await db.get('SELECT 1 AS ok FROM ' + t + ' LIMIT 1')
         .catch((e) => { throw new Error(`${t}: ${e.message}`, { cause: e }) })
-    expect((await db.all('SELECT name FROM _migrations'))).toHaveLength(1)
+    expect((await db.all('SELECT name FROM _migrations'))).toHaveLength(2)
   })
 
   it('folds the organizer_id columns from 002/003 onto persons, trips, and checklists', async () => {
@@ -59,7 +59,7 @@ describe('runMigrations', () => {
     try {
       const results = await Promise.allSettled([runMigrations(a), runMigrations(b)])
       expect(results.filter((r) => r.status === 'rejected').map((r) => String(r.reason))).toEqual([])
-      expect(await a.all('SELECT name FROM _migrations')).toHaveLength(1)
+      expect(await a.all('SELECT name FROM _migrations')).toHaveLength(2)
       expect((await a.get('SELECT COUNT(*)::int AS c FROM organizers')).c).toBe(0)
     } finally {
       await a.close(); await b.close()

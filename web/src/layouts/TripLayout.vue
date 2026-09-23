@@ -105,7 +105,12 @@ async function advanceStatus() {
             <i :class="s.icon" aria-hidden="true" />
             <span class="trip-nav-label">{{ s.label }}</span>
             <template v-if="hints[s.name]">
-              <span v-if="hints[s.name].count" class="trip-nav-badge">{{ hints[s.name].count }}</span>
+              <span
+                v-if="hints[s.name].count"
+                class="trip-nav-badge"
+                :title="hints[s.name].label"
+                :aria-label="hints[s.name].label"
+              >{{ hints[s.name].count }}</span>
               <span v-else-if="hints[s.name].text" class="trip-nav-hint">{{ hints[s.name].text }}</span>
               <i v-else-if="hints[s.name].ok === false" class="pi pi-circle-fill trip-nav-dot" aria-label="needs attention" />
               <i v-else-if="hints[s.name].ok === true" class="pi pi-check trip-nav-ok" aria-label="done" />

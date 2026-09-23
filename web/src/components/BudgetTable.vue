@@ -21,7 +21,19 @@ function draftFor(category) {
   return (props.draft || []).find((d) => d.category === category)
 }
 
+// PrimeVue InputNumber only emits update:model-value on blur/Enter/spin/paste,
+// not per keystroke — its onUserInput never calls updateModel, that happens in
+// onInputBlur. The footer Total below is computed from modelValue, so without
+// also handling @input (which does fire per keystroke, payload
+// { originalEvent, value, formattedValue }) the Total stays stale while
+// typing. Both events can land with the same final value (e.g. Enter fires
+// input then update:model-value) — lastEmitted guards that double-fire so it
+// doesn't do redundant work, not because a repeat would be wrong.
+const lastEmitted = new Map()
 function update(category, field, value) {
+  const key = `${category}:${field}`
+  if (lastEmitted.get(key) === value) return
+  lastEmitted.set(key, value)
   emit('update:modelValue', props.modelValue.map((l) => (l.category === category ? { ...l, [field]: value } : l)))
 }
 
@@ -44,6 +56,7 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
           :min="0"
           :max-fraction-digits="2"
           fluid
+          @input="update(data.category, 'estimate', Number($event.value) || 0)"
           @update:model-value="update(data.category, 'estimate', Number($event) || 0)"
         />
       </template>

@@ -6,6 +6,7 @@ import Tag from 'primevue/tag'
 import ProgressSpinner from 'primevue/progressspinner'
 import Message from 'primevue/message'
 import { useParticipantStore } from '../stores/participant.js'
+import { useNotify } from '../composables/useNotify.js'
 import ParticipantProfileForm from '../components/ParticipantProfileForm.vue'
 import ParticipantDocs from '../components/ParticipantDocs.vue'
 import ParticipantChecklist from '../components/ParticipantChecklist.vue'
@@ -13,6 +14,7 @@ import ParticipantItinerary from '../components/ParticipantItinerary.vue'
 
 const route = useRoute()
 const store = useParticipantStore()
+const notify = useNotify()
 
 const loading = ref(true)
 const invalidLink = ref(false)
@@ -56,20 +58,30 @@ const dateRange = computed(() =>
 // Mirrors ParticipantDocs.vue's download() exactly — a bearer token can't
 // ride a plain <a href>, so this fetches with the Authorization header and
 // hands the browser a blob: URL instead.
+//
+// trip-planner-d3p: this used to be `if (!res.ok) return` with no try/catch
+// at all — a 404/500, or fetch() itself rejecting on a dropped connection,
+// left the button doing nothing visible: no tab, no toast, just a console
+// error. Every user-triggered file action needs to surface a toast on
+// failure (same contract as download()/openInTab() elsewhere in this app).
 async function downloadIcs() {
-  const res = await fetch('/api/participant/itinerary.ics', {
-    headers: { Authorization: `Bearer ${store.token}` }
-  })
-  if (!res.ok) return
-  const blob = await res.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${store.trip.name || 'trip'}.ics`
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
+  try {
+    const res = await fetch('/api/participant/itinerary.ics', {
+      headers: { Authorization: `Bearer ${store.token}` }
+    })
+    if (!res.ok) throw new Error('Could not download the calendar file. Try again.')
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${store.trip.name || 'trip'}.ics`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    notify.error(e.message || 'Could not download the calendar file. Try again.')
+  }
 }
 </script>
 

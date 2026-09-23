@@ -92,8 +92,8 @@ export default async function routes(app) {
         [trip.id, JSON.stringify(snapshot), notes, photoLinks, photoLinksProvided]
       )
       await db.run(
-        `UPDATE trips SET status = 'archived', archived_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
-        [trip.id]
+        `UPDATE trips SET status = 'archived', prior_status = ?, archived_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
+        [trip.status, trip.id]
       )
       await db.run(
         `UPDATE participant_links SET revoked_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE trip_id = ? AND revoked_at IS NULL`,
@@ -108,7 +108,10 @@ export default async function routes(app) {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (trip.status !== 'archived') return httpError(reply, 400, 'NOT_ARCHIVED', 'Trip is not archived')
-    await db.run(`UPDATE trips SET status = 'active', archived_at = NULL WHERE id = ?`, [trip.id])
+    // Restore whatever lifecycle stage the trip was at immediately before archiving
+    // (trip-planner-8uw) rather than hardcoding 'active'. prior_status is NULL for
+    // trips archived before this column existed — 'planning' is the fallback for those.
+    await db.run(`UPDATE trips SET status = COALESCE(prior_status, 'planning'), prior_status = NULL, archived_at = NULL WHERE id = ?`, [trip.id])
     return { trip: await tripToJson(db, await get(trip.id)) }
   })
 

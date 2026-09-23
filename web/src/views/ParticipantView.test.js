@@ -6,6 +6,11 @@ import { mountWithBase } from '../test-utils.js'
 import ParticipantView from './ParticipantView.vue'
 import { useParticipantStore } from '../stores/participant.js'
 
+// Same technique as useNotify.test.js: mock the underlying toast primitive so
+// a failed file action can be asserted without mounting the real <Toast/>.
+const mockToastAdd = vi.fn()
+vi.mock('primevue/usetoast', () => ({ useToast: () => ({ add: mockToastAdd }) }))
+
 async function mountView(state) {
   const router = createRouter({
     history: createMemoryHistory(),
@@ -88,5 +93,40 @@ describe('ParticipantView', () => {
     })
     expect(downloadedName).toBe('Goa 2026.ics')
     expect(global.URL.revokeObjectURL).toHaveBeenCalledWith('blob:x')
+  })
+
+  // trip-planner-d3p: the .ics download was the one user-triggered file action
+  // that swallowed a failure completely — `if (!res.ok) return` with no catch
+  // and no notify, so a 404/500 (or a dropped connection, since fetch() itself
+  // wasn't even wrapped) produced no toast, no tab, nothing — same silent-
+  // failure shape the bug reported for the documents "open in new tab" action.
+  it('notifies on a failed .ics download instead of failing silently', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 })
+    const { wrapper } = await mountView({
+      token: 'tok1',
+      trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },
+      person: { name: 'Asha' },
+      profileConfirmed: true, documents: [], packing: [], tasks: [],
+      itinerary: [], budget: null, companions: [], companionCount: 0,
+    })
+    mockToastAdd.mockClear()
+    await wrapper.find('.p-ics-btn').trigger('click')
+    await flushPromises()
+    expect(mockToastAdd).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }))
+  })
+
+  it('notifies when the .ics fetch itself rejects (network failure)', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+    const { wrapper } = await mountView({
+      token: 'tok1',
+      trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },
+      person: { name: 'Asha' },
+      profileConfirmed: true, documents: [], packing: [], tasks: [],
+      itinerary: [], budget: null, companions: [], companionCount: 0,
+    })
+    mockToastAdd.mockClear()
+    await wrapper.find('.p-ics-btn').trigger('click')
+    await flushPromises()
+    expect(mockToastAdd).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }))
   })
 })

@@ -245,8 +245,8 @@ describe('archive routes', () => {
   })
 
   describe('unarchive', () => {
-    it('flips status back to active, keeps archived_at cleared, keeps the archives row, keeps links revoked', async () => {
-      const trip = await createTrip(db, { status: 'confirmed' })
+    it('restores status to what it was before archiving: planning -> archived -> planning (keeps archived_at cleared, keeps the archives row, keeps links revoked)', async () => {
+      const trip = await createTrip(db, { status: 'planning' })
       const person = await createPerson(db, { name: 'Alice' })
       await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [trip.id, person.id])
       await seedParticipantLink(app, db, trip.id, person.id)
@@ -254,7 +254,7 @@ describe('archive routes', () => {
 
       const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
       expect(res.statusCode).toBe(200)
-      expect(res.json().trip.status).toBe('active')
+      expect(res.json().trip.status).toBe('planning')
       expect(res.json().trip.archived_at).toBeFalsy()
 
       const archiveRow = await db.get('SELECT trip_id FROM archives WHERE trip_id = ?', [trip.id])
@@ -262,6 +262,30 @@ describe('archive routes', () => {
 
       const link = await db.get('SELECT revoked_at FROM participant_links WHERE trip_id = ?', [trip.id])
       expect(link.revoked_at).toBeTruthy()
+
+      const row = await db.get('SELECT prior_status FROM trips WHERE id = ?', [trip.id])
+      expect(row.prior_status).toBeFalsy()
+    })
+
+    it('restores status to what it was before archiving: active -> archived -> active', async () => {
+      const trip = await createTrip(db, { status: 'active' })
+      await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
+
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+      expect(res.statusCode).toBe(200)
+      expect(res.json().trip.status).toBe('active')
+      expect(res.json().trip.archived_at).toBeFalsy()
+    })
+
+    it('falls back to planning when prior_status is NULL (trip archived before the column existed)', async () => {
+      const trip = await createTrip(db, { status: 'confirmed' })
+      await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/archive`, payload: {} })
+      // Simulate a row that was archived before the prior_status column was backfillable.
+      await db.run('UPDATE trips SET prior_status = NULL WHERE id = ?', [trip.id])
+
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+      expect(res.statusCode).toBe(200)
+      expect(res.json().trip.status).toBe('planning')
     })
 
     it('400 NOT_ARCHIVED when the trip is not archived', async () => {

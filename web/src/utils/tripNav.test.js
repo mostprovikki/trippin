@@ -37,14 +37,28 @@ describe('sectionHints', () => {
     const h = sectionHints(MID)
     expect(h['trip-dates']).toEqual({ ok: true })
     expect(h['trip-destination']).toEqual({ ok: false })
-    expect(h['trip-people']).toEqual({ count: 2 })
-    expect(h['trip-checklists']).toEqual({ count: 1 })
+    expect(h['trip-people']).toEqual({ count: 2, label: '2 participant profiles unconfirmed' })
+    expect(h['trip-checklists']).toEqual({ count: 1, label: '1 overdue checklist item' })
     expect(h['trip-readiness'].text).toMatch(/%$/)
   })
   it('hides zero counts', () => {
     const h = sectionHints(READY)
     expect(h['trip-people']).toBeUndefined()
     expect(h['trip-checklists']).toBeUndefined()
+  })
+  it('count badges carry a disambiguating label — count is an attention-needed count, not a total (matches nextActions wording)', () => {
+    const oneUnconfirmed = sectionHints({
+      decisions: {},
+      participants: [{ profile_confirmed: 1 }, { profile_confirmed: 0 }],
+      checklists: {}
+    })
+    expect(oneUnconfirmed['trip-people']).toEqual({ count: 1, label: '1 participant profile unconfirmed' })
+    const bothUnconfirmed = sectionHints({
+      decisions: {},
+      participants: [{ profile_confirmed: 0 }, { profile_confirmed: 0 }],
+      checklists: {}
+    })
+    expect(bothUnconfirmed['trip-people']).toEqual({ count: 2, label: '2 participant profiles unconfirmed' })
   })
 })
 
