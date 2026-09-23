@@ -59,6 +59,18 @@ export async function fetchDocumentBlob({ url, direct }, { headers = {} } = {}) 
   throw new DownloadError('server', 'Download failed. Try again.')
 }
 
+// Second step for the "open in a new tab" secondary action (DocumentList.vue):
+// resolve the URL to navigate to. Both direct:true and direct:false file-url
+// responses already hand back a `url` that's directly usable as-is —
+// direct:true's is a presigned Stratus link (renders inline via its own
+// contentType), direct:false's IS the same-origin /file path the download
+// route itself redirects from. No branching needed; this only exists so the
+// component doesn't reimplement the `{ url }` destructure inline.
+export async function getDocUrl(store, docId) {
+  const { url } = await store.getDocumentUrl(docId)
+  return url
+}
+
 export function triggerBlobDownload(blob, filename) {
   const objUrl = URL.createObjectURL(blob)
   const a = document.createElement('a')

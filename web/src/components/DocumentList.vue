@@ -9,7 +9,7 @@ import DateField from './DateField.vue'
 import { isExpiredIso } from '../utils/dates.js'
 import { usePeopleStore } from '../stores/people.js'
 import { useNotify } from '../composables/useNotify.js'
-import { fetchDocumentBlob, triggerBlobDownload } from '../utils/downloadDoc.js'
+import { fetchDocumentBlob, triggerBlobDownload, getDocUrl } from '../utils/downloadDoc.js'
 
 const props = defineProps({ personId: { type: String, required: true } })
 const store = usePeopleStore()
@@ -88,6 +88,28 @@ async function download(doc) {
     downloadingIds.value.delete(doc.id)
   }
 }
+
+// Secondary action: view the file inline instead of saving it. Same {url,
+// direct} step as download() (getDocUrl below — no second fetch-the-url path
+// to maintain). direct:true's `url` is a presigned cross-origin Stratus link
+// (renders inline via its own contentType, needs no auth of its own).
+// direct:false's `url` is already the same-origin /file path the download
+// route redirects from — plain navigation carries the organizer's cookie, so
+// window.open needs nothing extra either way.
+const openingIds = ref(new Set())
+
+async function openInTab(doc) {
+  if (openingIds.value.has(doc.id)) return // same in-flight guard as download()
+  openingIds.value.add(doc.id)
+  try {
+    const url = await getDocUrl(store, doc.id)
+    window.open(url, '_blank', 'noopener')
+  } catch (e) {
+    notify.error(e.message)
+  } finally {
+    openingIds.value.delete(doc.id)
+  }
+}
 </script>
 
 <template>
@@ -111,7 +133,10 @@ async function download(doc) {
             <Tag :severity="isExpired(doc) ? 'warn' : 'secondary'" :value="doc.expiry_date || '-'" />
           </td>
           <td data-label="File"><a href="#" :aria-disabled="downloadingIds.has(doc.id)" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
-          <td><Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" /></td>
+          <td class="doc-actions">
+            <Button type="button" icon="pi pi-external-link" severity="secondary" text rounded class="icon-muted-btn" :aria-label="`Open ${doc.original_name} in new tab`" @click="openInTab(doc)" />
+            <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" />
+          </td>
         </tr>
       </tbody>
     </table>
@@ -140,3 +165,12 @@ async function download(doc) {
     </form>
   </div>
 </template>
+
+<style scoped>
+/* Two icon-only row actions side by side (open-in-tab, delete) — same gap as
+   the .field rows below them, tight enough to still read as one action group. */
+.doc-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+</style>
