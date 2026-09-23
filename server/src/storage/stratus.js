@@ -44,7 +44,7 @@ export function makeStratusStorage(cfg) {
   }
   const bucket = (req) => appFor(req).stratus().bucket(cfg.storage.stratusBucket)
   return {
-    async put(req, key, readable) {
+    async put(req, key, readable, { mime } = {}) {
       const chunks = []
       for await (const c of readable) chunks.push(c) // ≤10MB (multipart limit) — buffering is fine
       const buf = Buffer.concat(chunks)
@@ -52,7 +52,13 @@ export function makeStratusStorage(cfg) {
       // implementation ends `return resp.statusCode === 200` (bucket.js:614) — it can
       // resolve false rather than throwing. Discarding that would write the documents
       // row anyway, leaving a document that lists fine and 404s forever on download.
-      const ok = await bucket(req).putObject(key, buf)
+      //
+      // Without an explicit contentType, putObject falls back to guessing from the key's
+      // extension (bucket.js:554, mime_types_1.getContentType) — our keys are
+      // `${personId}/${documentId}` with no extension, so every object would land as
+      // application/octet-stream. IStratusPutObjectOptions.contentType
+      // (lib/utils/pojo/stratus.d.ts:79-92) is the documented way to set it explicitly.
+      const ok = await bucket(req).putObject(key, buf, mime ? { contentType: mime } : undefined)
       if (ok !== true) throw new Error(`Stratus putObject failed for key ${key} (returned ${JSON.stringify(ok)})`)
       return { size: buf.length }
     },

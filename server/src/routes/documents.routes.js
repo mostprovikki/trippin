@@ -26,7 +26,7 @@ export default async function routes(app) {
       if (part.type === 'file') {
         const id = randomUUID()
         const key = `${personId}/${id}`
-        const { size } = await app.storage.put(req, key, part.file) // throws on fileSize limit → 413 via error handler
+        const { size } = await app.storage.put(req, key, part.file, { mime: part.mimetype }) // throws on fileSize limit → 413 via error handler
         file = { id, key, size, original_name: part.filename, mime_type: part.mimetype }
       } else fields[part.fieldname] = part.value
     }

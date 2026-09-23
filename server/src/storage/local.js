@@ -8,7 +8,7 @@ import { StorageNotFoundError } from './errors.js'
 export function makeLocalStorage({ uploadsDir = config.uploadsDir } = {}) {
   const abs = (key) => join(uploadsDir, key)
   return {
-    async put(_req, key, readable) {
+    async put(_req, key, readable, _opts) { // _opts: { mime } — filesystem has no content-type to set
       await mkdir(dirname(abs(key)), { recursive: true })
       await pipeline(readable, createWriteStream(abs(key)))
       return { size: statSync(abs(key)).size }
