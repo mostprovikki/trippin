@@ -11,7 +11,8 @@
 //   node scripts/run-e2e.mjs ui-walk   # ui-walk.mjs only
 //
 // Env:
-//   E2E_GATE_TIMEOUT_MS   per-gate timeout in ms (default 120000)
+//   E2E_GATE_TIMEOUT_MS   per-gate timeout in ms (default 180000 — see the
+//                         comment at its definition below for why 180s)
 //
 // Prerequisites (gates / ui-walk): web on 43100 + API on 43101, plus the two
 // seeded QA accounts the gates log in as:
@@ -24,9 +25,12 @@
 //   npm run db:up && npm run dev
 //   node server/scripts/seed-organizer.js --email=demo@tripper.dev --name="Demo Organizer" --password=tripper1234
 //   node server/scripts/seed-organizer.js --email=demo@example.com --name="Demo Example" --password=demo-pass-123
-// (see individual e2e/qa-*.mjs file headers for any gate-specific seed data,
-// e.g. qa-dates-confirmed.mjs / qa-format-polish.mjs hardcode specific trip
-// ids — re-seed with e2e/seed-demo.mjs if those trips don't exist.)
+// (see individual e2e/qa-*.mjs file headers for any gate-specific seed data;
+// re-seed with e2e/seed-demo.mjs if a gate reports it can't find its trip.
+// qa-format-polish.mjs and qa-dates-confirmed.mjs resolve the flagship/idea
+// trip ids at runtime via GET /api/trips (status=confirmed / status=idea) —
+// override with QA_TRIP_ID, or QA_CONFIRMED_TRIP_ID / QA_IDEA_TRIP_ID
+// respectively, only if a DB ever has more than one of either status.)
 //
 // Prerequisites (smoke): local dev Postgres only (npm run db:up) — smoke.mjs
 // boots its own in-process server on a random port against a throwaway
@@ -112,6 +116,11 @@ const files = mode === 'smoke'
     ? ['ui-walk.mjs']
     : readdirSync(E2E_DIR).filter((f) => /^qa-.*\.mjs$/.test(f)).sort()
 
+if (!files.length) {
+  console.error(`FAIL: no e2e/qa-*.mjs files found in ${E2E_DIR} — a passing empty run would be silently vacuous.`)
+  process.exit(1)
+}
+
 console.log(`Running ${files.length} gate(s) sequentially (timeout ${GATE_TIMEOUT_MS}ms each): ${files.join(', ')}\n`)
 
 const results = []
@@ -126,16 +135,28 @@ for (const file of files) {
     env: process.env,
   })
   const ms = Date.now() - start
-  const timedOut = res.status === null && res.signal !== null
-  const ok = res.status === 0 && !timedOut
-  results.push({ file, ok, status: res.status, signal: res.signal, ms, timedOut })
-  if (timedOut) console.error(`!!! ${file} TIMED OUT after ${GATE_TIMEOUT_MS}ms (killed with ${res.signal})`)
+  // Playwright installs its own SIGTERM handler, so a gate spawnSync kills for
+  // running past the timeout exits with a CODE (measured: status=130,
+  // signal=null), not a signal — the signal check alone never fires for a
+  // real gate. Elapsed-time is the reliable tell; keep the signal check too
+  // for the (non-Playwright) case where the child really is killed by signal.
+  const timedOut = (res.status === null && res.signal !== null) || ms >= GATE_TIMEOUT_MS
+  const ok = res.status === 0 && !timedOut && !res.error
+  results.push({ file, ok, status: res.status, signal: res.signal, ms, timedOut, error: res.error })
+  if (timedOut) console.error(`!!! ${file} TIMED OUT after ${GATE_TIMEOUT_MS}ms (status=${res.status} signal=${res.signal})`)
+  if (res.error) console.error(`!!! ${file} failed to spawn: ${res.error.message}`)
   console.log()
 }
 
 console.log('=== e2e summary ===')
 for (const r of results) {
-  const detail = r.ok ? '' : `  (status=${r.status} signal=${r.signal}${r.timedOut ? ' TIMEOUT' : ''})`
+  const bits = []
+  if (!r.ok) {
+    bits.push(`status=${r.status} signal=${r.signal}`)
+    if (r.timedOut) bits.push('TIMEOUT')
+    if (r.error) bits.push(`spawn error: ${r.error.message}`)
+  }
+  const detail = bits.length ? `  (${bits.join(' ')})` : ''
   console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.file}  ${r.ms}ms${detail}`)
 }
 const failed = results.filter((r) => !r.ok)

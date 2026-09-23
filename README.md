@@ -132,8 +132,10 @@ stack and asserts something specific (contrast, dark mode, datepicker
 keynav, search, upload reset, template isolation, etc). All are wired into
 npm scripts via `scripts/run-e2e.mjs`, which runs them **sequentially**
 (they share one dev server + Postgres — parallel runs would collide) with a
-per-gate timeout (`E2E_GATE_TIMEOUT_MS`, default 120s) and prints a
-pass/fail summary, exiting non-zero if any gate failed or timed out.
+per-gate timeout (`E2E_GATE_TIMEOUT_MS`, default 180s — measured
+2026-09-23: `qa-datepicker.mjs` alone takes ~150s, so 120s killed it
+mid-run) and prints a pass/fail summary, exiting non-zero if any gate
+failed or timed out.
 
 ```bash
 npm run test:e2e            # all 12 qa-*.mjs gates
@@ -152,8 +154,12 @@ guidance rather than hanging if they're missing:
   node server/scripts/seed-organizer.js --email=demo@tripper.dev --name="Demo Organizer" --password=tripper1234
   node server/scripts/seed-organizer.js --email=demo@example.com --name="Demo Example" --password=demo-pass-123
   ```
-  Some gates also hardcode specific seeded trips (see each `e2e/qa-*.mjs`
-  file header) — re-run `e2e/seed-demo.mjs` if those are missing.
+  `qa-format-polish.mjs` and `qa-dates-confirmed.mjs` resolve the
+  flagship/idea trip ids at runtime via `GET /api/trips` (matched by
+  `status`); override with `QA_TRIP_ID`, or `QA_CONFIRMED_TRIP_ID` /
+  `QA_IDEA_TRIP_ID`, only if a DB ever has more than one trip of either
+  status. Re-run `e2e/seed-demo.mjs` if a gate reports it can't find its
+  trip at all.
 - `test:e2e:smoke` only needs `npm run db:up` (smoke.mjs boots its own
   in-process server on a random port + throwaway schema — it doesn't touch
   43100/43101 or the seeded accounts above).
