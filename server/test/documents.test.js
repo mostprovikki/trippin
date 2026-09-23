@@ -79,6 +79,28 @@ describe('documents', () => {
     expect(dl2.statusCode).toBe(404)
   })
 
+  // trip-planner-g9p review fix: DocumentList.vue's "open in new tab" secondary
+  // action needs `inline`, not the default `attachment` — otherwise opening the
+  // route just re-downloads the file and the new tab closes itself.
+  it('?inline=1 on /file responds content-disposition: inline (still filenamed); plain /file stays attachment', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
+    const form = new FormData()
+    form.append('file', pdfBlob(10), 'passport.pdf')
+    form.append('doc_type', 'passport')
+    const up = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: form })
+    const doc = up.json().document
+
+    const inline = await authedInject(app, cookie, { method: 'GET', url: `/api/documents/${doc.id}/file?inline=1` })
+    expect(inline.statusCode).toBe(200)
+    expect(inline.headers['content-disposition']).toContain('inline')
+    expect(inline.headers['content-disposition']).toContain('passport.pdf')
+    expect(inline.headers['content-disposition']).not.toContain('attachment')
+
+    const attachment = await authedInject(app, cookie, { method: 'GET', url: `/api/documents/${doc.id}/file` })
+    expect(attachment.headers['content-disposition']).toContain('attachment')
+  })
+
   it('rejects bad doc_type with 400 BAD_DOC_TYPE, accepts "other"', async () => {
     const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const p = await createPerson(db)

@@ -57,7 +57,14 @@ export default async function routes(app) {
       throw e
     }
     if (dl.url) return reply.redirect(dl.url)
-    reply.header('content-disposition', `attachment; filename="${dl.filename.replace(/"/g, '')}"`)
+    // ?inline=1 (checked by DocumentList.vue's "open in new tab" secondary
+    // action, via downloadDoc.js's getDocUrl) — without it, opening this same
+    // route in a new tab just re-triggered a download and the tab closed
+    // itself. Query-gated rather than a separate route/response field so the
+    // download path's default (attachment) and its existing callers/tests are
+    // untouched.
+    const disposition = req.query.inline === '1' ? 'inline' : 'attachment'
+    reply.header('content-disposition', `${disposition}; filename="${dl.filename.replace(/"/g, '')}"`)
     reply.type(dl.mime)
     return reply.send(dl.stream)
   }

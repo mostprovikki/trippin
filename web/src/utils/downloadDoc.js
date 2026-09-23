@@ -60,15 +60,18 @@ export async function fetchDocumentBlob({ url, direct }, { headers = {} } = {}) 
 }
 
 // Second step for the "open in a new tab" secondary action (DocumentList.vue):
-// resolve the URL to navigate to. Both direct:true and direct:false file-url
-// responses already hand back a `url` that's directly usable as-is —
-// direct:true's is a presigned Stratus link (renders inline via its own
-// contentType), direct:false's IS the same-origin /file path the download
-// route itself redirects from. No branching needed; this only exists so the
-// component doesn't reimplement the `{ url }` destructure inline.
+// resolve the URL to navigate to. direct:true's `url` is a presigned Stratus
+// link and already renders inline via its own contentType. direct:false's
+// `url` is the same-origin /file path the download route itself redirects
+// from — that route defaults to `content-disposition: attachment` (see
+// sendDoc in documents.routes.js), so opened as-is it would just download the
+// file again and the new tab would close itself. `?inline=1` is the flag
+// sendDoc checks to send `inline` instead — picked over a second `view_url`
+// field on the file-url response so the response shape (and its existing
+// tests) stay untouched.
 export async function getDocUrl(store, docId) {
-  const { url } = await store.getDocumentUrl(docId)
-  return url
+  const { url, direct } = await store.getDocumentUrl(docId)
+  return direct ? url : `${url}?inline=1`
 }
 
 export function triggerBlobDownload(blob, filename) {

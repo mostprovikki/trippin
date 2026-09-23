@@ -91,20 +91,35 @@ async function download(doc) {
 
 // Secondary action: view the file inline instead of saving it. Same {url,
 // direct} step as download() (getDocUrl below — no second fetch-the-url path
-// to maintain). direct:true's `url` is a presigned cross-origin Stratus link
-// (renders inline via its own contentType, needs no auth of its own).
-// direct:false's `url` is already the same-origin /file path the download
-// route redirects from — plain navigation carries the organizer's cookie, so
-// window.open needs nothing extra either way.
+// to maintain); getDocUrl appends `?inline=1` on the local driver's same-origin
+// path so /file answers with `content-disposition: inline` instead of
+// `attachment` (see documents.routes.js sendDoc) — otherwise "open in new tab"
+// just re-triggered a download and the tab closed itself. direct:true's `url`
+// (a presigned Stratus link) already renders inline via its own contentType.
 const openingIds = ref(new Set())
 
 async function openInTab(doc) {
   if (openingIds.value.has(doc.id)) return // same in-flight guard as download()
   openingIds.value.add(doc.id)
+  // window.open() must run synchronously, before any await — called after one
+  // it's lost the click event's user-activation and gets popup-blocked in
+  // Safari/Firefox. Open a blank placeholder now and navigate it once the URL
+  // resolves. `.opener = null` (set by hand, not via a 'noopener' window
+  // feature) keeps the reverse-tabnabbing protection without losing the
+  // reference — most browsers hand back null for the reference itself when
+  // 'noopener' is passed to window.open, and step 2 needs that reference.
+  const w = window.open('about:blank')
+  if (w) w.opener = null
+  if (!w) {
+    openingIds.value.delete(doc.id)
+    notify.error('Your browser blocked the pop-up. Allow pop-ups for this site and try again.')
+    return
+  }
   try {
     const url = await getDocUrl(store, doc.id)
-    window.open(url, '_blank', 'noopener')
+    w.location = url
   } catch (e) {
+    w.close()
     notify.error(e.message)
   } finally {
     openingIds.value.delete(doc.id)
@@ -133,9 +148,11 @@ async function openInTab(doc) {
             <Tag :severity="isExpired(doc) ? 'warn' : 'secondary'" :value="doc.expiry_date || '-'" />
           </td>
           <td data-label="File"><a href="#" :aria-disabled="downloadingIds.has(doc.id)" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
-          <td class="doc-actions">
-            <Button type="button" icon="pi pi-external-link" severity="secondary" text rounded class="icon-muted-btn" :aria-label="`Open ${doc.original_name} in new tab`" @click="openInTab(doc)" />
-            <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" />
+          <td>
+            <div class="doc-actions">
+              <Button type="button" icon="pi pi-external-link" :loading="openingIds.has(doc.id)" severity="secondary" text rounded class="icon-muted-btn" :aria-label="`Open ${doc.original_name} in new tab`" @click="openInTab(doc)" />
+              <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" />
+            </div>
           </td>
         </tr>
       </tbody>

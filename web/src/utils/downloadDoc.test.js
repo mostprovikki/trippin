@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fetchDocumentBlob, triggerBlobDownload, DownloadError } from './downloadDoc.js'
+import { fetchDocumentBlob, triggerBlobDownload, getDocUrl, DownloadError } from './downloadDoc.js'
 
 describe('fetchDocumentBlob', () => {
   it('direct:true — fetches the presigned url with NO headers, even when the caller passed some', async () => {
@@ -69,6 +69,19 @@ describe('fetchDocumentBlob', () => {
       .rejects.toBeInstanceOf(DownloadError)
     await expect(fetchDocumentBlob({ url: 'https://stratus.example/signed', direct: true }))
       .rejects.toMatchObject({ reason: 'network' })
+  })
+})
+
+describe('getDocUrl', () => {
+  it('direct:true — returns the presigned url unchanged (already renders inline via its own contentType)', async () => {
+    const store = { getDocumentUrl: vi.fn().mockResolvedValue({ url: 'https://stratus.example/signed?sig=abc', direct: true }) }
+    await expect(getDocUrl(store, 'd1')).resolves.toBe('https://stratus.example/signed?sig=abc')
+    expect(store.getDocumentUrl).toHaveBeenCalledWith('d1')
+  })
+
+  it("direct:false — appends ?inline=1 so /file answers inline instead of its default attachment", async () => {
+    const store = { getDocumentUrl: vi.fn().mockResolvedValue({ url: '/api/documents/d1/file', direct: false }) }
+    await expect(getDocUrl(store, 'd1')).resolves.toBe('/api/documents/d1/file?inline=1')
   })
 })
 
