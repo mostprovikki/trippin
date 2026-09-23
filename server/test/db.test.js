@@ -10,6 +10,22 @@ describe('compileSql', () => {
   it('ignores ? inside string literals', () => {
     expect(compileSql("SELECT 'a?b' AS x WHERE y = ?")).toBe("SELECT 'a?b' AS x WHERE y = $1")
   })
+  it('still compiles normal placeholders next to a quoted identifier with no ? in it', () => {
+    expect(compileSql('SELECT "user" FROM t WHERE a = ? AND "b col" = ?'))
+      .toBe('SELECT "user" FROM t WHERE a = $1 AND "b col" = $2')
+  })
+  it('throws on ? inside a double-quoted identifier', () => {
+    expect(() => compileSql('SELECT * FROM t WHERE "weird?col" = ?')).toThrow(/double-quoted identifier/)
+  })
+  it('throws on the jsonb ?| operator shape', () => {
+    expect(() => compileSql("SELECT * FROM t WHERE data ?| array['a','b']")).toThrow(/jsonb/i)
+  })
+  it('throws on the jsonb ?& operator shape', () => {
+    expect(() => compileSql("SELECT * FROM t WHERE data ?& array['a','b']")).toThrow(/jsonb/i)
+  })
+  it('throws on the bare jsonb ? existence-operator shape (? immediately before a string literal)', () => {
+    expect(() => compileSql("SELECT * FROM t WHERE data ? 'key'")).toThrow(/jsonb/i)
+  })
 })
 
 describe('makeDb (pg driver)', () => {

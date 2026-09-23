@@ -81,7 +81,14 @@ _Add a brief overview of your project architecture_
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+- **Route SQL uses sqlite-style `?` placeholders only** — `compileSql` (server/src/db.js)
+  rewrites them to `$1..$n` before they hit `pg`. Every unquoted `?` is treated as a
+  placeholder, so **jsonb's `?` / `?|` / `?&` existence operators are forbidden** — they
+  collide with the convention and `compileSql` throws on them (`?|`, `?&`, and a bare `?`
+  immediately before a string literal, e.g. `data ? 'key'`) rather than silently
+  misnumbering placeholders. Use `jsonb_exists(col, 'key')`, `jsonb_exists_any`, or
+  `jsonb_exists_all` instead. `compileSql` also throws on a `?` inside a double-quoted
+  identifier (e.g. `"weird?col"`) for the same reason — rename the identifier instead.
 
 ## Local overrides to the generated Beads block
 

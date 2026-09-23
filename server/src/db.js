@@ -3,12 +3,43 @@ import { config } from './config.js'
 
 const als = new AsyncLocalStorage()
 
-// '?' → '$1..$n', skipping single-quoted literals. Route SQL keeps sqlite-style '?'.
+// '?' → '$1..$n', skipping single-quoted literals. Route SQL keeps sqlite-style '?',
+// so every unquoted '?' is a placeholder — EXCEPT the shapes below, which this throws
+// on instead of silently misnumbering:
+//   - '?' inside a double-quoted identifier (e.g. "weird?col") — identifiers can't
+//     hold a parameter placeholder; a '?' there is always a mistake.
+//   - jsonb operators, which collide with the placeholder convention and are
+//     unambiguous once the following char(s) are inspected:
+//       '?|' / '?&'      — the jsonb ?| and ?& operators (never valid placeholder syntax)
+//       '?' + ws* + "'"  — the bare jsonb ? existence operator applied to a string
+//                          literal (e.g. `data ? 'key'`); a real placeholder is never
+//                          followed directly by a literal with nothing but whitespace
+//                          between them.
+//   Use jsonb_exists(col, 'key') / jsonb_exists_any / jsonb_exists_all instead — see
+//   CLAUDE.md.
 export function compileSql(sql) {
-  let out = '', n = 0, inStr = false
-  for (const c of sql) {
-    if (c === "'") { inStr = !inStr; out += c; continue }
-    out += (!inStr && c === '?') ? `$${++n}` : c
+  let out = '', n = 0, inStr = false, inIdent = false
+  for (let i = 0; i < sql.length; i++) {
+    const c = sql[i]
+    if (!inIdent && c === "'") { inStr = !inStr; out += c; continue }
+    if (!inStr && c === '"') { inIdent = !inIdent; out += c; continue }
+    if (inIdent) {
+      if (c === '?') throw new Error(`compileSql: '?' inside a double-quoted identifier is not supported: ...${sql.slice(Math.max(0, i - 20), i + 5)}...`)
+      out += c; continue
+    }
+    if (!inStr && c === '?') {
+      if (sql[i + 1] === '|' || sql[i + 1] === '&') {
+        throw new Error(`compileSql: jsonb '?${sql[i + 1]}' operator is forbidden (collides with '?' placeholders) — use jsonb_exists_any/jsonb_exists_all instead: ...${sql.slice(Math.max(0, i - 20), i + 5)}...`)
+      }
+      let j = i + 1
+      while (sql[j] === ' ' || sql[j] === '\t' || sql[j] === '\n') j++
+      if (sql[j] === "'") {
+        throw new Error(`compileSql: bare jsonb '?' existence operator is forbidden (collides with '?' placeholders) — use jsonb_exists instead: ...${sql.slice(Math.max(0, i - 20), i + 5)}...`)
+      }
+      out += `$${++n}`
+      continue
+    }
+    out += c
   }
   return out
 }
