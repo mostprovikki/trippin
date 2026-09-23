@@ -219,4 +219,48 @@ describe('handleCalendarArrowKey', () => {
     expect(event.defaultPrevented).toBe(true)
     expect(spanFor(panel, 1, { other: true }).classList.contains('p-disabled')).toBe(true)
   })
+
+  // The regression this test pins down: 2026-10-31 is a Saturday, so October's
+  // grid ends EXACTLY on the last column with no trailing November filler at
+  // all (4 leading Sep days + 31 Oct days = 35 = a complete 5-row grid).
+  // cells[index + 1] is therefore `undefined`, not an other-month cell, and the
+  // old code read that as "showOtherMonths is off, stay put" — silently
+  // swallowing ArrowRight at this exact boundary (jumped 0 days).
+  it('pages forward when the grid ends exactly on the last column (no trailing filler)', async () => {
+    const days = []
+    for (let d = 27; d <= 30; d++) days.push({ day: d, other: true }) // Sep 27-30 leading
+    for (let d = 1; d <= 31; d++) days.push({ day: d }) // Oct 1-31, completes the row exactly
+    document.body.innerHTML = ''
+    const octPanel = buildPanel(days)
+    expect(octPanel.querySelectorAll('.p-datepicker-day').length).toBe(35) // no Nov filler exists
+    let nextClicks = 0
+    octPanel.querySelector('.p-datepicker-next-button').addEventListener('click', () => { nextClicks++ })
+    const oct31 = spanFor(octPanel, 31)
+    oct31.focus()
+    const event = press(oct31, 'ArrowRight')
+    await handleCalendarArrowKey(event)
+    expect(event.defaultPrevented).toBe(true)
+    // Regression assertion: the old code returned early on `!neighbour` and
+    // never touched the next button at all.
+    expect(nextClicks).toBe(1)
+  })
+
+  // Same edge case in reverse: a month that starts exactly on the grid's first
+  // column (no leading filler) must page backward and land on the previous
+  // month's LAST day, whose number isn't known up front.
+  it('pages backward when the grid starts exactly on the first column (no leading filler)', async () => {
+    const days = []
+    for (let d = 1; d <= 30; d++) days.push({ day: d }) // e.g. Nov starting on a Sunday
+    for (let d = 1; d <= 5; d++) days.push({ day: d, other: true }) // Dec trailing
+    document.body.innerHTML = ''
+    const novPanel = buildPanel(days)
+    let prevClicks = 0
+    novPanel.querySelector('.p-datepicker-prev-button').addEventListener('click', () => { prevClicks++ })
+    const nov1 = spanFor(novPanel, 1)
+    nov1.focus()
+    const event = press(nov1, 'ArrowLeft')
+    await handleCalendarArrowKey(event)
+    expect(event.defaultPrevented).toBe(true)
+    expect(prevClicks).toBe(1)
+  })
 })

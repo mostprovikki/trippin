@@ -56,6 +56,9 @@ function moveFocus(from, to) {
 }
 
 // Page the panel one month and put focus on `dayNumber` as an in-month cell.
+// `dayNumber === null` means "the last in-month day of whatever renders" —
+// used when paging backward off a month that has no leading filler, where we
+// know we want the previous month's last day but not yet its number.
 // The re-render is Vue's, so poll a few frames rather than assuming one tick.
 async function pageAndFocus(panel, forward, dayNumber) {
   // The class is what this build actually renders; the data-pc-section attribute
@@ -91,9 +94,13 @@ async function pageAndFocus(panel, forward, dayNumber) {
   if (monthLabel() === before) return false
 
   const targetSpan = () => {
-    const td = dayCells(panel).find(
-      (c) => !isOtherMonth(c) && Number((spanOf(c)?.textContent || '').trim()) === dayNumber
-    )
+    const inMonth = dayCells(panel).filter((c) => !isOtherMonth(c))
+    const td = dayNumber === null
+      ? inMonth.reduce((best, c) => {
+        const n = Number((spanOf(c)?.textContent || '').trim())
+        return !best || n > Number((spanOf(best)?.textContent || '').trim()) ? c : best
+      }, null)
+      : inMonth.find((c) => Number((spanOf(c)?.textContent || '').trim()) === dayNumber)
     const span = spanOf(td)
     return span && !isDisabled(span) ? span : null
   }
@@ -156,9 +163,19 @@ export async function handleCalendarArrowKey(event) {
   event.preventDefault()
   event.stopPropagation()
 
-  // No neighbour means the grid rendered without filler days (showOtherMonths
-  // off). Nothing sensible to move to without paging blind, so stay put.
-  if (!neighbour) return true
+  // No neighbour cell at all — not "no filler days" (showOtherMonths is on
+  // everywhere else in this grid), but the current day sits at the table's
+  // very last/first cell because the month starts or ends exactly on the
+  // grid's edge column, so PrimeVue emits no trailing/leading filler row to
+  // hold a next cell. (2026-10-31 is such a case: it's a Saturday, so the
+  // in-month grid ends exactly at 35 cells with nothing left to represent
+  // Nov 1.) Page in the pressed direction and land on the new month's first
+  // (forward) or last (backward) in-month day, same as an other-month
+  // neighbour would.
+  if (!neighbour) {
+    await pageAndFocus(panel, forward, forward ? 1 : null)
+    return true
+  }
 
   const neighbourSpan = spanOf(neighbour)
   if (!neighbourSpan) return true
