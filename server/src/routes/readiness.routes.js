@@ -21,26 +21,38 @@ export default async function routes(app) {
       [tripId]
     )
 
-    const participants = []
-    for (const p of people) {
-      const { c: docs_count } = await app.db.get(
-        'SELECT COUNT(*)::int AS c FROM documents WHERE person_id = ?', [p.person_id]
-      )
-      const activeLink = await app.db.get(
-        `SELECT 1 FROM participant_links
-         WHERE trip_id = ? AND person_id = ? AND revoked_at IS NULL
-           AND (expires_at IS NULL OR expires_at > to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))`,
-        [tripId, p.person_id]
-      )
-      participants.push({
-        person_id: p.person_id,
-        name: p.name,
-        profile_confirmed: p.profile_confirmed,
-        docs_count,
-        doc_warnings: warningsByPerson.get(p.person_id) || [],
-        has_active_link: !!activeLink,
-      })
-    }
+    // One aggregate query per concern for all participants (was 2 round-trips per
+    // participant — 2N total — which is expensive on serverless/pooled connections).
+    const docCounts = await app.db.all(
+      `SELECT tp.person_id AS person_id, COUNT(d.id)::int AS docs_count
+       FROM trip_participants tp
+       LEFT JOIN documents d ON d.person_id = tp.person_id
+       WHERE tp.trip_id = ?
+       GROUP BY tp.person_id`,
+      [tripId]
+    )
+    const docsCountByPerson = new Map(docCounts.map((r) => [r.person_id, r.docs_count]))
+
+    const activeLinks = await app.db.all(
+      `SELECT tp.person_id AS person_id, bool_or(pl.person_id IS NOT NULL) AS has_active_link
+       FROM trip_participants tp
+       LEFT JOIN participant_links pl ON pl.trip_id = tp.trip_id AND pl.person_id = tp.person_id
+         AND pl.revoked_at IS NULL
+         AND (pl.expires_at IS NULL OR pl.expires_at > to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+       WHERE tp.trip_id = ?
+       GROUP BY tp.person_id`,
+      [tripId]
+    )
+    const activeLinkByPerson = new Map(activeLinks.map((r) => [r.person_id, r.has_active_link]))
+
+    const participants = people.map((p) => ({
+      person_id: p.person_id,
+      name: p.name,
+      profile_confirmed: p.profile_confirmed,
+      docs_count: docsCountByPerson.get(p.person_id) ?? 0,
+      doc_warnings: warningsByPerson.get(p.person_id) || [],
+      has_active_link: !!activeLinkByPerson.get(p.person_id),
+    }))
 
     const dates_confirmed = !!(trip.date_mode === 'confirmed' && trip.start_date && trip.end_date)
     const destination_decided = !!(trip.destination_mode === 'decided' && trip.destination)
