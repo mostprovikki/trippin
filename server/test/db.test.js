@@ -26,6 +26,15 @@ describe('compileSql', () => {
   it('throws on the bare jsonb ? existence-operator shape (? immediately before a string literal)', () => {
     expect(() => compileSql("SELECT * FROM t WHERE data ? 'key'")).toThrow(/jsonb/i)
   })
+  it('does NOT throw on a placeholder immediately followed by the || concat operator', () => {
+    expect(compileSql("SELECT ?||'x'")).toBe("SELECT $1||'x'")
+  })
+  it('ignores a stray double-quote inside a -- line comment (does not desync the identifier tracker)', () => {
+    expect(compileSql('-- 6" rule\nSELECT * FROM t WHERE a = ?')).toBe('-- 6" rule\nSELECT * FROM t WHERE a = $1')
+  })
+  it('ignores a stray double-quote inside a /* */ block comment', () => {
+    expect(compileSql('/* 6" rule */ SELECT * FROM t WHERE a = ?')).toBe('/* 6" rule */ SELECT * FROM t WHERE a = $1')
+  })
 })
 
 describe('makeDb (pg driver)', () => {

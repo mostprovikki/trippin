@@ -3,24 +3,45 @@ import { config } from './config.js'
 
 const als = new AsyncLocalStorage()
 
-// '?' → '$1..$n', skipping single-quoted literals. Route SQL keeps sqlite-style '?',
-// so every unquoted '?' is a placeholder — EXCEPT the shapes below, which this throws
-// on instead of silently misnumbering:
+// '?' → '$1..$n', skipping single-quoted literals, '--' line comments and '/* */' block
+// comments. Route SQL keeps sqlite-style '?', so every unquoted '?' is a placeholder —
+// EXCEPT the shapes below, which this throws on instead of silently misnumbering:
 //   - '?' inside a double-quoted identifier (e.g. "weird?col") — identifiers can't
 //     hold a parameter placeholder; a '?' there is always a mistake.
 //   - jsonb operators, which collide with the placeholder convention and are
 //     unambiguous once the following char(s) are inspected:
-//       '?|' / '?&'      — the jsonb ?| and ?& operators (never valid placeholder syntax)
+//       '?|' (not followed by a second '|') / '?&' — the jsonb ?| and ?& operators
+//                          (never valid placeholder syntax). '?||' is NOT this case —
+//                          it's a placeholder immediately followed by the '||' concat
+//                          operator (e.g. `?||'x'`), which is legal and common.
 //       '?' + ws* + "'"  — the bare jsonb ? existence operator applied to a string
 //                          literal (e.g. `data ? 'key'`); a real placeholder is never
 //                          followed directly by a literal with nothing but whitespace
 //                          between them.
 //   Use jsonb_exists(col, 'key') / jsonb_exists_any / jsonb_exists_all instead — see
 //   CLAUDE.md.
+// Comments are skipped (copied through verbatim) so a stray quote inside one — e.g.
+// `-- 6" rule` — can't desync the quote/identifier tracker for the rest of the string.
 export function compileSql(sql) {
   let out = '', n = 0, inStr = false, inIdent = false
   for (let i = 0; i < sql.length; i++) {
     const c = sql[i]
+
+    if (!inStr && !inIdent && c === '-' && sql[i + 1] === '-') {
+      const nl = sql.indexOf('\n', i)
+      const stop = nl === -1 ? sql.length : nl
+      out += sql.slice(i, stop)
+      i = stop - 1
+      continue
+    }
+    if (!inStr && !inIdent && c === '/' && sql[i + 1] === '*') {
+      const end = sql.indexOf('*/', i + 2)
+      const stop = end === -1 ? sql.length : end + 2
+      out += sql.slice(i, stop)
+      i = stop - 1
+      continue
+    }
+
     if (!inIdent && c === "'") { inStr = !inStr; out += c; continue }
     if (!inStr && c === '"') { inIdent = !inIdent; out += c; continue }
     if (inIdent) {
@@ -28,7 +49,7 @@ export function compileSql(sql) {
       out += c; continue
     }
     if (!inStr && c === '?') {
-      if (sql[i + 1] === '|' || sql[i + 1] === '&') {
+      if ((sql[i + 1] === '|' && sql[i + 2] !== '|') || sql[i + 1] === '&') {
         throw new Error(`compileSql: jsonb '?${sql[i + 1]}' operator is forbidden (collides with '?' placeholders) — use jsonb_exists_any/jsonb_exists_all instead: ...${sql.slice(Math.max(0, i - 20), i + 5)}...`)
       }
       let j = i + 1
