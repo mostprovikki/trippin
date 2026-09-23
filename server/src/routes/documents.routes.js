@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import multipart from '@fastify/multipart'
 import { httpError } from '../lib/errors.js'
+import { StorageNotFoundError } from '../storage/errors.js'
 
 const DOC_TYPES = ['passport', 'visa', 'national_id', 'driving_license', 'vaccination', 'other']
 const DOC_FIELDS = ['id', 'person_id', 'doc_type', 'doc_number', 'expiry_date', 'original_name', 'mime_type', 'size_bytes', 'uploaded_at']
@@ -44,8 +45,17 @@ export default async function routes(app) {
     return getDoc(file.id)
   }
 
+  // Shared by both organizer and participant download routes: the one place that
+  // translates "storage object missing" (documents row survives, e.g. an orphan-upload
+  // purge or manual deletion) into the app's standard 404 shape, for both drivers.
   async function sendDoc(req, reply, row) {
-    const dl = await app.storage.getDownload(req, { key: row.file_path, filename: row.original_name, mime: row.mime_type })
+    let dl
+    try {
+      dl = await app.storage.getDownload(req, { key: row.file_path, filename: row.original_name, mime: row.mime_type })
+    } catch (e) {
+      if (e instanceof StorageNotFoundError) return httpError(reply, 404, 'NOT_FOUND', 'Document file is missing')
+      throw e
+    }
     if (dl.url) return reply.redirect(dl.url)
     reply.header('content-disposition', `attachment; filename="${dl.filename.replace(/"/g, '')}"`)
     reply.type(dl.mime)

@@ -3,6 +3,7 @@ import { mkdir, unlink } from 'node:fs/promises'
 import { pipeline } from 'node:stream/promises'
 import { join, dirname } from 'node:path'
 import { config } from '../config.js'
+import { StorageNotFoundError } from './errors.js'
 
 export function makeLocalStorage({ uploadsDir = config.uploadsDir } = {}) {
   const abs = (key) => join(uploadsDir, key)
@@ -13,9 +14,13 @@ export function makeLocalStorage({ uploadsDir = config.uploadsDir } = {}) {
       return { size: statSync(abs(key)).size }
     },
     async getDownload(_req, { key, filename, mime }) {
-      statSync(abs(key)) // throws if missing → route 404s upstream of this in practice
+      try { statSync(abs(key)) }
+      catch (e) { if (e.code === 'ENOENT') throw new StorageNotFoundError(key); throw e }
       return { stream: createReadStream(abs(key)), filename, mime }
     },
-    async remove(_req, key) { try { await unlink(abs(key)) } catch { /* already gone */ } }
+    async remove(_req, key) {
+      try { await unlink(abs(key)) }
+      catch (e) { if (e.code !== 'ENOENT') throw e /* else: already gone */ }
+    }
   }
 }

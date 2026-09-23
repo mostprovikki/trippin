@@ -2,8 +2,15 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, existsSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { createRequire } from 'node:module'
 import { makeTestApp, loginOrganizer, authedInject, createPerson, createTrip } from './helpers.js'
 import { makeLocalStorage } from '../src/storage/local.js'
+// documents.routes.js is loaded by @fastify/autoload via a genuine native dynamic
+// import() (see the same note in itinerary.test.js) — a separate module registry
+// from this file's own `import` graph, so `instanceof` against a plain import here
+// would never match what the route actually throws/catches. createRequire puts us
+// in that same native registry.
+const { StorageNotFoundError } = createRequire(import.meta.url)('../src/storage/errors.js')
 
 function pdfBlob(sizeBytes = 20, byte = 0x61) {
   return new Blob([Buffer.alloc(sizeBytes, byte)], { type: 'application/pdf' })
@@ -142,6 +149,32 @@ describe('documents', () => {
     // headers. The Stratus SDK has no way to attach them to a signed URL (see the
     // KNOWN GAP note in src/storage/stratus.js), so the redirect currently drops both.
     expect(seen.getArgs).toEqual({ key: `${p.id}/${doc.id}`, filename: 'passport.pdf', mime: 'application/pdf' })
+  })
+
+  it('download 404s with the standard NOT_FOUND shape when the DB row survives but the object is gone', async () => {
+    const missingStorage = {
+      // Must drain the part stream — @fastify/multipart won't advance otherwise.
+      async put(_req, key, readable) {
+        let size = 0
+        for await (const c of readable) size += c.length
+        return { size, key }
+      },
+      async getDownload(_req, { key }) { throw new StorageNotFoundError(key) },
+      async remove() {},
+    }
+    const { app, db } = await makeTestApp({ storage: missingStorage })
+    const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db)
+    const form = new FormData()
+    form.append('file', pdfBlob(10), 'passport.pdf')
+    form.append('doc_type', 'passport')
+    const up = await authedInject(app, cookie, { method: 'POST', url: `/api/people/${p.id}/documents`, payload: form })
+    expect(up.statusCode).toBe(201)
+    const doc = up.json().document
+
+    const dl = await authedInject(app, cookie, { method: 'GET', url: `/api/documents/${doc.id}/file` })
+    expect(dl.statusCode).toBe(404)
+    expect(dl.json().error.code).toBe('NOT_FOUND')
   })
 
   it('rejects oversize upload (11 MB) with 413', async () => {

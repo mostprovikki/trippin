@@ -1,5 +1,6 @@
 // server/src/storage/stratus.js — the ONLY file in the app that imports a Zoho SDK.
 import catalyst from 'zcatalyst-sdk-node'
+import { StorageNotFoundError } from './errors.js'
 
 // `catalyst.initialize(req)` with the default `type: 'auto'` requires the Catalyst
 // project id/key to be stamped on `req.headers` — that is the *Advanced I/O function*
@@ -66,8 +67,21 @@ export function makeStratusStorage(cfg) {
       // SDK. So a redirected download is named after the object key and its type is
       // guessed by the browser. Fixing that means streaming through the app instead of
       // redirecting, which is a product decision, not a code fix — left for the owner.
-      const signed = await bucket(req).generatePreSignedUrl(key, 'GET', { expiryIn: 300 })
-      return { url: signed.signature }
+      // NOT-FOUND TRANSLATION: node_modules/zcatalyst-sdk-node/lib/utils/api-request.js's
+      // _finalizeRequest() rejects with a plain {statusCode, code, message} object (not an
+      // Error instance) whenever the Catalyst API returns a non-2xx, and explicitly branches
+      // on `response.statusCode === 404` (line ~119) before calling rejectWithContext. A
+      // missing object key surfaces as a 404 from the `/bucket/object/signed-url` call, so
+      // `err.statusCode === 404` is the documented signal — verified by reading the SDK
+      // source, NOT by hitting a real bucket. UNVERIFIED against a live Stratus bucket
+      // (no Catalyst credentials in this environment) — confirm at deploy.
+      try {
+        const signed = await bucket(req).generatePreSignedUrl(key, 'GET', { expiryIn: 300 })
+        return { url: signed.signature }
+      } catch (e) {
+        if (e && e.statusCode === 404) throw new StorageNotFoundError(key)
+        throw e
+      }
     },
     async remove(req, key) {
       try { await bucket(req).deleteObject(key) } catch { /* orphan object beats a failed API delete */ }
