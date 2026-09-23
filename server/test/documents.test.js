@@ -1,10 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterAll } from 'vitest'
 import { mkdtempSync, existsSync, readdirSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRequire } from 'node:module'
 import { makeTestApp, loginOrganizer, authedInject, createPerson, createTrip } from './helpers.js'
 import { makeLocalStorage } from '../src/storage/local.js'
+import { config } from '../src/config.js'
 // documents.routes.js is loaded by @fastify/autoload via a genuine native dynamic
 // import() (see the same note in itinerary.test.js) — a separate module registry
 // from this file's own `import` graph, so `instanceof` against a plain import here
@@ -15,6 +17,21 @@ const { StorageNotFoundError } = createRequire(import.meta.url)('../src/storage/
 function pdfBlob(sizeBytes = 20, byte = 0x61) {
   return new Blob([Buffer.alloc(sizeBytes, byte)], { type: 'application/pdf' })
 }
+
+// trip-planner-hu9: every makeTestApp() below with no explicit `storage` falls
+// through to buildApp's `storage ?? await makeStorage()` -> makeLocalStorage(config),
+// whose `uploadsDir = config.uploadsDir` default param is read PER CALL, not
+// captured at import time — so redirecting this one mutable property before any
+// test runs is enough, no config.js/local.js change needed. This suite alone was
+// writing real files into server/data/uploads (~20MB/8 dirs per run, nothing ever
+// cleaned it up — 660MB accumulated over time). vitest's default per-file module
+// isolation means this mutation never touches config.js's copy in any other test
+// file, so it can't leak into search.test.js/storage-local.test.js's own runs.
+const testUploadsDir = mkdtempSync(join(tmpdir(), 'tp-documents-'))
+config.uploadsDir = testUploadsDir
+afterAll(async () => {
+  await rm(testUploadsDir, { recursive: true, force: true })
+})
 
 describe('documents', () => {
   it('requires organizer auth', async () => {
