@@ -18,7 +18,11 @@ function findExecutable() {
 }
 
 const BASE = process.env.BASE_URL || 'http://[::1]:43100'
-const TRIP = '8da9c5b4-b32a-4af7-984f-26258638afa0'
+// Resolved at runtime (below) rather than hardcoded: the flagship trip's id
+// is only stable within one seeded DB — e2e/seed-demo.mjs mints a fresh one
+// whenever the flagship (matched by name) doesn't already exist at a
+// previously-recorded id, so a literal UUID here goes stale on any reseed.
+let TRIP = process.env.QA_TRIP_ID || ''
 let failures = 0
 const ok = (n, x = '') => console.log(`ok  - ${n}${x ? ` (${x})` : ''}`)
 const fail = (n, d) => { failures++; console.error(`FAIL - ${n}: ${d}`) }
@@ -35,6 +39,17 @@ await page.locator('#password').fill('tripper1234')
 await page.getByRole('button', { name: /sign in|log in/i }).click()
 await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15000 })
 
+if (!TRIP) {
+  const trips = await page.evaluate(() => fetch('/api/trips').then((r) => r.json()).then((j) => j.trips))
+  const confirmed = trips.filter((t) => t.status === 'confirmed')
+  if (confirmed.length !== 1) {
+    console.error(`FAIL - could not resolve flagship trip: ${confirmed.length} confirmed trip(s) found (${confirmed.map((t) => t.name).join(', ')}); set QA_TRIP_ID to disambiguate`)
+    process.exit(1)
+  }
+  TRIP = confirmed[0].id
+  console.log(`(resolved flagship trip: ${confirmed[0].name} / ${TRIP})`)
+}
+
 // 1. Overview stat tile shows a separated number, not the raw digits.
 await page.goto(`${BASE}/trips/${TRIP}`, { waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
@@ -43,8 +58,10 @@ const stat = await page.evaluate(() => {
   const c = cards.find((x) => x.textContent.includes('Budget'))
   return c ? c.querySelector('.stat-value')?.textContent.trim() : null
 })
-if (stat === '970,300') ok('overview budget stat formatted', stat)
-else fail('overview budget stat', `got ${JSON.stringify(stat)}, want "970,300"`)
+// formatMoney (fdb1fe9) now prefixes the currency symbol on every money
+// surface, this stat tile included — was a bare "970,300", is "₹970,300".
+if (stat === '₹970,300') ok('overview budget stat formatted', stat)
+else fail('overview budget stat', `got ${JSON.stringify(stat)}, want "₹970,300"`)
 
 // 2. Budget page: table footer total and the Total line both formatted.
 await page.goto(`${BASE}/trips/${TRIP}/budget`, { waitUntil: 'networkidle' })

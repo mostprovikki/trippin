@@ -8,6 +8,10 @@
   "scripts": {
     "dev": "npm run dev --workspace=server & npm run dev --workspace=web & wait",
     "test": "npm test --workspace=server && npm test --workspace=web",
+    "test:e2e": "node scripts/run-e2e.mjs gates",
+    "test:e2e:smoke": "node scripts/run-e2e.mjs smoke",
+    "test:e2e:ui-walk": "node scripts/run-e2e.mjs ui-walk",
+    "test:all": "npm test && npm run test:e2e",
     "build": "npm run build --workspace=web",
     "db:up": "node scripts/pg-dev.mjs up",
     "db:down": "node scripts/pg-dev.mjs down",

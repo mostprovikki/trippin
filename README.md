@@ -121,6 +121,44 @@ node e2e/smoke.mjs
 ```
 
 It prints `SMOKE OK` and exits 0 on success, or exits 1 with the failing
-assertion on error. No `npm test` wiring needed — it's a plain Node script.
-It creates and drops its own `tp_smoke_*` schema, so it's safe to run
-repeatedly against the same dev database.
+assertion on error. It creates and drops its own `tp_smoke_*` schema, so it's
+safe to run repeatedly against the same dev database.
+
+## E2E gates
+
+`e2e/` also has 12 `qa-*.mjs` browser gates (Playwright, headless Chromium)
+plus `ui-walk.mjs` — each drives the real app in a browser against the dev
+stack and asserts something specific (contrast, dark mode, datepicker
+keynav, search, upload reset, template isolation, etc). All are wired into
+npm scripts via `scripts/run-e2e.mjs`, which runs them **sequentially**
+(they share one dev server + Postgres — parallel runs would collide) with a
+per-gate timeout (`E2E_GATE_TIMEOUT_MS`, default 120s) and prints a
+pass/fail summary, exiting non-zero if any gate failed or timed out.
+
+```bash
+npm run test:e2e            # all 12 qa-*.mjs gates
+npm run test:e2e:smoke      # smoke.mjs only (fast confidence check)
+npm run test:e2e:ui-walk    # ui-walk.mjs only
+npm run test:all            # unit suites (npm test), then npm run test:e2e
+```
+
+**Prerequisites** — the script checks these itself and fails fast with
+guidance rather than hanging if they're missing:
+
+- `test:e2e` / `test:e2e:ui-walk` need the dev stack up on its usual ports
+  (web `43100`, API `43101`) and the seeded QA accounts:
+  ```bash
+  npm run db:up && npm run dev
+  node server/scripts/seed-organizer.js --email=demo@tripper.dev --name="Demo Organizer" --password=tripper1234
+  node server/scripts/seed-organizer.js --email=demo@example.com --name="Demo Example" --password=demo-pass-123
+  ```
+  Some gates also hardcode specific seeded trips (see each `e2e/qa-*.mjs`
+  file header) — re-run `e2e/seed-demo.mjs` if those are missing.
+- `test:e2e:smoke` only needs `npm run db:up` (smoke.mjs boots its own
+  in-process server on a random port + throwaway schema — it doesn't touch
+  43100/43101 or the seeded accounts above).
+
+The runner does not boot servers on your behalf (`E2E_BOOT`-style
+auto-boot was considered and deliberately left out — doing it robustly
+would mean managing Vite/Fastify lifecycles and readiness polling, more
+than belongs in a thin fail-fast wrapper). Start the stack yourself first.

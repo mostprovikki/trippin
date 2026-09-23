@@ -1639,7 +1639,14 @@ if (tripId) {
   else {
     const s = await tzInputs.nth(0).inputValue()
     const e = await tzInputs.nth(1).inputValue()
-    if (s !== '2026-07-12' || e !== '2026-07-17') fail('off-by-one under UTC-7', `saved 2026-07-12/2026-07-17, UTC-7 browser shows ${s}/${e}`)
+    // expectedStart/endIso (set in section 4) are wall-clock relative -- the
+    // panel opens on the CURRENT month and picks day 12 of it, so the saved
+    // window drifts with "today" rather than being a fixed date. This used to
+    // be hardcoded as 2026-07-12/2026-07-17, which was only ever true the day
+    // this gate was written (today was July 2026); comparing to a literal
+    // made every run after month-end a false "off-by-one" failure unrelated
+    // to timezone handling.
+    if (s !== expectedStart || e !== endIso) fail('off-by-one under UTC-7', `saved ${expectedStart}/${endIso}, UTC-7 browser shows ${s}/${e}`)
     else ok('no off-by-one under UTC-7 (dates)', `${s} / ${e}`)
     // and a fresh round trip in that timezone, straight through the panel
     await setDateViaPanel(tz, tzInputs.nth(0), '2026-03-08', 'UTC-7 start (US DST spring-forward day)')

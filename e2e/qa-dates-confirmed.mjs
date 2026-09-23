@@ -17,8 +17,11 @@ function findExecutable() {
 }
 
 const BASE = process.env.BASE_URL || 'http://[::1]:43100'
-const CONFIRMED_TRIP = '8da9c5b4-b32a-4af7-984f-26258638afa0' // Vietnam, date_mode=confirmed, no windows
-const IDEA_TRIP = 'd88e2c90-69d0-4aa7-9a04-8209a5d6f2f6'      // Ladakh, windows, not confirmed
+// Resolved at runtime (below) rather than hardcoded: e2e/seed-demo.mjs mints
+// a fresh flagship id whenever it doesn't find one at a previously-recorded
+// id, so a literal UUID here goes stale on any reseed of a fresh DB.
+let CONFIRMED_TRIP = process.env.QA_CONFIRMED_TRIP_ID || '' // Vietnam, date_mode=confirmed, no windows
+let IDEA_TRIP = process.env.QA_IDEA_TRIP_ID || ''            // Ladakh, windows, not confirmed
 let failures = 0
 const ok = (n, x = '') => console.log(`ok  - ${n}${x ? ` (${x})` : ''}`)
 const fail = (n, d) => { failures++; console.error(`FAIL - ${n}: ${d}`) }
@@ -35,6 +38,20 @@ for (const scheme of ['light', 'dark']) {
   await page.locator('#password').fill('tripper1234')
   await page.getByRole('button', { name: /sign in|log in/i }).click()
   await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 15000 })
+
+  if (!CONFIRMED_TRIP || !IDEA_TRIP) {
+    const trips = await page.evaluate(() => fetch('/api/trips').then((r) => r.json()).then((j) => j.trips))
+    if (!CONFIRMED_TRIP) {
+      const confirmed = trips.filter((t) => t.status === 'confirmed')
+      if (confirmed.length !== 1) { fail('resolve confirmed trip', `${confirmed.length} confirmed trip(s) found; set QA_CONFIRMED_TRIP_ID`); break }
+      CONFIRMED_TRIP = confirmed[0].id
+    }
+    if (!IDEA_TRIP) {
+      const ideas = trips.filter((t) => t.status === 'idea')
+      if (ideas.length !== 1) { fail('resolve idea trip', `${ideas.length} idea trip(s) found; set QA_IDEA_TRIP_ID`); break }
+      IDEA_TRIP = ideas[0].id
+    }
+  }
 
   // Arm 1: confirmed trip shows banner with the exact dates + adapted description.
   await page.goto(`${BASE}/trips/${CONFIRMED_TRIP}/dates`, { waitUntil: 'networkidle' })
