@@ -38,11 +38,58 @@ describe('TripDatesView', () => {
     expect(wrapper.text()).toContain('Use as final dates')
   })
 
-  it('offers a date_mode control that calls trips.updateTrip on change', async () => {
+  it('disables the Confirmed date-mode option and shows a hint when the trip has no saved windows', async () => {
+    const { wrapper } = await mountView({ id: 't1', name: 'Goa 2026', date_mode: 'broad', windows: [] })
+    const radio = wrapper.find('#tdm-confirmed')
+    expect(radio.attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('add a date window first')
+  })
+
+  it('offers a date_mode control that calls trips.updateTrip on change for non-confirmed modes', async () => {
     const { wrapper, store } = await mountView({ id: 't1', name: 'Goa 2026', date_mode: 'broad', windows: [] })
+    await wrapper.find('#tdm-slight').setValue(true)
+    await flushPromises()
+    expect(store.updateTrip).toHaveBeenCalledWith('t1', { date_mode: 'slight' })
+  })
+
+  it('selecting Confirmed with saved windows locks the first window\'s dates when current dates match no window', async () => {
+    const { wrapper, store } = await mountView({
+      id: 't1',
+      name: 'Goa 2026',
+      date_mode: 'slight',
+      start_date: '2020-01-01',
+      end_date: '2020-01-02',
+      windows: [
+        { start_date: '2026-08-01', end_date: '2026-08-05' },
+        { start_date: '2026-09-01', end_date: '2026-09-05' }
+      ]
+    })
+    const radio = wrapper.find('#tdm-confirmed')
+    expect(radio.attributes('disabled')).toBeUndefined()
+    await radio.setValue(true)
+    await flushPromises()
+    expect(store.updateTrip).toHaveBeenCalledWith('t1', {
+      date_mode: 'confirmed', start_date: '2026-08-01', end_date: '2026-08-05'
+    })
+  })
+
+  it('selecting Confirmed passes dates through unchanged when they already match a saved window', async () => {
+    const { wrapper, store } = await mountView({
+      id: 't1',
+      name: 'Goa 2026',
+      date_mode: 'slight',
+      start_date: '2026-09-01',
+      end_date: '2026-09-05',
+      windows: [
+        { start_date: '2026-08-01', end_date: '2026-08-05' },
+        { start_date: '2026-09-01', end_date: '2026-09-05' }
+      ]
+    })
     await wrapper.find('#tdm-confirmed').setValue(true)
     await flushPromises()
-    expect(store.updateTrip).toHaveBeenCalledWith('t1', { date_mode: 'confirmed' })
+    expect(store.updateTrip).toHaveBeenCalledWith('t1', {
+      date_mode: 'confirmed', start_date: '2026-09-01', end_date: '2026-09-05'
+    })
   })
 
   it('offers "Use as final dates" per saved window, calling updateTrip with that window\'s dates', async () => {

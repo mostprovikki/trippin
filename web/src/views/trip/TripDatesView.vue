@@ -29,9 +29,20 @@ const dateMode = computed({
   set: (mode) => onDateModeChange(mode)
 })
 
+// Selecting 'Confirmed' with saved windows must lock window-backed dates, not
+// whatever stale start/end the trip still carries (trip-planner-53c): reuse
+// the current dates only if they match a saved window, else fall back to the
+// first window, in the same updateTrip call as the mode flip.
 async function onDateModeChange(mode) {
   try {
-    await trips.updateTrip(trips.current.id, { date_mode: mode })
+    const t = trips.current
+    if (mode === 'confirmed' && savedWindows.value.length) {
+      const match = savedWindows.value.find((w) => w.start_date === t.start_date && w.end_date === t.end_date)
+      const w = match || savedWindows.value[0]
+      await trips.updateTrip(t.id, { date_mode: mode, start_date: w.start_date, end_date: w.end_date })
+    } else {
+      await trips.updateTrip(t.id, { date_mode: mode })
+    }
   } catch (e) { notify.error(e.message) }
 }
 
@@ -79,7 +90,11 @@ async function onSave(windows) {
     <div v-else class="card date-mode-card">
       <div class="field">
         <label>Date mode</label>
-        <div class="radio-row"><RadioButton v-model="dateMode" input-id="tdm-confirmed" value="confirmed" /><label for="tdm-confirmed">Confirmed</label></div>
+        <div class="radio-row">
+          <RadioButton v-model="dateMode" input-id="tdm-confirmed" value="confirmed" :disabled="!savedWindows.length" />
+          <label for="tdm-confirmed">Confirmed</label>
+          <span v-if="!savedWindows.length" class="muted">add a date window first, then use &quot;Use as final dates&quot;</span>
+        </div>
         <div class="radio-row"><RadioButton v-model="dateMode" input-id="tdm-slight" value="slight" /><label for="tdm-slight">Slight flex</label></div>
         <div class="radio-row"><RadioButton v-model="dateMode" input-id="tdm-broad" value="broad" /><label for="tdm-broad">Broad</label></div>
       </div>
@@ -105,7 +120,8 @@ async function onSave(windows) {
   align-items: center;
   gap: 0.75rem;
 }
-.radio-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0; }
+.radio-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0; flex-wrap: wrap; }
+.muted { color: var(--app-text-muted); font-size: 0.875rem; }
 .dates-window-list { list-style: none; padding: 0; margin: 0; }
 .dates-window-row {
   display: flex;
