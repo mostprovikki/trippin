@@ -10,8 +10,9 @@ import InputText from 'primevue/inputtext'
 import { formatMoney } from '../../utils/format.js'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
+import Tag from 'primevue/tag'
 import { api } from '../../api/client.js'
-import { useAuthStore } from '../../stores/auth.js'
+import { useAiStatus } from '../../composables/useAiStatus.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
@@ -21,7 +22,7 @@ import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
 const tripId = computed(() => route.params.id)
-const auth = useAuthStore()
+const aiStatus = useAiStatus()
 const store = useBudgetStore()
 const confirm = useConfirm()
 const notify = useNotify()
@@ -30,6 +31,10 @@ const loading = ref(true)
 const participants = ref([])
 const tripCurrency = ref('INR')
 const newOverride = reactive({ person_id: '', amount: 0, note: '' })
+// trip-planner-53h: BudgetTable is read-only until the owner opts in — the
+// table was permanently in edit mode before, wasting space on inputs nobody
+// was touching.
+const editing = ref(false)
 
 // Getter keys: this view is reused across :id changes, so the drafts have to
 // follow the trip rather than freeze on whichever one was open at setup.
@@ -38,13 +43,6 @@ const overridesDraft = useDraft(() => `trip:${tripId.value}:budget-overrides`, (
 
 watch(() => store.lines, (lines) => { linesDraft.load({ lines: lines.map((l) => ({ ...l })) }) }, { immediate: true })
 watch(() => store.overrides, (overrides) => { overridesDraft.load({ overrides: overrides.map((o) => ({ ...o })) }) }, { immediate: true })
-
-// store.total only updates from server responses (fetch/save), so it stays
-// stale while the user is mid-edit — even after BudgetTable's own per-keystroke
-// fix, because that fix updates linesDraft, not the store. Deriving the
-// displayed total straight from the live draft rows keeps it in sync with what
-// the estimate fields show, pre-save.
-const draftTotal = computed(() => linesDraft.draft.lines.reduce((sum, l) => sum + (Number(l.estimate) || 0), 0))
 
 function resetNewOverride() {
   newOverride.person_id = ''
@@ -81,7 +79,16 @@ async function saveLines() {
     await store.saveLines(tripId.value, linesDraft.draft.lines)
     linesDraft.clear()
     notify.success('Budget saved')
+    editing.value = false
   } catch (e) { notify.error(e.message) }
+}
+
+// Discards unsaved edits back to the last-saved lines (store.lines, which the
+// linesDraft.load watcher above already mirrors into its baseline) rather
+// than clearing the draft to the empty factory default.
+function cancelEdit() {
+  linesDraft.draft.lines = store.lines.map((l) => ({ ...l }))
+  editing.value = false
 }
 
 function addOverrideRow() {
@@ -139,16 +146,25 @@ onBeforeRouteLeave(async () => {
       <div v-if="store.error" class="card">{{ store.error }}</div>
 
       <div class="card">
-        <h2>Category estimates</h2>
-        <BudgetTable v-model="linesDraft.draft.lines" :draft="store.draft" :currency="tripCurrency" />
-        <p><strong>Total: {{ formatMoney(draftTotal, tripCurrency) }}</strong></p>
-        <Button label="Save budget" @click="saveLines" />
+        <div class="card-header-row">
+          <h2>Category estimates</h2>
+          <Button v-if="!editing" label="Edit budget" text @click="editing = true" />
+        </div>
+        <BudgetTable v-model="linesDraft.draft.lines" :draft="store.draft" :currency="tripCurrency" :editing="editing" />
+        <div v-if="editing" class="budget-edit-actions">
+          <Button label="Save budget" @click="saveLines" />
+          <Button label="Cancel" severity="secondary" outlined @click="cancelEdit" />
+        </div>
       </div>
 
       <div class="card">
         <h2>AI draft</h2>
-        <Button v-if="auth.aiEnabled" :label="store.aiBusy ? 'Generating…' : 'AI draft'" :disabled="store.aiBusy" @click="runAiDraft" />
-        <p v-else>AI suggestions are turned off</p>
+        <Button
+          :label="store.aiBusy ? 'Generating…' : 'AI draft'" :disabled="store.aiBusy || !aiStatus.enabled"
+          :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
+          @click="runAiDraft"
+        />
+        <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
       </div>
 
       <DraftReview v-if="store.draft" title="AI draft" :busy="store.aiBusy" @apply="applyDraft" @discard="discardDraft">
@@ -195,4 +211,6 @@ onBeforeRouteLeave(async () => {
 
 <style scoped>
 .override-add { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.budget-edit-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 </style>

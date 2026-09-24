@@ -23,6 +23,9 @@ const tripId = computed(() => route.params.id)
 const newParticipantId = ref(null)
 const revealedLink = ref(null)
 const qrDataUrl = ref(null)
+// Which people currently have their link history expanded — collapsed by
+// default, per person, so opening one doesn't open all of them.
+const expandedHistory = ref(new Set())
 // window globals aren't reachable from template expression scope
 const origin = location.origin
 
@@ -168,6 +171,19 @@ function linksFor(personId) {
 function activeLink(personId) {
   return linksFor(personId).some((l) => !l.revoked_at)
 }
+
+function isHistoryOpen(personId) {
+  return expandedHistory.value.has(personId)
+}
+
+function toggleHistory(personId) {
+  // Reassign (not mutate in place) so the Set change is seen by Vue's
+  // reactivity — a plain .add()/.delete() on the same object wouldn't trigger.
+  const next = new Set(expandedHistory.value)
+  if (next.has(personId)) next.delete(personId)
+  else next.add(personId)
+  expandedHistory.value = next
+}
 </script>
 
 <template>
@@ -191,6 +207,7 @@ function activeLink(personId) {
           <span class="participant-name">{{ p.name }}</span>
           <Tag v-if="activeLink(p.person_id)" value="link active" severity="success" />
           <Tag v-else value="no link" severity="secondary" />
+          <Tag v-if="!p.profile_confirmed" value="profile unconfirmed" severity="warn" />
         </div>
         <div class="participant-actions">
           <Button :label="activeLink(p.person_id) ? 'Replace link' : 'Create link'" size="small" outlined icon="pi pi-link" @click="createLink(p.person_id, p.name)" />
@@ -207,7 +224,18 @@ function activeLink(personId) {
         <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR code for invite link" class="invite-qr" />
       </div>
 
-      <ul v-if="linksFor(p.person_id).length" class="links-list">
+      <Button
+        v-if="linksFor(p.person_id).length"
+        :label="`History (${linksFor(p.person_id).length})`"
+        size="small"
+        text
+        class="history-toggle"
+        :icon="isHistoryOpen(p.person_id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+        :aria-expanded="isHistoryOpen(p.person_id)"
+        @click="toggleHistory(p.person_id)"
+      />
+
+      <ul v-if="linksFor(p.person_id).length && isHistoryOpen(p.person_id)" class="links-list">
         <li v-for="link in linksFor(p.person_id)" :key="link.id">
           <span class="link-meta">created {{ link.created_at }}</span>
           <Tag v-if="link.revoked_at" value="revoked" severity="warn" />
@@ -219,10 +247,12 @@ function activeLink(personId) {
 </template>
 
 <style scoped>
+.participant-card { padding: 0.625rem 0.75rem; }
 .participant-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.participant-id { display: flex; align-items: center; gap: 0.5rem; }
+.participant-id { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .participant-name { font-weight: 600; }
 .participant-actions { display: flex; gap: 0.25rem; }
+.history-toggle { margin-top: 0.25rem; padding-left: 0; padding-right: 0; }
 .link-reveal {
   margin-top: 0.75rem;
   padding: 0.75rem;

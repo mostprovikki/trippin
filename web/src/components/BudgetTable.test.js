@@ -27,6 +27,35 @@ describe('BudgetTable', () => {
     expect(wrapper.text()).not.toContain('60000 —')
   })
 
+  // trip-planner-53h: read mode is the default — no inputs, formatted text only.
+  it('read mode (default): shows formatted money and full basis text, no inputs', () => {
+    const wrapper = mountWithBase(BudgetTable, {
+      props: {
+        modelValue: [{ category: 'stay', estimate: 50000, basis: 'hotel avg per night, incl. breakfast' }],
+        currency: 'INR'
+      }
+    })
+    expect(wrapper.find('input').exists()).toBe(false)
+    expect(wrapper.text()).toContain('₹50,000')
+    expect(wrapper.text()).toContain('hotel avg per night, incl. breakfast')
+  })
+
+  it('editing=true reveals the Estimate and Basis inputs', () => {
+    const wrapper = mountWithBase(BudgetTable, {
+      props: { modelValue: [{ category: 'stay', estimate: 100, basis: 'x' }], editing: true }
+    })
+    expect(wrapper.find('#bt-estimate-stay').exists()).toBe(true)
+    expect(wrapper.find('#bt-basis-stay').exists()).toBe(true)
+  })
+
+  it('footer Total stays visible and reflects modelValue in read mode too', () => {
+    const wrapper = mountWithBase(BudgetTable, {
+      props: { modelValue: [{ category: 'stay', estimate: 50000, basis: '' }], currency: 'INR' }
+    })
+    expect(wrapper.text()).toContain('Total')
+    expect(wrapper.text()).toContain('₹50,000')
+  })
+
   // trip-planner-0jz: PrimeVue InputNumber only emits update:model-value on
   // blur/Enter/spin/paste (onUserInput never calls updateModel — that happens
   // in onInputBlur), so before this fix the Estimate field's per-keystroke
@@ -34,7 +63,7 @@ describe('BudgetTable', () => {
   // the field lost focus.
   it('emits an update from @input alone, before any blur/update:model-value', async () => {
     const wrapper = mountWithBase(BudgetTable, {
-      props: { modelValue: [{ category: 'stay', estimate: 0, basis: '' }], currency: 'INR' }
+      props: { modelValue: [{ category: 'stay', estimate: 0, basis: '' }], currency: 'INR', editing: true }
     })
     const estimateInput = wrapper.findComponent({ name: 'InputNumber' })
 
@@ -54,7 +83,7 @@ describe('BudgetTable', () => {
 
   it('does not double-fire when @input and @update:model-value land with the same value', async () => {
     const wrapper = mountWithBase(BudgetTable, {
-      props: { modelValue: [{ category: 'stay', estimate: 0, basis: '' }], currency: 'INR' }
+      props: { modelValue: [{ category: 'stay', estimate: 0, basis: '' }], currency: 'INR', editing: true }
     })
     const estimateInput = wrapper.findComponent({ name: 'InputNumber' })
 
@@ -72,7 +101,7 @@ describe('BudgetTable', () => {
   // the Estimate field carries a stable, category-scoped id.
   it('gives the Estimate field a stable id', () => {
     const wrapper = mountWithBase(BudgetTable, {
-      props: { modelValue: [{ category: 'stay', estimate: 100, basis: '' }] }
+      props: { modelValue: [{ category: 'stay', estimate: 100, basis: '' }], editing: true }
     })
     expect(wrapper.find('#bt-estimate-stay').exists()).toBe(true)
   })

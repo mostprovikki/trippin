@@ -176,4 +176,32 @@ describe('TripPeopleView', () => {
     await flushPromises()
     expect(wrapper.find('textarea').element.value).toContain('You\'re in for the trip!')
   })
+
+  it('keeps link history collapsed by default, behind a History (N) toggle', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.links = [
+      { id: 'l1', person_id: 'p1', created_at: '2026-01-01', revoked_at: '2026-01-02' },
+      { id: 'l2', person_id: 'p1', created_at: '2026-01-03', revoked_at: null }
+    ]
+    await wrapper.vm.$nextTick()
+    const toggle = wrapper.findAll('button').find((b) => b.text().includes('History (2)'))
+    expect(toggle).toBeTruthy()
+    expect(wrapper.find('.links-list').exists()).toBe(false)
+  })
+
+  it('reveals the link history rows when the History toggle is clicked', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.links = [
+      { id: 'l1', person_id: 'p1', created_at: '2026-01-01', revoked_at: '2026-01-02' },
+      { id: 'l2', person_id: 'p1', created_at: '2026-01-03', revoked_at: null }
+    ]
+    await wrapper.vm.$nextTick()
+    const toggle = wrapper.findAll('button').find((b) => b.text().includes('History (2)'))
+    await toggle.trigger('click')
+    const list = wrapper.find('.links-list')
+    expect(list.exists()).toBe(true)
+    expect(list.text()).toContain('created 2026-01-01')
+    expect(list.text()).toContain('revoked')
+    expect(list.text()).toContain('created 2026-01-03')
+  })
 })

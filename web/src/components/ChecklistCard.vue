@@ -8,7 +8,7 @@ import Tag from 'primevue/tag'
 import DateField from './DateField.vue'
 import DraftReview from './DraftReview.vue'
 import { useChecklistsStore } from '../stores/checklists.js'
-import { useAuthStore } from '../stores/auth.js'
+import { useAiStatus } from '../composables/useAiStatus.js'
 
 const props = defineProps({
   checklist: { type: Object, required: true },
@@ -16,7 +16,7 @@ const props = defineProps({
 })
 
 const store = useChecklistsStore()
-const auth = useAuthStore()
+const aiStatus = useAiStatus()
 const confirm = useConfirm()
 
 const newTitle = ref('')
@@ -151,13 +151,15 @@ function discardDraft() {
       <Button type="submit" label="Add item" />
     </form>
 
-    <div v-if="isPacking && auth.aiEnabled">
-      <Button type="button" severity="secondary" outlined :loading="store.aiBusy" @click="suggestPacking">
+    <div v-if="isPacking">
+      <Button
+        type="button" severity="secondary" outlined :loading="store.aiBusy"
+        :disabled="!aiStatus.enabled" :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
+        @click="suggestPacking"
+      >
         {{ store.aiBusy ? 'Generating…' : 'AI packing suggest' }}
       </Button>
-    </div>
-    <div v-else-if="isPacking">
-      <p>AI suggestions are turned off</p>
+      <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
     </div>
 
     <DraftReview v-if="draft" title="AI packing draft" :busy="store.aiBusy" @apply="applyDraft" @discard="discardDraft">

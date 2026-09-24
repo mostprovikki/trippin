@@ -7,7 +7,7 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import InputNumber from 'primevue/inputnumber'
 import { useTripsStore } from '../stores/trips.js'
-import { useAuthStore } from '../stores/auth.js'
+import { useAiStatus } from '../composables/useAiStatus.js'
 import { useNotify } from '../composables/useNotify.js'
 
 const props = defineProps({
@@ -16,7 +16,7 @@ const props = defineProps({
 })
 
 const store = useTripsStore()
-const auth = useAuthStore()
+const aiStatus = useAiStatus()
 const confirm = useConfirm()
 const notify = useNotify()
 
@@ -82,10 +82,14 @@ async function submitManual() {
 <template>
   <div class="destination-panel">
     <div class="destination-toolbar">
-      <Button v-if="auth.aiEnabled" type="button" severity="secondary" outlined :loading="store.aiBusy" @click="suggestWithAi">
+      <Button
+        type="button" severity="secondary" outlined :loading="store.aiBusy"
+        :disabled="!aiStatus.enabled" :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
+        @click="suggestWithAi"
+      >
         {{ store.aiBusy ? 'Generating…' : 'Suggest with AI' }}
       </Button>
-      <Tag v-else severity="warn" value="AI suggestions are turned off" />
+      <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
     </div>
 
     <div v-if="!candidates.length" class="dest-empty">No destination candidates yet.</div>

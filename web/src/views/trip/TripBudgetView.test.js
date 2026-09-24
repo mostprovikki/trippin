@@ -81,6 +81,55 @@ describe('TripBudgetView', () => {
     expect(wrapper.text()).not.toContain('₹999')
   })
 
+  // trip-planner-53h: BudgetTable is read-only by default; an Edit budget
+  // button in the card header switches it into edit mode with Save/Cancel.
+  it('defaults to read mode: Edit budget button shown, Save/Cancel hidden, BudgetTable not editing', async () => {
+    const { wrapper } = await mountView()
+    expect(wrapper.text()).toContain('Edit budget')
+    expect(wrapper.findComponent({ name: 'BudgetTable' }).props('editing')).toBe(false)
+    const buttonLabels = wrapper.findAll('button').map((b) => b.text())
+    expect(buttonLabels).not.toContain('Save budget')
+    expect(buttonLabels).not.toContain('Cancel')
+  })
+
+  it('Edit budget reveals Save budget + Cancel and switches BudgetTable to editing', async () => {
+    const { wrapper } = await mountView()
+    await wrapper.findAll('button').find((b) => b.text() === 'Edit budget').trigger('click')
+    expect(wrapper.findComponent({ name: 'BudgetTable' }).props('editing')).toBe(true)
+    const buttonLabels = wrapper.findAll('button').map((b) => b.text())
+    expect(buttonLabels).toContain('Save budget')
+    expect(buttonLabels).toContain('Cancel')
+  })
+
+  it('Cancel restores last-saved lines and exits edit mode', async () => {
+    const { wrapper, store } = await mountView()
+    store.lines = [{ category: 'stay', estimate: 500, basis: 'saved' }]
+    await wrapper.vm.$nextTick()
+    await wrapper.findAll('button').find((b) => b.text() === 'Edit budget').trigger('click')
+
+    const budgetTable = wrapper.findComponent({ name: 'BudgetTable' })
+    budgetTable.vm.$emit('update:modelValue', [{ category: 'stay', estimate: 9999, basis: 'unsaved edit' }])
+    await wrapper.vm.$nextTick()
+    expect(wrapper.findComponent({ name: 'BudgetTable' }).props('modelValue')).toEqual([
+      { category: 'stay', estimate: 9999, basis: 'unsaved edit' }
+    ])
+
+    await wrapper.findAll('button').find((b) => b.text() === 'Cancel').trigger('click')
+    expect(wrapper.findComponent({ name: 'BudgetTable' }).props('modelValue')).toEqual(store.lines)
+    expect(wrapper.findComponent({ name: 'BudgetTable' }).props('editing')).toBe(false)
+    expect(wrapper.text()).toContain('Edit budget')
+  })
+
+  it('drops the duplicate "Total: ₹X" paragraph — the footer total is the only one', async () => {
+    const { wrapper, store } = await mountView()
+    store.total = 999
+    const budgetTable = wrapper.findComponent({ name: 'BudgetTable' })
+    budgetTable.vm.$emit('update:modelValue', [{ category: 'stay', estimate: 23000, basis: '' }])
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('₹23,000')
+    expect(wrapper.text()).not.toContain('Total: ₹')
+  })
+
   it('override Remove button is icon-only with an aria-label', async () => {
     localStorage.setItem('tripper:draft:trip:t1:budget-overrides', JSON.stringify({
       overrides: [{ person_id: 'p1', person_name: 'Asha', amount: 100, note: '' }]

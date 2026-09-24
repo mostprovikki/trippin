@@ -116,4 +116,49 @@ describe('TripItineraryView', () => {
     scrollSpy.mockRestore()
     vi.useRealTimers()
   })
+
+  it('merges the export actions and AI draft into one toolbar card', async () => {
+    const { wrapper } = await mountView()
+    await flushPromises()
+    const toolbars = wrapper.findAll('.itinerary-toolbar')
+    expect(toolbars).toHaveLength(1)
+    const text = toolbars[0].text()
+    expect(text).toContain('Add to calendar')
+    expect(text).toContain('Print / PDF')
+    expect(text).toContain('AI draft (whole trip)')
+    // /api/ai/status isn't mocked in this test, so useAiStatus's fetch fails and
+    // falls back to disabled — the button stays present (trip-planner-oa7 changed
+    // "hide it" to "disable it, with a reason"), not hidden behind a fallback tag.
+    const btn = toolbars[0].findAll('button').find((b) => b.text().includes('AI draft (whole trip)'))
+    expect(btn.attributes('disabled')).not.toBeUndefined()
+  })
+
+  it('keeps only one inline item form open page-wide: opening Add on another day closes Edit', async () => {
+    const router = makeRouter()
+    await router.push('/trips/t1/itinerary')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    const trips = useTripsStore()
+    store.fetchItinerary = vi.fn().mockImplementation(async () => {
+      store.days = [
+        { id: 'd1', day_date: '2026-08-01', items: [{ id: 'i1', title: 'Beach walk', est_cost: null }] },
+        { id: 'd2', day_date: '2026-08-02', items: [] }
+      ]
+    })
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'planning' }
+    const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+
+    const editBtn = [...wrapper.findAll('button')].find((b) => b.text() === 'Edit')
+    await editBtn.trigger('click')
+    expect(wrapper.text()).toContain('Editing: Beach walk')
+
+    const dayCards = wrapper.findAllComponents(DayCard)
+    const addBtn = [...dayCards[1].findAll('button')].find((b) => b.text() === 'Add item')
+    await addBtn.trigger('click')
+
+    expect(wrapper.text()).not.toContain('Editing:')
+  })
 })

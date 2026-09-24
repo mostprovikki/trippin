@@ -102,6 +102,65 @@ describe('DayCard', () => {
     await downButtons[0].trigger('click')
     expect(store.reorder).toHaveBeenCalledWith('d1', ['i2', 'i1'])
   })
+
+  it('renders a color-coded category tag with the category label, not the emoji glyph', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-08-01', items: [{ id: 'i1', title: 'Pho', category: 'food', est_cost: null }] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
+    expect(wrapper.text()).toContain('Food')
+    expect(wrapper.text()).not.toContain('🍽️')
+    const tag = wrapper.find('.cat-tag-food')
+    expect(tag.exists()).toBe(true)
+  })
+
+  it('renders the form inline under the row named by the shared openForm prop, with an Editing heading and row highlight', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [
+      { id: 'i1', title: 'Breakfast', est_cost: null },
+      { id: 'i2', title: 'Museum', est_cost: null },
+    ] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR', openForm: { dayId: 'd1', itemId: 'i2' } } })
+    expect(wrapper.text()).toContain('Editing: Museum')
+    const items = wrapper.findAll('.day-item')
+    expect(items[0].classes()).not.toContain('day-item-editing')
+    expect(items[1].classes()).toContain('day-item-editing')
+    expect(wrapper.find('#iif-title').element.value).toBe('Museum')
+  })
+
+  it('ignores an openForm targeting a different day', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [{ id: 'i1', title: 'Breakfast', est_cost: null }] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR', openForm: { dayId: 'd-other', itemId: 'i1' } } })
+    expect(wrapper.text()).not.toContain('Editing:')
+    expect(wrapper.find('#iif-title').exists()).toBe(false)
+  })
+
+  it('emits open-form with itemId null on Add item, and with the item id on Edit', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [{ id: 'i1', title: 'Breakfast', est_cost: null }] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
+    const addBtn = [...wrapper.findAll('button')].find((b) => b.text() === 'Add item')
+    await addBtn.trigger('click')
+    expect(wrapper.emitted('open-form')[0]).toEqual([{ dayId: 'd1', itemId: null }])
+
+    const editBtn = [...wrapper.findAll('button')].find((b) => b.text() === 'Edit')
+    await editBtn.trigger('click')
+    expect(wrapper.emitted('open-form')[1]).toEqual([{ dayId: 'd1', itemId: 'i1' }])
+  })
+
+  it('emits close-form when the inline edit form is cancelled', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [{ id: 'i1', title: 'Breakfast', est_cost: null }] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR', openForm: { dayId: 'd1', itemId: 'i1' } } })
+    const cancelBtn = [...wrapper.findAll('button')].find((b) => b.text() === 'Cancel')
+    await cancelBtn.trigger('click')
+    expect(wrapper.emitted('close-form')).toBeTruthy()
+  })
 })
 
 afterEach(() => vi.useRealTimers())

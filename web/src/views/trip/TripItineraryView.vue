@@ -6,7 +6,7 @@ import Skeleton from 'primevue/skeleton'
 import Tag from 'primevue/tag'
 import { useItineraryStore } from '../../stores/itinerary.js'
 import { useTripsStore } from '../../stores/trips.js'
-import { useAuthStore } from '../../stores/auth.js'
+import { useAiStatus } from '../../composables/useAiStatus.js'
 import { useDraft } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
 import EmptyState from '../../components/EmptyState.vue'
@@ -20,10 +20,16 @@ const route = useRoute()
 const tripId = computed(() => route.params.id)
 const store = useItineraryStore()
 const trips = useTripsStore()
-const auth = useAuthStore()
+const aiStatus = useAiStatus()
 const notify = useNotify()
 
 const loading = ref(true)
+
+// Page-wide "which single item form is open" state — passed down to every
+// DayCard as a prop. A DayCard only ever reads this (never keeps its own
+// adding/editingId), so setting it here is what makes opening a form on one
+// day close whatever was open on any other day (trip-planner-45h).
+const openForm = ref(null)
 
 const todayDayId = computed(() => {
   const trip = trips.current
@@ -76,6 +82,7 @@ watch(() => store.draft, (d) => { aiDraftStore.draft.ai = d ?? null })
 async function load() {
   loading.value = true
   scrolledThisLoad = false
+  openForm.value = null
   // Read the stored draft before fetching: fetchItinerary clears store.draft on
   // a trip change, which feeds a null back through the mirror watcher above.
   // useDraft has already re-keyed by the time this runs, so this is the *new*
@@ -140,17 +147,17 @@ function discardWholeDraft() {
     <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
 
     <template v-else>
-      <div class="card export-actions">
-        <a class="p-button p-button-outlined p-component" :href="`/api/trips/${tripId}/itinerary.ics`">Add to calendar (.ics)</a>
-        <router-link class="p-button p-button-outlined p-component" :to="{ name: 'trip-itinerary-print', params: { id: tripId } }" target="_blank">Print / PDF</router-link>
-      </div>
-      <div class="card">
-        <div v-if="auth.aiEnabled">
-          <Button type="button" :loading="store.aiBusy" @click="draftWholeTrip">
-            {{ store.aiBusy ? 'Generating…' : 'AI draft (whole trip)' }}
-          </Button>
-        </div>
-        <Tag v-else severity="secondary" value="AI suggestions are turned off" />
+      <div class="card itinerary-toolbar">
+        <a class="p-button p-button-outlined p-component p-button-sm" :href="`/api/trips/${tripId}/itinerary.ics`">Add to calendar (.ics)</a>
+        <router-link class="p-button p-button-outlined p-component p-button-sm" :to="{ name: 'trip-itinerary-print', params: { id: tripId } }" target="_blank">Print / PDF</router-link>
+        <Button
+          type="button" size="small" :loading="store.aiBusy"
+          :disabled="!aiStatus.enabled" :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
+          @click="draftWholeTrip"
+        >
+          {{ store.aiBusy ? 'Generating…' : 'AI draft (whole trip)' }}
+        </Button>
+        <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
       </div>
 
       <DraftReview v-if="store.draft" title="AI draft preview" :busy="store.aiBusy" @apply="applyWholeDraft" @discard="discardWholeDraft">
@@ -174,15 +181,18 @@ function discardWholeDraft() {
         :index="idx + 1"
         :currency="trips.current?.currency"
         :is-today="day.id === todayDayId"
+        :open-form="openForm"
         :ref="el => setTodayCardRef(day.id, el)"
+        @open-form="openForm = $event"
+        @close-form="openForm = null"
       />
     </template>
   </div>
 </template>
 
 <style scoped>
-.export-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.export-actions a.p-button { text-decoration: none; }
+.itinerary-toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.itinerary-toolbar a.p-button { text-decoration: none; }
 .draft-day { margin-bottom: 1rem; }
 /* A non-inverting level: DraftReview's own header is an h4, so a day heading
    nested inside its slot renders as a styled div (not h3/h5) rather than
