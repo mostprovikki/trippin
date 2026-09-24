@@ -57,9 +57,9 @@ function remove(id) {
     <ul v-else class="goals-list">
       <li v-for="goal in goals" :key="goal.id" class="goal-item">
         <template v-if="editing[goal.id]">
-          <div class="field"><label>Title</label><InputText v-model="editing[goal.id].title" fluid /></div>
+          <div class="field"><label>Title</label><InputText :id="`ge-title-edit-${goal.id}`" :name="`ge-title-edit-${goal.id}`" v-model="editing[goal.id].title" fluid /></div>
           <div class="field"><label>Fixed date</label><DateField v-model="editing[goal.id].fixed_date" /></div>
-          <div class="field"><label>Fixed place</label><InputText v-model="editing[goal.id].fixed_place" fluid /></div>
+          <div class="field"><label>Fixed place</label><InputText :id="`ge-place-edit-${goal.id}`" :name="`ge-place-edit-${goal.id}`" v-model="editing[goal.id].fixed_place" fluid /></div>
           <div class="field"><label>Notes</label><Textarea v-model="editing[goal.id].notes" fluid auto-resize /></div>
           <Button type="button" label="Save" @click="submitEdit(goal.id)" />
           <Button type="button" label="Cancel" severity="secondary" outlined @click="cancelEdit(goal.id)" />
@@ -75,9 +75,9 @@ function remove(id) {
       </li>
     </ul>
     <form class="goal-add-form" @submit.prevent="submitAdd">
-      <div class="field"><label>New goal title</label><InputText v-model="form.title" placeholder="e.g. Visit temple" fluid /></div>
+      <div class="field"><label>New goal title</label><InputText id="ge-title-new" name="ge-title-new" v-model="form.title" placeholder="e.g. Visit temple" fluid /></div>
       <div class="field"><label>Fixed date</label><DateField v-model="form.fixed_date" /></div>
-      <div class="field"><label>Fixed place</label><InputText v-model="form.fixed_place" fluid /></div>
+      <div class="field"><label>Fixed place</label><InputText id="ge-place-new" name="ge-place-new" v-model="form.fixed_place" fluid /></div>
       <div class="field"><label>Notes</label><Textarea v-model="form.notes" fluid auto-resize /></div>
       <Button type="submit" label="Add goal" />
     </form>

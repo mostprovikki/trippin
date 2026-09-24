@@ -98,7 +98,7 @@ async function submit() {
       </div>
       <div class="field">
         <label for="pf-dietary">Dietary</label>
-        <Select input-id="pf-dietary" v-model="form.dietary" :options="dietaryOptions" option-label="label" option-value="value" fluid />
+        <Select label-id="pf-dietary" v-model="form.dietary" :options="dietaryOptions" option-label="label" option-value="value" fluid />
       </div>
       <div class="field">
         <label for="pf-allergies">Allergies</label>
@@ -110,7 +110,7 @@ async function submit() {
       </div>
       <div class="field">
         <label for="pf-pace">Preferred pace</label>
-        <Select input-id="pf-pace" v-model="form.pace" :options="paceOptions" option-label="label" option-value="value" fluid />
+        <Select label-id="pf-pace" v-model="form.pace" :options="paceOptions" option-label="label" option-value="value" fluid />
       </div>
       <div class="field">
         <label for="pf-interests">Interests (comma-separated)</label>
@@ -118,7 +118,7 @@ async function submit() {
       </div>
       <div class="field">
         <label for="pf-budget">Budget band</label>
-        <Select input-id="pf-budget" v-model="form.budget_band" :options="budgetOptions" option-label="label" option-value="value" fluid />
+        <Select label-id="pf-budget" v-model="form.budget_band" :options="budgetOptions" option-label="label" option-value="value" fluid />
       </div>
       <div class="field">
         <label for="pf-city">Home city</label>

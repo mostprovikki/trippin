@@ -161,9 +161,9 @@ onBeforeRouteLeave(async () => {
         <p>Equal share: {{ formatMoney(store.equal_share, tripCurrency) }}</p>
 
         <div class="override-add">
-          <Select v-model="newOverride.person_id" :options="participants" option-label="name" option-value="id" placeholder="Select person…" />
-          <InputNumber v-model="newOverride.amount" :min="0" :max-fraction-digits="2" placeholder="Amount" />
-          <InputText v-model="newOverride.note" placeholder="Note" />
+          <Select input-id="tb-new-override-person" name="tb-new-override-person" v-model="newOverride.person_id" :options="participants" option-label="name" option-value="id" placeholder="Select person…" />
+          <InputNumber input-id="tb-new-override-amount" name="tb-new-override-amount" v-model="newOverride.amount" :min="0" :max-fraction-digits="2" placeholder="Amount" />
+          <InputText id="tb-new-override-note" name="tb-new-override-note" v-model="newOverride.note" placeholder="Note" />
           <Button label="Add" icon="pi pi-plus" outlined :disabled="!newOverride.person_id" @click="addOverrideRow" />
         </div>
 
@@ -173,12 +173,12 @@ onBeforeRouteLeave(async () => {
           </Column>
           <Column header="Override amount">
             <template #body="{ data }">
-              <InputNumber v-model="data.amount" :min="0" :max-fraction-digits="2" fluid />
+              <InputNumber :input-id="`tb-amount-${data.person_id}`" :name="`tb-amount-${data.person_id}`" v-model="data.amount" :min="0" :max-fraction-digits="2" fluid />
             </template>
           </Column>
           <Column header="Note">
             <template #body="{ data }">
-              <InputText v-model="data.note" fluid />
+              <InputText :id="`tb-note-${data.person_id}`" :name="`tb-note-${data.person_id}`" v-model="data.note" fluid />
             </template>
           </Column>
           <Column>

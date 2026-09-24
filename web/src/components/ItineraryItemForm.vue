@@ -43,23 +43,23 @@ function submit() {
   <form class="card" @submit.prevent="submit">
     <div class="field">
       <label>Title</label>
-      <InputText v-model="form.title" required fluid />
+      <InputText id="iif-title" name="iif-title" v-model="form.title" required fluid />
     </div>
     <div class="field">
       <label>Time</label>
-      <InputText v-model="form.time_range" placeholder="e.g. 09:00-11:00" fluid />
+      <InputText id="iif-time-range" name="iif-time-range" v-model="form.time_range" placeholder="e.g. 09:00-11:00" fluid />
     </div>
     <div class="field">
       <label>Location</label>
-      <InputText v-model="form.location" fluid />
+      <InputText id="iif-location" name="iif-location" v-model="form.location" fluid />
     </div>
     <div class="field">
       <label>Category</label>
-      <Select v-model="form.category" :options="categories" fluid />
+      <Select input-id="iif-category" name="iif-category" v-model="form.category" :options="categories" fluid />
     </div>
     <div class="field">
       <label>Estimated cost</label>
-      <InputText v-model="form.est_cost" type="number" step="0.01" fluid />
+      <InputText id="iif-est-cost" name="iif-est-cost" v-model="form.est_cost" type="number" step="0.01" fluid />
     </div>
     <div class="field">
       <label>Notes</label>
@@ -67,7 +67,7 @@ function submit() {
     </div>
     <div class="field">
       <label>Link</label>
-      <InputText v-model="form.link" fluid />
+      <InputText id="iif-link" name="iif-link" v-model="form.link" fluid />
     </div>
     <Button type="submit" label="Save" />
     <Button type="button" label="Cancel" severity="secondary" outlined @click="$emit('cancel')" />

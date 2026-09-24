@@ -115,6 +115,50 @@ describe('TripPeopleView', () => {
     expect(wrapper.find('textarea').element.value).toContain('Fri 6 Nov – Sun 15 Nov')
   })
 
+  it('confirms before replacing an active link, mirroring the Revoke copy', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.links = [{ id: 'l1', person_id: 'p1', created_at: '2026-01-01', revoked_at: null }]
+    await wrapper.vm.$nextTick()
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    const dialogWrapper = mountWithBase(ConfirmDialog, { attachTo: document.body })
+    expect(wrapper.text()).toContain('Replace link')
+    await wrapper.findAll('button').find((b) => b.text().includes('Replace link')).trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(document.body.textContent).toContain("Asha's current link stops working immediately")
+    expect(trips.createLink).not.toHaveBeenCalled()
+    const acceptBtn = [...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Replace')
+    acceptBtn.click()
+    await flushPromises()
+    expect(trips.createLink).toHaveBeenCalledWith('t1', 'p1')
+    dialogWrapper.unmount()
+  })
+
+  it('cancelling the replace confirmation does not mint a new link', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.links = [{ id: 'l1', person_id: 'p1', created_at: '2026-01-01', revoked_at: null }]
+    await wrapper.vm.$nextTick()
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    const dialogWrapper = mountWithBase(ConfirmDialog, { attachTo: document.body })
+    await wrapper.findAll('button').find((b) => b.text().includes('Replace link')).trigger('click')
+    await wrapper.vm.$nextTick()
+    const cancelBtn = [...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Cancel')
+    cancelBtn.click()
+    await flushPromises()
+    expect(trips.createLink).not.toHaveBeenCalled()
+    dialogWrapper.unmount()
+  })
+
+  it('mints a link with no confirmation when the person has no active link', async () => {
+    const { wrapper, trips } = await mountView()
+    trips.createLink = vi.fn().mockResolvedValue({ url: '/p/tok123' })
+    const dialogWrapper = mountWithBase(ConfirmDialog, { attachTo: document.body })
+    await wrapper.findAll('button').find((b) => b.text().includes('Create link')).trigger('click')
+    await flushPromises()
+    expect(document.body.textContent).not.toContain('current link stops working immediately')
+    expect(trips.createLink).toHaveBeenCalledWith('t1', 'p1')
+    dialogWrapper.unmount()
+  })
+
   it('says "from <date>" in the invite message when only a start date is known', async () => {
     const { wrapper, trips } = await mountView()
     trips.current = { ...trips.current, start_date: '2026-11-06' }

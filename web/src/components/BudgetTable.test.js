@@ -66,4 +66,14 @@ describe('BudgetTable', () => {
 
     expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
   })
+
+  // trip-planner-hmu: Estimate/Basis fields had no id/name at all (Chrome a11y
+  // "should have an id or name", ~11 flags on this table alone) — spot-check
+  // the Estimate field carries a stable, category-scoped id.
+  it('gives the Estimate field a stable id', () => {
+    const wrapper = mountWithBase(BudgetTable, {
+      props: { modelValue: [{ category: 'stay', estimate: 100, basis: '' }] }
+    })
+    expect(wrapper.find('#bt-estimate-stay').exists()).toBe(true)
+  })
 })

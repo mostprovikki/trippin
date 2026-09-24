@@ -14,6 +14,15 @@ export function humanizeEnum(v) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+// Budget line categories are stored snake_case ('primary_transport'); the
+// live Budget page (BudgetTable) title-cases each word for display
+// ('Primary Transport'). Extracted here (trip-planner-k2j) so the archived
+// Actuals section on TripSettingsView can match instead of rendering the
+// raw key.
+export function budgetCategoryLabel(category) {
+  return category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 const CURRENCY_SYMBOLS = { INR: '₹', VND: '₫', USD: '$', EUR: '€', THB: '฿', GBP: '£' }
 
 // Money display with a currency lens: `compact` gives 57K / 1.2M (standard

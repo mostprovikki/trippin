@@ -130,7 +130,7 @@ function onCancel() {
     </div>
     <div class="field">
       <label for="pf-dietary">Dietary</label>
-      <Select input-id="pf-dietary" v-model="form.dietary" :options="DIETARY_OPTIONS" option-label="label" option-value="value" fluid />
+      <Select label-id="pf-dietary" v-model="form.dietary" :options="DIETARY_OPTIONS" option-label="label" option-value="value" fluid />
     </div>
     <div class="field">
       <label for="pf-allergies">Allergies</label>
@@ -142,7 +142,7 @@ function onCancel() {
     </div>
     <div class="field">
       <label for="pf-pace">Pace</label>
-      <Select input-id="pf-pace" v-model="form.pace" :options="PACE_OPTIONS" option-label="label" option-value="value" fluid />
+      <Select label-id="pf-pace" v-model="form.pace" :options="PACE_OPTIONS" option-label="label" option-value="value" fluid />
     </div>
     <div class="field">
       <label for="pf-interests">Interests (comma-separated)</label>
@@ -150,7 +150,7 @@ function onCancel() {
     </div>
     <div class="field">
       <label for="pf-budget">Budget band</label>
-      <Select input-id="pf-budget" v-model="form.budget_band" :options="BUDGET_BAND_OPTIONS" option-label="label" option-value="value" fluid />
+      <Select label-id="pf-budget" v-model="form.budget_band" :options="BUDGET_BAND_OPTIONS" option-label="label" option-value="value" fluid />
     </div>
     <div class="field">
       <label for="pf-city">Home city</label>

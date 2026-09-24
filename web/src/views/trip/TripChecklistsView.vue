@@ -85,12 +85,12 @@ async function addFromTemplate() {
     <div class="card">
       <h2>New checklist</h2>
       <form class="checklist-form-row" @submit.prevent="createChecklist">
-        <Select v-model="newKind" :options="KIND_OPTIONS" option-label="label" option-value="value" aria-label="Kind" />
-        <InputText id="checklist-name" v-model="newName" placeholder="Checklist name" />
+        <Select input-id="cv-new-kind" name="cv-new-kind" v-model="newKind" :options="KIND_OPTIONS" option-label="label" option-value="value" aria-label="Kind" />
+        <InputText id="checklist-name" name="checklist-name" v-model="newName" placeholder="Checklist name" />
         <Button type="submit" label="Create" />
       </form>
       <form class="checklist-form-row" @submit.prevent="addFromTemplate">
-        <Select v-model="selectedTemplate" :options="store.templates" option-label="name" option-value="id" placeholder="Select a template…" aria-label="Template" />
+        <Select input-id="cv-selected-template" name="cv-selected-template" v-model="selectedTemplate" :options="store.templates" option-label="name" option-value="id" placeholder="Select a template…" aria-label="Template" />
         <Button type="submit" label="Add from template" severity="secondary" outlined />
       </form>
     </div>

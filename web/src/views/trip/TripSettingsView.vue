@@ -11,6 +11,7 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useArchiveStore } from '../../stores/archive.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { budgetCategoryLabel, formatMoney } from '../../utils/format.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
@@ -213,9 +214,9 @@ async function cloneTrip() {
       <section class="card">
         <h2>Actuals</h2>
         <div v-for="(a, idx) in actualsDraft" :key="a.category" class="actual-row">
-          <span class="actual-cat">{{ a.category }}</span>
-          <span class="muted">est. {{ archiveStore.snapshot?.budget?.lines?.find((l) => l.category === a.category)?.estimate ?? 0 }}</span>
-          <InputNumber v-model="actualsDraft[idx].amount" :min="0" :max-fraction-digits="2" />
+          <span class="actual-cat">{{ budgetCategoryLabel(a.category) }}</span>
+          <span class="muted">est. {{ formatMoney(archiveStore.snapshot?.budget?.lines?.find((l) => l.category === a.category)?.estimate ?? 0, trips.current?.currency) }}</span>
+          <InputNumber :input-id="`ts-actual-${a.category}`" :name="`ts-actual-${a.category}`" v-model="actualsDraft[idx].amount" :min="0" :max-fraction-digits="2" />
         </div>
         <Button label="Save actuals" @click="saveActuals" />
       </section>
@@ -224,7 +225,7 @@ async function cloneTrip() {
         <h2>Snapshot</h2>
         <p>Itinerary days: {{ archiveStore.snapshot?.itinerary?.length ?? 0 }}</p>
         <p>Checklists: {{ archiveStore.snapshot?.checklists?.length ?? 0 }}</p>
-        <p>Budget total at archive time: {{ archiveStore.snapshot?.budget?.total ?? 0 }}</p>
+        <p>Budget total at archive time: {{ formatMoney(archiveStore.snapshot?.budget?.total ?? 0, trips.current?.currency) }}</p>
       </section>
     </template>
 

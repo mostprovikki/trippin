@@ -49,7 +49,7 @@ function save() {
       </div>
       <div class="field">
         <label>Note</label>
-        <InputText v-model="row.note" placeholder="optional" fluid />
+        <InputText :id="`dwe-note-${idx}`" :name="`dwe-note-${idx}`" v-model="row.note" placeholder="optional" fluid />
       </div>
       <Button type="button" label="Remove" severity="secondary" outlined size="small" @click="removeRow(idx)" />
     </div>

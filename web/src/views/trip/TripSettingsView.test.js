@@ -79,4 +79,34 @@ describe('TripSettingsView', () => {
     expect(archive.unarchive).toHaveBeenCalledWith('t1')
     dialogWrapper.unmount()
   })
+
+  // trip-planner-k2j: UX review found the archived Actuals section rendering
+  // raw category keys ('primary_transport') and bare numbers, bypassing the
+  // label()/formatMoney treatment BudgetTable already gives the same data
+  // live. Assert the humanized label and a currency-symbol amount instead.
+  it('renders archived Actuals rows with a humanized category label and formatMoney amounts', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/trips/:id/settings', name: 'trip-settings', component: TripSettingsView }]
+    })
+    await router.push('/trips/t1/settings')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const trips = useTripsStore()
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'archived', currency: 'THB', description: '', origin_city: '', vibe_tags: [] }
+    const archive = useArchiveStore()
+    archive.fetchArchive = vi.fn().mockImplementation(async () => {
+      archive.snapshot = { budget: { lines: [{ category: 'primary_transport', estimate: 12000 }] }, itinerary: [], checklists: [] }
+      archive.actuals = [{ category: 'primary_transport', amount: 15000 }]
+      archive.archived_at = '2026-01-01 00:00:00'
+    })
+    const wrapper = mountWithBase(TripSettingsView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Primary Transport')
+    expect(wrapper.text()).not.toContain('primary_transport')
+    expect(wrapper.text()).toContain('฿12,000')
+    expect(wrapper.text()).not.toMatch(/est\. 12000\b/)
+  })
 })

@@ -4,7 +4,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
-import { formatMoney } from '../utils/format.js'
+import { formatMoney, budgetCategoryLabel as label } from '../utils/format.js'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -12,10 +12,6 @@ const props = defineProps({
   currency: { type: String, default: 'INR' }
 })
 const emit = defineEmits(['update:modelValue'])
-
-function label(category) {
-  return category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
 
 function draftFor(category) {
   return (props.draft || []).find((d) => d.category === category)
@@ -52,6 +48,8 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
     <Column header="Estimate">
       <template #body="{ data }">
         <InputNumber
+          :input-id="`bt-estimate-${data.category}`"
+          :name="`bt-estimate-${data.category}`"
           :model-value="data.estimate"
           :min="0"
           :max-fraction-digits="2"
@@ -65,6 +63,8 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
     <Column header="Basis">
       <template #body="{ data }">
         <InputText
+          :id="`bt-basis-${data.category}`"
+          :name="`bt-basis-${data.category}`"
           :model-value="data.basis"
           fluid
           @update:model-value="update(data.category, 'basis', $event)"

@@ -75,7 +75,7 @@ function removeParticipant(personId) {
   })
 }
 
-async function createLink(personId) {
+async function mintLink(personId) {
   let result
   try {
     result = await trips.createLink(tripId.value, personId)
@@ -95,6 +95,25 @@ async function createLink(personId) {
   } catch {
     notify.error('Could not generate a QR code — the link above still works')
   }
+}
+
+function createLink(personId, personName) {
+  // Minting silently revokes any prior active link server-side (links.routes.js)
+  // — same destructive effect as Revoke, so it needs the same consent gate.
+  // First-time creation (no active link) stays one-click.
+  if (!activeLink(personId)) {
+    mintLink(personId)
+    return
+  }
+  confirm.require({
+    message: `${personName || 'This person'}'s current link stops working immediately — anyone using it loses access. A new link will be created.`,
+    header: `Replace ${personName || 'this person'}'s link?`,
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Replace',
+    acceptClass: 'p-button-danger',
+    rejectLabel: 'Cancel',
+    accept: () => mintLink(personId)
+  })
 }
 
 async function copyLink(url) {
@@ -155,7 +174,7 @@ function activeLink(personId) {
   <div>
     <SectionHeader title="People" description="Who's coming, and their personal share links.">
       <template #actions>
-        <Select v-model="newParticipantId" :options="availablePeople" option-label="name" option-value="id" placeholder="Add person…" filter />
+        <Select input-id="tp-new-participant" name="tp-new-participant" v-model="newParticipantId" :options="availablePeople" option-label="name" option-value="id" placeholder="Add person…" filter />
         <Button label="Add" icon="pi pi-plus" :disabled="!newParticipantId" @click="addParticipant" />
       </template>
     </SectionHeader>
@@ -174,7 +193,7 @@ function activeLink(personId) {
           <Tag v-else value="no link" severity="secondary" />
         </div>
         <div class="participant-actions">
-          <Button label="Create link" size="small" outlined icon="pi pi-link" @click="createLink(p.person_id)" />
+          <Button :label="activeLink(p.person_id) ? 'Replace link' : 'Create link'" size="small" outlined icon="pi pi-link" @click="createLink(p.person_id, p.name)" />
           <Button icon="pi pi-trash" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Remove ${p.name || 'this person'}`" @click="removeParticipant(p.person_id)" />
         </div>
       </div>

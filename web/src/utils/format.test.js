@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatAmount, humanizeEnum, formatMoney } from './format.js'
+import { formatAmount, humanizeEnum, formatMoney, budgetCategoryLabel } from './format.js'
 
 describe('formatMoney', () => {
   it('renders known currencies with their symbol, thousands-separated', () => {
@@ -45,4 +45,16 @@ describe('formatAmount', () => {
 })
 describe('humanizeEnum', () => {
   it('humanizes snake_case', () => { expect(humanizeEnum('non_veg')).toBe('Non-veg') })
+})
+
+// trip-planner-k2j: extracted from BudgetTable's local label() so
+// TripSettingsView's archived Actuals section can render the same
+// category-key -> human label as the live Budget page.
+describe('budgetCategoryLabel', () => {
+  it('humanizes a snake_case budget category', () => {
+    expect(budgetCategoryLabel('primary_transport')).toBe('Primary Transport')
+  })
+  it('title-cases each word', () => {
+    expect(budgetCategoryLabel('stay')).toBe('Stay')
+  })
 })

@@ -96,4 +96,33 @@ describe('nextActions', () => {
       { label: '1 overdue checklist item', to: 'trip-checklists' }
     ])
   })
+
+  it('replaces stale planning actions with an archive nudge once an active trip has ended', () => {
+    const trip = { status: 'active', end_date: '2026-09-01' }
+    expect(nextActions(MID, trip, '2026-09-24')).toEqual([
+      { label: 'Trip has ended — archive it', to: 'trip-settings' }
+    ])
+  })
+
+  it('nudges a confirmed (not just active) trip past its end_date too', () => {
+    const trip = { status: 'confirmed', end_date: '2026-09-01' }
+    expect(nextActions(READY, trip, '2026-09-24')).toEqual([
+      { label: 'Trip has ended — archive it', to: 'trip-settings' }
+    ])
+  })
+
+  it('does not nudge while end_date is today or in the future', () => {
+    const trip = { status: 'active', end_date: '2026-09-24' }
+    expect(nextActions(MID, trip, '2026-09-24')).not.toContainEqual({ label: 'Trip has ended — archive it', to: 'trip-settings' })
+  })
+
+  it('does not nudge non active/confirmed statuses even past end_date', () => {
+    const trip = { status: 'idea', end_date: '2026-09-01' }
+    expect(nextActions(MID, trip, '2026-09-24')).not.toContainEqual({ label: 'Trip has ended — archive it', to: 'trip-settings' })
+  })
+
+  it('ignores a trip with no end_date', () => {
+    const trip = { status: 'active', end_date: null }
+    expect(nextActions(MID, trip, '2026-09-24')).not.toContainEqual({ label: 'Trip has ended — archive it', to: 'trip-settings' })
+  })
 })

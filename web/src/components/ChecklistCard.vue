@@ -117,6 +117,8 @@ function discardDraft() {
 
         <template v-if="isTasks">
           <Select
+            :input-id="`cl-assignee-${item.id}`"
+            :name="`cl-assignee-${item.id}`"
             :model-value="item.assignee_person_id || ''"
             :options="assigneeOptions"
             option-label="label"
@@ -140,7 +142,7 @@ function discardDraft() {
     <form class="field checklist-add" @submit.prevent="addItem">
       <input v-model="newTitle" placeholder="New item title" />
       <template v-if="isTasks">
-        <Select v-model="newAssignee" :options="assigneeOptions" option-label="label" option-value="value" aria-label="Assignee" />
+        <Select input-id="cl-new-assignee" name="cl-new-assignee" v-model="newAssignee" :options="assigneeOptions" option-label="label" option-value="value" aria-label="Assignee" />
         <DateField v-model="newDueDate" class="due-date" :fluid="false" placeholder="Due date" />
       </template>
       <Button type="submit" label="Add item" />

@@ -1,5 +1,7 @@
 // Trip-section registry + readiness-derived nav hints. Pure functions, no Vue.
 
+import { toIsoDate } from './dates.js'
+
 export const TRIP_SECTIONS = [
   { name: 'trip-overview', label: 'Overview', icon: 'pi pi-home', group: null },
   { name: 'trip-dates', label: 'Dates', icon: 'pi pi-calendar', group: 'Plan' },
@@ -69,7 +71,18 @@ export function readinessPercent(data) {
   return Math.round((components.reduce((a, b) => a + b, 0) / components.length) * 100)
 }
 
-export function nextActions(data) {
+// A trip left in active/confirmed status past its own end_date has nothing
+// left to plan — the readiness gaps below (unconfirmed profiles, an overdue
+// checklist item) are stale noise pointing at sections that no longer matter.
+// One action replaces the whole list: archive it. `today` is a seam
+// (default = real today) so callers/tests can pin it, matching the pattern
+// tripCountdown uses in dates.js.
+function hasEnded(trip, today) {
+  return !!trip && ['active', 'confirmed'].includes(trip.status) && !!trip.end_date && trip.end_date < today
+}
+
+export function nextActions(data, trip, today = toIsoDate(new Date())) {
+  if (hasEnded(trip, today)) return [{ label: 'Trip has ended — archive it', to: 'trip-settings' }]
   if (!data) return []
   const { d, participants, unconfirmed, overdue } = parts(data)
   const actions = []

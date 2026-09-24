@@ -123,7 +123,7 @@ async function download(doc) {
       </div>
       <div class="field">
         <label for="doc-type">Type</label>
-        <Select input-id="doc-type" v-model="docType" :options="DOC_TYPES" fluid />
+        <Select label-id="doc-type" v-model="docType" :options="DOC_TYPES" fluid />
       </div>
       <div class="field">
         <label for="doc-number">Number (optional)</label>

@@ -5,8 +5,9 @@ import Tag from 'primevue/tag'
 import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
+import { useItineraryStore } from '../../stores/itinerary.js'
 import { nextActions, readinessPercent } from '../../utils/tripNav.js'
-import { tripCountdown } from '../../utils/dates.js'
+import { tripCountdown, toIsoDate, dayHeader } from '../../utils/dates.js'
 import { formatMoney } from '../../utils/format.js'
 
 const STATUSES = ['idea', 'planning', 'confirmed', 'active']
@@ -15,10 +16,11 @@ const route = useRoute()
 const trips = useTripsStore()
 const readiness = useReadinessStore()
 const budget = useBudgetStore()
+const itinerary = useItineraryStore()
 
 const tripId = computed(() => route.params.id)
 const trip = computed(() => trips.current)
-const actions = computed(() => nextActions(readiness.data))
+const actions = computed(() => nextActions(readiness.data, trip.value))
 const percent = computed(() => readinessPercent(readiness.data))
 const checklists = computed(() => readiness.data?.checklists)
 const participants = computed(() => readiness.data?.participants || [])
@@ -28,6 +30,20 @@ const dateRange = computed(() =>
 )
 const countdown = computed(() => (trip.value ? tripCountdown(trip.value) : null))
 const statusIndex = computed(() => STATUSES.indexOf(trip.value?.status))
+
+const todayIso = computed(() => toIsoDate(new Date()))
+// Active trip, today inside its own dates — anything else (idea/planning/
+// confirmed, archived, or an active trip whose window doesn't cover today)
+// gets no card and, per the guard in load() below, no itinerary fetch either.
+const showTodayCard = computed(() => {
+  const t = trip.value
+  if (!t || t.status !== 'active' || !t.start_date || !t.end_date) return false
+  return todayIso.value >= t.start_date && todayIso.value <= t.end_date
+})
+const todayHeading = computed(() => `Today — ${dayHeader(todayIso.value)}`)
+// One message covers both "itinerary never initialized" and "day exists but
+// empty" — the card's job is just to point at the itinerary, not diagnose why.
+const todayItems = computed(() => itinerary.days.find((d) => d.day_date === todayIso.value)?.items || [])
 
 async function load() {
   // Both stores are shared across trips and drop another trip's data themselves
@@ -40,8 +56,16 @@ async function load() {
   const pendingReadiness = readiness.lastTripId === tripId.value
     ? null
     : readiness.fetch(tripId.value).catch(() => { /* layout badge already reported */ })
+  // Same lastTripId guard as readiness, plus a render guard: an idea/planning
+  // trip, or an active one whose dates don't cover today, never shows the
+  // card, so fetching its itinerary here would be a wasted request no view
+  // reads from.
+  const pendingItinerary = showTodayCard.value && itinerary.lastTripId !== tripId.value
+    ? itinerary.fetchItinerary(tripId.value).catch(() => { /* today card shows its own empty state */ })
+    : null
   try { await budget.fetchBudget(tripId.value) } catch { /* stat shows — */ }
   await pendingReadiness
+  await pendingItinerary
 }
 
 onMounted(load)
@@ -57,6 +81,21 @@ watch(tripId, load)
 
 <template>
   <div v-if="trip">
+    <section v-if="showTodayCard" class="card today-card">
+      <h2>{{ todayHeading }}</h2>
+      <ul v-if="todayItems.length" class="day-items">
+        <li v-for="item in todayItems" :key="item.id" class="day-item">
+          <Tag v-if="item.time_range" :value="item.time_range" severity="secondary" />
+          <strong>{{ item.title }}</strong>
+          <span v-if="item.location">— {{ item.location }}</span>
+        </li>
+      </ul>
+      <p v-else class="today-empty">Nothing planned today — open the itinerary to add something</p>
+      <RouterLink class="action-link" :to="{ name: 'trip-itinerary', params: { id: trip.id } }">
+        <i class="pi pi-arrow-right" /> Open itinerary
+      </RouterLink>
+    </section>
+
     <section class="card hero">
       <div class="hero-main">
         <h1>{{ trip.name }}</h1>
@@ -115,6 +154,12 @@ watch(tripId, load)
 </template>
 
 <style scoped>
+/* Matches DayCard.vue's .day-items/.day-item row idiom (icon/tag/title/location
+   line) rather than inventing a second itinerary-row look on this page. */
+.today-card .day-items { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+.today-card .day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--app-border); flex-wrap: wrap; }
+.today-empty { color: var(--app-text-muted); margin: 0 0 0.75rem; }
+
 .hero { display: flex; justify-content: space-between; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
 .hero h1 { margin-bottom: 0.375rem; }
 .hero-sub { margin: 0; color: var(--app-text-muted); display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }

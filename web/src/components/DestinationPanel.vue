@@ -97,10 +97,10 @@ async function submitManual() {
 
     <form class="card dest-add-form" @submit.prevent="submitManual">
       <h3>Add destination candidate</h3>
-      <div class="field"><label>Name</label><InputText v-model="form.name" required fluid /></div>
+      <div class="field"><label>Name</label><InputText id="dest-name" name="dest-name" v-model="form.name" required fluid /></div>
       <div class="field"><label>Rationale</label><Textarea v-model="form.rationale" fluid auto-resize /></div>
-      <div class="field"><label>Best dates</label><InputText v-model="form.best_dates" fluid /></div>
-      <div class="field"><label>Est. budget per person</label><InputNumber v-model="form.est_budget_per_person" fluid /></div>
+      <div class="field"><label>Best dates</label><InputText id="dest-best-dates" name="dest-best-dates" v-model="form.best_dates" fluid /></div>
+      <div class="field"><label>Est. budget per person</label><InputNumber input-id="dest-budget-per-person" name="dest-budget-per-person" v-model="form.est_budget_per_person" fluid /></div>
       <div class="field"><label>Caveats</label><Textarea v-model="form.caveats" fluid auto-resize /></div>
       <Button type="submit" label="Add candidate" />
     </form>
