@@ -59,9 +59,19 @@ async function useAsFinal(w) {
 // Reverts to 'slight' rather than clearing date_mode outright ('broad' would
 // also drop the flex-days/anchor idiom this trip may still want) - windows
 // themselves are left untouched, only date_mode changes.
+//
+// A trip with zero saved windows would otherwise become a one-way trap: with
+// no windows the Confirmed radio is disabled (trip-planner-53c), so the just-
+// unconfirmed range could never be re-confirmed. Seed one window from the
+// confirmed start/end first so it stays in the list and re-confirmable via
+// 'Use as final dates'.
 async function onUnconfirm() {
   try {
-    await trips.updateTrip(trips.current.id, { date_mode: 'slight' })
+    const t = trips.current
+    if (!savedWindows.value.length && t.start_date && t.end_date) {
+      await trips.saveWindows(t.id, [{ start_date: t.start_date, end_date: t.end_date }])
+    }
+    await trips.updateTrip(t.id, { date_mode: 'slight' })
     notify.success('Dates unconfirmed')
   } catch (e) { notify.error(e.message) }
 }
@@ -83,7 +93,7 @@ async function onSave(windows) {
         : 'Propose date windows below, then use \'Use as final dates\' on one to lock the trip dates.'"
     />
     <div v-if="confirmed" class="card dates-confirmed">
-      <Tag severity="success" value="confirmed" />
+      <Tag severity="success" value="confirmed" title="Dates confirmed" aria-label="Dates confirmed" />
       <strong>{{ confirmed.start }} &ndash; {{ confirmed.end }}</strong>
       <Button type="button" label="Unconfirm" severity="secondary" outlined size="small" @click="onUnconfirm" />
     </div>
@@ -109,7 +119,7 @@ async function onSave(windows) {
       </ul>
     </div>
     <div class="card">
-      <DateWindowsEditor :windows="trips.current?.windows || []" @save="onSave" />
+      <DateWindowsEditor :windows="trips.current?.windows || []" :confirmed="!!confirmed" @save="onSave" />
     </div>
   </div>
 </template>

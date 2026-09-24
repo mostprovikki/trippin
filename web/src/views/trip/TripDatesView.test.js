@@ -33,6 +33,16 @@ describe('TripDatesView', () => {
     expect(wrapper.findComponent({ name: 'DateWindowsEditor' }).props('windows')).toHaveLength(1)
   })
 
+  it('tells DateWindowsEditor whether dates are confirmed, so its empty-state copy matches', async () => {
+    const { wrapper: locked } = await mountView({
+      id: 't1', name: 'Goa 2026', date_mode: 'confirmed', start_date: '2026-08-01', end_date: '2026-08-05', windows: []
+    })
+    expect(locked.findComponent({ name: 'DateWindowsEditor' }).props('confirmed')).toBe(true)
+
+    const { wrapper: unlocked } = await mountView({ id: 't1', name: 'Goa 2026', date_mode: 'broad', windows: [] })
+    expect(unlocked.findComponent({ name: 'DateWindowsEditor' }).props('confirmed')).toBe(false)
+  })
+
   it('describes the actual confirm action rather than a nonexistent control', async () => {
     const { wrapper } = await mountView({ id: 't1', name: 'Goa 2026', date_mode: 'broad', windows: [] })
     expect(wrapper.text()).toContain('Use as final dates')
@@ -118,5 +128,45 @@ describe('TripDatesView', () => {
     await btn.trigger('click')
     await flushPromises()
     expect(store.updateTrip).toHaveBeenCalledWith('t1', { date_mode: 'slight' })
+  })
+
+  it('Unconfirm on a zero-window trip seeds a window from the confirmed range before reverting date_mode', async () => {
+    const { wrapper, store } = await mountView({
+      id: 't1', name: 'Goa 2026', date_mode: 'confirmed', start_date: '2026-08-01', end_date: '2026-08-05', windows: []
+    })
+    const calls = []
+    store.saveWindows.mockImplementation(async (...args) => { calls.push(['saveWindows', ...args]); return [] })
+    store.updateTrip.mockImplementation(async (...args) => { calls.push(['updateTrip', ...args]) })
+    const btn = wrapper.findAll('button').find((b) => b.text() === 'Unconfirm')
+    await btn.trigger('click')
+    await flushPromises()
+    expect(store.saveWindows).toHaveBeenCalledWith('t1', [{ start_date: '2026-08-01', end_date: '2026-08-05' }])
+    expect(store.updateTrip).toHaveBeenCalledWith('t1', { date_mode: 'slight' })
+    expect(calls.map((c) => c[0])).toEqual(['saveWindows', 'updateTrip'])
+  })
+
+  it('Unconfirm on a trip that already has saved windows does not seed another one', async () => {
+    const { wrapper, store } = await mountView({
+      id: 't1',
+      name: 'Goa 2026',
+      date_mode: 'confirmed',
+      start_date: '2026-08-01',
+      end_date: '2026-08-05',
+      windows: [{ start_date: '2026-08-01', end_date: '2026-08-05' }]
+    })
+    const btn = wrapper.findAll('button').find((b) => b.text() === 'Unconfirm')
+    await btn.trigger('click')
+    await flushPromises()
+    expect(store.saveWindows).not.toHaveBeenCalled()
+    expect(store.updateTrip).toHaveBeenCalledWith('t1', { date_mode: 'slight' })
+  })
+
+  it('gives the date banner "confirmed" tag a distinct title from the sidebar trip-status tag', async () => {
+    const { wrapper } = await mountView({
+      id: 't1', name: 'Goa 2026', date_mode: 'confirmed', start_date: '2026-08-01', end_date: '2026-08-05', windows: []
+    })
+    const tag = wrapper.findComponent({ name: 'Tag' })
+    expect(tag.attributes('title')).toBe('Dates confirmed')
+    expect(tag.attributes('aria-label')).toBe('Dates confirmed')
   })
 })

@@ -104,8 +104,8 @@ function discardDayDraft() {
         <span v-if="item.location">— {{ item.location }}</span>
         <span v-if="item.est_cost != null">{{ formatMoney(item.est_cost, currency) }}</span>
         <span class="day-item-actions">
-          <Button type="button" severity="secondary" outlined :disabled="idx === 0" @click="move(idx, -1)">↑</Button>
-          <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" @click="move(idx, 1)">↓</Button>
+          <Button type="button" severity="secondary" outlined :disabled="idx === 0" aria-label="Move up within day" title="Move up within day" @click="move(idx, -1)">↑</Button>
+          <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" aria-label="Move down within day" title="Move down within day" @click="move(idx, 1)">↓</Button>
           <Button type="button" label="Edit" severity="secondary" outlined @click="editingId = item.id" />
           <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="remove(item)" />
         </span>

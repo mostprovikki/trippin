@@ -71,6 +71,37 @@ describe('DayCard', () => {
     expect(store.deleteItem).toHaveBeenCalledWith('i1')
     dialogWrapper.unmount()
   })
+
+  it('labels the reorder arrows so their purpose is clear without relying on the glyph', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [
+      { id: 'i1', title: 'Breakfast', est_cost: null },
+      { id: 'i2', title: 'Museum', est_cost: null },
+    ] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
+    const up = wrapper.find('[aria-label="Move up within day"]')
+    const down = wrapper.find('[aria-label="Move down within day"]')
+    expect(up.exists()).toBe(true)
+    expect(down.exists()).toBe(true)
+    expect(up.attributes('title')).toBe('Move up within day')
+    expect(down.attributes('title')).toBe('Move down within day')
+  })
+
+  it('moving an item down calls store.reorder with the ids swapped', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    store.reorder = vi.fn().mockResolvedValue()
+    const day = { id: 'd1', day_date: '2026-11-06', items: [
+      { id: 'i1', title: 'Breakfast', est_cost: null },
+      { id: 'i2', title: 'Museum', est_cost: null },
+    ] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR' } })
+    const downButtons = wrapper.findAll('[aria-label="Move down within day"]')
+    await downButtons[0].trigger('click')
+    expect(store.reorder).toHaveBeenCalledWith('d1', ['i2', 'i1'])
+  })
 })
 
 afterEach(() => vi.useRealTimers())

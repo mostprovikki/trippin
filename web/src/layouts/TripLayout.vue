@@ -85,7 +85,7 @@ async function advanceStatus() {
         <template v-if="trips.current">
           <span class="trip-sidebar-name">{{ trips.current.name }}</span>
           <div class="trip-sidebar-status">
-            <Tag class="status-tag" :value="trips.current.status" :severity="trips.current.status === 'archived' ? 'secondary' : 'info'" />
+            <Tag class="status-tag" :value="trips.current.status" :severity="trips.current.status === 'archived' ? 'secondary' : 'info'" title="Trip status" :aria-label="`Trip status: ${trips.current.status}`" />
             <Button v-if="nextTransition" :label="nextTransition.label" size="small" outlined @click="advanceStatus" />
           </div>
         </template>

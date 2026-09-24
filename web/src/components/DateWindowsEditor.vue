@@ -5,7 +5,10 @@ import Button from 'primevue/button'
 import DateField from './DateField.vue'
 
 const props = defineProps({
-  windows: { type: Array, default: () => [] }
+  windows: { type: Array, default: () => [] },
+  // Set when the trip's date_mode is 'confirmed': swaps the empty-state copy
+  // so it doesn't read as contradicting the locked-dates banner above it.
+  confirmed: { type: Boolean, default: false }
 })
 const emit = defineEmits(['save'])
 
@@ -54,7 +57,10 @@ function save() {
       <Button type="button" label="Remove" severity="secondary" outlined size="small" @click="removeRow(idx)" />
     </div>
     <p v-if="!rows.length" class="dwe-empty">
-      <i class="pi pi-calendar-plus" aria-hidden="true" /> No date windows yet — add one to propose dates.
+      <i class="pi pi-calendar-plus" aria-hidden="true" />
+      {{ confirmed
+        ? 'Dates are locked above — no proposed windows. Add one only if plans might change.'
+        : 'No date windows yet — add one to propose dates.' }}
     </p>
     <Button type="button" label="Add date window" severity="secondary" outlined @click="addRow" />
     <Button type="button" label="Save windows" @click="save" />

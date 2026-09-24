@@ -65,13 +65,16 @@ async function addItem() {
   newAssignee.value = ''
   newDueDate.value = ''
 }
-// deliberately not confirmed: everything an item holds — title, assignee, due
-// date — is visible in the row you are deleting, and the add form directly
-// below re-creates it in one field. This is also by far the most frequent
-// delete in the app, and a dialog here is what would train people to dismiss
-// the checklist-level one below without reading it.
-async function removeItem(itemId) {
-  await store.deleteItem(itemId)
+// Was deliberately unconfirmed (item content is visible in the row you're
+// deleting, and this is the most frequent delete in the app) — owner decision
+// 2026-09-24 overrides that: confirm like every other delete.
+function removeItem(item) {
+  confirm.require({
+    message: `Delete "${item.title}"?`,
+    header: 'Delete item?', icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Delete', acceptClass: 'p-button-danger', rejectLabel: 'Cancel',
+    accept: async () => { await store.deleteItem(item.id) }
+  })
 }
 function removeChecklist() {
   const count = props.checklist.items?.length || 0
@@ -135,7 +138,7 @@ function discardDraft() {
           />
         </template>
 
-        <Button type="button" icon="pi pi-times" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="removeItem(item.id)" />
+        <Button type="button" icon="pi pi-times" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="removeItem(item)" />
       </li>
     </ul>
 

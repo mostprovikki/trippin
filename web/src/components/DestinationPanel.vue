@@ -39,8 +39,15 @@ async function suggestWithAi() {
   try { await store.aiSuggest(props.tripId) } catch (e) { notify.error(e.message) }
 }
 
-async function markDecided(candidateId) {
-  try { await store.decide(candidateId) } catch (e) { notify.error(e.message) }
+function markDecided(candidateId, name) {
+  confirm.require({
+    message: `Make "${name}" the trip destination? Other candidates stay listed.`,
+    header: 'Set destination?', icon: 'pi pi-info-circle',
+    acceptLabel: 'Mark decided', rejectLabel: 'Cancel',
+    accept: async () => {
+      try { await store.decide(candidateId) } catch (e) { notify.error(e.message) }
+    }
+  })
 }
 
 function removeCandidate(candidateId) {
@@ -91,7 +98,7 @@ async function submitManual() {
       <p v-if="c.best_dates"><strong>Best dates:</strong> {{ c.best_dates }}</p>
       <p v-if="c.est_budget_per_person != null"><strong>Est. budget/person:</strong> {{ c.est_budget_per_person }}</p>
       <p v-if="c.caveats"><strong>Caveats:</strong> {{ c.caveats }}</p>
-      <Button type="button" label="Mark decided" :disabled="!!c.decided" @click="markDecided(c.id)" />
+      <Button type="button" label="Mark decided" :disabled="!!c.decided" @click="markDecided(c.id, c.name)" />
       <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${c.name}`" :disabled="!!c.decided" @click="removeCandidate(c.id)" />
     </div>
 
