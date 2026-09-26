@@ -5,8 +5,10 @@ import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import Menu from 'primevue/menu'
 import DateField from './DateField.vue'
 import DraftReview from './DraftReview.vue'
+import PromptPasteDialog from './PromptPasteDialog.vue'
 import { useChecklistsStore } from '../stores/checklists.js'
 import { useAiStatus } from '../composables/useAiStatus.js'
 
@@ -97,6 +99,26 @@ async function saveAsTemplate() {
   templateName.value = ''
   showSaveAsTemplate.value = false
 }
+// AI actions sit under ⋯, never as buttons at rest (docs/design/tripper.md §5).
+// Templates have no trip to draft for, so they get no menu.
+const hasAiMenu = computed(() => isPacking.value && !props.checklist.is_template)
+const moreMenu = ref(null)
+const menuId = computed(() => `checklist-more-${props.checklist.id}`)
+const moreItems = computed(() => [
+  {
+    // A disabled menu item shows no tooltip, so the reason goes in the label.
+    label: (store.aiBusy ? 'Generating…' : 'AI packing suggest')
+      + (!aiStatus.enabled ? ' · AI not configured' : aiStatus.isMock ? ' · AI: dev mock' : ''),
+    icon: 'pi pi-sparkles',
+    disabled: !aiStatus.enabled || store.aiBusy,
+    command: suggestPacking
+  },
+  // BYO-AI: always offered, provider or not (trip-planner-d5d).
+  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } }
+])
+const pasteOpen = ref(false)
+function onPasted(res) { store.setPastedPackingDraft(props.checklist.id, res.items) }
+
 async function suggestPacking() {
   await store.aiPackingSuggest(props.checklist.id)
 }
@@ -110,7 +132,22 @@ function discardDraft() {
 
 <template>
   <div class="card">
-    <h3>{{ checklist.name }} <Tag :value="checklist.kind" severity="secondary" /></h3>
+    <div class="checklist-head">
+      <h3>{{ checklist.name }} <Tag :value="checklist.kind" severity="secondary" /></h3>
+      <template v-if="hasAiMenu">
+        <Button
+          type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
+          :aria-label="`More ${checklist.name} actions`" aria-haspopup="true" :aria-controls="menuId"
+          @click="moreMenu.toggle($event)"
+        />
+        <Menu :id="menuId" ref="moreMenu" :model="moreItems" popup />
+        <PromptPasteDialog
+          v-model:visible="pasteOpen" header="Draft packing items with your own AI"
+          :prompt-url="`/api/checklists/${checklist.id}/ai-packing-suggest/prompt`" :import-url="`/api/checklists/${checklist.id}/ai-packing-suggest/import`"
+          @imported="onPasted"
+        />
+      </template>
+    </div>
 
     <ul class="checklist-items">
       <li v-for="item in checklist.items" :key="item.id">
@@ -151,18 +188,7 @@ function discardDraft() {
       <Button type="submit" label="Add item" />
     </form>
 
-    <div v-if="isPacking">
-      <Button
-        type="button" severity="secondary" outlined :loading="store.aiBusy"
-        :disabled="!aiStatus.enabled" :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
-        @click="suggestPacking"
-      >
-        {{ store.aiBusy ? 'Generating…' : 'AI packing suggest' }}
-      </Button>
-      <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
-    </div>
-
-    <DraftReview v-if="draft" title="AI packing draft" :busy="store.aiBusy" @apply="applyDraft" @discard="discardDraft">
+    <DraftReview v-if="draft" title="AI packing draft" :busy="store.aiBusy" :pasted="!!draft.pasted" @apply="applyDraft" @discard="discardDraft">
       <ul>
         <li v-for="(item, idx) in draft.items" :key="idx">{{ item.title }}</li>
       </ul>
@@ -188,6 +214,7 @@ function discardDraft() {
 </template>
 
 <style scoped>
+.checklist-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .checklist-items { list-style: none; padding: 0; }
 /* Wraps like .checklist-add below it: a task row is checkbox + label + assignee
    Select + 10rem date + Delete, which is far past 375px, and without wrap the

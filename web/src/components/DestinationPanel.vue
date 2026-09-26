@@ -1,11 +1,13 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import InputNumber from 'primevue/inputnumber'
+import Menu from 'primevue/menu'
+import PromptPasteDialog from './PromptPasteDialog.vue'
 import { useTripsStore } from '../stores/trips.js'
 import { useAiStatus } from '../composables/useAiStatus.js'
 import { useNotify } from '../composables/useNotify.js'
@@ -37,6 +39,27 @@ watch(() => props.tripId, resetForm)
 
 async function suggestWithAi() {
   try { await store.aiSuggest(props.tripId) } catch (e) { notify.error(e.message) }
+}
+
+// AI actions sit under ⋯, never as buttons at rest (docs/design/tripper.md §5).
+const moreMenu = ref(null)
+const moreItems = computed(() => [
+  {
+    // A disabled menu item shows no tooltip, so the reason goes in the label.
+    label: (store.aiBusy ? 'Generating…' : 'Suggest with AI')
+      + (!aiStatus.enabled ? ' · AI not configured' : aiStatus.isMock ? ' · AI: dev mock' : ''),
+    icon: 'pi pi-sparkles',
+    disabled: !aiStatus.enabled || store.aiBusy,
+    command: suggestWithAi
+  },
+  // BYO-AI: always offered, provider or not (trip-planner-d5d).
+  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } }
+])
+const pasteOpen = ref(false)
+// The import already saved the candidates server-side (same as the provider
+// path), so just reload the list.
+async function onPasted() {
+  try { await store.fetchCandidates(props.tripId) } catch (e) { notify.error(e.message) }
 }
 
 function markDecided(candidateId, name) {
@@ -83,13 +106,16 @@ async function submitManual() {
   <div class="destination-panel">
     <div class="destination-toolbar">
       <Button
-        type="button" severity="secondary" outlined :loading="store.aiBusy"
-        :disabled="!aiStatus.enabled" :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
-        @click="suggestWithAi"
-      >
-        {{ store.aiBusy ? 'Generating…' : 'Suggest with AI' }}
-      </Button>
-      <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
+        type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
+        aria-label="More destination actions" aria-haspopup="true" aria-controls="destination-more-menu"
+        @click="moreMenu.toggle($event)"
+      />
+      <Menu id="destination-more-menu" ref="moreMenu" :model="moreItems" popup />
+      <PromptPasteDialog
+        v-model:visible="pasteOpen" header="Suggest destinations with your own AI"
+        :prompt-url="`/api/trips/${tripId}/candidates/ai-suggest/prompt`" :import-url="`/api/trips/${tripId}/candidates/ai-suggest/import`"
+        @imported="onPasted"
+      />
     </div>
 
     <div v-if="!candidates.length" class="dest-empty">No destination candidates yet.</div>
@@ -119,7 +145,7 @@ async function submitManual() {
 </template>
 
 <style scoped>
-.destination-toolbar { margin-bottom: 1rem; }
+.destination-toolbar { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
 .dest-card h3 { margin-top: 0; display: flex; align-items: center; gap: 0.5rem; }
 .dest-empty { color: var(--app-text-muted); margin-bottom: 1rem; }
 </style>

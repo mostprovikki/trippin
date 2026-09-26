@@ -32,4 +32,14 @@ describe('DraftReview', () => {
     const without = mountWithBase(DraftReview, { props: { title: 'AI draft' } })
     expect(without.find('[data-test="draft-error"]').exists()).toBe(false)
   })
+
+  it('a pasted draft shows exactly one provenance line; a provider draft shows none', () => {
+    const pasted = mountWithBase(DraftReview, { props: { title: 'Draft', pasted: true } })
+    const lines = pasted.findAll('[data-test="draft-pasted"]')
+    expect(lines).toHaveLength(1)
+    expect(lines[0].text()).toBe('Pasted draft — source not verified by Tripper')
+    expect(pasted.text().match(/Pasted draft/g)).toHaveLength(1)
+    const provider = mountWithBase(DraftReview, { props: { title: 'Draft' } })
+    expect(provider.find('[data-test="draft-pasted"]').exists()).toBe(false)
+  })
 })

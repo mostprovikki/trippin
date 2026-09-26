@@ -183,6 +183,10 @@ export const useChecklistsStore = defineStore('checklists', {
         this.aiBusy = false
       }
     },
+    // The dialog already POSTed the reply to .../import; this only places it.
+    setPastedPackingDraft(checklistId, items) {
+      this.packingDraft = { checklistId, items, pasted: true }
+    },
     async applyPackingDraft(checklistId) {
       try {
         const draft = this.packingDraft

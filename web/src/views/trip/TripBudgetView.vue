@@ -10,7 +10,7 @@ import InputText from 'primevue/inputtext'
 import { formatMoney } from '../../utils/format.js'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
-import Tag from 'primevue/tag'
+import Menu from 'primevue/menu'
 import { api } from '../../api/client.js'
 import { useAiStatus } from '../../composables/useAiStatus.js'
 import { useBudgetStore } from '../../stores/budget.js'
@@ -19,6 +19,7 @@ import { useNotify } from '../../composables/useNotify.js'
 import BudgetTable from '../../components/BudgetTable.vue'
 import DraftReview from '../../components/DraftReview.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
+import PromptPasteDialog from '../../components/PromptPasteDialog.vue'
 
 const route = useRoute()
 const tripId = computed(() => route.params.id)
@@ -116,6 +117,23 @@ async function saveOverrides() {
   } catch (e) { notify.error(e.message) }
 }
 
+// AI actions sit under ⋯, never as buttons at rest (docs/design/tripper.md §5).
+// A disabled menu item shows no tooltip, so the reason goes in the label.
+const moreMenu = ref(null)
+const moreItems = computed(() => [
+  {
+    label: (store.aiBusy ? 'Generating…' : 'AI draft')
+      + (!aiStatus.enabled ? ' · AI not configured' : aiStatus.isMock ? ' · AI: dev mock' : ''),
+    icon: 'pi pi-sparkles',
+    disabled: !aiStatus.enabled || store.aiBusy,
+    command: runAiDraft
+  },
+  // BYO-AI: always offered, provider or not (trip-planner-d5d).
+  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } }
+])
+const pasteOpen = ref(false)
+function onPasted(res) { store.setPastedDraft(res.lines) }
+
 async function runAiDraft() {
   try { await store.aiDraft(tripId.value) } catch (e) { notify.error(e.message) }
 }
@@ -138,7 +156,7 @@ onBeforeRouteLeave(async () => {
 
 <template>
   <div>
-    <SectionHeader title="Budget" description="Category estimates, AI draft, and per-person split." />
+    <SectionHeader title="Budget" description="Category estimates and per-person split." />
 
     <div v-if="loading" class="card"><Skeleton v-for="i in 4" :key="i" class="skeleton-row" /></div>
 
@@ -148,7 +166,15 @@ onBeforeRouteLeave(async () => {
       <div class="card">
         <div class="card-header-row">
           <h2>Category estimates</h2>
-          <Button v-if="!editing" label="Edit budget" text @click="editing = true" />
+          <div class="card-header-actions">
+            <Button v-if="!editing" label="Edit budget" text @click="editing = true" />
+            <Button
+              type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
+              aria-label="More budget actions" aria-haspopup="true" aria-controls="budget-more-menu"
+              @click="moreMenu.toggle($event)"
+            />
+            <Menu id="budget-more-menu" ref="moreMenu" :model="moreItems" popup />
+          </div>
         </div>
         <BudgetTable v-model="linesDraft.draft.lines" :draft="store.draft" :currency="tripCurrency" :editing="editing" />
         <div v-if="editing" class="budget-edit-actions">
@@ -157,17 +183,13 @@ onBeforeRouteLeave(async () => {
         </div>
       </div>
 
-      <div class="card">
-        <h2>AI draft</h2>
-        <Button
-          :label="store.aiBusy ? 'Generating…' : 'AI draft'" :disabled="store.aiBusy || !aiStatus.enabled"
-          :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
-          @click="runAiDraft"
-        />
-        <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
-      </div>
+      <PromptPasteDialog
+        v-model:visible="pasteOpen" header="Draft the budget with your own AI"
+        :prompt-url="`/api/trips/${tripId}/budget/ai-draft/prompt`" :import-url="`/api/trips/${tripId}/budget/ai-draft/import`"
+        @imported="onPasted"
+      />
 
-      <DraftReview v-if="store.draft" title="AI draft" :busy="store.aiBusy" @apply="applyDraft" @discard="discardDraft">
+      <DraftReview v-if="store.draft" title="AI draft" :busy="store.aiBusy" :pasted="store.draftPasted" @apply="applyDraft" @discard="discardDraft">
         <p>Compare the "AI draft" column above against your estimates, then apply or discard.</p>
       </DraftReview>
 
@@ -212,5 +234,6 @@ onBeforeRouteLeave(async () => {
 <style scoped>
 .override-add { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.card-header-actions { display: flex; align-items: center; gap: 0.25rem; }
 .budget-edit-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 </style>

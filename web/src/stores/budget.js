@@ -15,6 +15,8 @@ export const useBudgetStore = defineStore('budget', {
     participant_count: 0,
     overrides: [],
     draft: null,
+    // true when the draft came from a pasted BYO-AI reply (…/import), not a provider
+    draftPasted: false,
     error: null,
     aiBusy: false,
     // which trip everything above describes. the store is a singleton shared by
@@ -49,6 +51,7 @@ export const useBudgetStore = defineStore('budget', {
       this.participant_count = 0
       this.overrides = []
       this.draft = null
+      this.draftPasted = false
       this.aiBusy = false
       this.lastTripId = null
       this.reqTokens = {}
@@ -110,6 +113,7 @@ export const useBudgetStore = defineStore('budget', {
         // budget the moment "Apply" is pressed.
         if (this._stale('draft', token)) return
         this.draft = res.lines
+        this.draftPasted = false
       } catch (e) {
         if (!this._stale('draft', token)) this.error = e.message
         throw e
@@ -119,6 +123,11 @@ export const useBudgetStore = defineStore('budget', {
         // current sets it back to true for itself.
         this.aiBusy = false
       }
+    },
+    // The dialog already POSTed the reply to .../import; this only places it.
+    setPastedDraft(lines) {
+      this.draft = lines
+      this.draftPasted = true
     },
     async applyDraft(tripId) {
       if (!this.draft) return
@@ -130,6 +139,7 @@ export const useBudgetStore = defineStore('budget', {
         this._apply(res)
         this.lastTripId = tripId
         this.draft = null
+        this.draftPasted = false
       } catch (e) {
         if (!this._stale('budget', token)) this.error = e.message
         throw e

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
-import { mountWithBase } from '../../test-utils.js'
+import { mountWithBase, pasteViaMenu } from '../../test-utils.js'
 import TripBudgetView from './TripBudgetView.vue'
 import { useBudgetStore } from '../../stores/budget.js'
 import { api } from '../../api/client.js'
@@ -136,5 +136,29 @@ describe('TripBudgetView', () => {
     }))
     const { wrapper } = await mountView()
     expect(wrapper.find('[aria-label="Remove override for Asha"]').exists()).toBe(true)
+  })
+
+  it('AI actions live only in ⋯; "Draft with your own AI…" imports a draft with one provenance line', async () => {
+    const { wrapper, store } = await mountView()
+    const buttonTexts = wrapper.findAll('button').map((b) => b.text())
+    expect(buttonTexts.some((t) => /AI/.test(t))).toBe(false)
+    expect(wrapper.text()).not.toContain('your own AI')
+    api.get.mockImplementation(async (url) => {
+      if (url === '/api/trips/t1/budget/ai-draft/prompt') return { prompt: 'BUDGET PROMPT' }
+      throw new Error(`unexpected GET ${url}`)
+    })
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ lines: [{ category: 'stay', estimate: 1234, basis: 'pasted basis' }] })
+    await wrapper.find('[aria-label="More budget actions"]').trigger('click')
+    await flushPromises()
+    // provider action kept, not removed — disabled here with its reason in the label
+    expect(document.body.textContent).toContain('AI draft · AI not configured')
+    await wrapper.find('[aria-label="More budget actions"]').trigger('click')
+    await flushPromises()
+    await pasteViaMenu(wrapper, 'More budget actions', '{"lines":[]}', flushPromises)
+    expect(post).toHaveBeenCalledWith('/api/trips/t1/budget/ai-draft/import', { text: '{"lines":[]}' })
+    expect(store.draft).toEqual([{ category: 'stay', estimate: 1234, basis: 'pasted basis' }])
+    expect(wrapper.findAll('[data-test="draft-pasted"]')).toHaveLength(1)
+    wrapper.unmount()
+    document.body.innerHTML = ''
   })
 })

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
-import { mountWithBase } from '../../test-utils.js'
+import { mountWithBase, pasteViaMenu } from '../../test-utils.js'
 import TripItineraryView from './TripItineraryView.vue'
 import DayCard from '../../components/DayCard.vue'
 import { useItineraryStore } from '../../stores/itinerary.js'
@@ -236,5 +236,31 @@ describe('TripItineraryView', () => {
     await addBtn.trigger('click')
 
     expect(wrapper.text()).not.toContain('Editing:')
+  })
+
+  it('"Draft with your own AI…" works with no provider: prompt → paste → draft with one provenance line', async () => {
+    _resetAiStatus()
+    const getSpy = vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/ai/status') return { enabled: false, provider: 'none' }
+      if (url === '/api/trips/t1/itinerary/ai-draft/prompt') return { prompt: 'ITIN PROMPT' }
+      throw new Error(`unexpected GET ${url}`)
+    })
+    const postSpy = vi.spyOn(api, 'post').mockImplementation(async (url) => {
+      if (url === '/api/trips/t1/itinerary/ai-draft/import') return { days: [{ day_date: '2026-08-01', items: [{ title: 'Pasted beach' }] }] }
+      throw new Error(`unexpected POST ${url}`)
+    })
+    const { wrapper } = await mountView()
+    await flushPromises()
+    // not visible at rest
+    expect(wrapper.text()).not.toContain('your own AI')
+    await pasteViaMenu(wrapper, 'More itinerary actions', '{"days":[]}', flushPromises)
+    expect(getSpy).toHaveBeenCalledWith('/api/trips/t1/itinerary/ai-draft/prompt')
+    expect(postSpy).toHaveBeenCalledWith('/api/trips/t1/itinerary/ai-draft/import', { text: '{"days":[]}' })
+    expect(wrapper.text()).toContain('Pasted beach')
+    expect(wrapper.findAll('[data-test="draft-pasted"]')).toHaveLength(1)
+    wrapper.unmount()
+    getSpy.mockRestore(); postSpy.mockRestore()
+    _resetAiStatus()
+    document.body.innerHTML = ''
   })
 })

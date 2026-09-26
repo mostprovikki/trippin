@@ -11,6 +11,8 @@ export const useItineraryStore = defineStore('itinerary', {
   state: () => ({
     days: [],
     draft: null,
+    // true when the draft came from a pasted BYO-AI reply (…/import), not a provider
+    draftPasted: false,
     dayDrafts: {},
     error: null,
     aiBusy: false,
@@ -42,6 +44,7 @@ export const useItineraryStore = defineStore('itinerary', {
       // invalidates everything in flight for the old trip in one go.
       this.days = []
       this.draft = null
+      this.draftPasted = false
       this.dayDrafts = {}
       this.aiBusy = false
       this.lastTripId = null
@@ -123,6 +126,7 @@ export const useItineraryStore = defineStore('itinerary', {
         // against this trip's days, writing the wrong itinerary into it.
         if (this._stale('draft', token)) return res
         this.draft = res.days
+        this.draftPasted = false
         return res
       } catch (e) {
         if (!this._stale('draft', token)) this.error = e.message
@@ -134,6 +138,11 @@ export const useItineraryStore = defineStore('itinerary', {
         this.aiBusy = false
       }
     },
+    // The dialog already POSTed the reply to .../import; this only places it.
+    setPastedDraft(days) {
+      this.draft = days
+      this.draftPasted = true
+    },
     async applyDraft(tripId) {
       const token = this._start('days')
       try {
@@ -142,6 +151,7 @@ export const useItineraryStore = defineStore('itinerary', {
         this.days = res.days
         this.lastTripId = tripId
         this.draft = null
+        this.draftPasted = false
       } catch (e) {
         if (!this._stale('days', token)) this.error = e.message
         throw e

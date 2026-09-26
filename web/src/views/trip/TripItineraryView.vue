@@ -14,6 +14,7 @@ import EmptyState from '../../components/EmptyState.vue'
 import DayCard from '../../components/DayCard.vue'
 import DraftReview from '../../components/DraftReview.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
+import PromptPasteDialog from '../../components/PromptPasteDialog.vue'
 import { formatMoney } from '../../utils/format.js'
 import { toIsoDate, formatDayDate } from '../../utils/dates.js'
 
@@ -76,10 +77,11 @@ function setTodayCardRef(dayId, el) {
 
 // Getter key: this view is reused across :id changes, so the AI draft has to
 // follow the trip rather than freeze on whichever one was open at setup.
-const aiDraftStore = useDraft(() => `trip:${tripId.value}:itinerary-ai`, () => ({ ai: null }))
+const aiDraftStore = useDraft(() => `trip:${tripId.value}:itinerary-ai`, () => ({ ai: null, pasted: false }))
 
 // Mirror the Pinia draft into persistent storage both ways.
 watch(() => store.draft, (d) => { aiDraftStore.draft.ai = d ?? null })
+watch(() => store.draftPasted, (p) => { aiDraftStore.draft.pasted = p })
 
 async function load() {
   loading.value = true
@@ -90,12 +92,13 @@ async function load() {
   // useDraft has already re-keyed by the time this runs, so this is the *new*
   // trip's stored draft.
   const stored = aiDraftStore.draft.ai
+  const storedPasted = !!aiDraftStore.draft.pasted
   try {
     await store.fetchItinerary(tripId.value)
   } catch (e) {
     notify.error(e.message)
   } finally {
-    if (stored && !store.draft) store.draft = stored
+    if (stored && !store.draft) { store.draft = stored; store.draftPasted = storedPasted }
     loading.value = false
   }
 }
@@ -127,12 +130,17 @@ const moreItems = computed(() => [
     disabled: !aiStatus.enabled || store.aiBusy,
     command: draftWholeTrip
   },
+  // BYO-AI: always offered, provider or not (trip-planner-d5d).
+  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } },
   { label: 'Add to calendar (.ics)', icon: 'pi pi-calendar-plus', url: `/api/trips/${tripId.value}/itinerary.ics` },
   {
     label: 'Print / PDF', icon: 'pi pi-print', target: '_blank',
     url: router.resolve({ name: 'trip-itinerary-print', params: { id: tripId.value } }).href
   }
 ])
+
+const pasteOpen = ref(false)
+function onPasted(res) { store.setPastedDraft(res.days) }
 
 async function draftWholeTrip() {
   try { await store.aiDraft(tripId.value) } catch (e) { notify.error(e.message) }
@@ -166,6 +174,11 @@ function discardWholeDraft() {
           @click="moreMenu.toggle($event)"
         />
         <Menu id="itinerary-more-menu" ref="moreMenu" :model="moreItems" popup />
+        <PromptPasteDialog
+          v-model:visible="pasteOpen" header="Draft the itinerary with your own AI"
+          :prompt-url="`/api/trips/${tripId}/itinerary/ai-draft/prompt`" :import-url="`/api/trips/${tripId}/itinerary/ai-draft/import`"
+          @imported="onPasted"
+        />
       </template>
     </SectionHeader>
 
@@ -178,7 +191,7 @@ function discardWholeDraft() {
     <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
 
     <template v-else>
-      <DraftReview v-if="store.draft" title="AI draft preview" :busy="store.aiBusy" @apply="applyWholeDraft" @discard="discardWholeDraft">
+      <DraftReview v-if="store.draft" title="AI draft preview" :busy="store.aiBusy" :pasted="store.draftPasted" @apply="applyWholeDraft" @discard="discardWholeDraft">
         <div v-for="d in store.draft" :key="d.day_date" class="draft-day">
           <div class="draft-day-heading">{{ formatDayDate(d.day_date) }}</div>
           <ul class="draft-day-items">

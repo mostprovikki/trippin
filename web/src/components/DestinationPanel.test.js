@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import ConfirmDialog from 'primevue/confirmdialog'
-import { mountWithBase } from '../test-utils.js'
+import { flushPromises } from '@vue/test-utils'
+import { mountWithBase, pasteViaMenu } from '../test-utils.js'
+import { api } from '../api/client.js'
 import DestinationPanel from './DestinationPanel.vue'
 import { useTripsStore } from '../stores/trips.js'
 
@@ -49,5 +51,25 @@ describe('DestinationPanel', () => {
     await new Promise((r) => setTimeout(r, 0))
     expect(store.decide).not.toHaveBeenCalled()
     dialogWrapper.unmount()
+  })
+
+  it('AI actions only in ⋯; a pasted import refetches the candidates and closes the dialog', async () => {
+    const { wrapper, store } = mountPanel([])
+    await flushPromises()
+    expect(wrapper.findAll('button').some((b) => /AI/.test(b.text()))).toBe(false)
+    expect(wrapper.text()).not.toContain('your own AI')
+    store.fetchCandidates = vi.fn().mockResolvedValue()
+    vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/trips/t1/candidates/ai-suggest/prompt') return { prompt: 'DEST PROMPT' }
+      throw new Error(`unexpected GET ${url}`)
+    })
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ candidates: [{ id: 'x', name: 'Hampi', source: 'ai' }] })
+    await pasteViaMenu(wrapper, 'More destination actions', '{"candidates":[]}', flushPromises)
+    expect(post).toHaveBeenCalledWith('/api/trips/t1/candidates/ai-suggest/import', { text: '{"candidates":[]}' })
+    expect(store.fetchCandidates).toHaveBeenCalledWith('t1')
+    expect(document.body.querySelector('[data-test="paste-reply"]')).toBeNull()
+    wrapper.unmount()
+    vi.restoreAllMocks()
+    document.body.innerHTML = ''
   })
 })

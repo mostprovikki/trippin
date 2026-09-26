@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url'
 import { describe, it, expect, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import ConfirmDialog from 'primevue/confirmdialog'
-import { mountWithBase } from '../test-utils.js'
+import { mountWithBase, pasteViaMenu } from '../test-utils.js'
+import { flushPromises } from '@vue/test-utils'
+import { api } from '../api/client.js'
 import ChecklistCard from './ChecklistCard.vue'
 import { useChecklistsStore } from '../stores/checklists.js'
 
@@ -69,5 +71,33 @@ describe('ChecklistCard', () => {
     const src = readFileSync(path.join(here, 'ChecklistCard.vue'), 'utf8')
     const style = src.slice(src.indexOf('<style'))
     expect(style).toMatch(/\.checklist-items\s+\.icon-danger-btn\s*{[^}]*width:\s*2\.25rem[^}]*height:\s*2\.25rem/)
+  })
+
+  it('packing: AI actions only in ⋯; "Draft with your own AI…" imports a draft with one provenance line', async () => {
+    const { wrapper, store } = mountCard({ id: 'c1', name: 'Packing', kind: 'packing', items: [] })
+    await flushPromises()
+    expect(wrapper.findAll('button').some((b) => /AI|suggest/i.test(b.text()))).toBe(false)
+    expect(wrapper.text()).not.toContain('your own AI')
+    const get = vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/checklists/c1/ai-packing-suggest/prompt') return { prompt: 'PACK PROMPT' }
+      throw new Error(`unexpected GET ${url}`)
+    })
+    const post = vi.spyOn(api, 'post').mockResolvedValue({ items: [{ title: 'Sunscreen' }] })
+    await pasteViaMenu(wrapper, 'More Packing actions', '{"items":[]}', flushPromises)
+    expect(get).toHaveBeenCalledWith('/api/checklists/c1/ai-packing-suggest/prompt')
+    expect(post).toHaveBeenCalledWith('/api/checklists/c1/ai-packing-suggest/import', { text: '{"items":[]}' })
+    expect(store.packingDraft).toEqual({ checklistId: 'c1', items: [{ title: 'Sunscreen' }], pasted: true })
+    expect(wrapper.text()).toContain('Sunscreen')
+    expect(wrapper.findAll('[data-test="draft-pasted"]')).toHaveLength(1)
+    wrapper.unmount()
+    vi.restoreAllMocks()
+    document.body.innerHTML = ''
+  })
+
+  it('tasks lists and templates get no AI ⋯ menu', () => {
+    const tasks = mountCard({ id: 'c2', name: 'Chores', kind: 'tasks', items: [] }).wrapper
+    expect(tasks.find('[aria-label="More Chores actions"]').exists()).toBe(false)
+    const tpl = mountCard({ id: 'c3', name: 'Beach', kind: 'packing', is_template: true, items: [] }).wrapper
+    expect(tpl.find('[aria-label="More Beach actions"]').exists()).toBe(false)
   })
 })
