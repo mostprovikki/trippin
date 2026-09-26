@@ -20,12 +20,10 @@ async function mountLayout({ fetchTrip } = {}) {
           { path: '', name: 'trip-overview', component: Stub },
           { path: 'dates', name: 'trip-dates', component: Stub },
           { path: 'destination', name: 'trip-destination', component: Stub },
-          { path: 'goals', name: 'trip-goals', component: Stub },
           { path: 'people', name: 'trip-people', component: Stub },
           { path: 'budget', name: 'trip-budget', component: Stub },
           { path: 'itinerary', name: 'trip-itinerary', component: Stub },
           { path: 'checklists', name: 'trip-checklists', component: Stub },
-          { path: 'readiness', name: 'trip-readiness', component: Stub },
           { path: 'settings', name: 'trip-settings', component: Stub }
         ]
       }
@@ -56,18 +54,77 @@ async function mountLayout({ fetchTrip } = {}) {
 }
 
 describe('TripLayout', () => {
-  it('renders sidebar with all 10 sections, trip name, and the active child', async () => {
+  const tabLabels = (w) => w.findAll('.trip-nav-item').map((n) => n.find('.trip-nav-label').text())
+
+  it('renders exactly the five top tabs, a Details toggle, the trip name, and the active child', async () => {
     const { wrapper } = await mountLayout()
-    expect(wrapper.findAll('.trip-nav-item')).toHaveLength(10)
+    expect(tabLabels(wrapper)).toEqual(['Overview', 'Itinerary', 'Budget', 'Checklists', 'People'])
+    expect(wrapper.find('.trip-details-toggle').text()).toContain('Details')
     expect(wrapper.text()).toContain('Goa 2026')
     expect(wrapper.find('.child-stub').exists()).toBe(true)
   })
 
-  it('marks only the current section active', async () => {
+  it('has no Goals or Readiness entry, in the bar or behind Details', async () => {
+    const { wrapper } = await mountLayout()
+    await wrapper.find('.trip-details-toggle').trigger('click')
+    expect(wrapper.find('a[href$="/goals"]').exists()).toBe(false)
+    expect(wrapper.find('a[href$="/readiness"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toMatch(/Goals|Readiness/)
+  })
+
+  it('Details ▾ is closed at rest and opens to Dates, Destination, Settings', async () => {
+    const { wrapper } = await mountLayout()
+    const toggle = wrapper.find('.trip-details-toggle')
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('.trip-details-menu').exists()).toBe(false)
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+    const items = wrapper.findAll('.trip-details-menu a')
+    expect(items.map((a) => a.text())).toEqual(['Dates', 'Destination', 'Settings'])
+    expect(items.map((a) => a.attributes('href'))).toEqual(['/trips/t1/dates', '/trips/t1/destination', '/trips/t1/settings'])
+  })
+
+  it('closes Details on Escape (focus back on the toggle) and after navigating', async () => {
+    const { wrapper, router } = await mountLayout()
+    const toggle = wrapper.find('.trip-details-toggle')
+    await toggle.trigger('click')
+    await wrapper.find('.trip-details-menu').trigger('keydown', { key: 'Escape' })
+    expect(wrapper.find('.trip-details-menu').exists()).toBe(false)
+    await toggle.trigger('click')
+    await router.push('/trips/t1/dates')
+    await flushPromises()
+    expect(wrapper.find('.trip-details-menu').exists()).toBe(false)
+  })
+
+  it('scrolls the tab strip back to the start after navigating, so all five tabs are in view', async () => {
+    const { wrapper, router } = await mountLayout()
+    const strip = wrapper.find('.trip-tabs').element
+    strip.scrollLeft = 60
+    await router.push('/trips/t1/settings')
+    await flushPromises()
+    expect(strip.scrollLeft).toBe(0)
+  })
+
+  it('marks only the current tab active', async () => {
     const { wrapper } = await mountLayout()
     const active = wrapper.findAll('.trip-nav-active')
     expect(active).toHaveLength(1)
     expect(active[0].text()).toContain('Budget')
+  })
+
+  it('marks the Details toggle active on a details page, so the bar always shows where you are', async () => {
+    const { wrapper, router } = await mountLayout()
+    await router.push('/trips/t1/settings')
+    await flushPromises()
+    const active = wrapper.findAll('.trip-nav-active')
+    expect(active).toHaveLength(1)
+    expect(active[0].classes()).toContain('trip-details-toggle')
+    expect(active[0].text()).toContain('Settings')
+  })
+
+  it('flags an undecided date or destination on the Details toggle', async () => {
+    const { wrapper } = await mountLayout()
+    expect(wrapper.find('.trip-details-toggle .trip-nav-dot').exists()).toBe(true)
   })
 
   it('shows hint badge for unconfirmed profiles', async () => {

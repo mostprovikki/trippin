@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { TRIP_SECTIONS, sectionHints, readinessPercent, nextActions } from './tripNav.js'
+import { TRIP_TABS, TRIP_DETAILS, TRIP_SECTIONS, sectionHints, readinessPercent, nextActions } from './tripNav.js'
 
 const READY = {
   decisions: { dates_confirmed: 1, destination_decided: 1, budget_drafted: 1, itinerary_days: 3 },
@@ -17,12 +17,19 @@ const MID = {
   checklists: { total_items: 4, done_items: 1, overdue: [{ title: 'Book flights' }] }
 }
 
-describe('TRIP_SECTIONS', () => {
-  it('has 10 sections, overview first, settings last', () => {
-    expect(TRIP_SECTIONS).toHaveLength(10)
-    expect(TRIP_SECTIONS[0].name).toBe('trip-overview')
-    expect(TRIP_SECTIONS.at(-1).name).toBe('trip-settings')
-    for (const s of TRIP_SECTIONS) {
+describe('trip nav registry', () => {
+  it('TRIP_SECTIONS (AppNav breadcrumb lookup) is every tab plus every Details page', () => {
+    expect(TRIP_SECTIONS).toEqual([...TRIP_TABS, ...TRIP_DETAILS])
+  })
+  it('has the five top tabs in design-doc order (docs/design/tripper.md §5)', () => {
+    expect(TRIP_TABS.map((s) => s.label)).toEqual(['Overview', 'Itinerary', 'Budget', 'Checklists', 'People'])
+  })
+  it('puts Dates, Destination, Settings behind Details; no Goals or Readiness entry anywhere', () => {
+    expect(TRIP_DETAILS.map((s) => s.name)).toEqual(['trip-dates', 'trip-destination', 'trip-settings'])
+    const all = [...TRIP_TABS, ...TRIP_DETAILS].map((s) => s.name)
+    expect(all).not.toContain('trip-goals')
+    expect(all).not.toContain('trip-readiness')
+    for (const s of [...TRIP_TABS, ...TRIP_DETAILS]) {
       expect(s.label).toBeTruthy()
       expect(s.icon).toMatch(/^pi pi-/)
     }
@@ -39,7 +46,7 @@ describe('sectionHints', () => {
     expect(h['trip-destination']).toEqual({ ok: false })
     expect(h['trip-people']).toEqual({ count: 2, label: '2 participant profiles unconfirmed' })
     expect(h['trip-checklists']).toEqual({ count: 1, label: '1 overdue checklist item' })
-    expect(h['trip-readiness'].text).toMatch(/%$/)
+    expect(h['trip-readiness']).toBeUndefined()
   })
   it('hides zero counts', () => {
     const h = sectionHints(READY)

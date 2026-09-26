@@ -8,6 +8,7 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useNotify } from '../../composables/useNotify.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 import DestinationPanel from '../../components/DestinationPanel.vue'
+import GoalsEditor from '../../components/GoalsEditor.vue'
 
 const route = useRoute()
 const trips = useTripsStore()
@@ -49,6 +50,18 @@ onMounted(load)
 // change — it does now, since it blanks its trip while the next one loads — or
 // reuses it in place, which is what it used to do.
 watch(tripId, load)
+
+// Goals live here since the Goals tab was cut (docs/design/tripper.md §5): they
+// are constraints on where the trip goes — fixed events, must-dos.
+async function onAddGoal(goal) {
+  try { await trips.addGoal(tripId.value, goal) } catch (e) { notify.error(e.message) }
+}
+async function onUpdateGoal(goalId, goal) {
+  try { await trips.updateGoal(goalId, goal) } catch (e) { notify.error(e.message) }
+}
+async function onDeleteGoal(goalId) {
+  try { await trips.deleteGoal(goalId) } catch (e) { notify.error(e.message) }
+}
 </script>
 
 <template>
@@ -65,9 +78,18 @@ watch(tripId, load)
 
       <DestinationPanel v-else :trip-id="tripId" :candidates="trips.candidates" />
     </div>
+
+    <section class="card dest-goals" aria-labelledby="trip-goals-heading">
+      <h2 id="trip-goals-heading">Goals</h2>
+      <p class="dest-goals-desc">What this trip is for — fixed events, must-dos, shared intentions.</p>
+      <GoalsEditor :goals="trips.current?.goals || []" @add="onAddGoal" @update="onUpdateGoal" @delete="onDeleteGoal" />
+    </section>
   </div>
 </template>
 
 <style scoped>
+.dest-goals { margin-top: 1rem; }
+.dest-goals h2 { margin-bottom: 0.25rem; }
+.dest-goals-desc { margin: 0 0 0.75rem; color: var(--app-text-muted); font-size: 0.875rem; }
 .dest-error { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
 </style>

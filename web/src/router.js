@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from './stores/auth.js'
 
-const routes = [
+export const routes = [
   { path: '/login', name: 'login', component: () => import('./views/LoginView.vue'), meta: { public: true } },
   { path: '/', name: 'trips', component: () => import('./views/TripsListView.vue'), meta: { auth: true } },
   { path: '/trips/new', name: 'trip-new', component: () => import('./views/TripNewView.vue'), meta: { auth: true } },
@@ -13,12 +13,14 @@ const routes = [
       { path: '', name: 'trip-overview', component: () => import('./views/trip/TripOverviewView.vue') },
       { path: 'dates', name: 'trip-dates', component: () => import('./views/trip/TripDatesView.vue') },
       { path: 'destination', name: 'trip-destination', component: () => import('./views/trip/TripDestinationView.vue') },
-      { path: 'goals', name: 'trip-goals', component: () => import('./views/trip/TripGoalsView.vue') },
+      // Retired tabs (docs/design/tripper.md §5): Goals folded into Destination,
+      // Readiness's job moved to the Overview. Kept as redirects for old links.
+      { path: 'goals', redirect: (to) => ({ name: 'trip-destination', params: to.params }) },
       { path: 'people', name: 'trip-people', component: () => import('./views/trip/TripPeopleView.vue') },
       { path: 'budget', name: 'trip-budget', component: () => import('./views/trip/TripBudgetView.vue') },
       { path: 'itinerary', name: 'trip-itinerary', component: () => import('./views/trip/TripItineraryView.vue') },
       { path: 'checklists', name: 'trip-checklists', component: () => import('./views/trip/TripChecklistsView.vue') },
-      { path: 'readiness', name: 'trip-readiness', component: () => import('./views/trip/TripReadinessView.vue') },
+      { path: 'readiness', name: 'trip-readiness', redirect: (to) => ({ name: 'trip-overview', params: to.params }) },
       { path: 'settings', name: 'trip-settings', component: () => import('./views/trip/TripSettingsView.vue') }
     ]
   },

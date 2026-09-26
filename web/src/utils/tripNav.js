@@ -2,18 +2,25 @@
 
 import { toIsoDate } from './dates.js'
 
-export const TRIP_SECTIONS = [
-  { name: 'trip-overview', label: 'Overview', icon: 'pi pi-home', group: null },
-  { name: 'trip-dates', label: 'Dates', icon: 'pi pi-calendar', group: 'Plan' },
-  { name: 'trip-destination', label: 'Destination', icon: 'pi pi-map-marker', group: 'Plan' },
-  { name: 'trip-goals', label: 'Goals', icon: 'pi pi-flag', group: 'Plan' },
-  { name: 'trip-people', label: 'People', icon: 'pi pi-users', group: 'People' },
-  { name: 'trip-budget', label: 'Budget', icon: 'pi pi-wallet', group: 'Logistics' },
-  { name: 'trip-itinerary', label: 'Itinerary', icon: 'pi pi-list-check', group: 'Logistics' },
-  { name: 'trip-checklists', label: 'Checklists', icon: 'pi pi-check-square', group: 'Logistics' },
-  { name: 'trip-readiness', label: 'Readiness', icon: 'pi pi-gauge', group: null },
-  { name: 'trip-settings', label: 'Settings', icon: 'pi pi-cog', group: null }
+// Trip nav per docs/design/tripper.md §5: five one-click tabs, then the rare
+// admin edits behind Details ▾. Goals folded into Destination; Readiness was cut
+// (its job moved to the Overview) — both old routes redirect in router.js.
+export const TRIP_TABS = [
+  { name: 'trip-overview', label: 'Overview', icon: 'pi pi-home' },
+  { name: 'trip-itinerary', label: 'Itinerary', icon: 'pi pi-list-check' },
+  { name: 'trip-budget', label: 'Budget', icon: 'pi pi-wallet' },
+  { name: 'trip-checklists', label: 'Checklists', icon: 'pi pi-check-square' },
+  { name: 'trip-people', label: 'People', icon: 'pi pi-users' }
 ]
+
+export const TRIP_DETAILS = [
+  { name: 'trip-dates', label: 'Dates', icon: 'pi pi-calendar' },
+  { name: 'trip-destination', label: 'Destination', icon: 'pi pi-map-marker' },
+  { name: 'trip-settings', label: 'Settings', icon: 'pi pi-cog' }
+]
+
+// Every trip page with a nav entry — AppNav's breadcrumb looks labels up here.
+export const TRIP_SECTIONS = [...TRIP_TABS, ...TRIP_DETAILS]
 
 function parts(data) {
   const d = data?.decisions || {}
@@ -42,8 +49,7 @@ export function sectionHints(data) {
   const { d, unconfirmed, overdue } = parts(data)
   const hints = {
     'trip-dates': { ok: !!d.dates_confirmed },
-    'trip-destination': { ok: !!d.destination_decided },
-    'trip-readiness': { text: `${readinessPercent(data)}%` }
+    'trip-destination': { ok: !!d.destination_decided }
   }
   if (unconfirmed > 0) hints['trip-people'] = { count: unconfirmed, label: unconfirmedLabel(unconfirmed) }
   if (overdue > 0) hints['trip-checklists'] = { count: overdue, label: overdueLabel(overdue) }
