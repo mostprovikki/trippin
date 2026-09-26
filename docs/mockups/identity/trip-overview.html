@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trip overview — identity mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system.css">
+<style>
+  body[data-flavour="1"] .flav-2 { display: none !important; }
+  body[data-flavour="2"] .flav-1 { display: none !important; }
+  body[data-phase="before"] .ph-during { display: none !important; }
+  body[data-phase="during"] .ph-before { display: none !important; }
+
+  .demobar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 8px 22px;
+    background: var(--surface-3); border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--ink-2); }
+  .demobar__status { margin-left: auto; }
+
+  .col { max-width: 760px; margin: 0 auto; }
+  .wide { max-width: 1120px; margin: 0 auto; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  .stackgap { display: flex; flex-direction: column; gap: 16px; }
+
+  .tripline { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .tripline .mono { color: var(--ink); }
+  .tabs { margin: 16px 0 18px; overflow-x: auto; }
+  .tabs .tab { white-space: nowrap; }
+  label.l1 { display: flex; align-items: center; gap: 8px; }
+  .rw[data-state="info"] { box-shadow: inset 3px 0 0 var(--info); }
+
+  .rw { display: grid; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--line-2); }
+  .rw:last-child { border-bottom: 0; }
+  .rw--miss { grid-template-columns: minmax(0, 1fr) auto; }
+  .rw--chg  { grid-template-columns: 62px minmax(0, 1fr); }
+  .rw--day  { grid-template-columns: 56px minmax(0, 1fr) auto; }
+  .l1 { display: block; font-size: 13.5px; font-weight: 500; }
+  .l2 { display: block; font-size: 12px; color: var(--ink-2); margin-top: 3px; }
+  .ts { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-3); }
+
+  .foot { padding: 10px 16px; font-size: 12.5px; color: var(--ink-2); border-top: 1px solid var(--line-2); }
+  .note { font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+  .qa { margin-top: 40px; padding: 14px 16px; border: 1px dashed var(--line-dash); border-radius: var(--r); font-size: 12.5px; color: var(--ink-2); }
+  .qa b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body data-flavour="1" data-phase="before">
+
+<div class="demobar">
+  <span>Design</span>
+  <div class="segs" role="tablist" aria-label="Design option">
+    <button class="seg" data-set="flavour" data-v="1" aria-selected="true">Option 1</button>
+    <button class="seg" data-set="flavour" data-v="2" aria-selected="false">Option 2</button>
+  </div>
+  <span>Trip phase</span>
+  <div class="segs" role="tablist" aria-label="Trip phase">
+    <button class="seg" data-set="phase" data-v="before" aria-selected="true">Before trip</button>
+    <button class="seg" data-set="phase" data-v="during" aria-selected="false">During trip</button>
+  </div>
+  <span class="demobar__status" id="status"></span>
+</div>
+
+<header class="appbar">
+  <p class="appbar__brand">Tripper</p>
+  <span class="appbar__spacer"></span>
+  <span class="t-meta">Vignesh</span>
+</header>
+
+<!-- ============================ OPTION 1: Monitor — one column, glance first ============================ -->
+<main class="shell flav-1">
+  <div class="col">
+    <h1 class="t-page">Vietnam — Hanoi to Saigon</h1>
+    <div class="tripline">
+      <span class="state state--ok ph-before"><span class="state__dot"></span>Confirmed</span>
+      <span class="state state--info ph-during"><span class="state__dot"></span>On the trip</span>
+      <span><span class="mono">14–24 Nov</span></span><span>6 people</span>
+      <span class="ph-before"><span class="mono">49</span> days to go</span>
+      <span class="ph-during">Day <span class="mono">3</span> of <span class="mono">11</span></span>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab" aria-selected="true">Overview</button>
+      <button class="tab">Itinerary</button>
+      <button class="tab">Budget</button>
+      <button class="tab">Checklists <span class="tab__n">7</span></button>
+      <button class="tab">Details ▾</button>
+    </nav>
+
+    <!-- DURING: today first -->
+    <section class="card ph-during">
+      <div class="card__head"><h2>Today · Sat 16 Nov · Hoi An</h2></div>
+      <div class="card__body">
+        <ol class="tl">
+          <li data-state="ok"><div class="tl__t">Breakfast, walk the Old Town<span class="tl__time">08:00</span></div>
+            <div class="tl__d">Hotel pickup not needed — 6 min walk. <a href="#">Map</a></div></li>
+          <li><div class="tl__t">Basket boat, Cam Thanh<span class="tl__time">10:30</span></div>
+            <div class="tl__d">Booked by Arun · 2 taxis from hotel. <a href="#">Map</a></div></li>
+          <li><div class="tl__t">Tailor fitting<span class="tl__time">15:00</span></div>
+            <div class="tl__d">Priya, Karthik only.</div></li>
+          <li><div class="tl__t">Night market dinner<span class="tl__time">19:30</span></div>
+            <div class="tl__d">No booking.</div></li>
+        </ol>
+      </div>
+      <div class="foot">Tomorrow: fly Da Nang → Saigon, <span class="mono">11:40</span>. 2 of your checklist items are due before then.</div>
+    </section>
+
+    <!-- BEFORE: numbers that drive a decision -->
+    <div class="facts ph-before">
+      <div class="fact fact--warn"><div class="fact__k">Missing info</div><div class="fact__v">2 of 6 people</div><div class="fact__d">chase below</div></div>
+      <div class="fact fact--bad"><div class="fact__k">Documents</div><div class="fact__v">1 passport expires</div><div class="fact__d">within 6 mo of trip end</div></div>
+      <div class="fact"><div class="fact__k">Checklists</div><div class="fact__v">7 open items</div><div class="fact__d">3 unassigned</div></div>
+    </div>
+
+    <section class="card ph-before" style="margin-top:16px">
+      <div class="card__head"><h2>Who's missing what</h2></div>
+      <div class="rows">
+        <div class="rw rw--miss"><div><span class="l1">Karthik</span><span class="l2">Passport expires <span class="mono">02 Mar 2027</span> — too close for Vietnam's 6-month rule</span></div><button class="btn">Copy Karthik's link</button></div>
+        <div class="rw rw--miss"><div><span class="l1">Meena</span><span class="l2">No dietary preference · no emergency contact</span></div><button class="btn">Copy Meena's link</button></div>
+        <div class="rw rw--miss"><div><span class="l1">Arun</span><span class="l2">Visa not uploaded</span></div><button class="btn">Copy Arun's link</button></div>
+      </div>
+      <div class="foot">3 people are complete.</div>
+    </section>
+
+    <section class="card" style="margin-top:16px">
+      <div class="card__head"><h2>Since you last looked · <span class="mono">19 Sep</span></h2></div>
+      <div class="rows">
+        <div class="rw rw--chg"><span class="ts">Sep 24</span><span class="t-body">Priya uploaded her visa</span></div>
+        <div class="rw rw--chg"><span class="ts">Sep 22</span><span class="t-body">Divya updated her profile — now vegetarian</span></div>
+        <div class="rw rw--chg"><span class="ts">Sep 21</span><span class="t-body">Arun ticked 2 checklist items</span></div>
+      </div>
+    </section>
+
+    <p class="note ph-during">Who's missing what is hidden during the trip: <span class="mono">0</span> gaps would change today.</p>
+  </div>
+</main>
+
+<!-- ============================ OPTION 2: Hub, refined — two columns, each top job gets a card ============================ -->
+<main class="shell flav-2">
+  <div class="wide">
+    <h1 class="t-page">Vietnam — Hanoi to Saigon</h1>
+    <div class="tripline">
+      <span class="state state--ok ph-before"><span class="state__dot"></span>Confirmed</span>
+      <span class="state state--info ph-during"><span class="state__dot"></span>On the trip</span>
+      <span class="mono">14–24 Nov</span><span>Hanoi → Hoi An → Saigon</span><span>6 people</span>
+      <span class="ph-before"><span class="mono">49</span> days to go</span>
+      <span class="ph-during">Day <span class="mono">3</span> of <span class="mono">11</span></span>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab" aria-selected="true">Overview</button>
+      <button class="tab">Itinerary</button>
+      <button class="tab">Budget</button>
+      <button class="tab">Checklists <span class="tab__n">7</span></button>
+      <button class="tab">People <span class="tab__n ph-before">3</span></button>
+      <button class="tab">Details ▾</button>
+    </nav>
+
+    <!-- ---------------- BEFORE ---------------- -->
+    <div class="grid2 ph-before">
+      <div class="stackgap">
+        <section class="card">
+          <div class="card__head"><h2>Who's missing what · <span class="mono">3</span> of <span class="mono">6</span> people</h2></div>
+          <div class="rows">
+            <div class="rw rw--miss"><div><span class="l1"><span class="state state--bad"><span class="state__dot"></span>Karthik</span></span><span class="l2">Passport expires <span class="mono">02 Mar 2027</span>. Vietnam needs 6 months past <span class="mono">24 Nov</span>, so he has to renew.</span></div><button class="btn">Copy Karthik's link</button></div>
+            <div class="rw rw--miss"><div><span class="l1"><span class="state state--warn"><span class="state__dot"></span>Arun</span></span><span class="l2">Visa not uploaded. An e-visa takes about <span class="mono">3</span> working days.</span></div><button class="btn">Copy Arun's link</button></div>
+            <div class="rw rw--miss"><div><span class="l1"><span class="state state--warn"><span class="state__dot"></span>Meena</span></span><span class="l2">No dietary preference · no emergency contact</span></div><button class="btn">Copy Meena's link</button></div>
+          </div>
+          <div class="foot"><span class="state state--ok"><span class="state__dot"></span>Priya, Divya, Vignesh</span> are complete.</div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h2>Since you last looked · <span class="mono">19 Sep</span></h2></div>
+          <div class="rows">
+            <div class="rw rw--chg"><span class="ts">Sep 24</span><span class="t-body">Priya uploaded her visa</span></div>
+            <div class="rw rw--chg"><span class="ts">Sep 22</span><span class="t-body">Divya changed diet to vegetarian — affects <a href="#">2 dinners</a></span></div>
+            <div class="rw rw--chg"><span class="ts">Sep 21</span><span class="t-body">Arun ticked "Book Ha Long cruise"</span></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="stackgap">
+        <section class="card">
+          <div class="card__head"><h2>Itinerary · <span class="mono">8</span> of <span class="mono">11</span> days planned</h2></div>
+          <div class="rows">
+            <div class="rw rw--day"><span class="ts">Nov 19</span><span class="t-body dim">Saigon — nothing planned</span><span></span></div>
+            <div class="rw rw--day"><span class="ts">Nov 21</span><span class="t-body dim">Mekong or free day — nothing planned</span><span></span></div>
+            <div class="rw rw--day"><span class="ts">Nov 23</span><span class="t-body dim">Saigon — nothing planned</span><span></span></div>
+          </div>
+          <div class="foot"><a href="#">Open itinerary</a> · only the empty days are listed</div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h2>Budget · per person</h2></div>
+          <div class="card__body">
+            <div class="t-hero mono">₹68,400</div>
+            <div class="t-meta"><span class="mono">₹41,200</span> booked (flights, Ha Long) · <span class="mono">₹27,200</span> estimated</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h2>Checklists · <span class="mono">7</span> open</h2></div>
+          <div class="rows">
+            <div class="rw rw--miss"><div><span class="l1">Book Saigon hotel</span><span class="l2"><span class="state state--warn"><span class="state__dot"></span>Unassigned</span></span></div><span></span></div>
+            <div class="rw rw--miss"><div><span class="l1">Travel insurance</span><span class="l2">Everyone · <span class="mono">3</span> of <span class="mono">6</span> done</span></div><span></span></div>
+            <div class="rw rw--miss"><div><span class="l1">Da Nang → Saigon flight</span><span class="l2"><span class="state state--warn"><span class="state__dot"></span>Unassigned</span></span></div><span></span></div>
+          </div>
+          <div class="foot"><a href="#">All 7 items</a> · unassigned first</div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ---------------- DURING ---------------- -->
+    <div class="grid2 ph-during">
+      <div class="stackgap">
+        <section class="card">
+          <div class="card__head"><h2>Today · Sat 16 Nov · Hoi An</h2></div>
+          <div class="rows">
+            <div class="rw rw--day"><span class="ts">08:00</span><span class="t-body dim">Breakfast, walk the Old Town</span><span class="state state--ok"><span class="state__dot"></span>Done</span></div>
+            <div class="rw rw--day" data-state="info"><span class="ts">10:30</span><div><span class="l1">Basket boat, Cam Thanh</span><span class="l2">Next · in <span class="mono">40</span> min · booked by Arun, ref <span class="mono">CT-4471</span> · 2 taxis from the hotel</span></div><a href="#">Map</a></div>
+            <div class="rw rw--day"><span class="ts">15:00</span><div><span class="l1">Tailor fitting</span><span class="l2">Priya, Karthik only</span></div><a href="#">Map</a></div>
+            <div class="rw rw--day"><span class="ts">19:30</span><div><span class="l1">Night market dinner</span><span class="l2">No booking · Divya is vegetarian</span></div><a href="#">Map</a></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="stackgap">
+        <section class="card">
+          <div class="card__head"><h2>Quick reference</h2></div>
+          <div class="rows">
+            <div class="rw rw--miss"><div><span class="l1">Tonight: Anantara Hoi An</span><span class="l2">1 Pham Hong Thai · ref <span class="mono">HA-88213</span> · check-out <span class="mono">11:00</span></span></div><span><a href="#">Call</a> · <a href="#">Map</a></span></div>
+            <div class="rw rw--miss"><div><span class="l1">Guide: Minh (basket boat, food walk)</span><span class="l2">WhatsApp <span class="mono">+84 90 555 0142</span></span></div><a href="#">Call</a></div>
+            <div class="rw rw--miss"><div><span class="l1">Emergency in Vietnam</span><span class="l2">Ambulance <span class="mono">115</span> · Police <span class="mono">113</span> · Indian embassy <span class="mono">+84 24 3824 4990</span></span></div><span></span></div>
+          </div>
+          <div class="foot">From the itinerary's stays and bookings · <a href="#">Edit in Itinerary</a></div>
+        </section>
+        <section class="card">
+          <div class="card__head"><h2>Tomorrow · Sun 17 Nov</h2></div>
+          <div class="rows">
+            <div class="rw rw--day"><span class="ts">08:45</span><div><span class="l1">Leave for Da Nang airport</span><span class="l2">About 45 min by car</span></div><span></span></div>
+            <div class="rw rw--day"><span class="ts">11:40</span><div><span class="l1">Fly Da Nang → Saigon</span><span class="l2">VJ 623 · check-in closes <span class="mono">10:55</span></span></div><span></span></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h2>Before tomorrow · <span class="mono">2</span> open</h2></div>
+          <div class="rows">
+            <div class="rw rw--miss"><div><label class="l1"><input type="checkbox" class="check"> Web check-in, VJ 623</label><span class="l2">You</span></div><span></span></div>
+            <div class="rw rw--miss"><div><label class="l1"><input type="checkbox" class="check"> Pick up the tailored clothes</label><span class="l2">Priya</span></div><span></span></div>
+          </div>
+          <div class="foot"><a href="#">All checklists</a></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="shell" style="padding-top:0">
+  <div class="qa">
+    <b>What to mark.</b> For each element, pick one: keep / cut / move (and where to).
+    <b>Option 1</b> is a one-column Monitor. Only the facts that drive a decision are on the page, and each row has one action.
+    <b>Option 2</b> is a two-column hub. Before the trip, each top job gets a card showing only what needs attention. During the trip, it shows today, tomorrow, and what has to be done before tomorrow. It has no header button.
+    Tabs: People keeps its own tab (Option 2). Dates, Destination+Goals and Settings go inside <b>Details ▾</b>.
+  </div>
+</div>
+
+<script>
+  const S = { flavour: '1', phase: 'before' };
+  const LABEL = { '1': 'Option 1 — one-column Monitor', '2': 'Option 2 — two-column hub (refined)' };
+  function apply() {
+    document.body.dataset.flavour = S.flavour;
+    document.body.dataset.phase = S.phase;
+    document.querySelectorAll('.demobar .seg').forEach(b => b.setAttribute('aria-selected', String(S[b.dataset.set] === b.dataset.v)));
+    document.getElementById('status').textContent = 'Viewing: ' + LABEL[S.flavour] + ' · ' + (S.phase === 'before' ? 'before the trip' : 'during the trip');
+    history.replaceState(null, '', '#flavour=' + S.flavour + '&phase=' + S.phase);
+  }
+  for (const [k, v] of new URLSearchParams(location.hash.slice(1))) if (k in S) S[k] = v;
+  document.querySelectorAll('.demobar .seg').forEach(b => b.addEventListener('click', () => { S[b.dataset.set] = b.dataset.v; apply(); }));
+  apply();
+</script>
+</body>
+</html>

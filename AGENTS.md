@@ -117,6 +117,9 @@ Anything you can't resolve inside your task boundary — a needed cross-file cha
 
 ## UI process rules
 
+0. **Design identity: `docs/design/tripper.md`.** Modes, ranked jobs, archetype per
+   surface, reach tiers, refused features. Every UI change cites a section of it
+   (design-gate) or proposes a §9 changelog entry.
 1. **No bare routes.** Every new authenticated view renders inside a shared
    layout (`TripLayout` for trip sections, the AppNav shell otherwise) with
    persistent navigation and a visible way back (sidebar/breadcrumb). Only
