@@ -204,6 +204,17 @@ export default async function routes(app) {
     },
   )
 
+  app.get('/trips/:id/itinerary/ai-draft/prompt', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
+    const goals = await app.db.all('SELECT title, fixed_date, fixed_place, notes FROM trip_goals WHERE trip_id = ? ORDER BY seq', [trip.id])
+    const dietSummary = await computeDietSummary(trip.id)
+    const paceSummary = await computePaceSummary(trip.id)
+    const days = dateRange(trip.start_date, trip.end_date)
+    return { prompt: buildItineraryPrompt.standalone({ ...trip, paceSummary }, goals, dietSummary, days) }
+  })
+
   app.post('/trips/:id/itinerary/ai-draft', { preHandler: app.requireOrganizer }, async (req, reply) => {
     if (aiGuard(reply)) return
     const trip = await getTrip(req)
@@ -242,6 +253,15 @@ export default async function routes(app) {
       }
     })
     return { days: await listDays(trip.id) }
+  })
+
+  app.get('/days/:dayId/ai-regen/prompt', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const day = await ownedDay(req)
+    if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
+    const trip = await get(day.trip_id)
+    const currentItems = await listItems(day.id)
+    const instruction = (req.query && req.query.instruction) || null
+    return { prompt: buildDayRegenPrompt.standalone(trip, day, currentItems, instruction) }
   })
 
   app.post('/days/:dayId/ai-regen', { preHandler: app.requireOrganizer }, async (req, reply) => {

@@ -230,6 +230,18 @@ export default async function routes(app) {
   })
 
   // ---- AI packing suggestion ----
+  app.get('/checklists/:id/ai-packing-suggest/prompt', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const checklist = await ownedChecklist(req, req.params.id)
+    if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
+    if (checklist.kind !== 'packing') return httpError(reply, 400, 'NOT_PACKING', 'Checklist is not a packing list')
+    if (checklist.is_template) return httpError(reply, 404, 'NOT_FOUND', 'Template has no trip context')
+    const trip = await getTrip(checklist.trip_id)
+    const durationDays = trip?.start_date && trip?.end_date
+      ? Math.round((new Date(trip.end_date) - new Date(trip.start_date)) / 86400000) + 1
+      : null
+    return { prompt: buildPackingPrompt.standalone(trip, durationDays, checklist.name) }
+  })
+
   app.post('/checklists/:id/ai-packing-suggest', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')

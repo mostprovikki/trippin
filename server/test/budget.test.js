@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer } from './helpers.js'
 import { buildBudgetPrompt } from '../src/llm/prompts/budget.js'
 import { draftBudgetLines } from '../src/routes/budget.routes.js'
 
@@ -69,6 +69,23 @@ describe('budget', () => {
     process.env.LLM_PROVIDER = 'none'
     const off = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/budget/ai-draft` })
     expect(off.statusCode).toBe(503); expect(off.json().error.code).toBe('AI_DISABLED')
+  })
+  it('budget prompt endpoint returns a prompt with no provider configured', async () => {
+    process.env.LLM_PROVIDER = 'none'
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const t = await createTrip(db, { destination: 'Goa' })
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}/budget/ai-draft/prompt` })
+    expect(res.statusCode).toBe(200)
+    expect(typeof res.json().prompt).toBe('string')
+    expect(res.json().prompt.length).toBeGreaterThan(0)
+  })
+  it('budget prompt endpoint 404s for another organizer\'s trip', async () => {
+    process.env.LLM_PROVIDER = 'none'
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const other = await createOrganizer(db, { email: 'other-budget@x.dev' })
+    const t = await createTrip(db, { organizer_id: other.id })
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}/budget/ai-draft/prompt` })
+    expect(res.statusCode).toBe(404)
   })
   it('privacy: prompt contains no participant PII', async () => {
     const { db } = await makeTestApp()

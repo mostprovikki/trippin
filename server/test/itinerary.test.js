@@ -156,6 +156,26 @@ describe('itinerary — AI draft / apply-draft', () => {
     expect(res.statusCode).toBe(400)
     expect(res.json().error.code).toBe('BAD_DAY')
   })
+
+  it('ai-draft prompt endpoint returns a prompt with no provider configured', async () => {
+    const prev = process.env.LLM_PROVIDER
+    process.env.LLM_PROVIDER = 'none'
+    const { app, cookie, trip } = await setup()
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/itinerary/ai-draft/prompt` })
+    expect(res.statusCode).toBe(200)
+    expect(typeof res.json().prompt).toBe('string')
+    expect(res.json().prompt.length).toBeGreaterThan(0)
+    process.env.LLM_PROVIDER = prev
+  })
+
+  it('ai-draft prompt endpoint 404s for another organizer\'s trip', async () => {
+    const { app, db } = await makeTestApp()
+    const { cookie } = await loginOrganizer(app, db)
+    const other = await createOrganizer(db, { email: 'other-itin-draft@x.dev' })
+    const trip = await createTrip(db, { organizer_id: other.id, start_date: '2026-03-01', end_date: '2026-03-03' })
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/itinerary/ai-draft/prompt` })
+    expect(res.statusCode).toBe(404)
+  })
 })
 
 describe('itinerary — per-day AI regen', () => {
@@ -198,6 +218,31 @@ describe('itinerary — per-day AI regen', () => {
     expect(res.statusCode).toBe(503)
     expect(res.json().error.code).toBe('AI_DISABLED')
     process.env.LLM_PROVIDER = prev
+  })
+
+  it('ai-regen prompt endpoint returns a prompt with no provider configured', async () => {
+    const prev = process.env.LLM_PROVIDER
+    process.env.LLM_PROVIDER = 'none'
+    const { app, cookie, trip } = await setup()
+    await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/init` })
+    const days = (await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/itinerary` })).json().days
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/days/${days[0].id}/ai-regen/prompt` })
+    expect(res.statusCode).toBe(200)
+    expect(typeof res.json().prompt).toBe('string')
+    expect(res.json().prompt.length).toBeGreaterThan(0)
+    process.env.LLM_PROVIDER = prev
+  })
+
+  it('ai-regen prompt endpoint 404s for another organizer\'s day', async () => {
+    const { app, db } = await makeTestApp()
+    const { cookie } = await loginOrganizer(app, db)
+    const other = await createOrganizer(db, { email: 'other-itin-regen@x.dev' })
+    const otherCookie = `tp_session=${app.signSession(other)}`
+    const trip = await createTrip(db, { organizer_id: other.id, start_date: '2026-03-01', end_date: '2026-03-01' })
+    await authedInject(app, otherCookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/init` })
+    const days = (await authedInject(app, otherCookie, { method: 'GET', url: `/api/trips/${trip.id}/itinerary` })).json().days
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/days/${days[0].id}/ai-regen/prompt` })
+    expect(res.statusCode).toBe(404)
   })
 })
 

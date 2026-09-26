@@ -1,6 +1,6 @@
 process.env.LLM_PROVIDER = 'mock'
 import { describe, it, expect } from 'vitest'
-import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer } from './helpers.js'
 import { queueMock } from '../src/llm/drivers/mock.js'
 import { buildPrefSummary } from '../src/routes/destinations.routes.js'
 import { buildDestinationPrompt } from '../src/llm/prompts/destinations.js'
@@ -158,6 +158,29 @@ describe('destinations', () => {
     } finally {
       process.env.LLM_PROVIDER = prev
     }
+  })
+
+  it('ai-suggest prompt endpoint returns a prompt with no provider configured', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const trip = await createTrip(db, { origin_city: 'Chennai', vibe_tags: JSON.stringify(['relaxing']) })
+    const prev = process.env.LLM_PROVIDER
+    process.env.LLM_PROVIDER = 'none'
+    try {
+      const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/candidates/ai-suggest/prompt` })
+      expect(res.statusCode).toBe(200)
+      expect(typeof res.json().prompt).toBe('string')
+      expect(res.json().prompt.length).toBeGreaterThan(0)
+    } finally {
+      process.env.LLM_PROVIDER = prev
+    }
+  })
+
+  it('ai-suggest prompt endpoint 404s for another organizer\'s trip', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const other = await createOrganizer(db, { email: 'other-dest@x.dev' })
+    const trip = await createTrip(db, { organizer_id: other.id })
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/candidates/ai-suggest/prompt` })
+    expect(res.statusCode).toBe(404)
   })
 
   it('privacy: buildDestinationPrompt contains only aggregate counts, never participant names/emails', async () => {

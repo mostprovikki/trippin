@@ -115,6 +115,14 @@ export default async function routes(app) {
     return await budgetShape(app, trip.id)
   })
 
+  app.get('/trips/:id/budget/ai-draft/prompt', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    const { count: participant_count } = await app.db.get(
+      'SELECT COUNT(*)::int AS count FROM trip_participants WHERE trip_id = ?', [trip.id])
+    return { prompt: buildBudgetPrompt.standalone(trip, participant_count) }
+  })
+
   app.post('/trips/:id/budget/ai-draft', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')

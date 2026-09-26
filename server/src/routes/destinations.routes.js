@@ -77,6 +77,14 @@ export default async function routes(app) {
     return { candidate: await getCandidate(req, id) }
   })
 
+  app.get('/trips/:id/candidates/ai-suggest/prompt', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    const prefSummary = await buildPrefSummary(app.db, trip.id)
+    const prompt = buildDestinationPrompt.standalone(await tripToJson(app.db, trip), prefSummary.total, prefSummary)
+    return { prompt }
+  })
+
   app.post('/trips/:id/candidates/ai-suggest', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { describe, it, expect, beforeEach } from 'vitest'
-import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createTrip, createPerson, createOrganizer } from './helpers.js'
 import { buildPackingPrompt } from '../src/llm/prompts/packing.js'
 import { clearMocks, queueMock } from '../src/llm/drivers/mock.js'
 
@@ -245,6 +245,41 @@ describe('checklists routes', () => {
       })
       expect(suggestRes.statusCode).toBe(200)
       expect(suggestRes.json().items).toEqual([{ title: 'Sunscreen' }, { title: 'Swimsuit' }])
+    })
+
+    it('prompt endpoint returns a prompt with no provider configured', async () => {
+      const trip = await createTrip(db, {
+        destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05',
+        vibe_tags: JSON.stringify(['beach', 'relaxed']),
+      })
+      const res = await authedInject(app, cookie, {
+        method: 'POST', url: '/api/checklists',
+        payload: { kind: 'packing', name: 'Packing', trip_id: trip.id },
+      })
+      const checklist = res.json().checklist
+      process.env.LLM_PROVIDER = 'none'
+      const promptRes = await authedInject(app, cookie, {
+        method: 'GET', url: `/api/checklists/${checklist.id}/ai-packing-suggest/prompt`,
+      })
+      expect(promptRes.statusCode).toBe(200)
+      expect(typeof promptRes.json().prompt).toBe('string')
+      expect(promptRes.json().prompt.length).toBeGreaterThan(0)
+    })
+
+    it('prompt endpoint 404s for another organizer\'s checklist', async () => {
+      const other = await createOrganizer(db, { email: 'other-checklist@x.dev' })
+      const trip = await createTrip(db, { organizer_id: other.id, destination: 'Goa' })
+      const otherCookie = `tp_session=${app.signSession(other)}`
+      const res = await authedInject(app, otherCookie, {
+        method: 'POST', url: '/api/checklists',
+        payload: { kind: 'packing', name: 'Packing', trip_id: trip.id },
+      })
+      const checklist = res.json().checklist
+      process.env.LLM_PROVIDER = 'none'
+      const promptRes = await authedInject(app, cookie, {
+        method: 'GET', url: `/api/checklists/${checklist.id}/ai-packing-suggest/prompt`,
+      })
+      expect(promptRes.statusCode).toBe(404)
     })
   })
 
