@@ -1,5 +1,18 @@
+import { randomUUID } from 'node:crypto'
 import { describe, it, expect } from 'vitest'
-import { makeTestApp, loginOrganizer, authedInject, createPerson, createOrganizer } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createPerson, createOrganizer, createTrip } from './helpers.js'
+
+async function seedParticipantLink(app, db, tripId, personId) {
+  await db.run('INSERT INTO participant_links (id, trip_id, person_id, token_hash) VALUES (?,?,?,?)',
+    [randomUUID(), tripId, personId, app.hashToken(randomUUID())])
+}
+
+// Server-local calendar date offset from today, matching trips.routes.js's todayLocalDate().
+function localDateOffset(days) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 async function mkTrip(app, cookie, extra = {}) {
   return (await authedInject(app, cookie, { method: 'POST', url: '/api/trips',
@@ -155,6 +168,50 @@ describe('trips', () => {
     expect((await s('idea')).json().error.code).toBe('BAD_TRANSITION')
     expect((await s('archived')).statusCode).toBe(400)
     expect((await s('archived')).json().error.code).toBe('USE_ARCHIVE_ENDPOINT')
+  })
+
+  // First failing test: an active trip past its own end_date reads back archived, from
+  // both the single-trip GET and the list GET, without anyone archiving it by hand — and
+  // it's a *real* archive (archiveTrip()), not a bare status flip: it leaves a snapshot
+  // behind, revokes participant links, and unarchive restores 'active' — same as if the
+  // organizer had hit POST /trips/:id/archive themselves.
+  it('active trip past its end date reads back archived (full archiveTrip: snapshot, revoked link, unarchive restores active)', async () => {
+    const { app, db } = await makeTestApp(); const { cookie, organizer } = await loginOrganizer(app, db)
+    const trip = await createTrip(db, { organizer_id: organizer.id, status: 'active', end_date: localDateOffset(-1) })
+    const person = await createPerson(db, { name: 'Alice' })
+    await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [trip.id, person.id])
+    await seedParticipantLink(app, db, trip.id, person.id)
+
+    const one = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}` })
+    expect(one.statusCode).toBe(200)
+    expect(one.json().trip.status).toBe('archived')
+
+    const list = await authedInject(app, cookie, { method: 'GET', url: '/api/trips' })
+    const summary = list.json().trips.find((t) => t.id === trip.id)
+    expect(summary.status).toBe('archived')
+
+    const archiveRes = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/archive` })
+    expect(archiveRes.statusCode).toBe(200)
+    expect(archiveRes.json().archive.snapshot.trip.id).toBe(trip.id)
+
+    const link = await db.get('SELECT revoked_at FROM participant_links WHERE trip_id = ?', [trip.id])
+    expect(link.revoked_at).toBeTruthy()
+
+    const unarchiveRes = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/unarchive` })
+    expect(unarchiveRes.statusCode).toBe(200)
+    expect(unarchiveRes.json().trip.status).toBe('active')
+  })
+
+  it('active trip whose end date is today stays active', async () => {
+    const { app, db } = await makeTestApp(); const { cookie, organizer } = await loginOrganizer(app, db)
+    const trip = await createTrip(db, { organizer_id: organizer.id, status: 'active', end_date: localDateOffset(0) })
+
+    const one = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}` })
+    expect(one.json().trip.status).toBe('active')
+
+    const list = await authedInject(app, cookie, { method: 'GET', url: '/api/trips' })
+    const summary = list.json().trips.find((t) => t.id === trip.id)
+    expect(summary.status).toBe('active')
   })
 
   it('status 404 on missing trip', async () => {

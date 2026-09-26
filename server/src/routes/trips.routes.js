@@ -1,8 +1,32 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { archiveTrip } from '../lib/archive.js'
 
 const TRIP_FIELDS = ['name', 'description', 'vibe_tags', 'origin_city', 'date_mode', 'start_date', 'end_date', 'flex_days', 'destination_mode', 'destination']
 const TRANSITIONS = { idea: ['planning'], planning: ['confirmed'], confirmed: ['active'], active: [], archived: [] }
+
+// Server-local (not UTC) calendar date, since a trip's end_date is a plain
+// YYYY-MM-DD with no timezone of its own.
+function todayLocalDate() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// A trip left active past its own end_date is archived the next time it's read
+// (GET one) or listed (GET all), so the phase-aware Trip overview
+// (docs/design/tripper.md §2) doesn't keep showing the during-trip layout
+// forever for a trip nobody archived by hand. end_date === today stays active.
+// Goes through the same archiveTrip() as the manual POST /trips/:id/archive endpoint
+// (server/src/lib/archive.js), so an auto-archived trip gets the same snapshot,
+// prior_status/archived_at bookkeeping, and revoked participant links as one archived
+// by hand — not just a bare status flip.
+async function archivePastEndDate(db, whereClause, params) {
+  const rows = await db.all(
+    `SELECT * FROM trips WHERE status = 'active' AND end_date < ? AND ${whereClause}`,
+    [todayLocalDate(), ...params]
+  )
+  for (const row of rows) await archiveTrip(db, row)
+}
 
 export async function tripToJson(db, row) {
   if (!row) return row
@@ -25,6 +49,7 @@ export default async function routes(app) {
   )
 
   app.get('/trips', { preHandler: app.requireOrganizer }, async (req) => {
+    await archivePastEndDate(app.db, 'organizer_id = ?', [req.organizer.id])
     const { status } = req.query || {}
     const rows = status
       ? await app.db.all('SELECT * FROM trips WHERE organizer_id = ? AND status = ? ORDER BY created_at DESC, id', [req.organizer.id, status])
@@ -85,6 +110,7 @@ export default async function routes(app) {
   })
 
   app.get('/trips/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    await archivePastEndDate(app.db, 'id = ? AND organizer_id = ?', [req.params.id, req.organizer.id])
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     return { trip: await tripToJson(app.db, trip) }
