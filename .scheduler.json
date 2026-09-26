@@ -3,10 +3,11 @@
   "autoLabel": "unattended",
   "cwd": ".",
   "maxConcurrent": 1,
+  "gates": "npm test",
   "defaults": {
     "timeoutMin": 30,
     "model": "default",
     "notify": "failure",
-    "permMode": "acceptEdits"
+    "permMode": "auto"
   }
 }
