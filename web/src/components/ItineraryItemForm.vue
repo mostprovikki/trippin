@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, watch, ref, onMounted, useId } from 'vue'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
@@ -9,6 +9,26 @@ const props = defineProps({ item: { type: Object, default: null } })
 const emit = defineEmits(['submit', 'cancel'])
 
 const categories = ['travel', 'food', 'activity', 'rest', 'logistics']
+
+// Per-instance uid so each label's `for` matches its input's id even if two
+// forms ever mount at once (only one is open page-wide today, per DayCard,
+// but ids stay collision-safe regardless).
+const uid = useId()
+const ids = {
+  title: `iif-title-${uid}`,
+  time: `iif-time-${uid}`,
+  category: `iif-category-${uid}`,
+  cost: `iif-cost-${uid}`,
+  location: `iif-location-${uid}`,
+  link: `iif-link-${uid}`,
+  notes: `iif-notes-${uid}`
+}
+
+const titleInput = ref(null)
+
+onMounted(() => {
+  titleInput.value?.$el?.focus()
+})
 
 const form = reactive({
   title: '', time_range: '', location: '', category: 'activity', est_cost: '', notes: '', link: ''
@@ -40,35 +60,35 @@ function submit() {
 </script>
 
 <template>
-  <form class="card iif-form" @submit.prevent="submit">
+  <form class="card iif-form" @submit.prevent="submit" @keydown.esc="$emit('cancel')">
     <div class="iif-grid">
       <div class="field iif-title">
-        <label>Title</label>
-        <InputText id="iif-title" name="iif-title" v-model="form.title" required fluid />
+        <label :for="ids.title">Title</label>
+        <InputText :id="ids.title" ref="titleInput" name="iif-title" v-model="form.title" required fluid />
       </div>
       <div class="field iif-time">
-        <label>Time</label>
-        <InputText id="iif-time-range" name="iif-time-range" v-model="form.time_range" placeholder="e.g. 09:00-11:00" fluid />
+        <label :for="ids.time">Time</label>
+        <InputText :id="ids.time" name="iif-time-range" v-model="form.time_range" placeholder="e.g. 09:00-11:00" fluid />
       </div>
       <div class="field iif-category">
-        <label>Category</label>
-        <Select input-id="iif-category" name="iif-category" v-model="form.category" :options="categories" fluid />
+        <label :for="ids.category">Category</label>
+        <Select :input-id="ids.category" name="iif-category" v-model="form.category" :options="categories" fluid />
       </div>
       <div class="field iif-cost">
-        <label>Estimated cost</label>
-        <InputText id="iif-est-cost" name="iif-est-cost" v-model="form.est_cost" type="number" step="0.01" fluid />
+        <label :for="ids.cost">Cost</label>
+        <InputText :id="ids.cost" name="iif-est-cost" v-model="form.est_cost" type="number" step="0.01" fluid />
       </div>
       <div class="field iif-location">
-        <label>Location</label>
-        <InputText id="iif-location" name="iif-location" v-model="form.location" fluid />
+        <label :for="ids.location">Location</label>
+        <InputText :id="ids.location" name="iif-location" v-model="form.location" fluid />
       </div>
       <div class="field iif-link">
-        <label>Link</label>
-        <InputText id="iif-link" name="iif-link" v-model="form.link" fluid />
+        <label :for="ids.link">Link</label>
+        <InputText :id="ids.link" name="iif-link" v-model="form.link" fluid />
       </div>
       <div class="field iif-notes">
-        <label>Notes</label>
-        <Textarea v-model="form.notes" fluid auto-resize />
+        <label :for="ids.notes">Notes</label>
+        <Textarea :id="ids.notes" v-model="form.notes" fluid auto-resize />
       </div>
     </div>
     <div class="iif-actions">

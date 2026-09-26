@@ -116,7 +116,7 @@ describe('DayCard', () => {
     const items = wrapper.findAll('.day-item')
     expect(items[0].classes()).not.toContain('day-item-editing')
     expect(items[1].classes()).toContain('day-item-editing')
-    expect(wrapper.find('#iif-title').element.value).toBe('Museum')
+    expect(wrapper.find('input[name="iif-title"]').element.value).toBe('Museum')
   })
 
   it('ignores an openForm targeting a different day', () => {
@@ -125,7 +125,7 @@ describe('DayCard', () => {
     const day = { id: 'd1', day_date: '2026-11-06', items: [{ id: 'i1', title: 'Breakfast', est_cost: null }] }
     const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR', openForm: { dayId: 'd-other', itemId: 'i1' } } })
     expect(wrapper.text()).not.toContain('Editing:')
-    expect(wrapper.find('#iif-title').exists()).toBe(false)
+    expect(wrapper.find('input[name="iif-title"]').exists()).toBe(false)
   })
 
   it('emits open-form with itemId null on Add item, and with the item id on Edit', async () => {
@@ -193,5 +193,64 @@ describe('DayCard today view', () => {
     const wrapper = mountWithBase(DayCard, { props: { day, index: 1, currency: 'INR', isToday: true }, pinia })
     const items = wrapper.findAll('.day-item')
     expect(items[0].classes()).toContain('day-item-now')
+  })
+})
+
+// Focus lifecycle (trip-planner-0xv.3): DayCard doesn't own openForm itself
+// (TripItineraryView does, one form open page-wide) — these tests drive it
+// the way that parent does, via setProps after each open-form/close-form
+// emit, to check the opener-focus contract end to end.
+describe('DayCard focus lifecycle', () => {
+  it('opening Add item focuses the Title input, and Cancel returns focus to Add item', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    const day = { id: 'd1', day_date: '2026-11-06', items: [] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR', openForm: null }, attachTo: document.body })
+
+    const addBtn = wrapper.find('button')
+    expect(wrapper.text()).toContain('Add item')
+    await addBtn.trigger('click')
+    expect(wrapper.emitted('open-form')[0][0]).toEqual({ dayId: 'd1', itemId: null })
+
+    await wrapper.setProps({ openForm: { dayId: 'd1', itemId: null } })
+    const title = wrapper.find('input[name="iif-title"]')
+    expect(title.exists()).toBe(true)
+    expect(document.activeElement).toBe(title.element)
+
+    const cancelBtn = wrapper.findAll('button').find((b) => b.text() === 'Cancel')
+    await cancelBtn.trigger('click')
+    expect(wrapper.emitted('close-form')).toBeTruthy()
+
+    await wrapper.setProps({ openForm: null })
+    await wrapper.vm.$nextTick()
+    const reopenedAddBtn = wrapper.findAll('button').find((b) => b.text() === 'Add item')
+    expect(document.activeElement).toBe(reopenedAddBtn.element)
+    wrapper.unmount()
+  })
+
+  it('opening Edit focuses the Title input, and Save returns focus to that row\'s Edit button', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    const store = useItineraryStore()
+    store.updateItem = vi.fn().mockResolvedValue()
+    const day = { id: 'd1', day_date: '2026-11-06', items: [{ id: 'i1', title: 'Snorkeling', category: 'activity', est_cost: null }] }
+    const wrapper = mountWithBase(DayCard, { pinia, props: { day, index: 1, currency: 'INR', openForm: null }, attachTo: document.body })
+
+    const editBtn = wrapper.findAll('button').find((b) => b.text() === 'Edit')
+    await editBtn.trigger('click')
+    expect(wrapper.emitted('open-form')[0][0]).toEqual({ dayId: 'd1', itemId: 'i1' })
+
+    await wrapper.setProps({ openForm: { dayId: 'd1', itemId: 'i1' } })
+    const title = wrapper.find('input[name="iif-title"]')
+    expect(document.activeElement).toBe(title.element)
+
+    await wrapper.find('form').trigger('submit')
+    await new Promise((r) => setTimeout(r, 0))
+    expect(store.updateItem).toHaveBeenCalledWith('i1', expect.any(Object))
+    expect(wrapper.emitted('close-form')).toBeTruthy()
+
+    await wrapper.setProps({ openForm: null })
+    await wrapper.vm.$nextTick()
+    const editBtnAgain = wrapper.findAll('button').find((b) => b.text() === 'Edit')
+    expect(document.activeElement).toBe(editBtnAgain.element)
+    wrapper.unmount()
   })
 })

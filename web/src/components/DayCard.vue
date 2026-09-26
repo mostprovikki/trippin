@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
@@ -54,9 +54,38 @@ function isItemNow(item) {
 const adding = computed(() => props.openForm?.dayId === props.day.id && props.openForm.itemId == null)
 const editingId = computed(() => (props.openForm?.dayId === props.day.id && props.openForm.itemId != null) ? props.openForm.itemId : null)
 
-function openAdd() { emit('open-form', { dayId: props.day.id, itemId: null }) }
-function openEdit(id) { emit('open-form', { dayId: props.day.id, itemId: id }) }
+// Opener-focus return (trip-planner-0xv.3): the "Edit" button that opened a
+// row's form stays mounted the whole time the form is open, so a captured
+// DOM reference to it is still good when the form closes — but the "Add
+// item" button unmounts (v-if="!adding") while its form is open and a new
+// element is created when it reappears, so a captured reference to it goes
+// stale; addBtnRef is a template ref instead, which Vue rebinds to the new
+// element each time it (re)mounts.
+const openerEl = ref(null)
+const addBtnRef = ref(null)
+
+function openAdd(event) {
+  openerEl.value = event?.currentTarget || null
+  emit('open-form', { dayId: props.day.id, itemId: null })
+}
+function openEdit(id, event) {
+  openerEl.value = event?.currentTarget || null
+  emit('open-form', { dayId: props.day.id, itemId: id })
+}
 function closeForm() { emit('close-form') }
+
+// openForm is owned by the parent (one form open page-wide) — DayCard only
+// reacts to it changing. Focus returns to the opener only when THIS day's
+// form was open and is now fully closed (not when a different day's form
+// opens next), matching "after Save or Cancel, focus returns to the button
+// that opened it."
+watch(() => props.openForm, async (val, oldVal) => {
+  if (oldVal?.dayId !== props.day.id || val != null) return
+  const wasAdding = oldVal.itemId == null
+  await nextTick()
+  if (wasAdding) addBtnRef.value?.$el?.focus()
+  else openerEl.value?.focus()
+})
 
 async function move(idx, dir) {
   const items = [...props.day.items]
@@ -104,7 +133,7 @@ async function onEditSubmit(item) {
           <span class="day-item-actions">
             <Button type="button" severity="secondary" outlined :disabled="idx === 0" aria-label="Move up within day" title="Move up within day" @click="move(idx, -1)">↑</Button>
             <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" aria-label="Move down within day" title="Move down within day" @click="move(idx, 1)">↓</Button>
-            <Button type="button" label="Edit" severity="secondary" outlined @click="openEdit(item.id)" />
+            <Button type="button" label="Edit" severity="secondary" outlined @click="openEdit(item.id, $event)" />
             <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="remove(item)" />
           </span>
         </div>
@@ -116,7 +145,7 @@ async function onEditSubmit(item) {
     </ul>
 
     <p v-if="!adding">
-      <Button type="button" label="Add item" @click="openAdd" />
+      <Button ref="addBtnRef" type="button" label="Add item" @click="openAdd" />
     </p>
     <ItineraryItemForm v-if="adding" @submit="onAddSubmit" @cancel="closeForm" />
   </div>
