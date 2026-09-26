@@ -7,6 +7,8 @@ import TripItineraryView from './TripItineraryView.vue'
 import DayCard from '../../components/DayCard.vue'
 import { useItineraryStore } from '../../stores/itinerary.js'
 import { useTripsStore } from '../../stores/trips.js'
+import { _resetAiStatus } from '../../composables/useAiStatus.js'
+import { api } from '../../api/client.js'
 
 // Shared by every test below: TripItineraryView's "Print / PDF" router-link
 // resolves against 'trip-itinerary-print', so any memory router that doesn't
@@ -117,20 +119,94 @@ describe('TripItineraryView', () => {
     vi.useRealTimers()
   })
 
-  it('merges the export actions and AI draft into one toolbar card', async () => {
+  it('at rest, AI draft is not a visible button; it is an item in the ⋯ menu', async () => {
     const { wrapper } = await mountView()
     await flushPromises()
-    const toolbars = wrapper.findAll('.itinerary-toolbar')
-    expect(toolbars).toHaveLength(1)
-    const text = toolbars[0].text()
-    expect(text).toContain('Add to calendar')
-    expect(text).toContain('Print / PDF')
-    expect(text).toContain('AI draft (whole trip)')
-    // /api/ai/status isn't mocked in this test, so useAiStatus's fetch fails and
-    // falls back to disabled — the button stays present (trip-planner-oa7 changed
-    // "hide it" to "disable it, with a reason"), not hidden behind a fallback tag.
-    const btn = toolbars[0].findAll('button').find((b) => b.text().includes('AI draft (whole trip)'))
-    expect(btn.attributes('disabled')).not.toBeUndefined()
+    const buttonTexts = wrapper.findAll('button').map((b) => b.text())
+    expect(buttonTexts.some((t) => t.includes('AI draft'))).toBe(false)
+    expect(wrapper.text()).not.toContain('Add to calendar')
+    expect(wrapper.text()).not.toContain('Print / PDF')
+    const more = wrapper.findAll('[aria-label="More itinerary actions"]')
+    expect(more).toHaveLength(1)
+    await more[0].trigger('click')
+    await flushPromises()
+    const menuText = document.body.textContent
+    expect(menuText).toContain('AI draft (whole trip)')
+    expect(menuText).toContain('Add to calendar (.ics)')
+    expect(menuText).toContain('Print / PDF')
+    wrapper.unmount()
+  })
+
+  it('only the per-day Add item buttons are primary-styled at rest', async () => {
+    const router = makeRouter()
+    await router.push('/trips/t1/itinerary')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    const trips = useTripsStore()
+    store.fetchItinerary = vi.fn().mockImplementation(async () => {
+      store.days = [
+        { id: 'd1', day_date: '2026-08-01', items: [{ id: 'i1', title: 'Beach walk', est_cost: null }] },
+        { id: 'd2', day_date: '2026-08-02', items: [] }
+      ]
+    })
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'planning' }
+    const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    // PrimeVue marks non-primary buttons with a severity/outlined/text class.
+    const primary = wrapper.findAll('button').filter((b) => !/p-button-(secondary|outlined|text|danger|help|contrast)/.test(b.classes().join(' ')))
+    expect(primary.map((b) => b.text())).toEqual(['Add item', 'Add item'])
+  })
+
+  it('has no Regenerate day button or instruction input anywhere', async () => {
+    const { wrapper } = await mountView()
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('Regenerate')
+    expect(wrapper.find('input').exists()).toBe(false)
+  })
+
+  it('shows the provider tag at most once, inside the ⋯ menu AI item label, never per day', async () => {
+    _resetAiStatus()
+    const getSpy = vi.spyOn(api, 'get').mockImplementation(async (url) => {
+      if (url === '/api/ai/status') return { enabled: true, provider: 'mock' }
+      throw new Error(`unexpected GET ${url}`)
+    })
+    const router = makeRouter()
+    await router.push('/trips/t1/itinerary')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    const trips = useTripsStore()
+    store.fetchItinerary = vi.fn().mockImplementation(async () => {
+      store.days = [
+        { id: 'd1', day_date: '2026-08-01', items: [] },
+        { id: 'd2', day_date: '2026-08-02', items: [] }
+      ]
+    })
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'planning' }
+    const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('dev mock')
+    await wrapper.find('[aria-label="More itinerary actions"]').trigger('click')
+    await flushPromises()
+    const items = [...document.body.querySelectorAll('.p-menu-item')]
+    const aiItem = items.find((el) => el.textContent.includes('AI draft (whole trip)'))
+    expect(aiItem.textContent).toContain('dev mock')
+    expect(document.body.textContent.match(/dev mock/g)).toHaveLength(1)
+    wrapper.unmount()
+    getSpy.mockRestore()
+    _resetAiStatus()
+  })
+
+  it('renders the "generated from confirmed dates" subtitle only when there are no days', async () => {
+    const { wrapper, store } = await mountView()
+    await flushPromises()
+    expect(wrapper.find('.section-desc').exists()).toBe(false)
+    store.days = []
+    await flushPromises()
+    expect(wrapper.find('.section-desc').text()).toContain('generated from confirmed dates')
   })
 
   it('keeps only one inline item form open page-wide: opening Add on another day closes Edit', async () => {

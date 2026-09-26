@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import Menu from 'primevue/menu'
 import Skeleton from 'primevue/skeleton'
 import Tag from 'primevue/tag'
 import { useItineraryStore } from '../../stores/itinerary.js'
@@ -17,6 +18,7 @@ import { formatMoney } from '../../utils/format.js'
 import { toIsoDate, formatDayDate } from '../../utils/dates.js'
 
 const route = useRoute()
+const router = useRouter()
 const tripId = computed(() => route.params.id)
 const store = useItineraryStore()
 const trips = useTripsStore()
@@ -112,6 +114,26 @@ async function initDays() {
   try { await store.init(tripId.value) } catch (e) { notify.error(e.message) }
 }
 
+// One page-level ⋯ menu for everything that isn't adding an item
+// (docs/design/tripper.md §5: one primary at rest). The provider tag rides in
+// the AI item's label rather than repeating beside every day.
+const moreMenu = ref(null)
+const moreItems = computed(() => [
+  {
+    // A disabled menu item shows no tooltip, so the reason goes in the label.
+    label: (store.aiBusy ? 'Generating…' : 'AI draft (whole trip)')
+      + (!aiStatus.enabled ? ' · AI not configured' : aiStatus.isMock ? ' · AI: dev mock' : ''),
+    icon: 'pi pi-sparkles',
+    disabled: !aiStatus.enabled || store.aiBusy,
+    command: draftWholeTrip
+  },
+  { label: 'Add to calendar (.ics)', icon: 'pi pi-calendar-plus', url: `/api/trips/${tripId.value}/itinerary.ics` },
+  {
+    label: 'Print / PDF', icon: 'pi pi-print', target: '_blank',
+    url: router.resolve({ name: 'trip-itinerary-print', params: { id: tripId.value } }).href
+  }
+])
+
 async function draftWholeTrip() {
   try { await store.aiDraft(tripId.value) } catch (e) { notify.error(e.message) }
 }
@@ -136,7 +158,16 @@ function discardWholeDraft() {
 
 <template>
   <div>
-    <SectionHeader title="Itinerary" description="Day-by-day plan. Days are generated from confirmed dates." />
+    <SectionHeader title="Itinerary" :description="store.days.length ? '' : 'Day-by-day plan. Days are generated from confirmed dates.'">
+      <template v-if="!loading && store.days.length" #actions>
+        <Button
+          type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
+          aria-label="More itinerary actions" aria-haspopup="true" aria-controls="itinerary-more-menu"
+          @click="moreMenu.toggle($event)"
+        />
+        <Menu id="itinerary-more-menu" ref="moreMenu" :model="moreItems" popup />
+      </template>
+    </SectionHeader>
 
     <div v-if="store.error" class="card">
       <strong>Error:</strong> {{ store.error }}
@@ -147,19 +178,6 @@ function discardWholeDraft() {
     <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
 
     <template v-else>
-      <div class="card itinerary-toolbar">
-        <a class="p-button p-button-outlined p-component p-button-sm" :href="`/api/trips/${tripId}/itinerary.ics`">Add to calendar (.ics)</a>
-        <router-link class="p-button p-button-outlined p-component p-button-sm" :to="{ name: 'trip-itinerary-print', params: { id: tripId } }" target="_blank">Print / PDF</router-link>
-        <Button
-          type="button" size="small" :loading="store.aiBusy"
-          :disabled="!aiStatus.enabled" :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
-          @click="draftWholeTrip"
-        >
-          {{ store.aiBusy ? 'Generating…' : 'AI draft (whole trip)' }}
-        </Button>
-        <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
-      </div>
-
       <DraftReview v-if="store.draft" title="AI draft preview" :busy="store.aiBusy" @apply="applyWholeDraft" @discard="discardWholeDraft">
         <div v-for="d in store.draft" :key="d.day_date" class="draft-day">
           <div class="draft-day-heading">{{ formatDayDate(d.day_date) }}</div>
@@ -191,8 +209,6 @@ function discardWholeDraft() {
 </template>
 
 <style scoped>
-.itinerary-toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-.itinerary-toolbar a.p-button { text-decoration: none; }
 .draft-day { margin-bottom: 1rem; }
 /* A non-inverting level: DraftReview's own header is an h4, so a day heading
    nested inside its slot renders as a styled div (not h3/h5) rather than

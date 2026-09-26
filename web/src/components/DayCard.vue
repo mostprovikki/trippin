@@ -1,12 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import { useItineraryStore } from '../stores/itinerary.js'
-import { useAiStatus } from '../composables/useAiStatus.js'
 import ItineraryItemForm from './ItineraryItemForm.vue'
-import DraftReview from './DraftReview.vue'
 import { formatMoney } from '../utils/format.js'
 import { dayHeader, formatDayDate } from '../utils/dates.js'
 import { parseTimeRange } from '../utils/itinerary.js'
@@ -26,7 +24,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['open-form', 'close-form'])
 const store = useItineraryStore()
-const aiStatus = useAiStatus()
 const confirm = useConfirm()
 
 // Text label per category, replacing the emoji glyph with a color-coded Tag
@@ -56,9 +53,6 @@ function isItemNow(item) {
 
 const adding = computed(() => props.openForm?.dayId === props.day.id && props.openForm.itemId == null)
 const editingId = computed(() => (props.openForm?.dayId === props.day.id && props.openForm.itemId != null) ? props.openForm.itemId : null)
-const instruction = ref('')
-
-const dayDraft = computed(() => store.dayDrafts[props.day.id] || null)
 
 function openAdd() { emit('open-form', { dayId: props.day.id, itemId: null }) }
 function openEdit(id) { emit('open-form', { dayId: props.day.id, itemId: id }) }
@@ -94,18 +88,6 @@ async function onEditSubmit(item) {
   await store.updateItem(editingId.value, item)
   closeForm()
 }
-
-async function regen() {
-  await store.aiRegenDay(props.day.id, instruction.value || null)
-}
-
-async function applyDayDraft() {
-  await store.applyDay(props.day.id)
-}
-
-function discardDayDraft() {
-  delete store.dayDrafts[props.day.id]
-}
 </script>
 
 <template>
@@ -134,36 +116,9 @@ function discardDayDraft() {
     </ul>
 
     <p v-if="!adding">
-      <Button type="button" label="Add item" severity="secondary" outlined @click="openAdd" />
+      <Button type="button" label="Add item" @click="openAdd" />
     </p>
     <ItineraryItemForm v-if="adding" @submit="onAddSubmit" @cancel="closeForm" />
-
-    <div class="day-ai">
-      <div class="field">
-        <label>Regenerate instruction (optional)</label>
-        <input v-model="instruction" placeholder="e.g. more relaxed" />
-      </div>
-      <Button
-        type="button" severity="secondary" outlined :loading="store.aiBusy"
-        :disabled="!aiStatus.enabled" :title="!aiStatus.enabled ? 'AI is not configured on this server (set LLM_PROVIDER)' : undefined"
-        @click="regen"
-      >
-        {{ store.aiBusy ? 'Generating…' : 'Regenerate day' }}
-      </Button>
-      <Tag v-if="aiStatus.isMock" severity="secondary" value="AI: dev mock" />
-    </div>
-
-    <DraftReview v-if="dayDraft" :title="`Draft for ${formatDayDate(day.day_date)}`" :busy="store.aiBusy" @apply="applyDayDraft" @discard="discardDayDraft">
-      <ul class="day-items">
-        <li v-for="(it, i) in dayDraft" :key="i">
-          <Tag :value="categoryLabel(it.category)" :class="['cat-tag', `cat-tag-${it.category}`]" />
-          <Tag v-if="it.time_range" :value="it.time_range" severity="secondary" />
-          <strong>{{ it.title }}</strong>
-          <span v-if="it.location">— {{ it.location }}</span>
-          <span v-if="it.est_cost != null">{{ formatMoney(it.est_cost, currency) }}</span>
-        </li>
-      </ul>
-    </DraftReview>
   </div>
 </template>
 
@@ -187,7 +142,6 @@ function discardDayDraft() {
 .day-item-editing { background: var(--app-accent-soft); border-left: 3px solid var(--app-accent); border-radius: var(--app-radius-sm); padding-left: 0.5rem; }
 .day-item-edit { padding: 0.5rem 0 0.75rem; }
 .day-item-edit-heading { margin: 0 0 0.5rem; color: var(--app-text-muted); }
-.day-ai { margin-top: 1rem; }
 
 /* Category tags: one hue per category, built from literal light/dark pairs
    (not just the app's 4 semantic tokens — travel/food/activity/rest/logistics
