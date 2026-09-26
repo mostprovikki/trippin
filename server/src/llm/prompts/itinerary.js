@@ -1,3 +1,5 @@
+import { wrap } from './_standalone.js'
+
 const CATEGORIES = ['travel', 'food', 'activity', 'rest', 'logistics']
 
 const itemSchema = {
@@ -51,6 +53,11 @@ function goalLines(goals) {
   }).join('\n')
 }
 
+function currentItemLines(items) {
+  if (!items || !items.length) return '(no items yet)'
+  return items.map((it) => `- ${it.title}${it.time_range ? ` (${it.time_range})` : ''} [${it.category}]`).join('\n')
+}
+
 function tripLines(trip) {
   const lines = []
   lines.push(`Trip: ${trip.name || 'Untitled trip'}`)
@@ -95,9 +102,7 @@ export function buildItineraryPrompt(trip, goals, dietSummary, days) {
  * @param {string|null} instruction - e.g. "more relaxed"
  */
 export function buildDayRegenPrompt(trip, day, currentItems, instruction) {
-  const currentLines = (currentItems && currentItems.length)
-    ? currentItems.map((it) => `- ${it.title}${it.time_range ? ` (${it.time_range})` : ''} [${it.category}]`).join('\n')
-    : '(no items yet)'
+  const currentLines = currentItemLines(currentItems)
   const prompt = [
     tripLines(trip),
     '',
@@ -109,4 +114,45 @@ export function buildDayRegenPrompt(trip, day, currentItems, instruction) {
     'Return ONLY JSON: { "items": [ { "title", "time_range", "location", "category", "est_cost", "notes" } ] }',
   ].join('\n')
   return { system: SYSTEM, prompt, schema: dayRegenSchema }
+}
+
+const ROLE = 'You are a precise trip-planning assistant.'
+const PRIVACY_RULE = 'Never invent participant names or personal details — you are given only aggregated trip parameters.'
+
+// Paste-ready single block for a bare chatbot (no system slot, no retry). Same arguments.
+buildItineraryPrompt.standalone = function standaloneItineraryPrompt(trip, goals, dietSummary, days) {
+  return wrap({
+    role: ROLE,
+    trip: tripLines(trip),
+    constraints: [
+      goalLines(goals),
+      `Dietary needs across the group: ${dietSummary || 'no data'} — every food stop needs an option covering these counts.`,
+    ].join('\n'),
+    task: [
+      `Draft a day-by-day itinerary for exactly these dates: ${days.join(', ')}.`,
+      'For each day, propose 3-6 items covering travel, food, activities, rest and logistics as appropriate.',
+    ].join('\n'),
+    schema: draftSchema,
+    rules: [
+      'Respect any NON-NEGOTIABLE constraint by placing it on its exact date.',
+      'One entry in "days" per listed date, in order; "day_date" is YYYY-MM-DD.',
+      PRIVACY_RULE,
+    ],
+  })
+}
+
+buildDayRegenPrompt.standalone = function standaloneDayRegenPrompt(trip, day, currentItems, instruction) {
+  const currentLines = currentItemLines(currentItems)
+  return wrap({
+    role: ROLE,
+    trip: tripLines(trip),
+    constraints: [
+      'Current items for this day:',
+      currentLines,
+      instruction ? `Instruction: ${instruction}` : 'Instruction: refine and improve this day.',
+    ].join('\n'),
+    task: `Regenerate ONLY the itinerary for ${day.day_date}.`,
+    schema: dayRegenSchema,
+    rules: ['Return items for this one day only.', PRIVACY_RULE],
+  })
 }

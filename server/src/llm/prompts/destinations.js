@@ -1,6 +1,31 @@
-// Pure prompt builder — no I/O. Never pass names/phones/emails/medical notes in here;
-// `prefSummary` must already be aggregated counts-only (see destinations.routes.js#buildPrefSummary).
-export function buildDestinationPrompt(trip, participantCount, prefSummary) {
+import { wrap } from './_standalone.js'
+
+const destinationSchema = {
+  type: 'object',
+  required: ['candidates'],
+  properties: {
+    candidates: {
+      type: 'array',
+      minItems: 3,
+      maxItems: 7,
+      items: {
+        type: 'object',
+        required: ['name', 'rationale'],
+        properties: {
+          name: { type: 'string' },
+          rationale: { type: 'string' },
+          best_dates: { type: 'string' },
+          est_budget_per_person: { type: 'number' },
+          caveats: { type: 'string' },
+        },
+      },
+    },
+  },
+}
+
+const PRIVACY_RULE = 'Never invent or reference participant names, contact details, or medical information.'
+
+function destinationParams(trip, prefSummary) {
   const vibe = (trip.vibe_tags || []).join(', ') || 'unspecified'
 
   const goals = (trip.goals || []).map((g) => {
@@ -28,7 +53,13 @@ export function buildDestinationPrompt(trip, participantCount, prefSummary) {
     `Top interests: ${prefSummary.top_interests?.length ? prefSummary.top_interests.join(', ') : 'none specified'}`,
   ].join('\n')
 
-  const currency = trip.currency || 'INR'
+  return { vibe, goals, dateInfo, prefsLines, currency: trip.currency || 'INR' }
+}
+
+// Pure prompt builder — no I/O. Never pass names/phones/emails/medical notes in here;
+// `prefSummary` must already be aggregated counts-only (see destinations.routes.js#buildPrefSummary).
+export function buildDestinationPrompt(trip, participantCount, prefSummary) {
+  const { vibe, goals, dateInfo, prefsLines, currency } = destinationParams(trip, prefSummary)
 
   const prompt = `Suggest 3 to 7 destination candidates for a group trip, using ONLY the parameters below.
 
@@ -45,32 +76,33 @@ ${prefsLines}
 
 For each candidate return: a name, a short rationale tied to the vibe/goals/preferences above, a best_dates suggestion (season or month range), an estimated budget per person in ${currency}, and any caveats (visa, weather risk, long transit, etc).`
 
-  const schema = {
-    type: 'object',
-    required: ['candidates'],
-    properties: {
-      candidates: {
-        type: 'array',
-        minItems: 3,
-        maxItems: 7,
-        items: {
-          type: 'object',
-          required: ['name', 'rationale'],
-          properties: {
-            name: { type: 'string' },
-            rationale: { type: 'string' },
-            best_dates: { type: 'string' },
-            est_budget_per_person: { type: 'number' },
-            caveats: { type: 'string' },
-          },
-        },
-      },
-    },
-  }
-
   return {
-    system: 'You are a meticulous trip-planning assistant. Propose destination candidates using only the trip parameters and aggregated group preferences supplied. Never invent or reference participant names, contact details, or medical information.',
+    system: `You are a meticulous trip-planning assistant. Propose destination candidates using only the trip parameters and aggregated group preferences supplied. ${PRIVACY_RULE}`,
     prompt,
-    schema,
+    schema: destinationSchema,
   }
+}
+
+// Paste-ready single block for a bare chatbot (no system slot, no retry). Same arguments.
+buildDestinationPrompt.standalone = function standaloneDestinationPrompt(trip, participantCount, prefSummary) {
+  const { vibe, goals, dateInfo, prefsLines, currency } = destinationParams(trip, prefSummary)
+  return wrap({
+    role: 'You are a meticulous trip-planning assistant.',
+    trip: [
+      `Vibe: ${vibe}`,
+      dateInfo,
+      `Origin city: ${trip.origin_city || 'unspecified'}`,
+      `Group size: ${participantCount} participant(s)`,
+      `Currency: ${currency}`,
+    ].join('\n'),
+    constraints: [
+      'Goals:',
+      goals || 'none specified',
+      'Aggregated group preferences (counts only — no personal details):',
+      prefsLines,
+    ].join('\n'),
+    task: `Suggest 3 to 7 destination candidates for this group trip, using ONLY the parameters above. For each: a name, a short rationale tied to the vibe/goals/preferences, a best_dates suggestion (season or month range), an estimated budget per person in ${currency}, and any caveats (visa, weather risk, long transit, etc).`,
+    schema: destinationSchema,
+    rules: [PRIVACY_RULE],
+  })
 }
