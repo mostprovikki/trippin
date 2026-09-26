@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
-import { generate, aiGuard } from '../llm/index.js'
-import { buildItineraryPrompt, buildDayRegenPrompt } from '../llm/prompts/itinerary.js'
+import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
+import { buildItineraryPrompt, buildDayRegenPrompt, draftSchema, dayRegenSchema } from '../llm/prompts/itinerary.js'
 import { buildTripIcs, slugify } from '../lib/ics.js'
 
 const ITEM_CATEGORIES = ['travel', 'food', 'activity', 'rest', 'logistics']
@@ -233,6 +233,17 @@ export default async function routes(app) {
     }
   })
 
+  app.post('/trips/:id/itinerary/ai-draft/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
+    try {
+      return parseAndValidate({ text: req.body.text, schema: draftSchema })
+    } catch (err) {
+      return pasteError(reply, err)
+    }
+  })
+
   app.post('/trips/:id/itinerary/apply-draft', { preHandler: app.requireOrganizer, schema: { body: applyDraftBodySchema } }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
@@ -277,6 +288,16 @@ export default async function routes(app) {
       return draft
     } catch (err) {
       return httpError(reply, 502, 'AI_FAILED', err.message)
+    }
+  })
+
+  app.post('/days/:dayId/ai-regen/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
+    const day = await ownedDay(req)
+    if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
+    try {
+      return parseAndValidate({ text: req.body.text, schema: dayRegenSchema })
+    } catch (err) {
+      return pasteError(reply, err)
     }
   })
 

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
-import { generate, aiGuard } from '../llm/index.js'
-import { buildDestinationPrompt } from '../llm/prompts/destinations.js'
+import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
+import { buildDestinationPrompt, destinationSchema } from '../llm/prompts/destinations.js'
 import { tripToJson } from './trips.routes.js'
 
 // Aggregated (counts-only) preference summary for a trip's participants — never names/emails.
@@ -42,6 +42,15 @@ export default async function routes(app) {
   const listCandidates = (tripId) => app.db.all(
     'SELECT * FROM destination_candidates WHERE trip_id = ? ORDER BY decided DESC, created_at ASC, seq ASC', [tripId]
   )
+  // Shared by the provider (ai-suggest) and pasted-JSON (ai-suggest/import) paths.
+  const insertAiCandidates = async (tripId, candidates) => {
+    for (const c of candidates) {
+      await app.db.run(`INSERT INTO destination_candidates
+        (id, trip_id, name, rationale, best_dates, est_budget_per_person, caveats, source)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'ai')`,
+        [randomUUID(), tripId, c.name, c.rationale ?? null, c.best_dates ?? null, c.est_budget_per_person ?? null, c.caveats ?? null])
+    }
+  }
 
   app.get('/trips/:id/candidates', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await getTrip(req)
@@ -92,12 +101,20 @@ export default async function routes(app) {
     const prefSummary = await buildPrefSummary(app.db, trip.id)
     const { system, prompt, schema } = buildDestinationPrompt(await tripToJson(app.db, trip), prefSummary.total, prefSummary)
     const result = await generate({ system, prompt, schema })
-    for (const c of result.candidates) {
-      await app.db.run(`INSERT INTO destination_candidates
-        (id, trip_id, name, rationale, best_dates, est_budget_per_person, caveats, source)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'ai')`,
-        [randomUUID(), trip.id, c.name, c.rationale ?? null, c.best_dates ?? null, c.est_budget_per_person ?? null, c.caveats ?? null])
+    await insertAiCandidates(trip.id, result.candidates)
+    return { candidates: await listCandidates(trip.id) }
+  })
+
+  app.post('/trips/:id/candidates/ai-suggest/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    let result
+    try {
+      result = parseAndValidate({ text: req.body.text, schema: destinationSchema })
+    } catch (err) {
+      return pasteError(reply, err)
     }
+    await insertAiCandidates(trip.id, result.candidates)
     return { candidates: await listCandidates(trip.id) }
   })
 

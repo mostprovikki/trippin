@@ -1,6 +1,6 @@
 import { wrap } from './_standalone.js'
 
-const destinationSchema = {
+export const destinationSchema = {
   type: 'object',
   required: ['candidates'],
   properties: {

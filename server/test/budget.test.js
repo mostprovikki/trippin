@@ -87,6 +87,40 @@ describe('budget', () => {
     const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t.id}/budget/ai-draft/prompt` })
     expect(res.statusCode).toBe(404)
   })
+  describe('budget import (pasted JSON, no provider)', () => {
+    const CATS = ['primary_transport', 'secondary_transport', 'stay', 'food', 'activities', 'shopping', 'leisure', 'misc']
+    const lines = CATS.map((category) => ({ category, estimate: 1000, basis: 'guess' }))
+    async function post(text, { organizerId } = {}) {
+      process.env.LLM_PROVIDER = 'none'
+      const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+      const owner = organizerId ? await createOrganizer(db, { email: 'other-budget-import@x.dev' }) : null
+      const t = await createTrip(db, { destination: 'Goa', ...(owner ? { organizer_id: owner.id } : {}) })
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/budget/ai-draft/import`, payload: { text } })
+      const { n } = await db.get('SELECT COUNT(*)::int AS n FROM budget_lines WHERE trip_id = ?', [t.id])
+      return { res, n }
+    }
+    it('valid JSON -> 200 with the provider route\'s { lines } shape', async () => {
+      const { res } = await post(JSON.stringify({ lines }))
+      expect(res.statusCode).toBe(200); expect(res.json()).toEqual({ lines })
+    })
+    it('fenced JSON -> 200', async () => {
+      const { res } = await post('```json\n' + JSON.stringify({ lines }) + '\n```')
+      expect(res.statusCode).toBe(200); expect(res.json().lines).toHaveLength(8)
+    })
+    it('prose -> 400 AI_PASTE_INVALID, nothing written', async () => {
+      const { res, n } = await post('I cannot estimate that.')
+      expect(res.statusCode).toBe(400); expect(res.json().error.code).toBe('AI_PASTE_INVALID')
+      expect(res.json().error.message).toMatch(/no JSON/i); expect(n).toBe(0)
+    })
+    it('schema violation -> 400 carrying the Ajv text', async () => {
+      const { res } = await post(JSON.stringify({ lines: lines.slice(0, 3) }))
+      expect(res.statusCode).toBe(400); expect(res.json().error.message).toMatch(/must NOT have fewer than 8 items/)
+    })
+    it('another organizer\'s trip -> 404', async () => {
+      const { res } = await post(JSON.stringify({ lines }), { organizerId: true })
+      expect(res.statusCode).toBe(404)
+    })
+  })
   it('privacy: prompt contains no participant PII', async () => {
     const { db } = await makeTestApp()
     const t = await createTrip(db, { destination: 'Goa' })

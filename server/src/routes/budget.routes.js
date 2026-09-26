@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
-import { generate, aiGuard, LlmValidationError } from '../llm/index.js'
-import { buildBudgetPrompt, CATEGORIES } from '../llm/prompts/budget.js'
+import { generate, aiGuard, LlmValidationError, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
+import { buildBudgetPrompt, budgetSchema, CATEGORIES } from '../llm/prompts/budget.js'
 
 export { CATEGORIES, budgetShape }
 
@@ -132,6 +132,16 @@ export default async function routes(app) {
     } catch (err) {
       if (err instanceof LlmValidationError || err.name === 'LlmHttpError') return httpError(reply, 502, 'AI_FAILED', err.message)
       throw err
+    }
+  })
+
+  app.post('/trips/:id/budget/ai-draft/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
+    const trip = await getTrip(req)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    try {
+      return { lines: parseAndValidate({ text: req.body.text, schema: budgetSchema }).lines }
+    } catch (err) {
+      return pasteError(reply, err)
     }
   })
 }

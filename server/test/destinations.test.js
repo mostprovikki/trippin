@@ -183,6 +183,52 @@ describe('destinations', () => {
     expect(res.statusCode).toBe(404)
   })
 
+  describe('ai-suggest import (pasted JSON, no provider)', () => {
+    async function post(text) {
+      const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+      const trip = await createTrip(db, { origin_city: 'Chennai' })
+      const prev = process.env.LLM_PROVIDER
+      process.env.LLM_PROVIDER = 'none'
+      try {
+        const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates/ai-suggest/import`, payload: { text } })
+        const rows = await db.all('SELECT name, source FROM destination_candidates WHERE trip_id = ? ORDER BY name', [trip.id])
+        return { res, rows }
+      } finally { process.env.LLM_PROVIDER = prev }
+    }
+    it('valid JSON -> 200 and ai-sourced candidate rows exist', async () => {
+      const { res, rows } = await post(JSON.stringify({ candidates: AI_CANDIDATES }))
+      expect(res.statusCode).toBe(200)
+      expect(res.json().candidates).toHaveLength(3)
+      expect(rows).toEqual([{ name: 'Goa', source: 'ai' }, { name: 'Manali', source: 'ai' }, { name: 'Rishikesh', source: 'ai' }])
+    })
+    it('fenced JSON with chatter -> 200', async () => {
+      const { res, rows } = await post('Sure!\n```json\n' + JSON.stringify({ candidates: AI_CANDIDATES }) + '\n```')
+      expect(res.statusCode).toBe(200); expect(rows).toHaveLength(3)
+    })
+    it('prose -> 400, no rows', async () => {
+      const { res, rows } = await post('Goa, Manali and Rishikesh would all be great.')
+      expect(res.statusCode).toBe(400); expect(res.json().error.code).toBe('AI_PASTE_INVALID')
+      expect(res.json().error.message).toMatch(/no JSON/i); expect(rows).toEqual([])
+    })
+    it('truncated JSON -> 400 naming the parse failure, no rows', async () => {
+      const { res, rows } = await post(JSON.stringify({ candidates: AI_CANDIDATES }).slice(0, 80))
+      expect(res.statusCode).toBe(400); expect(res.json().error.message).toMatch(/could not be parsed/); expect(rows).toEqual([])
+    })
+    it('schema violation -> 400 with Ajv text, no rows', async () => {
+      const { res, rows } = await post(JSON.stringify({ candidates: AI_CANDIDATES.slice(0, 1) }))
+      expect(res.statusCode).toBe(400); expect(res.json().error.message).toMatch(/must NOT have fewer than 3 items/)
+      expect(rows).toEqual([])
+    })
+    it('another organizer\'s trip -> 404, no rows', async () => {
+      const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+      const other = await createOrganizer(db, { email: 'other-dest-import@x.dev' })
+      const trip = await createTrip(db, { organizer_id: other.id })
+      const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/candidates/ai-suggest/import`, payload: { text: JSON.stringify({ candidates: AI_CANDIDATES }) } })
+      expect(res.statusCode).toBe(404)
+      expect(await db.all('SELECT id FROM destination_candidates WHERE trip_id = ?', [trip.id])).toEqual([])
+    })
+  })
+
   it('privacy: buildDestinationPrompt contains only aggregate counts, never participant names/emails', async () => {
     const { db } = await makeTestApp()
     const trip = await createTrip(db, {

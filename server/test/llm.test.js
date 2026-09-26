@@ -34,6 +34,27 @@ describe('llm adapter', () => {
   })
 })
 
+describe('parseAndValidate (pasted replies)', () => {
+  const schema = { type: 'object', required: ['answer'], properties: { answer: { type: 'number' } } }
+  beforeEach(() => vi.resetModules())
+  async function llm() { process.env.LLM_PROVIDER = 'none'; return await import('../src/llm/index.js') }
+  it('extractJson is exported and strips fences', async () => {
+    const { extractJson } = await llm()
+    expect(extractJson('```json\n{"answer":1}\n```')).toEqual({ answer: 1 })
+  })
+  it('returns the parsed object with no provider configured', async () => {
+    const { parseAndValidate } = await llm()
+    expect(parseAndValidate({ text: 'ok:\n```\n{"answer": 2}\n```', schema })).toEqual({ answer: 2 })
+  })
+  it('throws LlmValidationError naming each failure mode', async () => {
+    const { parseAndValidate, LlmValidationError } = await llm()
+    expect(() => parseAndValidate({ text: 'no json here', schema })).toThrow(LlmValidationError)
+    expect(() => parseAndValidate({ text: 'no json here', schema })).toThrow(/no JSON object/)
+    expect(() => parseAndValidate({ text: '{"answer": ', schema })).toThrow(/could not be parsed/)
+    expect(() => parseAndValidate({ text: '{"answer": "x"}', schema })).toThrow(/data\/answer must be number/)
+  })
+})
+
 describe('standalone prompt variants', () => {
   const trip = {
     name: 'Goa run', destination: 'Goa', origin_city: 'Chennai', currency: 'INR',

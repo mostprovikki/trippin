@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
-import { generate, aiGuard } from '../llm/index.js'
-import { buildPackingPrompt } from '../llm/prompts/packing.js'
+import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
+import { buildPackingPrompt, packingSchema } from '../llm/prompts/packing.js'
 
 const CHECKLIST_FIELDS = ['name', 'trip_type_tags']
 const ITEM_FIELDS = ['title', 'assignee_person_id', 'due_date', 'done']
@@ -269,6 +269,18 @@ export default async function routes(app) {
       },
     })
     return { items: result.items }
+  })
+
+  app.post('/checklists/:id/ai-packing-suggest/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
+    const checklist = await ownedChecklist(req, req.params.id)
+    if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
+    if (checklist.kind !== 'packing') return httpError(reply, 400, 'NOT_PACKING', 'Checklist is not a packing list')
+    if (checklist.is_template) return httpError(reply, 404, 'NOT_FOUND', 'Template has no trip context')
+    try {
+      return { items: parseAndValidate({ text: req.body.text, schema: packingSchema }).items }
+    } catch (err) {
+      return pasteError(reply, err)
+    }
   })
 
   // ---- participant ----

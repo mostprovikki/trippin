@@ -15,12 +15,28 @@ export function aiGuard(reply) {
   reply.code(503).send({ error: { code: 'AI_DISABLED', message: 'No LLM provider configured' } })
   return true
 }
-function extractJson(text) {
+export function extractJson(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/)
   const body = fenced ? fenced[1] : text
   const start = body.indexOf('{'); const end = body.lastIndexOf('}')
   if (start === -1 || end === -1) return null
   try { return JSON.parse(body.slice(start, end + 1)) } catch { return null }
+}
+// Pasted replies (BYO-AI path): same extraction + Ajv check as generate(), but never re-asked —
+// the error text goes back to the user instead.
+export function parseAndValidate({ text, schema }) {
+  if (typeof text !== 'string' || !/[{}]/.test(text)) throw new LlmValidationError('Reply contains no JSON object — paste the AI\'s JSON answer')
+  const parsed = extractJson(text)
+  if (!parsed) throw new LlmValidationError('Reply contains JSON that could not be parsed — it may be truncated or malformed')
+  const validate = ajv.compile(schema)
+  if (!validate(parsed)) throw new LlmValidationError(`Reply JSON does not match the expected shape: ${ajv.errorsText(validate.errors)}`)
+  return parsed
+}
+export const pasteBodySchema = { type: 'object', required: ['text'], properties: { text: { type: 'string' } } }
+export function pasteError(reply, err) {
+  if (!(err instanceof LlmValidationError)) throw err
+  reply.code(400).send({ error: { code: 'AI_PASTE_INVALID', message: err.message } })
+  return reply
 }
 export async function generate({ system, prompt, schema, maxTokens = 4000 }) {
   if (!isEnabled()) throw new LlmDisabledError()

@@ -281,6 +281,46 @@ describe('checklists routes', () => {
       })
       expect(promptRes.statusCode).toBe(404)
     })
+
+    describe('import (pasted JSON, no provider)', () => {
+      async function post(text) {
+        const trip = await createTrip(db, { destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05' })
+        const checklist = (await authedInject(app, cookie, {
+          method: 'POST', url: '/api/checklists', payload: { kind: 'packing', name: 'Packing', trip_id: trip.id },
+        })).json().checklist
+        process.env.LLM_PROVIDER = 'none'
+        const res = await authedInject(app, cookie, { method: 'POST', url: `/api/checklists/${checklist.id}/ai-packing-suggest/import`, payload: { text } })
+        const { n } = await db.get('SELECT COUNT(*)::int AS n FROM checklist_items WHERE checklist_id = ?', [checklist.id])
+        return { res, n }
+      }
+      const items = [{ title: 'Sunscreen' }, { title: 'Swimsuit' }]
+      it('valid JSON -> 200 with the provider route\'s { items } shape', async () => {
+        const { res } = await post(JSON.stringify({ items }))
+        expect(res.statusCode).toBe(200); expect(res.json()).toEqual({ items })
+      })
+      it('fenced JSON -> 200', async () => {
+        const { res } = await post('```json\n' + JSON.stringify({ items }) + '\n```')
+        expect(res.statusCode).toBe(200); expect(res.json()).toEqual({ items })
+      })
+      it('prose -> 400, nothing written', async () => {
+        const { res, n } = await post('Pack light!')
+        expect(res.statusCode).toBe(400); expect(res.json().error.code).toBe('AI_PASTE_INVALID')
+        expect(res.json().error.message).toMatch(/no JSON/i); expect(n).toBe(0)
+      })
+      it('schema violation -> 400 with Ajv text', async () => {
+        const { res } = await post(JSON.stringify({ items: [{ name: 'Sunscreen' }] }))
+        expect(res.statusCode).toBe(400); expect(res.json().error.message).toMatch(/must have required property 'title'/)
+      })
+      it('another organizer\'s checklist -> 404', async () => {
+        const other = await createOrganizer(db, { email: 'other-checklist-import@x.dev' })
+        const trip = await createTrip(db, { organizer_id: other.id, destination: 'Goa' })
+        const checklist = (await authedInject(app, `tp_session=${app.signSession(other)}`, {
+          method: 'POST', url: '/api/checklists', payload: { kind: 'packing', name: 'Packing', trip_id: trip.id },
+        })).json().checklist
+        const res = await authedInject(app, cookie, { method: 'POST', url: `/api/checklists/${checklist.id}/ai-packing-suggest/import`, payload: { text: JSON.stringify({ items }) } })
+        expect(res.statusCode).toBe(404)
+      })
+    })
   })
 
   describe('participant routes', () => {

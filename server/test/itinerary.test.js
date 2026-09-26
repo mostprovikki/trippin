@@ -178,6 +178,72 @@ describe('itinerary — AI draft / apply-draft', () => {
   })
 })
 
+describe('itinerary — pasted-JSON import (no provider)', () => {
+  const draft = { days: [{ day_date: '2026-03-01', items: [{ title: 'Fort walk', category: 'activity' }] }] }
+  async function noProvider(fn) {
+    const prev = process.env.LLM_PROVIDER
+    process.env.LLM_PROVIDER = 'none'
+    try { await fn() } finally { process.env.LLM_PROVIDER = prev }
+  }
+  const dayCount = async (db, tripId) => (await db.get('SELECT COUNT(*)::int AS n FROM itinerary_days WHERE trip_id = ?', [tripId])).n
+
+  it('import rejects prose with 400 and writes nothing', () => noProvider(async () => {
+    const { app, db, cookie, trip } = await setup()
+    const before = await dayCount(db, trip.id)
+    const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/ai-draft/import`, payload: { text: 'Sure! Here is a lovely plan for your trip.' } })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error.code).toBe('AI_PASTE_INVALID')
+    expect(res.json().error.message).toMatch(/no JSON/i)
+    expect(await dayCount(db, trip.id)).toBe(before)
+  }))
+
+  it('import accepts valid JSON and returns the same draft shape as the provider route', () => noProvider(async () => {
+    const { app, cookie, trip } = await setup()
+    const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/ai-draft/import`, payload: { text: JSON.stringify(draft) } })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(draft)
+  }))
+
+  it('import accepts JSON wrapped in a ```json fence with chatter', () => noProvider(async () => {
+    const { app, cookie, trip } = await setup()
+    const text = 'Here you go:\n```json\n' + JSON.stringify(draft) + '\n```\nEnjoy!'
+    const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/ai-draft/import`, payload: { text } })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(draft)
+  }))
+
+  it('import rejects schema-violating JSON with 400 carrying the Ajv error', () => noProvider(async () => {
+    const { app, cookie, trip } = await setup()
+    const bad = { days: [{ day_date: '2026-03-01', items: [{ title: 'x', category: 'party' }] }] }
+    const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/ai-draft/import`, payload: { text: JSON.stringify(bad) } })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error.code).toBe('AI_PASTE_INVALID')
+    expect(res.json().error.message).toMatch(/category must be equal to one of the allowed values/)
+  }))
+
+  it('import 404s for another organizer\'s trip', async () => {
+    const { app, db } = await makeTestApp()
+    const { cookie } = await loginOrganizer(app, db)
+    const other = await createOrganizer(db, { email: 'other-itin-import@x.dev' })
+    const trip = await createTrip(db, { organizer_id: other.id, start_date: '2026-03-01', end_date: '2026-03-03' })
+    const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/ai-draft/import`, payload: { text: JSON.stringify(draft) } })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('day regen import validates pasted items for one day', () => noProvider(async () => {
+    const { app, cookie, trip } = await setup()
+    await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${trip.id}/itinerary/init` })
+    const days = (await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${trip.id}/itinerary` })).json().days
+    const url = `/api/days/${days[0].id}/ai-regen/import`
+    const ok = await authedInject(app, cookie, { method: 'POST', url, payload: { text: '```\n{"items":[{"title":"Nap","category":"rest"}]}\n```' } })
+    expect(ok.statusCode).toBe(200)
+    expect(ok.json()).toEqual({ items: [{ title: 'Nap', category: 'rest' }] })
+    const bad = await authedInject(app, cookie, { method: 'POST', url, payload: { text: '{"things":[]}' } })
+    expect(bad.statusCode).toBe(400)
+    expect(bad.json().error.message).toMatch(/must have required property 'items'/)
+  }))
+})
+
 describe('itinerary — per-day AI regen', () => {
   it('ai-regen returns items for one day; apply replaces only that day', async () => {
     const { app, cookie, trip } = await setup()

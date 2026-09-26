@@ -2,7 +2,7 @@ import { wrap } from './_standalone.js'
 
 export const CATEGORIES = ['primary_transport', 'secondary_transport', 'stay', 'food', 'activities', 'shopping', 'leisure', 'misc']
 
-const budgetSchema = {
+export const budgetSchema = {
   type: 'object',
   required: ['lines'],
   properties: {
