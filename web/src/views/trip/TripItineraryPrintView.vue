@@ -54,7 +54,8 @@ function print() { window.print() }
 
       <section v-for="day in itinerary.days" :key="day.id" class="print-day">
         <h2>{{ formatLongDate(day.day_date) }}</h2>
-        <table>
+        <p v-if="!day.items?.length" class="empty-day">Nothing planned</p>
+        <table v-else>
           <thead><tr><th>Time</th><th>Title</th><th>Location</th><th>Notes</th><th>Cost</th></tr></thead>
           <tbody>
             <tr v-for="item in day.items" :key="item.id">
@@ -81,6 +82,7 @@ function print() { window.print() }
 .print-header { margin-bottom: 1.5rem; }
 .print-day { margin-bottom: 1.5rem; page-break-inside: avoid; break-inside: avoid; }
 .state-banner { color: #111; }
+.empty-day { color: #555; font-size: 0.875rem; margin: 0; }
 .state-error { color: #b91c1c; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 0.375rem 0.5rem; border-bottom: 1px solid #ddd; font-size: 0.875rem; }

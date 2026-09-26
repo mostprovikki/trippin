@@ -42,6 +42,23 @@ async function mountView({ days, tripsError, itineraryError, fetchTripImpl, fetc
 }
 
 describe('TripItineraryPrintView', () => {
+  it('empty day prints Nothing planned, no table', async () => {
+    const { wrapper } = await mountView({
+      days: [
+        { id: 'd1', day_date: '2026-03-02', items: [] },
+        { id: 'd2', day_date: '2026-03-03', items: [{ id: 'i1', title: 'Beach', category: 'activity' }] }
+      ]
+    })
+    await flushPromises()
+    await wrapper.vm.$nextTick()
+    const days = wrapper.findAll('.print-day')
+    expect(days).toHaveLength(2)
+    expect(days[0].text()).toContain('Nothing planned')
+    expect(days[0].find('table').exists()).toBe(false)
+    expect(days[1].find('table').exists()).toBe(true)
+    expect(days[1].text()).not.toContain('Nothing planned')
+  })
+
   it('renders the trip name, day headings and item rows from the store', async () => {
     const { wrapper } = await mountView()
     await flushPromises()

@@ -37,4 +37,18 @@ describe('ItineraryItemForm', () => {
     expect(wrapper.emitted().cancel).toBeTruthy()
     wrapper.unmount()
   })
+
+  it('shows capitalised category labels but keeps lowercase stored values', async () => {
+    const wrapper = mountWithBase(ItineraryItemForm, { attachTo: document.body })
+    const select = wrapper.findComponent({ name: 'Select' })
+    const opts = select.props('options')
+    const label = (o) => o[select.props('optionLabel')]
+    const value = (o) => o[select.props('optionValue')]
+    expect(opts.map(label)).toEqual(['Travel', 'Food', 'Activity', 'Rest', 'Logistics'])
+    expect(opts.map(value)).toEqual(['travel', 'food', 'activity', 'rest', 'logistics'])
+    expect(wrapper.find('.p-select-label').text()).toBe('Activity')
+    await wrapper.find('form').trigger('submit')
+    expect(wrapper.emitted().submit[0][0].category).toBe('activity')
+    wrapper.unmount()
+  })
 })

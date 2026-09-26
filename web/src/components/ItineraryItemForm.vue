@@ -8,7 +8,14 @@ import Button from 'primevue/button'
 const props = defineProps({ item: { type: Object, default: null } })
 const emit = defineEmits(['submit', 'cancel'])
 
-const categories = ['travel', 'food', 'activity', 'rest', 'logistics']
+// Labels match DayCard's category Tag; stored values stay lowercase.
+const categories = [
+  { label: 'Travel', value: 'travel' },
+  { label: 'Food', value: 'food' },
+  { label: 'Activity', value: 'activity' },
+  { label: 'Rest', value: 'rest' },
+  { label: 'Logistics', value: 'logistics' }
+]
 
 // Per-instance uid so each label's `for` matches its input's id even if two
 // forms ever mount at once (only one is open page-wide today, per DayCard,
@@ -72,7 +79,7 @@ function submit() {
       </div>
       <div class="field iif-category">
         <label :for="ids.category">Category</label>
-        <Select :input-id="ids.category" name="iif-category" v-model="form.category" :options="categories" fluid />
+        <Select :input-id="ids.category" name="iif-category" v-model="form.category" :options="categories" option-label="label" option-value="value" fluid />
       </div>
       <div class="field iif-cost">
         <label :for="ids.cost">Cost</label>
