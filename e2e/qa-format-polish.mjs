@@ -57,8 +57,15 @@ await page.goto(`${BASE}/trips/${TRIP}`, { waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
 const per = await page.evaluate(async (id) => {
   const b = await fetch(`/api/trips/${id}/budget`).then((r) => r.json())
-  return { shown: document.querySelector('.budget-card .budget-hero')?.textContent.trim() ?? null, share: b.equal_share }
+  return { shown: document.querySelector('.budget-card .budget-hero')?.textContent.trim() ?? null, share: b.equal_share,
+    sub: document.querySelector('.budget-card .overview-row-reason')?.textContent.trim() ?? null,
+    n: b.participant_count, o: b.overrides.length }
 }, TRIP)
+// equal_share is what each person WITHOUT a custom amount pays; the label said
+// "6 people" on a trip where 2 had their own (smoke test 2026-10-02)
+const wantSub = per.o ? `estimate · each of ${per.n - per.o} people · ${per.o} set their own amount` : `estimate · ${per.n} people`
+if (per.sub === wantSub) ok('overview per-person label names who shares it', per.sub)
+else fail('overview per-person label', `got ${JSON.stringify(per.sub)}, want ${JSON.stringify(wantSub)}`)
 const wantPer = `₹${Math.round(per.share).toLocaleString('en-US')}`
 if (per.share > 1000 && per.shown === wantPer) ok('overview per-person budget formatted', per.shown)
 else fail('overview per-person budget', `got ${JSON.stringify(per.shown)}, want ${JSON.stringify(wantPer)} (equal_share ${per.share})`)

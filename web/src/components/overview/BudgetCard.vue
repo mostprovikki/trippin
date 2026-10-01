@@ -8,9 +8,17 @@ import { formatMoney } from '../../utils/format.js'
 const props = defineProps({
   equalShare: { type: Number, default: 0 },
   participantCount: { type: Number, default: 0 },
+  // people with their own amount (budget overrides): equal_share is what
+  // each of the OTHERS pays, so the label must say so
+  overrideCount: { type: Number, default: 0 },
   currency: { type: String, default: 'INR' }
 })
 const route = useRoute()
+const sharing = computed(() => Math.max(0, props.participantCount - props.overrideCount))
+const plural = (n) => `${n} ${n === 1 ? 'person' : 'people'}`
+const sub = computed(() => (props.overrideCount
+  ? `estimate · each of ${plural(sharing.value)} · ${props.overrideCount} set their own amount`
+  : `estimate · ${plural(props.participantCount)}`))
 const hero = computed(() => (props.equalShare > 0 ? formatMoney(Math.round(props.equalShare), props.currency) : null))
 </script>
 
@@ -19,7 +27,7 @@ const hero = computed(() => (props.equalShare > 0 ? formatMoney(Math.round(props
     <h2 id="budget-h" class="overview-card-title">Budget · per person</h2>
     <template v-if="hero">
       <p class="budget-hero">{{ hero }}</p>
-      <p class="overview-row-reason">estimate · {{ participantCount }} {{ participantCount === 1 ? 'person' : 'people' }}</p>
+      <p class="overview-row-reason">{{ sub }}</p>
     </template>
     <p v-else class="overview-empty">No estimate yet.</p>
     <p class="overview-card-foot">

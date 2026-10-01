@@ -59,6 +59,12 @@ describe('BudgetCard (§6 per-person cost; owner D5: estimate only)', () => {
     expect(w.text()).toContain('estimate · 6 people')
     expect(w.find('a').attributes('href')).toBe('/trips/t1/budget')
   })
+  it('with custom amounts, says the share is for the others (smoke test 2026-10-02: said "6 people")', async () => {
+    const w = await mount(BudgetCard, { equalShare: 174325, participantCount: 6, overrideCount: 2, currency: 'INR' })
+    expect(w.find('.budget-hero').text()).toBe('₹174,325')
+    expect(w.text()).toContain('estimate · each of 4 people · 2 set their own amount')
+    expect(w.text()).not.toContain('6 people')
+  })
   it('no estimate yet', async () => {
     const w = await mount(BudgetCard, { equalShare: 0, participantCount: 0, currency: 'INR' })
     expect(w.text()).toContain('No estimate yet')
