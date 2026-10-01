@@ -67,7 +67,7 @@ Always run `npm run db:up` first — the server (and its test suite) connects to
 ```bash
 npm install
 npm run db:up              # idempotent — starts the dev/test Postgres if not already up
-npm test                   # server (vitest, 25 files/193 tests) + web (47/385)
+npm test                   # server (vitest, ~264 tests) + web (~564), 2026-10-02
 npm run build               # builds web/dist
 npm run db:down             # stop the dev/test Postgres when done
 ```
