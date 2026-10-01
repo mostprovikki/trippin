@@ -5,7 +5,9 @@ import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import DateField from './DateField.vue'
-import { isExpiredIso } from '../utils/dates.js'
+import { formatShortDate, isExpiredIso } from '../utils/dates.js'
+import { docTypeLabel } from '../utils/format.js'
+import { missingDocTypes } from '../utils/requiredDocs.js'
 import { useParticipantStore } from '../stores/participant.js'
 import { useNotify } from '../composables/useNotify.js'
 import { fetchDocumentBlob, triggerBlobDownload } from '../utils/downloadDoc.js'
@@ -15,8 +17,12 @@ const confirm = useConfirm()
 const notify = useNotify()
 
 const DOC_TYPES = ['passport', 'visa', 'national_id', 'driving_license', 'vaccination', 'other']
+  .map((value) => ({ label: docTypeLabel(value), value }))
 
-const docType = ref('passport')
+// Start on the document the trip still needs from this person, so the
+// common case is pick a file → Upload.
+const firstMissing = () => missingDocTypes(store.trip?.required_doc_types, store.documents)[0] || 'passport'
+const docType = ref(firstMissing())
 const docNumber = ref('')
 const expiryDate = ref('')
 const file = ref(null)
@@ -37,6 +43,7 @@ async function upload() {
     if (docNumber.value) fd.append('doc_number', docNumber.value)
     if (expiryDate.value) fd.append('expiry_date', expiryDate.value)
     await store.uploadDocument(fd)
+    docType.value = firstMissing()
     docNumber.value = ''
     expiryDate.value = ''
     file.value = null
@@ -90,8 +97,8 @@ async function download(doc) {
 </script>
 
 <template>
-  <section class="card">
-    <h2>Your documents</h2>
+  <!-- no card or heading: ParticipantView's step card is the card (trip-planner-0qh) -->
+  <div class="pd">
     <table class="table" v-if="store.documents.length">
       <thead>
         <tr><th>Type</th><th>Number</th><th>Expiry</th><th>File</th><th></th></tr>
@@ -104,10 +111,10 @@ async function download(doc) {
                action cell is left unlabelled on purpose — the button says what
                it does, and a "Delete" prefix in front of it would just be
                noise. -->
-          <td data-label="Type">{{ doc.doc_type }}</td>
+          <td data-label="Type">{{ docTypeLabel(doc.doc_type) }}</td>
           <td data-label="Number">{{ doc.doc_number || '-' }}</td>
           <td data-label="Expiry">
-            <Tag :value="doc.expiry_date || '-'" :severity="isExpired(doc) ? 'warn' : 'secondary'" />
+            <Tag :value="doc.expiry_date ? formatShortDate(doc.expiry_date) : '-'" :severity="isExpired(doc) ? 'warn' : 'secondary'" />
           </td>
           <td data-label="File"><a href="#" :aria-disabled="downloadingIds.has(doc.id)" @click.prevent="download(doc)">{{ doc.original_name }}</a></td>
           <td><Button icon="pi pi-trash" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${doc.original_name}`" @click="remove(doc)" /></td>
@@ -123,7 +130,7 @@ async function download(doc) {
       </div>
       <div class="field">
         <label for="doc-type">Type</label>
-        <Select label-id="doc-type" v-model="docType" :options="DOC_TYPES" fluid />
+        <Select label-id="doc-type" v-model="docType" :options="DOC_TYPES" option-label="label" option-value="value" fluid />
       </div>
       <div class="field">
         <label for="doc-number">Number (optional)</label>
@@ -135,9 +142,9 @@ async function download(doc) {
              beats 6 clicks through a calendar to 2035. -->
         <DateField v-model="expiryDate" input-id="doc-expiry" typeable />
       </div>
-      <Button type="submit" :label="uploading ? 'Uploading…' : 'Upload'" :disabled="uploading" />
+      <Button type="submit" :label="uploading ? 'Uploading…' : 'Upload'" :disabled="uploading" fluid />
     </form>
-  </section>
+  </div>
 </template>
 
 <style scoped>

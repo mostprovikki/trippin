@@ -11,6 +11,8 @@ import ParticipantProfileForm from '../components/ParticipantProfileForm.vue'
 import ParticipantDocs from '../components/ParticipantDocs.vue'
 import ParticipantChecklist from '../components/ParticipantChecklist.vue'
 import ParticipantItinerary from '../components/ParticipantItinerary.vue'
+import { docTypeLabel } from '../utils/format.js'
+import { missingDocTypes } from '../utils/requiredDocs.js'
 
 const route = useRoute()
 const store = useParticipantStore()
@@ -45,9 +47,22 @@ onMounted(load)
 const checklistItems = computed(() => [...store.packing, ...store.tasks])
 const checklistDone = computed(() => checklistItems.value.filter((i) => i.done).length)
 
+// trip-planner-0qh: Documents says what the trip needs. With nothing required
+// it stays optional and is done after any upload (the old behaviour).
+const requiredDocs = computed(() => store.trip?.required_doc_types ?? [])
+const missingDocs = computed(() => missingDocTypes(requiredDocs.value, store.documents))
+const docsStep = computed(() => {
+  if (requiredDocs.value.length) {
+    const missing = missingDocs.value
+    return { done: missing.length === 0, hint: missing.length ? `Needed: ${missing.map(docTypeLabel).join(', ')}` : 'All uploaded' }
+  }
+  const n = store.documents.length
+  return { done: n > 0, hint: n ? `${n} uploaded` : 'Optional — passport, ID or tickets' }
+})
+
 const steps = computed(() => [
   { key: 'profile', n: 1, title: 'Your profile', done: store.profileConfirmed, hint: store.profileConfirmed ? 'Confirmed' : store.stillNeeded.length ? `Still needed: ${store.stillNeeded.join(', ')}` : 'Confirm your details' },
-  { key: 'docs', n: 2, title: 'Documents', done: store.documents.length > 0, hint: store.documents.length ? `${store.documents.length} uploaded` : 'Upload passport / ID / tickets' },
+  { key: 'docs', n: 2, title: 'Documents', ...docsStep.value },
   { key: 'checklist', n: 3, title: 'Checklist', done: checklistItems.value.length > 0 && checklistDone.value === checklistItems.value.length, hint: checklistItems.value.length ? `${checklistDone.value}/${checklistItems.value.length} done` : 'Nothing assigned yet' }
 ])
 

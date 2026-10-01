@@ -140,4 +140,29 @@ describe('ParticipantView', () => {
     await flushPromises()
     expect(mockToastAdd).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }))
   })
+
+  // trip-planner-0qh: Documents names what the trip requires
+  const base = { trip: { name: 'Goa 2026', status: 'confirmed', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [], required_doc_types: ['passport', 'visa'] }, person: { name: 'Asha' }, packing: [], tasks: [] }
+
+  it('Documents step names the required types still missing', async () => {
+    const { wrapper } = await mountView({ ...base, documents: [{ id: 'd1', doc_type: 'passport' }] })
+    const docs = wrapper.findAll('.step-card')[1]
+    expect(docs.find('.step-hint').text()).toBe('Needed: Visa')
+    expect(docs.classes()).not.toContain('step-done')
+  })
+
+  it('Documents step is done when every required type is present', async () => {
+    const { wrapper } = await mountView({ ...base, documents: [{ id: 'd1', doc_type: 'passport' }, { id: 'd2', doc_type: 'visa' }] })
+    const docs = wrapper.findAll('.step-card')[1]
+    expect(docs.classes()).toContain('step-done')
+    expect(docs.find('.step-hint').text()).toBe('All uploaded')
+  })
+
+  it('no required types: optional hint, done after any upload', async () => {
+    const trip = { ...base.trip, required_doc_types: [] }
+    const empty = await mountView({ ...base, trip, documents: [] })
+    expect(empty.wrapper.findAll('.step-card')[1].find('.step-hint').text()).toBe('Optional — passport, ID or tickets')
+    const one = await mountView({ ...base, trip, documents: [{ id: 'd1', doc_type: 'other' }] })
+    expect(one.wrapper.findAll('.step-card')[1].classes()).toContain('step-done')
+  })
 })
