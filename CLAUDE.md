@@ -75,6 +75,11 @@ npm run db:down             # stop the dev/test Postgres when done
 Server-only: `npm test --workspace=server`. Web-only: `npm test --workspace=web`.
 Local dev servers: `npm run dev` (after `npm run db:up`).
 
+Browser gates (dev servers up: web `[::1]:43100`, api 43101): `node scripts/run-e2e.mjs gates`
+runs every `e2e/qa-*.mjs`. The Trip overview's own gate is `node e2e/qa-overview.mjs`
+(tripper.md §2 phases, §4 390px reach, §6 badges = Overview numbers); it fails on purpose at
+00:00 and 23:59 local, where its timed fixtures can't hold.
+
 ## Architecture Overview
 
 _Add a brief overview of your project architecture_
