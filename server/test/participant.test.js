@@ -70,6 +70,25 @@ describe('participant self-service', () => {
     expect(await confirmedOf(db, t, p)).toBe(0)
   })
 
+  // trip-planner-0qh: /p's Documents step names the types the trip requires.
+  it('GET /participant/me returns the trip required_doc_types', async () => {
+    const { app, db } = await makeTestApp()
+    const p = await createPerson(db)
+    const t = await createTrip(db, { required_doc_types: '["passport","visa"]' })
+    const raw = await seedLink(app, db, t, p)
+    const res = await app.inject({ method: 'GET', url: '/api/participant/me', headers: { authorization: `Bearer ${raw}` } })
+    expect(res.json().trip.required_doc_types).toEqual(['passport', 'visa'])
+  })
+
+  it('GET /participant/me returns required_doc_types [] when the trip sets none', async () => {
+    const { app, db } = await makeTestApp()
+    const p = await createPerson(db)
+    const t = await createTrip(db)
+    const raw = await seedLink(app, db, t, p)
+    const res = await app.inject({ method: 'GET', url: '/api/participant/me', headers: { authorization: `Bearer ${raw}` } })
+    expect(res.json().trip.required_doc_types).toEqual([])
+  })
+
   it('GET /participant/me reports the missing required fields', async () => {
     const { app, db } = await makeTestApp()
     const p = await createPerson(db, { phone: '1' })

@@ -67,6 +67,7 @@ export default async function routes(app) {
         id: trip.id, name: trip.name, description: trip.description, status: trip.status,
         vibe_tags: JSON.parse(trip.vibe_tags || '[]'), destination: trip.destination,
         date_mode: trip.date_mode, start_date: trip.start_date, end_date: trip.end_date,
+        required_doc_types: JSON.parse(trip.required_doc_types || '[]'),
         goals,
       },
       person,
