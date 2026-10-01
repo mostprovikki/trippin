@@ -68,8 +68,8 @@ export function emptyDays(trip, days = []) {
 }
 
 // §2 Checklists card: open items, unassigned first. On a packing list an item
-// with no assignee is everyone's (each participant ticks their own), so only an
-// unassigned *task* is "Unassigned".
+// with no assignee is the group's ("Everyone" — one shared tick, anyone may
+// tick it), so only an unassigned *task* is "Unassigned".
 export function openChecklistItems(checklists = []) {
   const out = []
   for (const list of checklists || []) {
@@ -87,8 +87,29 @@ export function openChecklistItems(checklists = []) {
 // 'morning'). The first clock time in it is the start; a bare number isn't one
 // ('Day 2'), so a time needs minutes or am/pm. Unparseable → null, and such an
 // item is listed but never "Next".
+const to24 = (h, ap) => (h % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0)
+
 export function parseStartMinutes(timeRange) {
   const s = String(timeRange ?? '')
+  // A range's start may be a bare hour that borrows the end's am/pm:
+  // '10–11am' → 10:00, '9–11pm' → 21:00, '11-1pm' → 11:00 (11pm would come
+  // after its own end), '9-10:30' → 09:00 (24h).
+  const range = /\b(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*(?:[-–—]|to)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i.exec(s)
+  if (range) {
+    const [, h1, m1, ap1, h2, m2, ap2] = range
+    const sm = m1 == null ? 0 : Number(m1)
+    const sh = Number(h1)
+    if (sm <= 59) {
+      if (ap1) { if (sh >= 1 && sh <= 12) return to24(sh, ap1) * 60 + sm }
+      else if (ap2) {
+        if (sh >= 1 && sh <= 12 && Number(h2) >= 1 && Number(h2) <= 12) {
+          const end = to24(Number(h2), ap2) * 60 + (m2 == null ? 0 : Number(m2))
+          const same = to24(sh, ap2) * 60 + sm
+          return same <= end ? same : to24(sh, ap2.toLowerCase() === 'pm' ? 'am' : 'pm') * 60 + sm
+        }
+      } else if (sh <= 23 && (m1 != null || m2 != null)) return sh * 60 + sm
+    }
+  }
   const re = /\b(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\b/gi
   for (const m of s.matchAll(re)) {
     const [, hh, mm, ap] = m
@@ -98,7 +119,7 @@ export function parseStartMinutes(timeRange) {
     if (min > 59) return null
     if (ap) {
       if (h < 1 || h > 12) return null
-      h = (h % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0)
+      h = to24(h, ap)
     } else if (h > 23) return null
     return h * 60 + min
   }

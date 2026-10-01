@@ -180,8 +180,13 @@ describe('TripOverviewView — during the trip', () => {
     })
     expect(lists.fetchForTrip).toHaveBeenCalledWith('t1')
     lists.updateItem = vi.fn().mockResolvedValue({})
+    const r = useReadinessStore()
+    r.fetch.mockClear()
     await wrapper.find('.before-tomorrow-card input[type="checkbox"]').setValue(true)
+    await flushPromises()
     expect(lists.updateItem).toHaveBeenCalledWith('c1', { done: true })
+    // §6: the Checklists tab badge reads readiness — refresh it so it agrees
+    expect(r.fetch).toHaveBeenCalledWith('t1')
   })
 
   it('last day: Tomorrow says so', async () => {

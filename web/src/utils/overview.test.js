@@ -98,7 +98,9 @@ describe('openChecklistItems', () => {
 describe('parseStartMinutes (§9 gap: next-item timing from free-text time_range)', () => {
   it.each([
     ['09:30–11:00', 570], ['9:05-10', 545], ['01:40–11:25', 100], ['18:00', 1080],
-    ['9am', 540], ['9.30pm', 1290], ['12am', 0], ['12:15 pm', 735], ['around 7:00', 420]
+    ['9am', 540], ['9.30pm', 1290], ['12am', 0], ['12:15 pm', 735], ['around 7:00', 420],
+    // final review 2026-10-02: a bare start hour in a range used to lose to the end time
+    ['10–11am', 600], ['9-10:30', 540], ['9–11pm', 1260], ['9 to 11am', 540], ['11-1pm', 660], ['Day 2 9am', 540]
   ])('%s → %s', (input, want) => { expect(parseStartMinutes(input)).toBe(want) })
   it.each([['morning'], [''], [null], [undefined], ['after lunch'], ['25:00'], ['9:75']])('%s → null (Review Focus 3)', (input) => {
     expect(parseStartMinutes(input)).toBe(null)

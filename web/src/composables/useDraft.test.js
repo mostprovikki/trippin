@@ -241,3 +241,18 @@ describe('useDraft with a reactive key', () => {
     d.teardown()
   })
 })
+
+// final review 2026-10-02: a draft saved before a field existed restored the
+// factory default for it, and Save then wrote that default over real data
+// (Settings basics: required_doc_types [] wiped the trip's required documents).
+describe('useDraft — field added after the draft was stored', () => {
+  it('load() fills fields the stored draft never had from the loaded values', () => {
+    localStorage.setItem('tripper:draft:s', JSON.stringify({ name: 'edited', tags: '' }))
+    const d = useDraft('s', () => ({ name: '', tags: '', docs: [] }))
+    expect(d.isDirty.value).toBe(true)
+    d.load({ name: 'server', tags: '', docs: ['visa'] })
+    expect(d.draft.name).toBe('edited') // the unsaved edit survives
+    expect(d.draft.docs).toEqual(['visa']) // the missing field comes from the server, not []
+    d.teardown()
+  })
+})

@@ -13,8 +13,16 @@ const SUMMARY = {
 }
 const TARGET = { profile_saved: 'people', doc_uploaded: 'people', checklist_ticked: 'checklists' }
 
+// The same person repeating the same change within an hour (tick, untick,
+// tick) is one change, not several.
 export async function recordEvent(db, { tripId, personId, kind, ...detail }) {
   const person = await db.get('SELECT name FROM persons WHERE id = ?', [personId])
+  const summary = SUMMARY[kind](firstName(person?.name), detail)
+  const recent = await db.get(
+    `SELECT 1 FROM trip_events WHERE trip_id = ? AND person_id = ? AND kind = ? AND summary = ?
+       AND created_at > to_char((now() AT TIME ZONE 'UTC') - INTERVAL '1 hour', 'YYYY-MM-DD HH24:MI:SS')`,
+    [tripId, personId, kind, summary])
+  if (recent) return
   await db.run('INSERT INTO trip_events (id, trip_id, person_id, kind, summary, target) VALUES (?,?,?,?,?,?)',
-    [randomUUID(), tripId, personId, kind, SUMMARY[kind](firstName(person?.name), detail), TARGET[kind]])
+    [randomUUID(), tripId, personId, kind, summary, TARGET[kind]])
 }

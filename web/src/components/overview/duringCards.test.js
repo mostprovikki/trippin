@@ -99,15 +99,15 @@ describe('BeforeTomorrowCard (§2: checkable in place)', () => {
   ] }]
   it('N open; ticking emits the item, keeps the row, its focus and its enabled state, and the count drops', async () => {
     const checklists = lists()
-    const w = await mount(BeforeTomorrowCard, { checklists, tomorrowIso: '2026-11-11' }, { attachTo: document.body })
+    const calls = []
+    const w = await mount(BeforeTomorrowCard, { checklists, tomorrowIso: '2026-11-11', toggle: async (item, done) => { calls.push([item.id, done]) } }, { attachTo: document.body })
     expect(w.find('h2').text()).toBe('Before tomorrow · 2 open')
     expect(w.findAll('li')).toHaveLength(2)
     const box = w.find('li input[type="checkbox"]')
     box.element.focus()
     await box.setValue(true)
     await flushPromises()
-    expect(w.emitted().toggle[0][0].id).toBe('o')
-    expect(w.emitted().toggle[0][1]).toBe(true)
+    expect(calls).toEqual([['o', true]])
     // parent applies the store update; simulate it
     checklists[0].items[0].done = 1
     await w.setProps({ checklists: [...checklists] })
@@ -116,6 +116,16 @@ describe('BeforeTomorrowCard (§2: checkable in place)', () => {
     expect(w.find('h2').text()).toBe('Before tomorrow · 1 open')
     expect(document.activeElement).toBe(w.find('li input[type="checkbox"]').element)
     expect(w.find('li input[type="checkbox"]').element.disabled).toBe(false)
+    w.unmount()
+  })
+  it('a failed save puts the box back (final review 2026-10-02)', async () => {
+    const checklists = lists()
+    const w = await mount(BeforeTomorrowCard, { checklists, tomorrowIso: '2026-11-11', toggle: async () => { throw new Error('offline') } }, { attachTo: document.body })
+    const box = w.find('li input[type="checkbox"]')
+    await box.setValue(true)
+    await flushPromises()
+    expect(box.element.checked).toBe(false)
+    expect(w.find('h2').text()).toBe('Before tomorrow · 2 open')
     w.unmount()
   })
   it('nothing due', async () => {

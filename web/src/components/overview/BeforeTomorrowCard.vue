@@ -8,18 +8,28 @@ import { dueByTomorrow } from '../../utils/overview.js'
 
 const props = defineProps({
   checklists: { type: Array, default: () => [] },
-  tomorrowIso: { type: String, required: true }
+  tomorrowIso: { type: String, required: true },
+  // async (item, done) => void; throws when the save failed
+  toggle: { type: Function, required: true }
 })
-const emit = defineEmits(['toggle'])
 const route = useRoute()
 const tickedHere = reactive(new Set())
 const rows = computed(() => dueByTomorrow(props.checklists, props.tomorrowIso, tickedHere))
 const open = computed(() => rows.value.filter((i) => !i.done).length)
 // Never disabled once ticked: a disabled control drops keyboard focus in
 // Chrome. Unticking a row ticked here is allowed and just undoes it.
-function toggle(item, done) {
+async function onChange(item, event) {
+  const done = event.target.checked
+  const wasHere = tickedHere.has(item.id)
   tickedHere.add(item.id)
-  emit('toggle', item, done)
+  try {
+    await props.toggle(item, done)
+  } catch {
+    // the parent has said why (toast); put the box back so it can't claim a
+    // tick the server never recorded — item.done didn't change, so Vue won't
+    event.target.checked = !done
+    if (!wasHere) tickedHere.delete(item.id)
+  }
 }
 </script>
 
@@ -30,7 +40,7 @@ function toggle(item, done) {
     <ul v-else class="overview-rows">
       <li v-for="item in rows" :key="item.id" :class="['overview-row', 'overview-row-plain', { 'is-done': item.done }]">
         <label class="bt-item">
-          <input type="checkbox" :checked="!!item.done" @change="toggle(item, $event.target.checked)" />
+          <input type="checkbox" :checked="!!item.done" @change="onChange(item, $event)" />
           <span>{{ item.title }}</span>
         </label>
         <span class="overview-row-reason checklist-who">{{ item.assignee_name || 'Anyone' }}</span>

@@ -82,13 +82,20 @@ export default async function routes(app) {
     schema: { body: bodySchema },
   }, async (req) => {
     const { tripId, personId } = req.participant
+    // "Since you last looked" only hears about a save that changed something —
+    // or the first save, which confirms the profile (a no-op re-save would
+    // otherwise flood the organizer's 20-row feed).
+    const before = await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])
+    const wasConfirmed = !!(await app.db.get('SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?', [tripId, personId]))?.profile_confirmed
+    const stored = (f, v) => (f === 'interests' ? JSON.stringify(v) : v)
+    const changed = FIELDS.some((f) => f in req.body && String(stored(f, req.body[f]) ?? '') !== String(before?.[f] ?? ''))
     for (const f of FIELDS) if (f in req.body)
       await app.db.run(
         `UPDATE persons SET ${f} = ?, updated_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
         [f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], personId]
       )
     await app.db.run('UPDATE trip_participants SET profile_confirmed = 1 WHERE trip_id = ? AND person_id = ?', [tripId, personId])
-    await recordEvent(app.db, { tripId, personId, kind: 'profile_saved' })
+    if (changed || !wasConfirmed) await recordEvent(app.db, { tripId, personId, kind: 'profile_saved' })
     return { person: personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])) }
   })
 

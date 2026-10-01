@@ -23,6 +23,10 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
   // this rather than storageKey.value, so a write scheduled before a key change
   // can never land in the new key's slot no matter which watcher flushes first.
   let activeKey = storageKey.value
+  // Keys the restored localStorage draft actually carried. A key it lacks (a
+  // field added after the draft was written) that still holds the factory
+  // default isn't an unsaved edit, so load() fills it from the real values.
+  let storedKeys = new Set()
 
   function hydrate() {
     activeKey = storageKey.value
@@ -30,6 +34,7 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
     let stored = null
     try { stored = JSON.parse(localStorage.getItem(activeKey) ?? 'null') } catch { stored = null }
 
+    storedKeys = new Set(Object.keys(stored || {}))
     const initial = { ...base, ...(stored || {}) }
     if (route) {
       for (const f of urlFields) {
@@ -135,6 +140,12 @@ export function useDraft(key, factory, { urlFields = [], router = null, route = 
     const baseObj = JSON.parse(baseline.value)
     baseline.value = JSON.stringify(bulkSnapshot({ ...baseObj, ...values }, urlFields))
     if (!wasDirty) Object.assign(draft, values)
+    else {
+      const pristine = factory()
+      for (const [k, v] of Object.entries(values)) {
+        if (!storedKeys.has(k) && JSON.stringify(draft[k]) === JSON.stringify(pristine[k])) draft[k] = v
+      }
+    }
     isDirty.value = JSON.stringify(bulkSnapshot(draft, urlFields)) !== baseline.value
   }
 

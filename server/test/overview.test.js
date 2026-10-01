@@ -82,6 +82,35 @@ describe('POST /trips/:id/seen', () => {
     ])
   })
 
+  // final review 2026-10-02: one participant link could flood the 20-row feed
+  it('a profile save that changes nothing records nothing', async () => {
+    const { db, seen, asParticipant, backdate } = await setup()
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: { dietary: 'veg' } })
+    await db.run(`UPDATE trip_events SET created_at = to_char((now() AT TIME ZONE 'UTC') - INTERVAL '3 hours', 'YYYY-MM-DD HH24:MI:SS')`)
+    await seen(); await backdate(2)
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: { dietary: 'veg' } })
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: {} })
+    expect((await seen()).json().events).toEqual([])
+  })
+
+  it('first save of an untouched profile still records (it confirms the profile)', async () => {
+    const { seen, asParticipant, backdate } = await setup()
+    await seen(); await backdate(2)
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: {} })
+    expect((await seen()).json().events.map((e) => e.summary)).toEqual(['Divya updated their details'])
+  })
+
+  it('tick, untick, tick again within the hour records one tick', async () => {
+    const { db, t, p, seen, asParticipant, backdate } = await setup()
+    await seen(); await backdate(2)
+    await db.run("INSERT INTO checklists (id,trip_id,kind,name) VALUES ('c2',?,'packing','Pack')", [t.id])
+    await db.run("INSERT INTO checklist_items (id,checklist_id,title,assignee_person_id,done,position) VALUES ('i2','c2','Hat',?,0,0)", [p.id])
+    for (const done of [true, false, true, false, true]) {
+      await asParticipant({ method: 'PUT', url: '/api/participant/checklist-items/i2', payload: { done } })
+    }
+    expect((await seen()).json().events.map((e) => e.summary)).toEqual(['Divya ticked Hat'])
+  })
+
   it('a failed participant write records nothing', async () => {
     const { seen, asParticipant, backdate } = await setup()
     await seen(); await backdate(2)

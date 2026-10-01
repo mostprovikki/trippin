@@ -65,7 +65,9 @@ const isLastDay = computed(() => todayIso.value === trip.value?.end_date)
 const stay = computed(() => tonightStay(itineraryDays.value, todayIso.value))
 
 async function toggleItem(item, done) {
-  try { await checklists.updateItem(item.id, { done }) } catch (e) { notify.error(e.message) }
+  try { await checklists.updateItem(item.id, { done }) } catch (e) { notify.error(e.message); throw e }
+  // §6: the Checklists tab badge counts from readiness — keep it in step
+  readiness.fetch(tripId.value).catch(() => { /* badge refreshes on next load */ })
 }
 
 async function load() {
@@ -133,7 +135,7 @@ watch(tripId, load)
       <div class="overview-col">
         <QuickRefCard :stay="stay" :today-items="todayItems" :emergency-info="trip.emergency_info || null" />
         <TomorrowCard :day-iso="isLastDay ? null : tomorrowIso" :items="tomorrowItems" :is-last-day="isLastDay" />
-        <BeforeTomorrowCard :checklists="tripChecklists" :tomorrow-iso="tomorrowIso" @toggle="toggleItem" />
+        <BeforeTomorrowCard :checklists="tripChecklists" :tomorrow-iso="tomorrowIso" :toggle="toggleItem" />
       </div>
     </div>
 
