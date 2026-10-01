@@ -4,7 +4,10 @@ import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from
 import { buildItineraryPrompt, buildDayRegenPrompt, draftSchema, dayRegenSchema } from '../llm/prompts/itinerary.js'
 import { buildTripIcs, slugify } from '../lib/ics.js'
 
-const ITEM_CATEGORIES = ['travel', 'food', 'activity', 'rest', 'logistics']
+const ITEM_CATEGORIES = ['travel', 'food', 'activity', 'rest', 'logistics', 'stay']
+// AI drafts keep the original five: stays come from bookings an organizer
+// records, not from a generated plan.
+const DRAFT_CATEGORIES = ['travel', 'food', 'activity', 'rest', 'logistics']
 
 function dateRange(start, end) {
   const out = []
@@ -32,6 +35,8 @@ const itemBodySchema = (required = []) => ({
     est_cost: { type: ['number', 'null'] },
     notes: { type: ['string', 'null'] },
     link: { type: ['string', 'null'] },
+    booking_ref: { type: ['string', 'null'] },
+    phone: { type: ['string', 'null'] },
   },
 })
 
@@ -39,7 +44,7 @@ const draftItemSchema = {
   type: 'object', required: ['title'],
   properties: {
     title: { type: 'string' }, time_range: { type: ['string', 'null'] }, location: { type: ['string', 'null'] },
-    category: { type: 'string', enum: ITEM_CATEGORIES }, est_cost: { type: ['number', 'null'] },
+    category: { type: 'string', enum: DRAFT_CATEGORIES }, est_cost: { type: ['number', 'null'] },
     notes: { type: ['string', 'null'] }, link: { type: ['string', 'null'] },
   },
 }
@@ -160,9 +165,9 @@ export default async function routes(app) {
     const { maxpos } = await app.db.get('SELECT COALESCE(MAX(position), -1) AS maxpos FROM itinerary_items WHERE day_id = ?', [day.id])
     const id = randomUUID()
     await app.db.run(
-      `INSERT INTO itinerary_items (id, day_id, position, title, time_range, location, category, est_cost, notes, link)
-       VALUES (?,?,?,?,?,?,?,?,?,?)`,
-      [id, day.id, maxpos + 1, b.title, b.time_range ?? null, b.location ?? null, b.category ?? 'activity', b.est_cost ?? null, b.notes ?? null, b.link ?? null],
+      `INSERT INTO itinerary_items (id, day_id, position, title, time_range, location, category, est_cost, notes, link, booking_ref, phone)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [id, day.id, maxpos + 1, b.title, b.time_range ?? null, b.location ?? null, b.category ?? 'activity', b.est_cost ?? null, b.notes ?? null, b.link ?? null, b.booking_ref ?? null, b.phone ?? null],
     )
     reply.code(201)
     return itemToJson(await getItem(id))
@@ -172,7 +177,7 @@ export default async function routes(app) {
     const item = await ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     const b = req.body || {}
-    const fields = ['title', 'time_range', 'location', 'category', 'est_cost', 'notes', 'link']
+    const fields = ['title', 'time_range', 'location', 'category', 'est_cost', 'notes', 'link', 'booking_ref', 'phone']
     const updates = []; const params = []
     for (const f of fields) if (Object.prototype.hasOwnProperty.call(b, f)) { updates.push(`${f} = ?`); params.push(b[f]) }
     if (updates.length) {

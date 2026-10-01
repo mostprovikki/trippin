@@ -25,7 +25,7 @@ describe('ItineraryItemForm', () => {
 
   it('resolves each labelled field by its label text', () => {
     const wrapper = mountWithBase(ItineraryItemForm, { attachTo: document.body })
-    for (const text of ['Title', 'Time', 'Location', 'Category', 'Cost', 'Notes', 'Link']) {
+    for (const text of ['Title', 'Time', 'Location', 'Category', 'Cost', 'Notes', 'Link', 'Booking ref', 'Phone']) {
       getByLabelText(wrapper, text)
     }
     wrapper.unmount()
@@ -44,11 +44,31 @@ describe('ItineraryItemForm', () => {
     const opts = select.props('options')
     const label = (o) => o[select.props('optionLabel')]
     const value = (o) => o[select.props('optionValue')]
-    expect(opts.map(label)).toEqual(['Travel', 'Food', 'Activity', 'Rest', 'Logistics'])
-    expect(opts.map(value)).toEqual(['travel', 'food', 'activity', 'rest', 'logistics'])
+    expect(opts.map(label)).toEqual(['Travel', 'Food', 'Activity', 'Rest', 'Logistics', 'Stay'])
+    expect(opts.map(value)).toEqual(['travel', 'food', 'activity', 'rest', 'logistics', 'stay'])
     expect(wrapper.find('.p-select-label').text()).toBe('Activity')
     await wrapper.find('form').trigger('submit')
     expect(wrapper.emitted().submit[0][0].category).toBe('activity')
+    wrapper.unmount()
+  })
+
+  // Quick reference on the during-trip Overview reads these (tripper.md §2, D4)
+  it('loads and submits booking ref + phone, blank as null', async () => {
+    const wrapper = mountWithBase(ItineraryItemForm, { attachTo: document.body, props: { item: { title: 'Taxi', booking_ref: 'CT-4471', phone: '' } } })
+    expect(getByLabelText(wrapper, 'Booking ref').element.value).toBe('CT-4471')
+    await getByLabelText(wrapper, 'Phone').setValue('+84 90 111')
+    await wrapper.find('form').trigger('submit')
+    expect(wrapper.emitted().submit[0][0]).toMatchObject({ booking_ref: 'CT-4471', phone: '+84 90 111' })
+    await getByLabelText(wrapper, 'Booking ref').setValue('')
+    await wrapper.find('form').trigger('submit')
+    expect(wrapper.emitted().submit[1][0].booking_ref).toBe(null)
+    wrapper.unmount()
+  })
+
+  it('Esc from inside the new fields still cancels', async () => {
+    const wrapper = mountWithBase(ItineraryItemForm, { attachTo: document.body })
+    await getByLabelText(wrapper, 'Booking ref').trigger('keydown', { key: 'Escape' })
+    expect(wrapper.emitted().cancel).toBeTruthy()
     wrapper.unmount()
   })
 })

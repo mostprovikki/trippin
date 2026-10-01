@@ -178,7 +178,7 @@ a decision.
 **Open data gaps the chosen Overview needs** (from the mockups, none built yet): per-person
 "reason it matters" (visa lead time, 6-month passport rule per destination); a "last seen"
 timestamp per organizer per trip for "Since you last looked" (built 2026-10-01: `organizer_trip_views` + `trip_events`); a stay/guide/emergency
-quick-reference source; booking refs on itinerary items; "next item" timing on today.
+quick-reference source (built 2026-10-01: `stay` category, item `phone`, trip `emergency_info`); booking refs on itinerary items (built 2026-10-01: item `booking_ref`); "next item" timing on today.
 
 **Resolved 2026-09-26 (was a conflict with d5d.4):** the paste-JSON path ("Draft with your own
 AI…") is always available, in the same `⋯` menu as "Draft with AI" at each of the four AI sites.
@@ -203,3 +203,4 @@ Nothing AI-related shows at rest.
 | 2026-10-01 | After the trip the Overview shows trip line, Itinerary, Budget | phase-aware build | §2 "After the trip" only said how a trip leaves active |
 | 2026-10-01 | People and Checklists tab badges = the Overview's numbers (people missing; open items) | phase-aware build | §6 one number, one place — badges counted unconfirmed profiles and overdue items, two other numbers |
 | 2026-10-01 | `during` also needs today inside the trip dates; an active trip outside them gets the before layout | phase-aware build | otherwise an early-activated trip shows an empty Today |
+| 2026-10-01 | Quick reference source = `stay` itinerary items + item phone/booking ref + trip "Local emergency numbers" (Details ▾ Destination) | owner (D4) | §9 gap; no stays table, no per-destination data |

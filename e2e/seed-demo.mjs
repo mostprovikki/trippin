@@ -264,6 +264,32 @@ async function applyItinerary(tripId, days) {
   await POST(`/trips/${tripId}/itinerary/apply-draft`, { days })
 }
 
+// Stays, booking refs and phones feed the during-trip Overview's Quick
+// reference and Today (tripper.md §2). apply-draft carries only draft fields
+// (and no `stay` category), so they go on afterwards; apply-draft replaces a
+// day's items, so re-running the seed doesn't duplicate them.
+const FLAGSHIP_STAYS = [
+  { day_date: '2026-11-06', title: 'La Siesta Premium Hang Be', location: '27 Hang Be, Hoan Kiem, Hanoi', booking_ref: 'LSP-88213', phone: '+84 24 3926 3641', notes: 'Three twin rooms, 2 nights. Check-out 12:00 on 8 Nov.' },
+  { day_date: '2026-11-09', title: 'Anantara Hoi An Resort', location: '1 Pham Hong Thai, Hoi An', booking_ref: 'ANT-4471', phone: '+84 235 3914 555', notes: '3 nights, river-view rooms. Check-out 12:00 on 12 Nov.' },
+  { day_date: '2026-11-13', title: 'Shinta Mani Angkor', location: 'Oum Khun St, Siem Reap', booking_ref: 'SMA-20931', phone: '+855 63 964 123', notes: '3 nights. Check-out 11:00 on 15 Nov.' },
+]
+const FLAGSHIP_REFS = { 'Airport transfer + hotel check-in': { booking_ref: 'HT-7SEAT-0611', phone: '+84 91 234 5678' }, 'Board overnight junk cruise': { booking_ref: 'JUNK-3C-1208' } }
+
+async function addFlagshipQuickRef(tripId) {
+  const { days } = (await GET(`/trips/${tripId}/itinerary`)).json
+  const byDate = new Map(days.map((d) => [d.day_date, d]))
+  for (const st of FLAGSHIP_STAYS) {
+    const day = byDate.get(st.day_date)
+    if (!day) throw new Error(`flagship stay: no itinerary day ${st.day_date}`)
+    const { day_date, ...item } = st
+    await POST(`/days/${day.id}/items`, { ...item, category: 'stay' })
+  }
+  for (const day of days) for (const it of day.items) {
+    if (FLAGSHIP_REFS[it.title]) await PUT(`/items/${it.id}`, FLAGSHIP_REFS[it.title])
+  }
+  await PUT(`/trips/${tripId}`, { emergency_info: 'Vietnam: Police 113 · Ambulance 115 · Fire 114\nCambodia: Police 117 · Ambulance 119\nIndian Embassy Hanoi +84 24 3824 4990' })
+}
+
 // Mints a fresh participant link (the endpoint revokes the previous active one)
 // and, when confirm is set, submits the participant profile — the ONLY way to
 // flip trip_participants.profile_confirmed, which readiness reads.
@@ -428,6 +454,7 @@ async function seedFlagship(people) {
   })
 
   await applyItinerary(trip.id, FLAGSHIP_ITINERARY)
+  await addFlagshipQuickRef(trip.id)
 
   const P = (n) => people.get(n).id
   // 12 packing items (9 done) + 10 task items (4 done) = 22 items, 13 done.

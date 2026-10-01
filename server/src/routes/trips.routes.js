@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
 import { archiveTrip } from '../lib/archive.js'
 
-const TRIP_FIELDS = ['name', 'description', 'vibe_tags', 'origin_city', 'date_mode', 'start_date', 'end_date', 'flex_days', 'destination_mode', 'destination', 'required_doc_types']
+const TRIP_FIELDS = ['name', 'description', 'vibe_tags', 'origin_city', 'date_mode', 'start_date', 'end_date', 'flex_days', 'destination_mode', 'destination', 'required_doc_types', 'emergency_info']
 // documents.doc_type CHECK values (001_init.sql)
 const DOC_TYPES = ['passport', 'visa', 'national_id', 'driving_license', 'vaccination', 'other']
 const JSON_FIELDS = new Set(['vibe_tags', 'required_doc_types'])

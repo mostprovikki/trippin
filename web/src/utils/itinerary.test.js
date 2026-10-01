@@ -14,7 +14,7 @@ describe('categoryIcon', () => {
     expect(categoryIcon(undefined)).toBe('•')
   })
   it('exposes the map so callers can iterate it', () => {
-    expect(Object.keys(CATEGORY_ICONS)).toEqual(['travel', 'food', 'activity', 'rest', 'logistics'])
+    expect(Object.keys(CATEGORY_ICONS)).toEqual(['travel', 'food', 'activity', 'rest', 'logistics', 'stay'])
   })
 })
 

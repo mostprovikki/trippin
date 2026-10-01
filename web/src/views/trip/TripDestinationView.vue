@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
+import Textarea from 'primevue/textarea'
 import { useTripsStore } from '../../stores/trips.js'
 import { useNotify } from '../../composables/useNotify.js'
 import SectionHeader from '../../components/SectionHeader.vue'
@@ -62,6 +63,18 @@ async function onUpdateGoal(goalId, goal) {
 async function onDeleteGoal(goalId) {
   try { await trips.deleteGoal(goalId) } catch (e) { notify.error(e.message) }
 }
+
+// Local emergency numbers, shown in the during-trip Overview's Quick reference
+// (tripper.md §2; owner decision D4). One Save for this section (§5).
+const emergencyDraft = ref('')
+watch(() => trips.current?.emergency_info, (v) => { emergencyDraft.value = v || '' }, { immediate: true })
+const emergencyDirty = computed(() => emergencyDraft.value !== (trips.current?.emergency_info || ''))
+async function saveEmergency() {
+  try {
+    await trips.updateTrip(tripId.value, { emergency_info: emergencyDraft.value.trim() || null })
+    notify.success('Emergency numbers saved')
+  } catch (e) { notify.error(e.message) }
+}
 </script>
 
 <template>
@@ -83,6 +96,16 @@ async function onDeleteGoal(goalId) {
       <h2 id="trip-goals-heading">Goals</h2>
       <p class="dest-goals-desc">What this trip is for — fixed events, must-dos, shared intentions.</p>
       <GoalsEditor :goals="trips.current?.goals || []" @add="onAddGoal" @update="onUpdateGoal" @delete="onDeleteGoal" />
+    </section>
+
+    <section class="card dest-goals" aria-labelledby="trip-emergency-heading">
+      <h2 id="trip-emergency-heading">On the trip</h2>
+      <p class="dest-goals-desc">Shown in the Overview's Quick reference while the trip is on.</p>
+      <div class="field">
+        <label for="trip-emergency">Local emergency numbers</label>
+        <Textarea id="trip-emergency" v-model="emergencyDraft" rows="3" auto-resize fluid placeholder="e.g. Police 113 · Ambulance 115 · Embassy +84 24 3824 0990" />
+      </div>
+      <Button label="Save emergency numbers" :disabled="!emergencyDirty" @click="saveEmergency" />
     </section>
   </div>
 </template>

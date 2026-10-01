@@ -16,7 +16,7 @@ async function mountView() {
   const pinia = createPinia()
   setActivePinia(pinia)
   const store = useTripsStore()
-  store.current = { id: 't1', name: 'Goa 2026', goals: [{ id: 'g1', title: 'Sunburn festival' }] }
+  store.current = { id: 't1', name: 'Goa 2026', goals: [{ id: 'g1', title: 'Sunburn festival' }], emergency_info: 'Police 100' }
   store.candidates = []
   store.fetchCandidates = vi.fn().mockResolvedValue([])
   store.addGoal = vi.fn().mockResolvedValue({})
@@ -43,5 +43,32 @@ describe('TripDestinationView — Goals folded in', () => {
     await flushPromises()
     expect(store.addGoal).toHaveBeenCalledWith('t1', { title: 'Beach day' })
     expect(store.deleteGoal).toHaveBeenCalledWith('g1')
+  })
+})
+
+// The during-trip Overview's Quick reference shows these (tripper.md §2; owner D4)
+describe('TripDestinationView — local emergency numbers', () => {
+  it('seeds from the trip, saves with its own Save, disabled until changed', async () => {
+    const { wrapper, store } = await mountView()
+    store.updateTrip = vi.fn().mockImplementation(async (_id, body) => ({ ...store.current, ...body }))
+    const label = wrapper.findAll('label').find((l) => l.text() === 'Local emergency numbers')
+    const ta = wrapper.find(`#${label.attributes('for')}`)
+    expect(ta.element.value).toBe('Police 100')
+    const save = wrapper.findAll('button').find((b) => b.text() === 'Save emergency numbers')
+    expect(save.attributes('disabled')).toBeDefined()
+    await ta.setValue('Police 113 · Ambulance 115')
+    expect(save.attributes('disabled')).toBeUndefined()
+    await save.trigger('click')
+    await flushPromises()
+    expect(store.updateTrip).toHaveBeenCalledWith('t1', { emergency_info: 'Police 113 · Ambulance 115' })
+  })
+  it('clearing it saves null', async () => {
+    const { wrapper, store } = await mountView()
+    store.updateTrip = vi.fn().mockResolvedValue({})
+    const label = wrapper.findAll('label').find((l) => l.text() === 'Local emergency numbers')
+    await wrapper.find(`#${label.attributes('for')}`).setValue('  ')
+    await wrapper.findAll('button').find((b) => b.text() === 'Save emergency numbers').trigger('click')
+    await flushPromises()
+    expect(store.updateTrip).toHaveBeenCalledWith('t1', { emergency_info: null })
   })
 })

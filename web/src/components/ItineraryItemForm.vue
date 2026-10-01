@@ -14,7 +14,9 @@ const categories = [
   { label: 'Food', value: 'food' },
   { label: 'Activity', value: 'activity' },
   { label: 'Rest', value: 'rest' },
-  { label: 'Logistics', value: 'logistics' }
+  { label: 'Logistics', value: 'logistics' },
+  // a night's accommodation — the during-trip Overview's "Tonight" (tripper.md §2)
+  { label: 'Stay', value: 'stay' }
 ]
 
 // Per-instance uid so each label's `for` matches its input's id even if two
@@ -28,6 +30,8 @@ const ids = {
   cost: `iif-cost-${uid}`,
   location: `iif-location-${uid}`,
   link: `iif-link-${uid}`,
+  ref: `iif-ref-${uid}`,
+  phone: `iif-phone-${uid}`,
   notes: `iif-notes-${uid}`
 }
 
@@ -38,7 +42,7 @@ onMounted(() => {
 })
 
 const form = reactive({
-  title: '', time_range: '', location: '', category: 'activity', est_cost: '', notes: '', link: ''
+  title: '', time_range: '', location: '', category: 'activity', est_cost: '', notes: '', link: '', booking_ref: '', phone: ''
 })
 
 function load(item) {
@@ -49,6 +53,8 @@ function load(item) {
   form.est_cost = item?.est_cost ?? ''
   form.notes = item?.notes || ''
   form.link = item?.link || ''
+  form.booking_ref = item?.booking_ref || ''
+  form.phone = item?.phone || ''
 }
 load(props.item)
 watch(() => props.item, load)
@@ -61,7 +67,9 @@ function submit() {
     category: form.category,
     est_cost: form.est_cost === '' ? null : Number(form.est_cost),
     notes: form.notes || null,
-    link: form.link || null
+    link: form.link || null,
+    booking_ref: form.booking_ref || null,
+    phone: form.phone || null
   })
 }
 </script>
@@ -93,6 +101,14 @@ function submit() {
         <label :for="ids.link">Link</label>
         <InputText :id="ids.link" name="iif-link" v-model="form.link" fluid />
       </div>
+      <div class="field iif-ref">
+        <label :for="ids.ref">Booking ref</label>
+        <InputText :id="ids.ref" name="iif-booking-ref" v-model="form.booking_ref" fluid />
+      </div>
+      <div class="field iif-phone">
+        <label :for="ids.phone">Phone</label>
+        <InputText :id="ids.phone" name="iif-phone" v-model="form.phone" type="tel" fluid />
+      </div>
       <div class="field iif-notes">
         <label :for="ids.notes">Notes</label>
         <Textarea :id="ids.notes" v-model="form.notes" fluid auto-resize />
@@ -107,14 +123,14 @@ function submit() {
 
 <style scoped>
 /* Compact grid: Title full-width; Time · Category · Est. cost on one row;
-   Location · Link on one row; Notes full-width. 6 columns is the LCM of the
+   Location · Link on one row; Booking ref · Phone on one row; Notes full-width. 6 columns is the LCM of the
    3-across and 2-across rows so both fit the same track without a nested
    grid. Collapses to one column at phone width (participant pages are
    phones) by resetting every span back to the full row. */
 .iif-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem 0.75rem; }
 .iif-title, .iif-notes { grid-column: 1 / -1; }
 .iif-time, .iif-category, .iif-cost { grid-column: span 2; }
-.iif-location, .iif-link { grid-column: span 3; }
+.iif-location, .iif-link, .iif-ref, .iif-phone { grid-column: span 3; }
 /* Tighter than the global .field (1rem bottom margin, 0.375rem label gap) —
    this form's fields sit in a dense grid rather than a single stacked column,
    so the extra breathing room the global rule budgets for isn't needed here.
@@ -126,7 +142,7 @@ function submit() {
 
 @media (max-width: 30rem) {
   .iif-grid { grid-template-columns: 1fr; }
-  .iif-title, .iif-notes, .iif-time, .iif-category, .iif-cost, .iif-location, .iif-link {
+  .iif-title, .iif-notes, .iif-time, .iif-category, .iif-cost, .iif-location, .iif-link, .iif-ref, .iif-phone {
     grid-column: auto;
   }
 }

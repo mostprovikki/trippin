@@ -1,7 +1,7 @@
 // Shared with DayCard.vue (organizer itinerary) and ParticipantItinerary.vue
 // (guest read-only view) — one map so the emoji for "food" can't drift
 // between the two renders of the same category.
-export const CATEGORY_ICONS = { travel: '✈️', food: '🍽️', activity: '🎟️', rest: '🛌', logistics: '🧳' }
+export const CATEGORY_ICONS = { travel: '✈️', food: '🍽️', activity: '🎟️', rest: '🛌', logistics: '🧳', stay: '🏨' }
 export function categoryIcon(cat) { return CATEGORY_ICONS[cat] || '•' }
 
 // "HH:MM–HH:MM" (en dash) or "HH:MM-HH:MM" (hyphen) only — anything else

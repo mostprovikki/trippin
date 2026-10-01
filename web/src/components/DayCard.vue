@@ -28,7 +28,7 @@ const confirm = useConfirm()
 
 // Text label per category, replacing the emoji glyph with a color-coded Tag
 // (readable in both themes via the cat-tag-* classes below).
-const CATEGORY_LABELS = { travel: 'Travel', food: 'Food', activity: 'Activity', rest: 'Rest', logistics: 'Logistics' }
+const CATEGORY_LABELS = { travel: 'Travel', food: 'Food', activity: 'Activity', rest: 'Rest', logistics: 'Logistics', stay: 'Stay' }
 function categoryLabel(cat) { return CATEGORY_LABELS[cat] || cat || 'Other' }
 
 function isItemNow(item) {
@@ -173,8 +173,8 @@ async function onEditSubmit(item) {
 .day-item-edit-heading { margin: 0 0 0.5rem; color: var(--app-text-muted); }
 
 /* Category tags: one hue per category, built from literal light/dark pairs
-   (not just the app's 4 semantic tokens — travel/food/activity/rest/logistics
-   is 5 categories and reusing severity="success"/"warn" would collide with
+   (not just the app's 4 semantic tokens — travel/food/activity/rest/logistics/stay
+   is 6 categories and reusing severity="success"/"warn" would collide with
    what those colors already mean elsewhere, e.g. "Overdue"). Each pair is
    tuned the same way main.css tunes --app-danger/--app-primary: a darker
    600/700-weight hue as TEXT on a pale tint in light mode (the only failure
@@ -187,9 +187,11 @@ async function onEditSubmit(item) {
 .cat-tag-activity { background: #f5f3ff; color: #6d28d9; }
 .cat-tag-rest { background: #ecfdf5; color: #047857; }
 .cat-tag-logistics { background: #fff1f2; color: #be123c; }
+.cat-tag-stay { background: #f0f9ff; color: #0369a1; }
 :root.app-dark .cat-tag-travel { background: rgba(96, 165, 250, 0.16); color: #60a5fa; }
 :root.app-dark .cat-tag-food { background: rgba(251, 146, 60, 0.16); color: #fb923c; }
 :root.app-dark .cat-tag-activity { background: rgba(167, 139, 250, 0.16); color: #a78bfa; }
 :root.app-dark .cat-tag-rest { background: rgba(52, 211, 153, 0.16); color: #34d399; }
 :root.app-dark .cat-tag-logistics { background: rgba(251, 113, 133, 0.16); color: #fb7185; }
+:root.app-dark .cat-tag-stay { background: rgba(56, 189, 248, 0.16); color: #38bdf8; }
 </style>
