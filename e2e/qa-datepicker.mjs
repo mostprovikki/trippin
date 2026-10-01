@@ -576,6 +576,12 @@ async function readExpiryBadges(p) {
   }).filter(Boolean))
 }
 
+function humanDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number)
+  const mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]
+  return { plain: `${d} ${mon} ${y}`, padded: `${String(d).padStart(2, '0')} ${mon} ${y}` }
+}
+
 async function assertExpiryBadges(p, label) {
   const d = await browserDates(p)
   const badges = await readExpiryBadges(p)
@@ -583,7 +589,9 @@ async function assertExpiryBadges(p, label) {
   note(`badges [${label}]: ${JSON.stringify(badges)}`)
   if (!badges.length) { fail(`document rows present to judge the badge: ${label}`, 'no table rows with a .p-tag on this surface'); return { d, badges } }
   for (const [iso, shouldWarn, which] of [[d.yesterday, true, 'YESTERDAY'], [d.today, false, 'TODAY'], [d.tomorrow, false, 'TOMORROW']]) {
-    const b = badges.find((x) => x.expiry === iso)
+    // /p now shows readable dates ("1 Oct 2026", bead 0qh.4); still accept raw ISO.
+    const human = humanDate(iso)
+    const b = badges.find((x) => x.expiry === iso || x.expiry === human.padded || x.expiry === human.plain)
     if (!b) { fail(`Expired badge for ${which} (${iso}): ${label}`, `no document row carries expiry ${iso}, so this case went untested`); continue }
     if (b.warn === shouldWarn) {
       ok(`Expired badge ${shouldWarn ? 'SHOWN' : 'ABSENT'} for ${which} (${iso}): ${label}`, `severity=${b.dataP || 'secondary'} bg=${b.bg}`)
@@ -1367,11 +1375,9 @@ let personUrl = null
 {
   await page.locator('.participant-card').first().waitFor({ timeout: 3000 }).catch(() => {})
   if (await page.locator('.participant-card').count()) {
-    await page.getByRole('button', { name: /create link/i }).first().click()
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(600)
-    const code = await page.locator('.link-reveal code').first().textContent().catch(() => null)
-    participantUrl = code?.trim() || null
+    const linkP = page.waitForResponse((r) => /\/participants\/[^/]+\/link$/.test(r.url()) && r.ok(), { timeout: 5000 }).then(async (r) => BASE + (await r.json()).url).catch(() => null)
+    await page.getByRole('button', { name: /^Copy .+'s link$/ }).first().click()
+    participantUrl = await linkP
   }
   if (participantUrl) ok('share link created')
   else fail('share link', 'no participant card / no link revealed on the People section')
@@ -1537,7 +1543,7 @@ if (participantUrl) {
         await mobile.reload({ waitUntil: 'networkidle' })
         await mobile.waitForTimeout(1100)
         const t = await mobile.locator('body').innerText().catch(() => '')
-        if (t.includes('2030-01-31')) ok('participant doc expiry persistence', '2030-01-31 survived upload+reload with no day shift')
+        if (t.includes('2030-01-31') || t.includes('31 Jan 2030')) ok('participant doc expiry persistence', '2030-01-31 survived upload+reload with no day shift')
         else fail('participant doc expiry persistence', `after upload+reload the page does not show 2030-01-31`)
         await mobile.screenshot({ path: path.join(shots, 'dp-34b-participant-after-reload.png'), fullPage: true })
 
@@ -1713,7 +1719,7 @@ await browser.close()
 
 // favicon 404 is cosmetic; the Settings view intentionally probes /archive and
 // treats its 404 as "not archived".
-const realErrors = consoleErrors.filter((e) => !/favicon|sourcemap|\/api\/trips\/[\w-]+\/archive/i.test(e))
+const realErrors = consoleErrors.filter((e) => !/favicon|sourcemap|\/api\/trips\/[\w-]+\/archive|\/participants\/[\w-]+\/link\)?$/i.test(e))
 console.log('\n--- console/page errors (filtered) ---')
 if (realErrors.length) { failures++; console.error(realErrors.join('\n')) } else console.log('(none)')
 console.log('--- raw console/page errors (unfiltered) ---')

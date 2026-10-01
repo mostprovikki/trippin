@@ -62,7 +62,7 @@ for (const scheme of ['light', 'dark']) {
     return {
       banner: banner ? banner.innerText.replace(/\s+/g, ' ').trim() : null,
       desc: main.innerText.includes('Trip dates are locked'),
-      staleDesc: main.innerText.includes('then confirm one to lock')
+      staleDesc: main.innerText.includes('to lock the trip dates')
     }
   })
   if (a.banner && a.banner.includes('2026-11-06') && a.banner.includes('2026-11-15') && /confirmed/i.test(a.banner)) ok(`${scheme}: confirmed trip shows banner`, a.banner)
@@ -77,7 +77,7 @@ for (const scheme of ['light', 'dark']) {
     const main = document.querySelector('.trip-main') || document.body
     return {
       banner: !!document.querySelector('.dates-confirmed'),
-      proposeDesc: main.innerText.includes('then confirm one to lock'),
+      proposeDesc: main.innerText.includes('to lock the trip dates'),
       rows: document.querySelectorAll('.dwe-row').length
     }
   })

@@ -117,10 +117,9 @@ for (let i = 0; i < Math.min(cardCount, 5) && !participantUrl; i++) {
   // Participant cards render after the layout's trip fetch settles — poll briefly.
   await page.locator('.participant-card').first().waitFor({ timeout: 2500 }).catch(() => {})
   if (await page.locator('.participant-card').count()) {
-    await page.getByRole('button', { name: /create link/i }).first().click()
-    await page.waitForLoadState('networkidle')
-    const code = await page.locator('.link-reveal code').textContent().catch(() => null)
-    participantUrl = code?.trim() || null
+    const linkP = page.waitForResponse((r) => /\/participants\/[^/]+\/link$/.test(r.url()) && r.ok(), { timeout: 5000 }).then(async (r) => BASE + (await r.json()).url).catch(() => null)
+    await page.getByRole('button', { name: /^Copy .+'s link$/ }).first().click()
+    participantUrl = await linkP
   }
   if (!participantUrl) {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })

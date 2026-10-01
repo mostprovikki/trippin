@@ -304,12 +304,12 @@ if (!(await toggle.count())) {
 if (ids.tripId && ids.personId) {
   await page.goto(`${BASE}/trips/${ids.tripId}/people`, { waitUntil: 'networkidle' })
   let participantUrl = null
-  const createLink = page.getByRole('button', { name: /create link/i }).first()
-  if (await createLink.count()) {
-    await createLink.click()
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(700)
-    participantUrl = (await page.locator('.link-reveal code').first().textContent().catch(() => null))?.trim() || null
+  const copyBtn = page.getByRole('button', { name: /^Copy .+'s link$/ }).first()
+  if (await copyBtn.count()) {
+    // The button copies via the clipboard; read the URL from the API response it triggers.
+    const linkP = page.waitForResponse((r) => /\/participants\/[^/]+\/link$/.test(r.url()) && r.ok(), { timeout: 5000 }).then(async (r) => BASE + (await r.json()).url).catch(() => null)
+    await copyBtn.click()
+    participantUrl = await linkP
   }
   if (!participantUrl) {
     note('could not mint a participant link — participant page NOT audited in dark')
@@ -345,7 +345,7 @@ if (ids.tripId && ids.personId) {
 // ---------- report ----------
 console.log('')
 if (consoleErrors.length) {
-  const real = consoleErrors.filter((e) => !/favicon|sourcemap|\/archive/i.test(e))
+  const real = consoleErrors.filter((e) => !/favicon|sourcemap|\/archive|participants\/[^/]+\/link\b/i.test(e))
   if (real.length) {
     console.error(`console errors (${real.length}):`)
     for (const e of real.slice(0, 10)) console.error(`  ! ${e}`)

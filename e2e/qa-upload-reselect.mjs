@@ -196,10 +196,9 @@ if (tripId) {
   await page.goto(`${BASE}/trips/${tripId}/people`, { waitUntil: 'networkidle' })
   await page.locator('.participant-card').first().waitFor({ timeout: 4000 }).catch(() => {})
   if (await page.locator('.participant-card').count()) {
-    await page.getByRole('button', { name: /create link/i }).first().click()
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(700)
-    participantUrl = (await page.locator('.link-reveal code').first().textContent().catch(() => null))?.trim() || null
+    const linkP = page.waitForResponse((r) => /\/participants\/[^/]+\/link$/.test(r.url()) && r.ok(), { timeout: 5000 }).then(async (r) => BASE + (await r.json()).url).catch(() => null)
+    await page.getByRole('button', { name: /^Copy .+'s link$/ }).first().click()
+    participantUrl = await linkP
   }
 }
 
