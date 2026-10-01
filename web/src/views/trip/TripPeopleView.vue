@@ -202,9 +202,12 @@ function toggleHistory(personId) {
 
     <div v-for="p in trips.current?.participants || []" :key="p.person_id" class="card participant-card">
       <div class="participant-row">
-        <div class="participant-id">
-          <span class="participant-name">{{ p.name }}</span>
-          <Tag v-if="missingFor(p.person_id)" data-missing value="Missing" :severity="missingFor(p.person_id).severity" />
+        <div class="participant-main">
+          <div class="participant-id">
+            <span class="participant-name">{{ p.name }}</span>
+            <Tag v-if="missingFor(p.person_id)" data-missing value="Missing" :severity="missingFor(p.person_id).severity" />
+          </div>
+          <p v-if="missingFor(p.person_id)" class="participant-reason">{{ missingFor(p.person_id).reasons.join(' · ') }}</p>
         </div>
         <div class="participant-actions">
           <Button size="small" outlined icon="pi pi-copy" :label="`Copy ${p.name}'s link`" @click="copyLink(p)" />
@@ -216,8 +219,6 @@ function toggleHistory(personId) {
           <Menu :id="`pm-${p.person_id}`" :ref="(el) => { if (el) menus[p.person_id] = el }" :model="menuItems(p)" popup />
         </div>
       </div>
-
-      <p v-if="missingFor(p.person_id)" class="participant-reason">{{ missingFor(p.person_id).reasons.join(' · ') }}</p>
 
       <div v-if="qr && qr.personId === p.person_id" class="link-qr">
         <img :src="qr.dataUrl" :alt="`QR code for ${p.name}'s link`" />
@@ -252,6 +253,7 @@ function toggleHistory(personId) {
 .participant-id { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .participant-name { font-weight: 600; }
 .participant-actions { display: flex; gap: 0.25rem; }
+.participant-main { min-width: 0; }
 .participant-reason { margin: 0.25rem 0 0; color: var(--app-text-muted); font-size: 0.875rem; }
 .history-toggle { margin-top: 0.25rem; padding-left: 0; padding-right: 0; }
 .link-qr { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; }

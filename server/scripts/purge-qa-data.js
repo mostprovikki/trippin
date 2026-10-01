@@ -41,6 +41,7 @@ const TRIP_PATTERNS = [
   'Rhythm QA *',    // e2e/qa-field-rhythm.mjs
   'Overview QA *',  // e2e/qa-overview.mjs
   'Profile QA *',   // e2e/qa-participant-profile.mjs
+  'People QA *',     // e2e/qa-people.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]
@@ -59,7 +60,8 @@ const PERSON_PATTERNS = [
   'UI Walk Person *',
   'Probe Person *',
   'Overview QA Person *', // e2e/qa-overview.mjs
-  'Profile QA Person *'   // e2e/qa-participant-profile.mjs
+  'Profile QA Person *',  // e2e/qa-participant-profile.mjs
+  'People QA Person *'    // e2e/qa-people.mjs
 ]
 
 const db = await makeDb()
