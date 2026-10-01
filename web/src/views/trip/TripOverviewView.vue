@@ -125,10 +125,11 @@ watch(tripId, load)
         <span class="stat-label">Budget</span>
         <span class="stat-value">{{ budget.total ? formatMoney(budget.total, trip.currency) : '—' }}</span>
       </RouterLink>
-      <RouterLink class="card stat-card" :to="{ name: 'trip-readiness', params: { id: trip.id } }">
+      <!-- Not a link: trip-readiness now redirects back to this Overview. -->
+      <div class="card stat-card">
         <span class="stat-label">Readiness</span>
         <span class="stat-value">{{ percent }}%</span>
-      </RouterLink>
+      </div>
       <RouterLink class="card stat-card" :to="{ name: 'trip-checklists', params: { id: trip.id } }">
         <span class="stat-label">Checklist</span>
         <span class="stat-value">{{ checklists ? `${checklists.done_items}/${checklists.total_items}` : '—' }}</span>
@@ -180,7 +181,7 @@ watch(tripId, load)
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; margin-bottom: 1rem; }
 .stat-card { display: flex; flex-direction: column; gap: 0.25rem; text-decoration: none; color: inherit; margin-bottom: 0; transition: box-shadow 0.15s ease, transform 0.15s ease; }
-.stat-card:hover { box-shadow: var(--app-shadow-md); transform: translateY(-1px); }
+a.stat-card:hover { box-shadow: var(--app-shadow-md); transform: translateY(-1px); }
 .stat-label { font-size: 0.8125rem; font-weight: 600; color: var(--app-text-muted); }
 /* 1.5rem — the display step the h1 already uses. 1.375rem was a 22px one-off
    invented for these tiles; the numbers are the loudest thing on the overview,

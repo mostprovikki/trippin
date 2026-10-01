@@ -58,6 +58,15 @@ describe('TripOverviewView', () => {
     expect(wrapper.text()).toContain('Readiness')
   })
 
+  it('Readiness stat is not a link (its route redirects back to this Overview)', async () => {
+    const { wrapper } = await mountView({
+      readiness: { decisions: {}, participants: [], checklists: { total_items: 0, done_items: 0, overdue: [] } }
+    })
+    const card = wrapper.findAll('.stat-card').find((c) => c.text().includes('Readiness'))
+    expect(card.element.tagName).not.toBe('A')
+    expect(wrapper.find('a[href$="/readiness"]').exists()).toBe(false)
+  })
+
   it('shows all-set message when nothing is pending', async () => {
     const { wrapper } = await mountView({
       readiness: {
