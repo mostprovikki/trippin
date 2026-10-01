@@ -173,7 +173,7 @@ a decision.
 
 **Open data gaps the chosen Overview needs** (from the mockups, none built yet): per-person
 "reason it matters" (visa lead time, 6-month passport rule per destination); a "last seen"
-timestamp per organizer per trip for "Since you last looked"; a stay/guide/emergency
+timestamp per organizer per trip for "Since you last looked" (built 2026-10-01: `organizer_trip_views` + `trip_events`); a stay/guide/emergency
 quick-reference source; booking refs on itinerary items; "next item" timing on today.
 
 **Resolved 2026-09-26 (was a conflict with d5d.4):** the paste-JSON path ("Draft with your own
@@ -194,3 +194,4 @@ Nothing AI-related shows at rest.
 | 2026-10-01 | Per-destination doc rules (visa lead time, country 6-month rule) parked; reason copy is generic | 5p9 build | no destination→country data; restore if a trip is refused on a rule we could have shown |
 | 2026-10-01 | Participant-link tokens stored encrypted (key derived from JWT_SECRET) so Copy ⟨Name⟩'s link is one click and never revokes | owner (D1) | hashed-only tokens forced "Replace link?" on every copy |
 | 2026-10-01 | Per-trip required documents (Details ▾ Settings, two clicks) make an absent doc Missing | owner (D3) | "Visa not uploaded" needs a rule |
+| 2026-10-01 | "Since you last looked" moves only on an Overview open > 1 h after the previous one; feed = participant changes (profile save, doc upload, checklist tick) | owner (D6) | a refresh must not empty the feed; organizers know their own edits |

@@ -202,6 +202,9 @@ a { color: var(--app-primary); }
 .overview-row-name { font-weight: 600; }
 .overview-row-reason { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--app-text-muted); }
 .overview-card-foot { margin: 0.75rem 0 0; font-size: 0.875rem; color: var(--app-text-muted); }
+.since-card .overview-row { justify-content: flex-start; padding-left: 0; }
+.since-date { flex: 0 0 5.5rem; font-size: 0.875rem; color: var(--app-text-muted); }
+.since-summary { flex: 1 1 12rem; min-width: 0; }
 /* Row actions are tapped one-handed on a phone (tripper.md §1 quick check /
    on the trip): 44px floor there, compact on desktop. */
 @media (max-width: 640px) {

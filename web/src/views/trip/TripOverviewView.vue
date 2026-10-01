@@ -8,6 +8,8 @@ import { useBudgetStore } from '../../stores/budget.js'
 import { useItineraryStore } from '../../stores/itinerary.js'
 import Button from 'primevue/button'
 import MissingCard from '../../components/overview/MissingCard.vue'
+import SinceCard from '../../components/overview/SinceCard.vue'
+import { useOverviewStore } from '../../stores/overview.js'
 import { useCopyLink } from '../../composables/useCopyLink.js'
 import { nextActions, readinessPercent } from '../../utils/tripNav.js'
 import { tripCountdown, toIsoDate, dayHeader } from '../../utils/dates.js'
@@ -20,6 +22,7 @@ const trips = useTripsStore()
 const readiness = useReadinessStore()
 const budget = useBudgetStore()
 const itinerary = useItineraryStore()
+const overview = useOverviewStore()
 const { copy: copyLink } = useCopyLink()
 const hasActiveLink = (personId) => !!participants.value.find((p) => p.person_id === personId)?.has_active_link
 
@@ -68,9 +71,13 @@ async function load() {
   const pendingItinerary = showTodayCard.value && itinerary.lastTripId !== tripId.value
     ? itinerary.fetchItinerary(tripId.value).catch(() => { /* today card shows its own empty state */ })
     : null
+  // Records this visit for "Since you last looked" — once per open, never
+  // guarded on lastTripId (the visit itself is the point).
+  const pendingSeen = overview.fetchSeen(tripId.value).catch(() => { /* card shows its first-visit state */ })
   try { await budget.fetchBudget(tripId.value) } catch { /* stat shows — */ }
   await pendingReadiness
   await pendingItinerary
+  await pendingSeen
 }
 
 onMounted(load)
@@ -100,6 +107,11 @@ watch(tripId, load)
         />
       </template>
     </MissingCard>
+    <SinceCard
+      v-if="trip.status !== 'active'"
+      :since="overview.lastTripId === trip.id ? overview.since : null"
+      :events="overview.lastTripId === trip.id ? overview.events : []"
+    />
     <section v-if="showTodayCard" class="card today-card">
       <h2>{{ todayHeading }}</h2>
       <ul v-if="todayItems.length" class="day-items">

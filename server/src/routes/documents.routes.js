@@ -1,3 +1,4 @@
+import { recordEvent } from '../lib/events.js'
 import { randomUUID } from 'node:crypto'
 import multipart from '@fastify/multipart'
 import { httpError } from '../lib/errors.js'
@@ -138,6 +139,7 @@ export default async function routes(app) {
   app.post('/participant/documents', { preHandler: app.requireParticipant }, async (req, reply) => {
     const doc = await saveUpload(req, req.participant.personId, reply)
     if (!doc) return
+    await recordEvent(app.db, { tripId: req.participant.tripId, personId: req.participant.personId, kind: 'doc_uploaded', docType: doc.doc_type })
     return reply.code(201).send({ document: docJson(doc) })
   })
 

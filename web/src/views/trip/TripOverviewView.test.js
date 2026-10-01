@@ -11,10 +11,11 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { useItineraryStore } from '../../stores/itinerary.js'
+import { useOverviewStore } from '../../stores/overview.js'
 
 const SECTIONS = ['trip-dates', 'trip-destination', 'trip-budget', 'trip-itinerary', 'trip-people', 'trip-checklists', 'trip-readiness', 'trip-settings']
 
-async function mountView({ readiness, trip, itineraryDays } = {}) {
+async function mountView({ readiness, trip, itineraryDays, seen } = {}) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -40,9 +41,11 @@ async function mountView({ readiness, trip, itineraryDays } = {}) {
   // guard should still fire, and days below stand in for whatever a real
   // fetchItinerary (mocked to a no-op here) would have populated.
   if (itineraryDays) itinerary.days = itineraryDays
+  const overview = useOverviewStore()
+  overview.fetchSeen = vi.fn().mockImplementation(async (id) => { Object.assign(overview, { since: null, events: [], ...seen, lastTripId: id }) })
   const wrapper = mountWithBase(TripOverviewView, { pinia, global: { plugins: [router] } })
   await flushPromises()
-  return { wrapper, itinerary }
+  return { wrapper, itinerary, overview }
 }
 
 describe('TripOverviewView', () => {
@@ -101,12 +104,26 @@ describe('TripOverviewView', () => {
     expect(copySpy).toHaveBeenLastCalledWith('t1', 'r', 'Ravi', { hasActiveLink: false })
   })
 
+  it('Since you last looked follows Who\'s missing what and records the visit once (tripper.md §2)', async () => {
+    const { wrapper, overview } = await mountView({
+      trip: { id: 't1', name: 'Goa 2026', status: 'planning', participants: [] },
+      readiness: { decisions: {}, participants: [], checklists: { total_items: 0, done_items: 0, overdue: [] } },
+      seen: { since: '2026-09-19 08:00:00', events: [{ id: 'e1', summary: 'Divya updated their details', target: 'people', created_at: '2026-09-20 08:00:00' }] }
+    })
+    expect(overview.fetchSeen).toHaveBeenCalledTimes(1)
+    expect(overview.fetchSeen).toHaveBeenCalledWith('t1')
+    const html = wrapper.html()
+    expect(wrapper.find('.since-card').text()).toContain('Divya updated their details')
+    expect(html.indexOf('missing-card')).toBeLessThan(html.indexOf('since-card'))
+  })
+
   it("hides Who's missing what during the trip (tripper.md §2)", async () => {
     const { wrapper } = await mountView({
       trip: { id: 't1', name: 'Goa 2026', status: 'active', start_date: '2020-01-01', end_date: '2020-01-02', participants: [] },
       readiness: { decisions: {}, participants: [], checklists: { total_items: 0, done_items: 0, overdue: [] } }
     })
     expect(wrapper.find('.missing-card').exists()).toBe(false)
+    expect(wrapper.find('.since-card').exists()).toBe(false)
   })
 
   it('Readiness stat is not a link (its route redirects back to this Overview)', async () => {
@@ -150,6 +167,7 @@ describe('TripOverviewView', () => {
     const budget = useBudgetStore()
     budget.total = 12000
     budget.fetchBudget = vi.fn().mockResolvedValue()
+    useOverviewStore().fetchSeen = vi.fn().mockResolvedValue()
     const wrapper = mountWithBase(TripOverviewView, { pinia, global: { plugins: [router] } })
     await flushPromises()
     expect(wrapper.text()).toContain('₹12,000')
@@ -177,6 +195,7 @@ describe('TripOverviewView', () => {
     r.fetch = vi.fn().mockResolvedValue()
     const budget = useBudgetStore()
     budget.fetchBudget = vi.fn().mockResolvedValue()
+    useOverviewStore().fetchSeen = vi.fn().mockResolvedValue()
     const wrapper = mountWithBase(TripOverviewView, { pinia, global: { plugins: [router] } })
     await flushPromises()
     expect(wrapper.text()).toContain('32 days to go')

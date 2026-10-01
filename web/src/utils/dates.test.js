@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso, formatDayDate, dayHeader, tripCountdown, formatLongDate, formatShortDate } from './dates.js'
+import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso, formatDayDate, dayHeader, tripCountdown, formatLongDate, formatShortDate, utcStampToLocalIso } from './dates.js'
 
 afterEach(() => { vi.useRealTimers() })
 
@@ -134,5 +134,21 @@ describe('formatShortDate', () => {
   it('falls back to the input when unparseable', () => {
     expect(formatShortDate('')).toBe('')
     expect(formatShortDate(null)).toBe('')
+  })
+})
+
+describe('utcStampToLocalIso', () => {
+  // server timestamps are TEXT 'YYYY-MM-DD HH24:MI:SS' in UTC; a feed row shows
+  // the organizer's local day, not the UTC one
+  it('converts a UTC stamp to the local calendar date', () => {
+    const want = toIsoDate(new Date(Date.UTC(2026, 8, 24, 23, 30, 0)))
+    expect(utcStampToLocalIso('2026-09-24 23:30:00')).toBe(want)
+  })
+  it('this machine is not on UTC, so the case above can tell the two apart', () => {
+    expect(new Date(Date.UTC(2026, 8, 24, 23, 30)).getTimezoneOffset()).not.toBe(0)
+  })
+  it('garbage in → empty string', () => {
+    expect(utcStampToLocalIso('nope')).toBe('')
+    expect(utcStampToLocalIso(null)).toBe('')
   })
 })

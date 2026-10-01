@@ -21,6 +21,15 @@ export function toIsoDate(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
+// Server timestamps are TEXT 'YYYY-MM-DD HH24:MI:SS' in UTC. A day label for
+// one (the change feed) is the organizer's local day — slicing the string
+// would show yesterday's date to an IST organizer after 18:30 UTC.
+export function utcStampToLocalIso(stamp) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(String(stamp ?? ''))
+  if (!m) return ''
+  return toIsoDate(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6])))
+}
+
 // Local midnight today — the boundary for "has this expired?". A document that
 // expires *today* is still valid, so compare against the start of the day.
 export function startOfToday() {

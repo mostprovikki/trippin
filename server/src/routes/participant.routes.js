@@ -1,3 +1,4 @@
+import { recordEvent } from '../lib/events.js'
 import rateLimit from '@fastify/rate-limit'
 import { personToJson } from './people.routes.js'
 import { budgetShape } from './budget.routes.js'
@@ -87,6 +88,7 @@ export default async function routes(app) {
         [f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], personId]
       )
     await app.db.run('UPDATE trip_participants SET profile_confirmed = 1 WHERE trip_id = ? AND person_id = ?', [tripId, personId])
+    await recordEvent(app.db, { tripId, personId, kind: 'profile_saved' })
     return { person: personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])) }
   })
 

@@ -1,3 +1,4 @@
+import { recordEvent } from '../lib/events.js'
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
 import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
@@ -318,6 +319,10 @@ export default async function routes(app) {
     if (row.cl_kind === 'tasks' && row.assignee_person_id !== req.participant.personId)
       return httpError(reply, 404, 'NOT_FOUND', 'Not assigned to you')
     await db.run('UPDATE checklist_items SET done = ? WHERE id = ?', [req.body.done ? 1 : 0, row.id])
+    // only a tick that changes something is news for "Since you last looked"
+    if (req.body.done && !row.done) {
+      await recordEvent(db, { tripId: req.participant.tripId, personId: req.participant.personId, kind: 'checklist_ticked', title: row.title })
+    }
     return await itemToJson(db, row.id)
   })
 }
