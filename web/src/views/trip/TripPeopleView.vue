@@ -7,6 +7,8 @@ import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import { useTripsStore } from '../../stores/trips.js'
 import { usePeopleStore } from '../../stores/people.js'
+import { useReadinessStore } from '../../stores/readiness.js'
+import { missingRows } from '../../utils/overview.js'
 import { useNotify } from '../../composables/useNotify.js'
 import { replaceLinkConfirm } from '../../composables/useCopyLink.js'
 import SectionHeader from '../../components/SectionHeader.vue'
@@ -17,6 +19,7 @@ import { formatDayDate } from '../../utils/dates.js'
 const route = useRoute()
 const trips = useTripsStore()
 const people = usePeopleStore()
+const readiness = useReadinessStore()
 const confirm = useConfirm()
 const notify = useNotify()
 
@@ -35,6 +38,15 @@ const availablePeople = computed(() => {
   const memberIds = new Set((trips.current.participants || []).map((p) => p.person_id))
   return people.people.filter((p) => !memberIds.has(p.id))
 })
+
+// §6 one number, one place: the same rows as the People badge and the
+// Overview's Who's missing what. Readiness held for another trip counts as none.
+const missingByPerson = computed(() => {
+  const ps = readiness.lastTripId === tripId.value ? readiness.data?.participants || [] : []
+  return new Map(missingRows(ps, trips.current?.end_date || null).rows.map((r) => [r.personId, r]))
+})
+const missingFor = (personId) => missingByPerson.value.get(personId)
+const refreshReadiness = () => readiness.fetch(tripId.value).catch(() => { /* badge refreshes on next section change */ })
 
 async function load() {
   // A half-picked "Add person" selection and a one-time link reveal both belong
@@ -62,6 +74,7 @@ async function addParticipant() {
   try {
     await trips.addParticipant(tripId.value, newParticipantId.value)
     newParticipantId.value = null
+    refreshReadiness()
   } catch (e) { notify.error(e.message) }
 }
 
@@ -74,7 +87,8 @@ function removeParticipant(personId) {
     acceptClass: 'p-button-danger',
     rejectLabel: 'Cancel',
     accept: async () => {
-      try { await trips.removeParticipant(tripId.value, personId) } catch (e) { notify.error(e.message) }
+      try { await trips.removeParticipant(tripId.value, personId) } catch (e) { notify.error(e.message); return }
+      refreshReadiness()
     }
   })
 }
@@ -198,15 +212,15 @@ function toggleHistory(personId) {
       <div class="participant-row">
         <div class="participant-id">
           <span class="participant-name">{{ p.name }}</span>
-          <Tag v-if="activeLink(p.person_id)" value="link active" severity="success" />
-          <Tag v-else value="no link" severity="secondary" />
-          <Tag v-if="!p.profile_confirmed" value="profile unconfirmed" severity="warn" />
+          <Tag v-if="missingFor(p.person_id)" data-missing value="Missing" :severity="missingFor(p.person_id).severity" />
         </div>
         <div class="participant-actions">
           <Button :label="activeLink(p.person_id) ? 'Replace link' : 'Create link'" size="small" outlined icon="pi pi-link" @click="createLink(p.person_id, p.name)" />
           <Button icon="pi pi-trash" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Remove ${p.name || 'this person'}`" @click="removeParticipant(p.person_id)" />
         </div>
       </div>
+
+      <p v-if="missingFor(p.person_id)" class="participant-reason">{{ missingFor(p.person_id).reasons.join(' · ') }}</p>
 
       <div v-if="revealedLink && revealedLink.personId === p.person_id" class="link-reveal">
         <p><strong>Shown only once — copy it now:</strong></p>
@@ -245,6 +259,7 @@ function toggleHistory(personId) {
 .participant-id { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .participant-name { font-weight: 600; }
 .participant-actions { display: flex; gap: 0.25rem; }
+.participant-reason { margin: 0.25rem 0 0; color: var(--app-text-muted); font-size: 0.875rem; }
 .history-toggle { margin-top: 0.25rem; padding-left: 0; padding-right: 0; }
 .link-reveal {
   margin-top: 0.75rem;

@@ -7,11 +7,18 @@ import { mountWithBase } from '../../test-utils.js'
 import TripPeopleView from './TripPeopleView.vue'
 import { useTripsStore } from '../../stores/trips.js'
 import { usePeopleStore } from '../../stores/people.js'
+import { useReadinessStore } from '../../stores/readiness.js'
 import QRCode from 'qrcode'
 
 vi.mock('qrcode', () => ({ default: { toDataURL: vi.fn().mockResolvedValue('data:image/png;base64,ZmFrZQ==') } }))
 
-async function mountView() {
+const ok = { profile_confirmed: 1, doc_warnings: [], missing_fields: [], missing_docs: [] }
+
+async function mountView({
+  participants = [{ person_id: 'p1', name: 'Asha' }],
+  readinessParticipants = [{ ...ok, person_id: 'p1', name: 'Asha' }],
+  readinessTrip = 't1'
+} = {}) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ path: '/trips/:id/people', name: 'trip-people', component: TripPeopleView }]
@@ -22,12 +29,16 @@ async function mountView() {
   setActivePinia(pinia)
   const trips = useTripsStore()
   const people = usePeopleStore()
-  trips.current = { id: 't1', name: 'Goa 2026', participants: [{ person_id: 'p1', name: 'Asha' }] }
+  trips.current = { id: 't1', name: 'Goa 2026', participants }
+  const readiness = useReadinessStore()
+  readiness.data = { participants: readinessParticipants }
+  readiness.lastTripId = readinessTrip
+  readiness.fetch = vi.fn().mockResolvedValue()
   trips.fetchLinks = vi.fn().mockResolvedValue()
   people.fetchPeople = vi.fn().mockResolvedValue()
   const wrapper = mountWithBase(TripPeopleView, { pinia, global: { plugins: [router] } })
   await flushPromises()
-  return { wrapper, trips }
+  return { wrapper, trips, readiness }
 }
 
 describe('TripPeopleView', () => {
@@ -43,6 +54,41 @@ describe('TripPeopleView', () => {
     expect(wrapper.find('h1').text()).toBe('People')
     expect(wrapper.text()).toContain('Asha')
     expect(wrapper.text()).toContain('Create link')
+  })
+
+  // §6 one number, one place (trip-planner-27f.2)
+  it("tags exactly the Overview's Missing people, with its reason; complete people untagged", async () => {
+    const { wrapper } = await mountView({
+      participants: [{ person_id: 'a', name: 'Asha' }, { person_id: 'm', name: 'Meena' }],
+      readinessParticipants: [{ ...ok, person_id: 'a', name: 'Asha' }, { ...ok, person_id: 'm', name: 'Meena', missing_fields: ['dietary'] }]
+    })
+    const rows = wrapper.findAll('.participant-card')
+    expect(rows[0].find('[data-missing]').exists()).toBe(false)
+    expect(rows[1].find('[data-missing]').text()).toBe('Missing')
+    expect(rows[1].find('.participant-reason').text()).toBe('No dietary preference')
+  })
+
+  it('drops the link-state and profile-unconfirmed tags', async () => {
+    const { wrapper } = await mountView({ readinessParticipants: [{ ...ok, person_id: 'p1', name: 'Asha', profile_confirmed: 0 }] })
+    expect(wrapper.text()).not.toMatch(/link active|no link|profile unconfirmed/)
+    expect(wrapper.find('[data-missing]').exists()).toBe(true)
+  })
+
+  it('ignores readiness held for another trip', async () => {
+    const { wrapper } = await mountView({ readinessTrip: 't2', readinessParticipants: [{ ...ok, person_id: 'p1', name: 'Asha', missing_fields: ['phone'] }] })
+    expect(wrapper.find('[data-missing]').exists()).toBe(false)
+  })
+
+  it('refreshes readiness after removing a participant', async () => {
+    const { wrapper, trips, readiness } = await mountView()
+    trips.removeParticipant = vi.fn().mockResolvedValue()
+    const dialog = mountWithBase(ConfirmDialog, { attachTo: document.body })
+    await wrapper.find('[aria-label="Remove Asha"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    ;[...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Remove').click()
+    await flushPromises()
+    expect(readiness.fetch).toHaveBeenCalledWith('t1')
+    dialog.unmount()
   })
 
   it('keeps an aria-label on Remove and actually confirms before removing', async () => {
