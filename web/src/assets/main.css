@@ -207,6 +207,22 @@ a { color: var(--app-primary); }
   border-color: var(--app-primary);
   box-shadow: 0 0 0 3px var(--app-focus-ring);
 }
+/* PrimeVue Select renders a <div>, so the `.field input` rule above never
+   reached it and it kept Aura's own fill, border, 16px text and a 42px box
+   beside 36px inputs (darker than its neighbours in dark mode). Same values,
+   so a Select reads as one more field in the row. Guarded by
+   e2e/qa-field-rhythm.mjs. */
+.field .p-select {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  border-radius: var(--app-radius-sm);
+  font-size: 0.9375rem;
+}
+.field .p-select .p-select-label { padding: 0.5rem 0.625rem; font-size: inherit; line-height: normal; }
+.field .p-select:not(.p-disabled).p-focus {
+  border-color: var(--app-primary);
+  box-shadow: 0 0 0 3px var(--app-focus-ring);
+}
 
 /* The file picker's button is native shadow-DOM chrome, so it inherits nothing
    from the theme and no DOM audit can see it. Left alone it renders as generic
