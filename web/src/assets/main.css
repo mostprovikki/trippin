@@ -242,14 +242,22 @@ a { color: var(--app-primary); }
    beside 36px inputs (darker than its neighbours in dark mode). Same values,
    so a Select reads as one more field in the row. Guarded by
    e2e/qa-field-rhythm.mjs. */
-.field .p-select {
+.field .p-select,
+.field .p-multiselect {
   background: var(--app-surface);
   border-color: var(--app-border);
   border-radius: var(--app-radius-sm);
   font-size: 0.9375rem;
 }
-.field .p-select .p-select-label { padding: 0.5rem 0.625rem; font-size: inherit; line-height: normal; }
-.field .p-select:not(.p-disabled).p-focus {
+.field .p-select .p-select-label,
+.field .p-multiselect .p-multiselect-label { padding: 0.5rem 0.625rem; font-size: inherit; line-height: normal; }
+/* MultiSelect chips (Settings "Documents every participant needs") sit inside
+   the same 36px box: tighter label padding plus a compact chip. */
+.field .p-multiselect { min-height: 2.25rem; align-items: center; }
+.field .p-multiselect-display-chip .p-multiselect-label { padding-block: 0.25rem; }
+.field .p-multiselect .p-multiselect-chip { padding-block: 0.0625rem; font-size: 0.875rem; }
+.field .p-select:not(.p-disabled).p-focus,
+.field .p-multiselect:not(.p-disabled).p-focus {
   border-color: var(--app-primary);
   box-shadow: 0 0 0 3px var(--app-focus-ring);
 }

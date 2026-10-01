@@ -7,11 +7,12 @@ import Textarea from 'primevue/textarea'
 import InputNumber from 'primevue/inputnumber'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
+import MultiSelect from 'primevue/multiselect'
 import { useTripsStore } from '../../stores/trips.js'
 import { useArchiveStore } from '../../stores/archive.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
-import { budgetCategoryLabel, formatMoney } from '../../utils/format.js'
+import { budgetCategoryLabel, formatMoney, docTypeLabel } from '../../utils/format.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 
 const route = useRoute()
@@ -26,8 +27,12 @@ const tripId = computed(() => route.params.id)
 // --- Basics (draft key unchanged from the old TripDetailView) ---
 // Settings is reused when only :id changes, so the key has to be a getter —
 // a string would pin the draft to whichever trip happened to be open at setup.
-const basicsDraft = useDraft(() => `trip:${tripId.value}:basics`, () => ({ name: '', description: '', origin_city: '', vibe_tags: '' }))
+const basicsDraft = useDraft(() => `trip:${tripId.value}:basics`, () => ({ name: '', description: '', origin_city: '', vibe_tags: '', required_doc_types: [] }))
 const basics = basicsDraft.draft
+// tripper.md §6 "Missing": a doc on this list that a participant hasn't
+// uploaded shows on the Overview's Who's missing what (owner decision D3).
+const DOC_TYPE_OPTIONS = ['passport', 'visa', 'national_id', 'driving_license', 'vaccination', 'other']
+  .map((value) => ({ value, label: docTypeLabel(value) }))
 
 function loadBasics(trip) {
   if (!trip) return
@@ -35,7 +40,8 @@ function loadBasics(trip) {
     name: trip.name || '',
     description: trip.description || '',
     origin_city: trip.origin_city || '',
-    vibe_tags: (trip.vibe_tags || []).join(', ')
+    vibe_tags: (trip.vibe_tags || []).join(', '),
+    required_doc_types: [...(trip.required_doc_types || [])]
   })
 }
 watch(() => trips.current, loadBasics, { immediate: true })
@@ -46,7 +52,8 @@ async function saveBasics() {
       name: basics.name,
       description: basics.description || null,
       origin_city: basics.origin_city || null,
-      vibe_tags: basics.vibe_tags.split(',').map((s) => s.trim()).filter(Boolean)
+      vibe_tags: basics.vibe_tags.split(',').map((s) => s.trim()).filter(Boolean),
+      required_doc_types: basics.required_doc_types || []
     })
     loadBasics(trip)
     basicsDraft.clear()
@@ -182,6 +189,19 @@ async function cloneTrip() {
       <div class="field"><label for="ts-desc">Description</label><Textarea id="ts-desc" v-model="basics.description" rows="3" fluid /></div>
       <div class="field"><label for="ts-origin">Origin city</label><InputText id="ts-origin" v-model="basics.origin_city" fluid /></div>
       <div class="field"><label for="ts-vibe">Vibe tags (comma-separated)</label><InputText id="ts-vibe" v-model="basics.vibe_tags" fluid /></div>
+      <div class="field">
+        <label for="ts-reqdocs">Documents every participant needs</label>
+        <MultiSelect
+          v-model="basics.required_doc_types"
+          input-id="ts-reqdocs"
+          :options="DOC_TYPE_OPTIONS"
+          option-label="label"
+          option-value="value"
+          display="chip"
+          placeholder="None required"
+          fluid
+        />
+      </div>
       <Button label="Save changes" :disabled="!basicsDraft.isDirty.value" @click="saveBasics" />
     </section>
 

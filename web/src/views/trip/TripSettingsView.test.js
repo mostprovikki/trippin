@@ -3,6 +3,7 @@ import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import ConfirmDialog from 'primevue/confirmdialog'
+import MultiSelect from 'primevue/multiselect'
 import { mountWithBase } from '../../test-utils.js'
 import TripSettingsView from './TripSettingsView.vue'
 import { useTripsStore } from '../../stores/trips.js'
@@ -29,6 +30,22 @@ async function mountView() {
 beforeEach(() => { localStorage.clear() })
 
 describe('TripSettingsView', () => {
+  it('required documents save with Basics (tripper.md §6 Missing, §5 one Save per section)', async () => {
+    const { wrapper, trips } = await mountView()
+    const ms = wrapper.findComponent(MultiSelect)
+    expect(ms.exists()).toBe(true)
+    expect(wrapper.find('label[for="ts-reqdocs"]').text()).toBe('Documents every participant needs')
+    expect(ms.props('modelValue')).toEqual([])
+    trips.updateTrip = vi.fn().mockImplementation(async (_id, body) => ({ ...trips.current, ...body }))
+    ms.vm.$emit('update:modelValue', ['passport', 'visa'])
+    await flushPromises()
+    const save = wrapper.findAll('button').find((b) => b.text() === 'Save changes')
+    await save.trigger('click')
+    await flushPromises()
+    expect(trips.updateTrip).toHaveBeenCalledTimes(1)
+    expect(trips.updateTrip.mock.calls[0][1].required_doc_types).toEqual(['passport', 'visa'])
+  })
+
   it('renders basics form seeded from trip and a read-only status (advance moved to the sidebar)', async () => {
     const { wrapper } = await mountView()
     expect(wrapper.find('h1').text()).toBe('Settings')

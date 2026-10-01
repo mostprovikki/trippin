@@ -11,3 +11,16 @@ export async function missingFieldsByPerson(db, tripId) {
   )
   return new Map(rows.map((r) => [r.id, REQUIRED_FIELDS.filter((f) => !String(r[f] ?? '').trim())]))
 }
+
+// Required doc types (trips.required_doc_types) a participant has no document
+// of, at any expiry — an expiring one is already reported by expiryWarnings.
+export async function missingDocsByPerson(db, tripId) {
+  const trip = await db.get('SELECT required_doc_types FROM trips WHERE id = ?', [tripId])
+  const required = JSON.parse(trip?.required_doc_types || '[]')
+  const people = await db.all('SELECT person_id FROM trip_participants WHERE trip_id = ?', [tripId])
+  const have = await db.all(
+    `SELECT DISTINCT d.person_id, d.doc_type FROM documents d
+     JOIN trip_participants tp ON tp.person_id = d.person_id WHERE tp.trip_id = ?`, [tripId])
+  const owned = new Set(have.map((r) => `${r.person_id}|${r.doc_type}`))
+  return new Map(people.map((p) => [p.person_id, required.filter((t) => !owned.has(`${p.person_id}|${t}`))]))
+}

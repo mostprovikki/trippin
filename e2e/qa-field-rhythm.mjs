@@ -120,7 +120,66 @@ else {
     if (diffs.length) fail(`${scheme}: select matches input`, diffs.join('; '))
     if (spread <= 1 && !diffs.length) ok(`${scheme}: itinerary form row`, `h=${hs.join('/')} bg=${m.time.bg} font=${m.time.font}`)
   }
-  await page.evaluate(() => localStorage.removeItem('tripper:theme'))
+  // Settings: the "Documents every participant needs" MultiSelect (Task 3 of
+  // docs/superpowers/plans/2026-10-01-phase-aware-overview.md) beside the
+  // Origin city input — empty, and again holding a chip, which is where the
+  // box grows.
+  for (const scheme of ['light', 'dark']) {
+    // useDraft keeps the unsaved chip in localStorage, and a Settings page
+    // writes it back as it unloads — so clear it from the Trips list (which
+    // holds no draft), then open Settings, and each scheme starts empty
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    await page.evaluate((s) => {
+      localStorage.setItem('tripper:theme', s)
+      for (const k of Object.keys(localStorage)) if (k.startsWith('tripper:draft:')) localStorage.removeItem(k)
+    }, scheme)
+    await page.goto(`${BASE}/trips/${fx.tripId}/settings`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(400)
+    if (await page.locator('.field .p-multiselect .p-multiselect-chip').count()) { fail(`${scheme}: multiselect starts empty`, 'a restored draft chip is present'); continue }
+    const measure = () => page.evaluate(() => {
+      const box = (el, labelSel) => {
+        if (!el) return null
+        const cs = getComputedStyle(el)
+        return {
+          h: Math.round(el.getBoundingClientRect().height * 10) / 10,
+          bg: cs.backgroundColor, border: cs.borderTopColor, radius: cs.borderTopLeftRadius,
+          font: getComputedStyle((labelSel && el.querySelector(labelSel)) || el).fontSize
+        }
+      }
+      return {
+        input: box(document.querySelector('#ts-origin')),
+        multi: box(document.querySelector('.field .p-multiselect'), '.p-multiselect-label'),
+        dark: document.documentElement.classList.contains('app-dark')
+      }
+    })
+    const check = (label, m) => {
+      if (m.dark !== (scheme === 'dark')) return fail(`${scheme}: ${label} scheme applied`, `app-dark=${m.dark}`)
+      if (!m.input || !m.multi) return fail(`${scheme}: ${label} controls`, JSON.stringify(m))
+      const spread = Math.abs(m.input.h - m.multi.h)
+      const diffs = ['bg', 'border', 'font', 'radius'].filter((k) => m.multi[k] !== m.input[k])
+        .map((k) => `${k}: multiselect ${m.multi[k]} vs input ${m.input[k]}`)
+      if (spread > 1) fail(`${scheme}: ${label} height`, `input ${m.input.h}px vs multiselect ${m.multi.h}px`)
+      if (diffs.length) fail(`${scheme}: ${label} matches input`, diffs.join('; '))
+      if (spread <= 1 && !diffs.length) ok(`${scheme}: ${label}`, `h=${m.input.h}/${m.multi.h}`)
+    }
+    check('settings multiselect (empty)', await measure())
+    await page.locator('.field .p-multiselect').click()
+    const opt = page.locator('.p-multiselect-option', { hasText: 'Visa' })
+    if (!(await opt.count())) { fail(`${scheme}: multiselect options`, 'no Visa option opened'); continue }
+    await opt.click()
+    await page.keyboard.press('Escape')
+    // blur, so the focus ring isn't measured as the resting border
+    await page.locator('h1').first().click()
+    await page.waitForTimeout(400)
+    if (SHOOT) await page.locator('.field .p-multiselect').screenshot({ path: path.join(shots, `settings-multiselect-${scheme}.png`) })
+    const chips = await page.locator('.field .p-multiselect .p-multiselect-chip').count()
+    if (chips !== 1) { fail(`${scheme}: multiselect chip present`, `${chips} chips after picking Visa — the chip measurement would be vacuous`); continue }
+    check('settings multiselect (one chip)', await measure())
+  }
+  await page.evaluate(() => {
+    localStorage.removeItem('tripper:theme')
+    for (const k of Object.keys(localStorage)) if (k.startsWith('tripper:draft:')) localStorage.removeItem(k)
+  })
 }
 
 if (errors.length) fail('console errors', errors.slice(0, 8).join(' | '))
