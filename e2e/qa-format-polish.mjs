@@ -1,4 +1,4 @@
-// Verify: formatted budget totals (overview stat, budget table footer, total
+// Verify: formatted budget numbers (Overview per-person card, budget table footer, total
 // line), humanized dietary enum, and expired-vs-warning pill severities.
 import { existsSync, readdirSync } from 'node:fs'
 import os from 'node:os'
@@ -50,18 +50,18 @@ if (!TRIP) {
   console.log(`(resolved flagship trip: ${confirmed[0].name} / ${TRIP})`)
 }
 
-// 1. Overview stat tile shows a separated number, not the raw digits.
+// 1. Overview Budget card: per-person estimate (tripper.md §6 — the 4-stat
+// grid with the trip total was cut, §7) shows a separated, currency-prefixed,
+// whole-rupee number equal to the API's equal_share.
 await page.goto(`${BASE}/trips/${TRIP}`, { waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
-const stat = await page.evaluate(() => {
-  const cards = [...document.querySelectorAll('.stat-card')]
-  const c = cards.find((x) => x.textContent.includes('Budget'))
-  return c ? c.querySelector('.stat-value')?.textContent.trim() : null
-})
-// formatMoney (fdb1fe9) now prefixes the currency symbol on every money
-// surface, this stat tile included — was a bare "970,300", is "₹970,300".
-if (stat === '₹970,300') ok('overview budget stat formatted', stat)
-else fail('overview budget stat', `got ${JSON.stringify(stat)}, want "₹970,300"`)
+const per = await page.evaluate(async (id) => {
+  const b = await fetch(`/api/trips/${id}/budget`).then((r) => r.json())
+  return { shown: document.querySelector('.budget-card .budget-hero')?.textContent.trim() ?? null, share: b.equal_share }
+}, TRIP)
+const wantPer = `₹${Math.round(per.share).toLocaleString('en-US')}`
+if (per.share > 1000 && per.shown === wantPer) ok('overview per-person budget formatted', per.shown)
+else fail('overview per-person budget', `got ${JSON.stringify(per.shown)}, want ${JSON.stringify(wantPer)} (equal_share ${per.share})`)
 
 // 2. Budget page: table footer total and the Total line both formatted.
 await page.goto(`${BASE}/trips/${TRIP}/budget`, { waitUntil: 'networkidle' })

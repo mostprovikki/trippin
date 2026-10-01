@@ -149,6 +149,10 @@ mockup decides.
 | 2026-09-26 | Dates, Destination, Settings as top-level tabs | trip tab bar | not top-5 jobs; rare edits | editing one becomes weekly |
 | 2026-09-26 | Regenerate day (+ its instruction input) | every itinerary day | whole-trip draft + edit in place is enough; 10 blocks at rest | editing a day by hand turns out slow in practice |
 | 2026-09-26 | Visible AI buttons at 5 sites | workbenches | over-promoted, not a job in itself | AI draft becomes the main way a day is planned |
+| 2026-10-01 | Hero card (name, status stepper, vibe tags) | Overview | name + status already in the trip header; a stepper is a status field at rest (§8 avoid) | an organizer asks "what stage is this trip" twice |
+| 2026-10-01 | Readiness % stat | Overview | not a §6 number; Who's missing what replaces it | — |
+| 2026-10-01 | Next actions list | Overview | "Dates TBD" / "Destination TBD" on the trip line and the Itinerary card's empty state point to the same pages | a decision is missed because nothing pointed at it |
+| 2026-10-01 | Budget total, Checklist done/total, Profiles confirmed stats | Overview | §6: per-person cost, `N open`, `N of M people` replace them | — |
 
 ## 8. Reference apps
 
@@ -195,3 +199,7 @@ Nothing AI-related shows at rest.
 | 2026-10-01 | Participant-link tokens stored encrypted (key derived from JWT_SECRET) so Copy ⟨Name⟩'s link is one click and never revokes | owner (D1) | hashed-only tokens forced "Replace link?" on every copy |
 | 2026-10-01 | Per-trip required documents (Details ▾ Settings, two clicks) make an absent doc Missing | owner (D3) | "Visa not uploaded" needs a rule |
 | 2026-10-01 | "Since you last looked" moves only on an Overview open > 1 h after the previous one; feed = participant changes (profile save, doc upload, checklist tick) | owner (D6) | a refresh must not empty the feed; organizers know their own edits |
+| 2026-10-01 | Budget card shows the per-person estimate only (no booked vs estimated) | owner (D5) | Budget has no booked flag; follow-up bead filed |
+| 2026-10-01 | After the trip the Overview shows trip line, Itinerary, Budget | phase-aware build | §2 "After the trip" only said how a trip leaves active |
+| 2026-10-01 | People and Checklists tab badges = the Overview's numbers (people missing; open items) | phase-aware build | §6 one number, one place — badges counted unconfirmed profiles and overdue items, two other numbers |
+| 2026-10-01 | `during` also needs today inside the trip dates; an active trip outside them gets the before layout | phase-aware build | otherwise an early-activated trip shows an empty Today |

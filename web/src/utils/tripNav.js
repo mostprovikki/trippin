@@ -1,6 +1,6 @@
 // Trip-section registry + readiness-derived nav hints. Pure functions, no Vue.
 
-import { toIsoDate } from './dates.js'
+import { missingRows } from './overview.js'
 
 // Trip nav per docs/design/tripper.md §5: five one-click tabs, then the rare
 // admin edits behind Details ▾. Goals folded into Destination; Readiness was cut
@@ -22,82 +22,22 @@ export const TRIP_DETAILS = [
 // Every trip page with a nav entry — AppNav's breadcrumb looks labels up here.
 export const TRIP_SECTIONS = [...TRIP_TABS, ...TRIP_DETAILS]
 
-function parts(data) {
-  const d = data?.decisions || {}
-  const participants = data?.participants || []
-  const checklists = data?.checklists || {}
-  const unconfirmed = participants.filter((p) => !p.profile_confirmed).length
-  return { d, participants, checklists, unconfirmed, overdue: (checklists.overdue || []).length }
-}
-
-// count badges across sections (People, Checklists) are all "items needing
-// attention" counts, never totals — trip-dates/trip-destination use a
-// separate ok:boolean shape for done/not-done, so there's no total-count
-// precedent to switch People to. Disambiguate instead: carry a label
-// alongside count so the badge's accessible name (title/aria-label in
-// TripLayout.vue) states what's being counted, wording reused from
-// nextActions below so the sidebar and the guided next-step list agree.
-function unconfirmedLabel(n) {
-  return `${n} participant profile${n === 1 ? '' : 's'} unconfirmed`
-}
-function overdueLabel(n) {
-  return `${n} overdue checklist item${n === 1 ? '' : 's'}`
-}
+// tripper.md §6 "one number, one place": the People and Checklists badges are
+// the Overview's own numbers — people missing anything (Who's missing what)
+// and open checklist items (Checklists card) — never a second count.
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`
 
 export function sectionHints(data) {
   if (!data) return {}
-  const { d, unconfirmed, overdue } = parts(data)
+  const d = data.decisions || {}
   const hints = {
     'trip-dates': { ok: !!d.dates_confirmed },
     'trip-destination': { ok: !!d.destination_decided }
   }
-  if (unconfirmed > 0) hints['trip-people'] = { count: unconfirmed, label: unconfirmedLabel(unconfirmed) }
-  if (overdue > 0) hints['trip-checklists'] = { count: overdue, label: overdueLabel(overdue) }
+  const missing = missingRows(data.participants || [], null).rows.length
+  if (missing > 0) hints['trip-people'] = { count: missing, label: `${plural(missing, 'person', 'people')} missing details or documents` }
+  const c = data.checklists || {}
+  const open = Math.max(0, (c.total_items || 0) - (c.done_items || 0))
+  if (open > 0) hints['trip-checklists'] = { count: open, label: plural(open, 'open checklist item', 'open checklist items') }
   return hints
-}
-
-// Equal-weight average over applicable components: the 4 decisions always
-// count; participant confirmation and checklist completion count only when
-// non-empty (so a fresh trip reads 0%, not 50%).
-export function readinessPercent(data) {
-  if (!data) return 0
-  const { d, participants, checklists } = parts(data)
-  const components = [
-    d.dates_confirmed ? 1 : 0,
-    d.destination_decided ? 1 : 0,
-    d.budget_drafted ? 1 : 0,
-    (d.itinerary_days || 0) > 0 ? 1 : 0
-  ]
-  if (participants.length) {
-    components.push(participants.filter((p) => p.profile_confirmed).length / participants.length)
-  }
-  if (checklists.total_items) {
-    components.push((checklists.done_items || 0) / checklists.total_items)
-  }
-  return Math.round((components.reduce((a, b) => a + b, 0) / components.length) * 100)
-}
-
-// A trip left in active/confirmed status past its own end_date has nothing
-// left to plan — the readiness gaps below (unconfirmed profiles, an overdue
-// checklist item) are stale noise pointing at sections that no longer matter.
-// One action replaces the whole list: archive it. `today` is a seam
-// (default = real today) so callers/tests can pin it, matching the pattern
-// tripCountdown uses in dates.js.
-function hasEnded(trip, today) {
-  return !!trip && ['active', 'confirmed'].includes(trip.status) && !!trip.end_date && trip.end_date < today
-}
-
-export function nextActions(data, trip, today = toIsoDate(new Date())) {
-  if (hasEnded(trip, today)) return [{ label: 'Trip has ended — archive it', to: 'trip-settings' }]
-  if (!data) return []
-  const { d, participants, unconfirmed, overdue } = parts(data)
-  const actions = []
-  if (!d.dates_confirmed) actions.push({ label: 'Confirm the dates', to: 'trip-dates' })
-  if (!d.destination_decided) actions.push({ label: 'Decide the destination', to: 'trip-destination' })
-  if (!d.budget_drafted) actions.push({ label: 'Draft a budget', to: 'trip-budget' })
-  if (!(d.itinerary_days > 0)) actions.push({ label: 'Build the itinerary', to: 'trip-itinerary' })
-  if (!participants.length) actions.push({ label: 'Add participants', to: 'trip-people' })
-  if (unconfirmed > 0) actions.push({ label: unconfirmedLabel(unconfirmed), to: 'trip-people' })
-  if (overdue > 0) actions.push({ label: overdueLabel(overdue), to: 'trip-checklists' })
-  return actions
 }

@@ -294,12 +294,15 @@ async function advanceStatus() {
 .not-found { text-align: center; padding: 3rem 1.5rem; }
 .not-found i { font-size: 2rem; color: var(--app-text-muted); }
 
-/* Phone: icons go and padding tightens so all five tabs fit 390px with room
-   for a two-digit badge (measured: People's right edge ~376px). */
+/* Phone: icons go and padding tightens so all five tabs fit 390px (§4). Since
+   2026-10-01 both People and Checklists carry a badge (tripper.md §6), so the
+   budget is two two-digit badges: measured People right edge 376px with "8"
+   and "4", guarded by e2e/qa-overview.mjs at two digits each. */
 @media (max-width: 767px) {
   .trip-shell { padding: 1rem 1rem 3rem; }
   .trip-tabbar { margin: 0 -1rem 1rem; padding: 0 0.25rem; }
   .trip-nav-item i:first-child { display: none; }
-  .trip-nav-item, .trip-details-toggle { padding: 0 0.4375rem; gap: 0.25rem; }
+  .trip-nav-item, .trip-details-toggle { padding: 0 0.3125rem; gap: 0.25rem; }
+  .trip-nav-badge { padding: 0 0.25rem; }
 }
 </style>

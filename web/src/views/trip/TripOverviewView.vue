@@ -1,227 +1,151 @@
 <script setup>
+// Trip overview — a phase-aware Monitor (docs/design/tripper.md §2). Before the
+// trip: Who's missing what + Since you last looked | Itinerary, Budget,
+// Checklists. During: Today (Task 7 of the 2026-10-01 plan builds the rest).
+// After: trip line, Itinerary, Budget. No button in the page header (§5);
+// every action sits on the row it acts on.
 import { computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Tag from 'primevue/tag'
+import Button from 'primevue/button'
 import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { useItineraryStore } from '../../stores/itinerary.js'
-import Button from 'primevue/button'
-import MissingCard from '../../components/overview/MissingCard.vue'
-import SinceCard from '../../components/overview/SinceCard.vue'
+import { useChecklistsStore } from '../../stores/checklists.js'
 import { useOverviewStore } from '../../stores/overview.js'
 import { useCopyLink } from '../../composables/useCopyLink.js'
-import { nextActions, readinessPercent } from '../../utils/tripNav.js'
-import { tripCountdown, toIsoDate, dayHeader } from '../../utils/dates.js'
-import { formatMoney } from '../../utils/format.js'
-
-const STATUSES = ['idea', 'planning', 'confirmed', 'active']
+import TripLine from '../../components/overview/TripLine.vue'
+import MissingCard from '../../components/overview/MissingCard.vue'
+import SinceCard from '../../components/overview/SinceCard.vue'
+import ItineraryCard from '../../components/overview/ItineraryCard.vue'
+import BudgetCard from '../../components/overview/BudgetCard.vue'
+import ChecklistsCard from '../../components/overview/ChecklistsCard.vue'
+import { overviewPhase } from '../../utils/overview.js'
+import { toIsoDate, dayHeader } from '../../utils/dates.js'
 
 const route = useRoute()
 const trips = useTripsStore()
 const readiness = useReadinessStore()
 const budget = useBudgetStore()
 const itinerary = useItineraryStore()
+const checklists = useChecklistsStore()
 const overview = useOverviewStore()
 const { copy: copyLink } = useCopyLink()
-const hasActiveLink = (personId) => !!participants.value.find((p) => p.person_id === personId)?.has_active_link
 
 const tripId = computed(() => route.params.id)
 const trip = computed(() => trips.current)
-const actions = computed(() => nextActions(readiness.data, trip.value))
-const percent = computed(() => readinessPercent(readiness.data))
-const checklists = computed(() => readiness.data?.checklists)
 const participants = computed(() => readiness.data?.participants || [])
-const confirmedCount = computed(() => participants.value.filter((p) => p.profile_confirmed).length)
-const dateRange = computed(() =>
-  trip.value?.start_date && trip.value?.end_date ? `${trip.value.start_date} – ${trip.value.end_date}` : null
-)
-const countdown = computed(() => (trip.value ? tripCountdown(trip.value) : null))
-const statusIndex = computed(() => STATUSES.indexOf(trip.value?.status))
+const hasActiveLink = (personId) => !!participants.value.find((p) => p.person_id === personId)?.has_active_link
 
 const todayIso = computed(() => toIsoDate(new Date()))
-// Active trip, today inside its own dates — anything else (idea/planning/
-// confirmed, archived, or an active trip whose window doesn't cover today)
-// gets no card and, per the guard in load() below, no itinerary fetch either.
-const showTodayCard = computed(() => {
-  const t = trip.value
-  if (!t || t.status !== 'active' || !t.start_date || !t.end_date) return false
-  return todayIso.value >= t.start_date && todayIso.value <= t.end_date
-})
+const phase = computed(() => overviewPhase(trip.value, todayIso.value))
+// Stores are shared across trips; show only data that belongs to this one.
+const mine = (store) => store.lastTripId === tripId.value
+const itineraryDays = computed(() => (mine(itinerary) ? itinerary.days : []))
+const tripChecklists = computed(() => (mine(checklists) ? checklists.checklists : []))
+
 const todayHeading = computed(() => `Today — ${dayHeader(todayIso.value)}`)
-// One message covers both "itinerary never initialized" and "day exists but
-// empty" — the card's job is just to point at the itinerary, not diagnose why.
-const todayItems = computed(() => itinerary.days.find((d) => d.day_date === todayIso.value)?.items || [])
+const todayItems = computed(() => itineraryDays.value.find((d) => d.day_date === todayIso.value)?.items || [])
 
 async function load() {
-  // Both stores are shared across trips and drop another trip's data themselves
-  // as soon as they are asked for this one, so the stat cards can't go on
-  // quoting the previous trip's total and readiness under this trip's name.
-  // Readiness is still guarded: TripLayout fetches it for the sidebar badges,
-  // and refetching what the store already holds would blank a card it filled.
-  // It is started before the budget is awaited so the guard's answer — and the
-  // clearing that goes with it — doesn't wait on an unrelated request.
-  const pendingReadiness = readiness.lastTripId === tripId.value
-    ? null
-    : readiness.fetch(tripId.value).catch(() => { /* layout badge already reported */ })
-  // Same lastTripId guard as readiness, plus a render guard: an idea/planning
-  // trip, or an active one whose dates don't cover today, never shows the
-  // card, so fetching its itinerary here would be a wasted request no view
-  // reads from.
-  const pendingItinerary = showTodayCard.value && itinerary.lastTripId !== tripId.value
-    ? itinerary.fetchItinerary(tripId.value).catch(() => { /* today card shows its own empty state */ })
-    : null
+  // Readiness is guarded: TripLayout fetches it for the tab badges, and
+  // refetching what the store already holds would blank a card it filled.
+  const pending = []
+  if (readiness.lastTripId !== tripId.value) {
+    pending.push(readiness.fetch(tripId.value).catch(() => { /* layout badge already reported */ }))
+  }
+  if (itinerary.lastTripId !== tripId.value) {
+    pending.push(itinerary.fetchItinerary(tripId.value).catch(() => { /* card shows its empty state */ }))
+  }
+  if (phase.value === 'before' && checklists.lastTripId !== tripId.value) {
+    pending.push(checklists.fetchForTrip(tripId.value).catch(() => { /* card shows Nothing open */ }))
+  }
   // Records this visit for "Since you last looked" — once per open, never
   // guarded on lastTripId (the visit itself is the point).
-  const pendingSeen = overview.fetchSeen(tripId.value).catch(() => { /* card shows its first-visit state */ })
-  try { await budget.fetchBudget(tripId.value) } catch { /* stat shows — */ }
-  await pendingReadiness
-  await pendingItinerary
-  await pendingSeen
+  if (phase.value === 'before') pending.push(overview.fetchSeen(tripId.value).catch(() => { /* first-visit state */ }))
+  pending.push(budget.fetchBudget(tripId.value).catch(() => { /* card shows No estimate yet */ }))
+  await Promise.all(pending)
 }
 
 onMounted(load)
-// Belt and braces, not the mechanism. Trip-scoped stores now clear themselves
-// when asked about a different trip, which empties trips.current and makes
-// TripLayout fall back to its skeleton — that unmounts this view, so onMounted
-// covers the common path today (verified in a browser: the skeleton really does
-// appear on a param-only switch). Kept because the reuse it guards against is
-// silent when it returns: the sidebar would say one trip and the body show
-// another, with edits written to whichever id the view captured first.
+// Belt and braces: TripLayout remounts this view on a trip switch today, but a
+// silent reuse would show one trip's cards under another's name.
 watch(tripId, load)
 </script>
 
 <template>
-  <div v-if="trip">
-    <!-- tripper.md §2: before the trip, Who's missing what leads (job 2, zero
-         clicks); during the trip it is hidden. Rest of the page is rebuilt
-         around it in plan Task 5. -->
-    <MissingCard v-if="trip.status !== 'active'" :participants="participants" :trip-end="trip.end_date || null">
-      <template #row-action="{ personId, name }">
-        <Button
-          size="small"
-          outlined
-          icon="pi pi-copy"
-          :label="`Copy ${name}'s link`"
-          @click="copyLink(trip.id, personId, name, { hasActiveLink: hasActiveLink(personId) })"
+  <div v-if="trip" class="overview" :data-phase="phase">
+    <h1 class="visually-hidden">Overview</h1>
+    <TripLine :trip="trip" />
+
+    <div v-if="phase === 'before'" class="overview-grid">
+      <div class="overview-col">
+        <MissingCard :participants="participants" :trip-end="trip.end_date || null">
+          <template #row-action="{ personId, name }">
+            <Button
+              size="small"
+              outlined
+              icon="pi pi-copy"
+              :label="`Copy ${name}'s link`"
+              @click="copyLink(trip.id, personId, name, { hasActiveLink: hasActiveLink(personId) })"
+            />
+          </template>
+        </MissingCard>
+        <SinceCard
+          :since="mine(overview) ? overview.since : null"
+          :events="mine(overview) ? overview.events : []"
         />
-      </template>
-    </MissingCard>
-    <SinceCard
-      v-if="trip.status !== 'active'"
-      :since="overview.lastTripId === trip.id ? overview.since : null"
-      :events="overview.lastTripId === trip.id ? overview.events : []"
-    />
-    <section v-if="showTodayCard" class="card today-card">
-      <h2>{{ todayHeading }}</h2>
-      <ul v-if="todayItems.length" class="day-items">
-        <li v-for="item in todayItems" :key="item.id" class="day-item">
-          <Tag v-if="item.time_range" :value="item.time_range" severity="secondary" />
-          <strong>{{ item.title }}</strong>
-          <span v-if="item.location">— {{ item.location }}</span>
-        </li>
-      </ul>
-      <p v-else class="today-empty">Nothing planned today — open the itinerary to add something</p>
-      <RouterLink class="action-link" :to="{ name: 'trip-itinerary', params: { id: trip.id } }">
-        <i class="pi pi-arrow-right" /> Open itinerary
-      </RouterLink>
-    </section>
-
-    <section class="card hero">
-      <div class="hero-main">
-        <h1>{{ trip.name }}</h1>
-        <p class="hero-sub">
-          <i class="pi pi-map-marker" /> {{ trip.destination || 'Destination TBD' }}
-          <span class="hero-sep" aria-hidden="true">·</span>
-          <i class="pi pi-calendar" /> {{ dateRange || 'Dates TBD' }}
-        </p>
-        <div v-if="(trip.vibe_tags || []).length || countdown" class="hero-tags">
-          <Tag v-if="countdown" :value="countdown.label" severity="info" />
-          <Tag v-for="tag in trip.vibe_tags" :key="tag" :value="tag" severity="secondary" />
-        </div>
       </div>
-      <ol v-if="trip.status !== 'archived'" class="status-stepper" aria-label="Trip status">
-        <li
-          v-for="(s, i) in STATUSES"
-          :key="s"
-          class="status-step"
-          :class="{ 'status-step-done': i < statusIndex, 'status-step-current': i === statusIndex }"
-        >{{ s }}</li>
-      </ol>
-      <Tag v-else class="status-tag" value="archived" severity="secondary" />
-    </section>
-
-    <div class="stat-grid">
-      <RouterLink class="card stat-card" :to="{ name: 'trip-budget', params: { id: trip.id } }">
-        <span class="stat-label">Budget</span>
-        <span class="stat-value">{{ budget.total ? formatMoney(budget.total, trip.currency) : '—' }}</span>
-      </RouterLink>
-      <!-- Not a link: trip-readiness now redirects back to this Overview. -->
-      <div class="card stat-card">
-        <span class="stat-label">Readiness</span>
-        <span class="stat-value">{{ percent }}%</span>
+      <div class="overview-col">
+        <ItineraryCard :trip="trip" :days="itineraryDays" />
+        <BudgetCard :equal-share="Number(budget.equal_share) || 0" :participant-count="budget.participant_count || 0" :currency="trip.currency || 'INR'" />
+        <ChecklistsCard :checklists="tripChecklists" />
       </div>
-      <RouterLink class="card stat-card" :to="{ name: 'trip-checklists', params: { id: trip.id } }">
-        <span class="stat-label">Checklist</span>
-        <span class="stat-value">{{ checklists ? `${checklists.done_items}/${checklists.total_items}` : '—' }}</span>
-      </RouterLink>
-      <RouterLink class="card stat-card" :to="{ name: 'trip-people', params: { id: trip.id } }">
-        <span class="stat-label">Profiles confirmed</span>
-        <span class="stat-value">{{ participants.length ? `${confirmedCount}/${participants.length}` : '—' }}</span>
-      </RouterLink>
     </div>
 
-    <section class="card">
-      <h2>Next actions</h2>
-      <p v-if="!actions.length" class="all-set"><i class="pi pi-check-circle" /> All set — nothing pending. 🎉</p>
-      <ul v-else class="actions-list">
-        <li v-for="a in actions" :key="a.to + a.label">
-          <RouterLink :to="{ name: a.to, params: { id: trip.id } }" class="action-link">
-            <i class="pi pi-arrow-right" /> {{ a.label }}
+    <div v-else-if="phase === 'during'" class="overview-grid">
+      <div class="overview-col">
+        <section class="card today-card">
+          <h2>{{ todayHeading }}</h2>
+          <ul v-if="todayItems.length" class="day-items">
+            <li v-for="item in todayItems" :key="item.id" class="day-item">
+              <Tag v-if="item.time_range" :value="item.time_range" severity="secondary" />
+              <strong>{{ item.title }}</strong>
+              <span v-if="item.location">— {{ item.location }}</span>
+            </li>
+          </ul>
+          <p v-else class="today-empty">Nothing planned today — open the itinerary to add something</p>
+          <RouterLink class="action-link" :to="{ name: 'trip-itinerary', params: { id: trip.id } }">
+            <i class="pi pi-arrow-right" /> Open itinerary
           </RouterLink>
-        </li>
-      </ul>
-    </section>
+        </section>
+      </div>
+    </div>
+
+    <div v-else class="overview-grid">
+      <div class="overview-col">
+        <ItineraryCard :trip="trip" :days="itineraryDays" />
+      </div>
+      <div class="overview-col">
+        <BudgetCard :equal-share="Number(budget.equal_share) || 0" :participant-count="budget.participant_count || 0" :currency="trip.currency || 'INR'" />
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* Matches DayCard.vue's .day-items/.day-item row idiom (icon/tag/title/location
-   line) rather than inventing a second itinerary-row look on this page. */
+/* §2: two columns at desk width; on a phone they stack left then right. */
+.overview-grid { display: grid; grid-template-columns: 1fr; gap: 0 1rem; align-items: start; }
+@media (min-width: 900px) {
+  .overview-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+.overview-col { min-width: 0; }
+
+/* Matches DayCard.vue's .day-items/.day-item row idiom. */
 .today-card .day-items { list-style: none; padding: 0; margin: 0 0 0.75rem; }
 .today-card .day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--app-border); flex-wrap: wrap; }
 .today-empty { color: var(--app-text-muted); margin: 0 0 0.75rem; }
-
-.hero { display: flex; justify-content: space-between; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
-.hero h1 { margin-bottom: 0.375rem; }
-.hero-sub { margin: 0; color: var(--app-text-muted); display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
-/* --app-border is a BORDER colour; as text it renders at ~1.1:1 on white and
-   1.7:1 on the dark surface, i.e. all but invisible. Separators are decorative
-   but they still have to be seen. */
-.hero-sep { color: var(--app-text-subtle); }
-.hero-tags { display: flex; gap: 0.375rem; flex-wrap: wrap; margin-top: 0.625rem; }
-
-.status-stepper { list-style: none; display: flex; gap: 0.25rem; padding: 0; margin: 0; }
-.status-step {
-  font-size: 0.75rem; font-weight: 600; text-transform: capitalize;
-  padding: 0.25rem 0.75rem; border-radius: 999px;
-  background: var(--app-surface-alt); color: var(--app-text-muted);
-}
-.status-step-done { background: var(--app-primary-soft); color: var(--app-primary); }
-.status-step-current { background: var(--app-primary); color: var(--app-primary-contrast); }
-
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; margin-bottom: 1rem; }
-.stat-card { display: flex; flex-direction: column; gap: 0.25rem; text-decoration: none; color: inherit; margin-bottom: 0; transition: box-shadow 0.15s ease, transform 0.15s ease; }
-a.stat-card:hover { box-shadow: var(--app-shadow-md); transform: translateY(-1px); }
-.stat-label { font-size: 0.8125rem; font-weight: 600; color: var(--app-text-muted); }
-/* 1.5rem — the display step the h1 already uses. 1.375rem was a 22px one-off
-   invented for these tiles; the numbers are the loudest thing on the overview,
-   so they belong on the scale's top step rather than half a step below it. */
-.stat-value { font-size: 1.5rem; font-weight: 650; letter-spacing: -0.01em; }
-
-.actions-list { list-style: none; padding: 0; margin: 0; }
-.actions-list li { padding: 0.25rem 0; }
 .action-link { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; font-weight: 500; }
 .action-link:hover { text-decoration: underline; }
-.all-set { color: var(--app-primary); font-weight: 500; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
 </style>

@@ -133,13 +133,13 @@ describe('TripLayout', () => {
     expect(peopleItem.text()).toContain('1')
   })
 
-  it('labels the People badge as an unconfirmed-profile count, not a total, so it cannot be misread as "someone was removed"', async () => {
+  it('labels the People badge as a people-missing count (tripper.md §6, same number as Who\'s missing what), not a total, so it cannot be misread as "someone was removed"', async () => {
     const { wrapper } = await mountLayout()
     const peopleItem = wrapper.findAll('.trip-nav-item').find((n) => n.text().includes('People'))
     const badge = peopleItem.find('.trip-nav-badge')
     expect(badge.exists()).toBe(true)
-    expect(badge.attributes('aria-label')).toBe('1 participant profile unconfirmed')
-    expect(badge.attributes('title')).toBe('1 participant profile unconfirmed')
+    expect(badge.attributes('aria-label')).toBe('1 person missing details or documents')
+    expect(badge.attributes('title')).toBe('1 person missing details or documents')
   })
 
   it('shows not-found panel when the trip fails to load', async () => {

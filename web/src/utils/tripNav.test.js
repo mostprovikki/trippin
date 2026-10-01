@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { TRIP_TABS, TRIP_DETAILS, TRIP_SECTIONS, sectionHints, readinessPercent, nextActions } from './tripNav.js'
+import { TRIP_TABS, TRIP_DETAILS, TRIP_SECTIONS, sectionHints } from './tripNav.js'
 
 const READY = {
   decisions: { dates_confirmed: 1, destination_decided: 1, budget_drafted: 1, itinerary_days: 3 },
-  participants: [{ profile_confirmed: 1 }, { profile_confirmed: 1 }],
+  participants: [{ person_id: 'a', name: 'A', profile_confirmed: 1 }, { person_id: 'b', name: 'B', profile_confirmed: 1 }],
   checklists: { total_items: 4, done_items: 4, overdue: [] }
 }
 const FRESH = {
@@ -13,7 +13,7 @@ const FRESH = {
 }
 const MID = {
   decisions: { dates_confirmed: 1, destination_decided: 0, budget_drafted: 0, itinerary_days: 0 },
-  participants: [{ profile_confirmed: 1 }, { profile_confirmed: 0 }, { profile_confirmed: 0 }],
+  participants: [{ person_id: 'a', name: 'A', profile_confirmed: 1 }, { person_id: 'b', name: 'B', profile_confirmed: 0 }, { person_id: 'c', name: 'C', profile_confirmed: 1, doc_warnings: [{ doc_type: 'passport', level: 'warning', expiry_date: '2027-01-01' }] }],
   checklists: { total_items: 4, done_items: 1, overdue: [{ title: 'Book flights' }] }
 }
 
@@ -36,100 +36,28 @@ describe('trip nav registry', () => {
   })
 })
 
+// tripper.md §6 "one number, one place": the People and Checklists badges show
+// the same numbers as the Overview's Who's missing what (N people missing) and
+// Checklists card (N open), not a second, different count.
 describe('sectionHints', () => {
   it('returns {} without data', () => {
     expect(sectionHints(null)).toEqual({})
   })
-  it('flags undone decisions, counts, percent', () => {
+  it('People = people missing anything (§6 Missing incl. an expiring doc); Checklists = open items', () => {
     const h = sectionHints(MID)
     expect(h['trip-dates']).toEqual({ ok: true })
     expect(h['trip-destination']).toEqual({ ok: false })
-    expect(h['trip-people']).toEqual({ count: 2, label: '2 participant profiles unconfirmed' })
-    expect(h['trip-checklists']).toEqual({ count: 1, label: '1 overdue checklist item' })
-    expect(h['trip-readiness']).toBeUndefined()
+    expect(h['trip-people']).toEqual({ count: 2, label: '2 people missing details or documents' })
+    expect(h['trip-checklists']).toEqual({ count: 3, label: '3 open checklist items' })
+  })
+  it('singular labels', () => {
+    const h = sectionHints({ decisions: {}, participants: [{ person_id: 'x', name: 'X', profile_confirmed: 0 }], checklists: { total_items: 1, done_items: 0 } })
+    expect(h['trip-people']).toEqual({ count: 1, label: '1 person missing details or documents' })
+    expect(h['trip-checklists']).toEqual({ count: 1, label: '1 open checklist item' })
   })
   it('hides zero counts', () => {
     const h = sectionHints(READY)
     expect(h['trip-people']).toBeUndefined()
     expect(h['trip-checklists']).toBeUndefined()
-  })
-  it('count badges carry a disambiguating label — count is an attention-needed count, not a total (matches nextActions wording)', () => {
-    const oneUnconfirmed = sectionHints({
-      decisions: {},
-      participants: [{ profile_confirmed: 1 }, { profile_confirmed: 0 }],
-      checklists: {}
-    })
-    expect(oneUnconfirmed['trip-people']).toEqual({ count: 1, label: '1 participant profile unconfirmed' })
-    const bothUnconfirmed = sectionHints({
-      decisions: {},
-      participants: [{ profile_confirmed: 0 }, { profile_confirmed: 0 }],
-      checklists: {}
-    })
-    expect(bothUnconfirmed['trip-people']).toEqual({ count: 2, label: '2 participant profiles unconfirmed' })
-  })
-})
-
-describe('readinessPercent', () => {
-  it('0 without data, 100 when everything done', () => {
-    expect(readinessPercent(null)).toBe(0)
-    expect(readinessPercent(READY)).toBe(100)
-  })
-  it('fresh trip is 0 (empty participant/checklist sets do not count)', () => {
-    expect(readinessPercent(FRESH)).toBe(0)
-  })
-  it('partial is between 0 and 100', () => {
-    const p = readinessPercent(MID)
-    expect(p).toBeGreaterThan(0)
-    expect(p).toBeLessThan(100)
-  })
-})
-
-describe('nextActions', () => {
-  it('empty without data and when fully ready', () => {
-    expect(nextActions(null)).toEqual([])
-    expect(nextActions(READY)).toEqual([])
-  })
-  it('fresh trip includes the guided-setup actions incl. adding people', () => {
-    expect(nextActions(FRESH)).toContainEqual({ label: 'Add participants', to: 'trip-people' })
-    expect(nextActions(FRESH)).toContainEqual({ label: 'Confirm the dates', to: 'trip-dates' })
-  })
-  it('lists gaps with target routes', () => {
-    const actions = nextActions(MID)
-    expect(actions).toEqual([
-      { label: 'Decide the destination', to: 'trip-destination' },
-      { label: 'Draft a budget', to: 'trip-budget' },
-      { label: 'Build the itinerary', to: 'trip-itinerary' },
-      { label: '2 participant profiles unconfirmed', to: 'trip-people' },
-      { label: '1 overdue checklist item', to: 'trip-checklists' }
-    ])
-  })
-
-  it('replaces stale planning actions with an archive nudge once an active trip has ended', () => {
-    const trip = { status: 'active', end_date: '2026-09-01' }
-    expect(nextActions(MID, trip, '2026-09-24')).toEqual([
-      { label: 'Trip has ended — archive it', to: 'trip-settings' }
-    ])
-  })
-
-  it('nudges a confirmed (not just active) trip past its end_date too', () => {
-    const trip = { status: 'confirmed', end_date: '2026-09-01' }
-    expect(nextActions(READY, trip, '2026-09-24')).toEqual([
-      { label: 'Trip has ended — archive it', to: 'trip-settings' }
-    ])
-  })
-
-  it('does not nudge while end_date is today or in the future', () => {
-    const trip = { status: 'active', end_date: '2026-09-24' }
-    expect(nextActions(MID, trip, '2026-09-24')).not.toContainEqual({ label: 'Trip has ended — archive it', to: 'trip-settings' })
-  })
-
-  it('does not nudge non active/confirmed statuses even past end_date', () => {
-    const trip = { status: 'idea', end_date: '2026-09-01' }
-    expect(nextActions(MID, trip, '2026-09-24')).not.toContainEqual({ label: 'Trip has ended — archive it', to: 'trip-settings' })
-  })
-
-  it('ignores a trip with no end_date', () => {
-    const trip = { status: 'active', end_date: null }
-    expect(nextActions(MID, trip, '2026-09-24')).not.toContainEqual({ label: 'Trip has ended — archive it', to: 'trip-settings' })
   })
 })
