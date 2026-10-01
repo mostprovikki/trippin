@@ -60,6 +60,7 @@ const PERSON_PATTERNS = [
   'QA Person *',
   'UI Walk Person *',
   'Probe Person *',
+  'QA Probe *',     // ad-hoc agent probe scripts
   'Overview QA Person *', // e2e/qa-overview.mjs
   'Profile QA Person *',  // e2e/qa-participant-profile.mjs
   'People QA Person *',   // e2e/qa-people.mjs

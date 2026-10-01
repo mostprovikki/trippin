@@ -310,6 +310,15 @@ async function isTypeable(inputLocator) {
 // date is rejected rather than rolled over (Feb 31 -> Mar 3).
 async function clearField(p, inputLocator) {
   await inputLocator.click()
+  // PrimeVue InputMask.onFocus, on an EMPTY field, schedules requestAnimationFrame(
+  // caret(0,0)) with no check that the field is still empty. Headless Chromium
+  // delays that frame 100-225ms (measured: 90-302ms after focus in 6/6 probes),
+  // longer than the 120ms settle below, so it can land after the first digit and
+  // send the caret back to slot 0 ("2026-09-30" -> "0260-93-0d"). A person needs
+  // >150ms to move from tap to first key, so this is a gate race, not a
+  // user-reachable defect. rAF callbacks run in registration order, so awaiting
+  // two frames of our own guarantees InputMask's has already fired.
+  await inputLocator.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
   await p.keyboard.press('ControlOrMeta+a')
   await p.keyboard.press('Backspace')
   await p.waitForTimeout(120)

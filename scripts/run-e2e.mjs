@@ -11,8 +11,8 @@
 //   node scripts/run-e2e.mjs ui-walk   # ui-walk.mjs only
 //
 // Env:
-//   E2E_GATE_TIMEOUT_MS   per-gate timeout in ms (default 180000 — see the
-//                         comment at its definition below for why 180s)
+//   E2E_GATE_TIMEOUT_MS   per-gate timeout in ms (default 300000 — see the
+//                         comment at its definition below for why 300s)
 //
 // Prerequisites (gates / ui-walk): web on 43100 + API on 43101, plus the two
 // seeded QA accounts the gates log in as:
@@ -51,8 +51,9 @@ const E2E_DIR = join(REPO_ROOT, 'e2e')
 // Measured 2026-09-23: qa-datepicker.mjs alone takes ~150s (it walks six date
 // surfaces plus a second-browser timezone pass) — a 120s timeout killed it
 // mid-run with a crash, not a clean FAIL, misclassifying a legitimately slow
-// gate as hung. 180s default gives it margin; override with E2E_GATE_TIMEOUT_MS.
-const GATE_TIMEOUT_MS = Number(process.env.E2E_GATE_TIMEOUT_MS) || 180_000
+// gate as hung. 2026-10-02: ~191s once its /p checks ran again (27f drift had
+// cut it short), so 180s killed it too. 300s default; override with E2E_GATE_TIMEOUT_MS.
+const GATE_TIMEOUT_MS = Number(process.env.E2E_GATE_TIMEOUT_MS) || 300_000
 // Overridable only so the fail-fast path can be tested against a dead port
 // without touching real dev servers; not meant for routine use.
 const WEB_PORT = Number(process.env.E2E_WEB_PORT) || 43100
