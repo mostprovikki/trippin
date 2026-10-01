@@ -68,7 +68,7 @@ const PARTICIPANTS = [
   { label: '16-participant-confirmed', personId: '81f1684a-012d-4fe6-af0b-62cea56d709c' }, // Asha Kumar
   { label: '17-participant-pending', personId: '1b886dc0-e0bf-47d2-a346-ae8298c50eac' }    // Aditya Sharma
 ]
-const SECTIONS = ['', 'dates', 'destination', 'goals', 'people', 'budget', 'itinerary', 'checklists', 'readiness', 'settings']
+const SECTIONS = ['', 'dates', 'destination', 'people', 'budget', 'itinerary', 'checklists', 'settings']
 
 const warnings = []
 let shots = 0

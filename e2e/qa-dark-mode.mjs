@@ -169,7 +169,7 @@ const ids = await page.evaluate(async () => {
 })
 if (!ids.tripId) note('could not create a trip — trip sections will be skipped')
 
-const SECTIONS = ['', 'dates', 'destination', 'goals', 'people', 'budget', 'itinerary', 'checklists', 'readiness', 'settings']
+const SECTIONS = ['', 'dates', 'destination', 'people', 'budget', 'itinerary', 'checklists', 'settings']
 if (ids.tripId) {
   for (const s of SECTIONS) {
     await page.goto(`${BASE}/trips/${ids.tripId}${s ? '/' + s : ''}`, { waitUntil: 'networkidle' })

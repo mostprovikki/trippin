@@ -183,7 +183,7 @@ async function run(scheme) {
   const trip = (await api('POST', '/api/trips', { name: `Aesth QA ${process.pid}` })).body?.trip
 
   const routes = [['trips', '/'], ['people', '/people'], ['wizard', '/trips/new'], ['search', '/search?q=a']]
-  if (trip?.id) for (const s of ['', '/dates', '/budget', '/itinerary', '/checklists', '/readiness', '/settings']) {
+  if (trip?.id) for (const s of ['', '/dates', '/budget', '/itinerary', '/checklists', '/settings']) {
     routes.push([`trip${s.replace('/', '-') || '-overview'}`, `/trips/${trip.id}${s}`])
   }
 

@@ -144,12 +144,20 @@ if (personId) {
 // Matched by href, not by accessible name: these links carry a badge or hint
 // span alongside the label, so their accessible name is "People 1" as often as
 // "People".
-const SECTIONS = ['dates', 'destination', 'goals', 'people', 'budget', 'itinerary', 'checklists', 'readiness', 'settings']
+const SECTIONS = ['dates', 'destination', 'people', 'budget', 'itinerary', 'checklists', 'settings']
+// Overview/Itinerary/Budget/Checklists/People are tabs; Dates/Destination/
+// Settings sit behind the Details ▾ toggle (tripper.md §5).
+async function tripNavLink(page, sel) {
+  const tab = page.locator(`.trip-nav-item${sel}`).first()
+  if (await tab.count()) return tab
+  await page.locator('.trip-details-toggle').click()
+  return page.locator(`.trip-details-item${sel}`).first()
+}
 if (trip?.id) {
   await page.goto(`${BASE}/trips/${trip.id}`, { waitUntil: 'networkidle' })
   await inspect('trip overview')
   for (const section of SECTIONS) {
-    const link = page.locator(`.trip-nav-item[href$="/${section}"]`).first()
+    const link = await tripNavLink(page, `[href$="/${section}"]`)
     if (!(await link.count())) { fail(`trip ${section}: sidebar link exists`, 'no such link in the trip nav'); continue }
     await link.click()
     await page.waitForTimeout(500)
@@ -201,7 +209,7 @@ if (!dead) ok(`all ${seen.size} in-app links resolve`, [...seen].slice(0, 6).joi
 for (const [w, h, tag] of [[375, 812, 'phone'], [768, 1024, 'tablet']]) {
   await page.setViewportSize({ width: w, height: h })
   const routes = [['trips list', '/'], ['people list', '/people'], ['person detail', personId ? `/people/${personId}` : '/people'], ['search', '/search?q=a']]
-  if (trip?.id) for (const s of ['', '/dates', '/people', '/budget', '/itinerary', '/checklists', '/readiness', '/settings']) {
+  if (trip?.id) for (const s of ['', '/dates', '/people', '/budget', '/itinerary', '/checklists', '/settings']) {
     routes.push([`trip ${s || 'overview'}`, `/trips/${trip.id}${s}`])
   }
   let worst = 0, worstAt = ''

@@ -83,7 +83,10 @@ const diet = await page.evaluate(() => {
 if (!diet.raw && diet.human) ok('dietary humanized', 'Non-veg shown, non_veg gone')
 else fail('dietary', JSON.stringify(diet))
 
-// 4. Readiness: expired pill is danger-red, future warning pill stays amber.
+// 4. Doc expiry: expired pill is danger-red, future warning pill stays amber.
+// The Readiness view that showed these was cut in 0xv.4 and nothing replaced it
+// yet (bead trip-planner-5p9), so this fails until the Overview shows them —
+// deliberately: a skipped check would hide the regression.
 await page.goto(`${BASE}/trips/${TRIP}/readiness`, { waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
 const pills = await page.evaluate(() => {
@@ -100,7 +103,7 @@ const pills = await page.evaluate(() => {
 })
 const redish = (s) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s); return m && Number(m[1]) > Number(m[2]) + 30 && Number(m[1]) > Number(m[3]) + 30 }
 const amberish = (s) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s); return m && Number(m[1]) > Number(m[3]) && Number(m[2]) > Number(m[3]) }
-if (!pills.expired.length) fail('expired pill present', 'no expired pill found on readiness page — measurement vacuous')
+if (!pills.expired.length) fail('expired pill present', 'no expired pill found (readiness view cut in 0xv.4; see trip-planner-5p9)')
 else if (pills.expired.every((p) => redish(p.color) || redish(p.bg))) ok('expired pills are red', pills.expired.map((p) => `${p.text} ${p.color}`).join('; '))
 else fail('expired pill colour', JSON.stringify(pills.expired))
 if (!pills.warning.length) fail('warning pill present', 'no warning pill found — other arm vacuous')

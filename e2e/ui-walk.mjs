@@ -80,9 +80,14 @@ else ok('wizard → trip shell')
 await shot('03-overview')
 
 // 3. Walk every sidebar section
-const SECTIONS = ['Overview', 'Dates', 'Destination', 'Goals', 'People', 'Budget', 'Itinerary', 'Checklists', 'Readiness', 'Settings']
+const SECTIONS = ['Overview', 'Dates', 'Destination', 'People', 'Budget', 'Itinerary', 'Checklists', 'Settings']
 for (const label of SECTIONS) {
-  const link = page.locator('.trip-nav-item', { hasText: label }).first()
+  // Dates/Destination/Settings sit behind Details ▾ (tripper.md §5).
+  let link = page.locator('.trip-nav-item', { hasText: label }).first()
+  if (!(await link.count())) {
+    await page.locator('.trip-details-toggle').click()
+    link = page.locator('.trip-details-item', { hasText: label }).first()
+  }
   if (!(await link.count())) { fail(`sidebar:${label}`, 'nav item missing'); continue }
   await link.click()
   await page.waitForLoadState('networkidle')

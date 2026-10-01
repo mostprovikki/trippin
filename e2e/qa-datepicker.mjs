@@ -1114,7 +1114,13 @@ if (!tripId) { fail('wizard create', `stuck at ${tripUrl}`) }
 else ok('wizard → trip created', tripId)
 
 async function gotoSection(label) {
-  await page.locator('.trip-nav-item', { hasText: label }).first().click()
+  const tab = page.locator('.trip-nav-item', { hasText: label }).first()
+  if (await tab.count()) await tab.click()
+  else {
+    // Dates/Destination/Settings sit behind Details ▾ (tripper.md §5).
+    await page.locator('.trip-details-toggle').click()
+    await page.locator('.trip-details-item', { hasText: label }).first().click()
+  }
   await page.waitForLoadState('networkidle')
   await page.waitForTimeout(400)
 }
@@ -1214,8 +1220,8 @@ await shot('dp-12b-dates-open-paths')
 await diagnosePanelHandoff(page, page.locator('.dwe-row .p-datepicker-input').nth(0), page.locator('.dwe-row .p-datepicker-input').nth(1), 'trip Dates start→end')
 await shot('dp-12c-dates-handoff')
 
-// ---------- 5. trip Goals section (GoalsEditor.vue) ----------
-await gotoSection('Goals')
+// ---------- 5. trip Goals (GoalsEditor.vue, on Destination since 0xv.4) ----------
+await gotoSection('Destination')
 await shot('dp-13-goals')
 const goalIso = '2026-10-03'
 {
