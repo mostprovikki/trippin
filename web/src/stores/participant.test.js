@@ -66,11 +66,23 @@ describe('participant store', () => {
       expect(opts.method).toBe('PUT')
       expect(opts.headers.Authorization).toBe('Bearer tok-123')
       expect(JSON.parse(opts.body)).toEqual({ name: 'Bob' })
-      return jsonResponse({ person: { id: 'p1', name: 'Bob' } })
+      return jsonResponse({ person: { id: 'p1', name: 'Bob' }, profile_confirmed: 1, missing_fields: [] })
     })
     await store.saveProfile({ name: 'Bob' })
     expect(store.person).toEqual({ id: 'p1', name: 'Bob' })
     expect(store.profileConfirmed).toBe(true)
+    expect(store.stillNeeded).toEqual([])
+  })
+
+  // trip-planner-4hi: confirmed means complete — the server decides.
+  it('saveProfile() with required fields blank leaves the profile unconfirmed and lists what is still needed', async () => {
+    const store = useParticipantStore()
+    store.token = 'tok-123'
+    store.profileConfirmed = true
+    fetch.mockImplementation(() => jsonResponse({ person: { id: 'p1', name: 'Bob' }, profile_confirmed: 0, missing_fields: ['phone', 'dietary'] }))
+    await store.saveProfile({ name: 'Bob' })
+    expect(store.profileConfirmed).toBe(false)
+    expect(store.stillNeeded).toEqual(['Phone', 'Dietary'])
   })
 
   it('uploadDocument() posts FormData with Bearer auth and appends document', async () => {

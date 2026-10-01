@@ -17,10 +17,12 @@ export function missingRows(participants = [], tripEnd) {
       ? `${docTypeLabel(w.doc_type)} expires before the trip${tripEnd ? ' ends' : ''}`
       : `${docTypeLabel(w.doc_type)} expires within 6 months of the trip end — many countries refuse entry`))
     for (const d of p.missing_docs || []) reasons.push(`${docTypeLabel(d)} not uploaded`)
-    // an unconfirmed profile already covers its own field gaps — listing them
-    // too would chase the person for the same thing twice
-    if (!p.profile_confirmed) reasons.push("Hasn't confirmed their details")
-    else if (p.missing_fields?.length) reasons.push(cap(p.missing_fields.map((f) => FIELD_LABEL[f] || f).join(' · ')))
+    // Confirmed means complete (server, trip-planner-4hi), so field gaps are
+    // the reason a profile is unconfirmed: name them — /p calls the same
+    // fields "Still needed". "Hasn't confirmed" is left for a profile the
+    // organizer filled in that the person never saved themselves.
+    if (p.missing_fields?.length) reasons.push(cap(p.missing_fields.map((f) => FIELD_LABEL[f] || f).join(' · ')))
+    else if (!p.profile_confirmed) reasons.push("Hasn't confirmed their details")
     if (!reasons.length) { complete.push(p.name); continue }
     rows.push({
       personId: p.person_id,

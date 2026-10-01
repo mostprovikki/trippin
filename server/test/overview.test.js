@@ -93,11 +93,21 @@ describe('POST /trips/:id/seen', () => {
     expect((await seen()).json().events).toEqual([])
   })
 
-  it('first save of an untouched profile still records (it confirms the profile)', async () => {
-    const { seen, asParticipant, backdate } = await setup()
+  it('first save of an untouched but complete profile still records (it confirms the profile)', async () => {
+    const { db, p, seen, asParticipant, backdate } = await setup()
+    await db.run("UPDATE persons SET phone = '1', emergency_contact = '2', dietary = 'veg' WHERE id = ?", [p.id])
     await seen(); await backdate(2)
     await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: {} })
     expect((await seen()).json().events.map((e) => e.summary)).toEqual(['Divya updated their details'])
+  })
+
+  // trip-planner-4hi: an incomplete profile isn't confirmed by saving, so a
+  // no-op save of one has nothing to tell the organizer.
+  it('a no-op save of an incomplete profile records nothing', async () => {
+    const { seen, asParticipant, backdate } = await setup()
+    await seen(); await backdate(2)
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: {} })
+    expect((await seen()).json().events).toEqual([])
   })
 
   it('tick, untick, tick again within the hour records one tick', async () => {

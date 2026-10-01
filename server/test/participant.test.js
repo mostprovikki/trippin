@@ -27,20 +27,56 @@ describe('participant self-service', () => {
     expect(body.profile_confirmed).toBe(0)
   })
 
-  it('PUT /participant/profile updates person and sets profile_confirmed=1', async () => {
+  const confirmedOf = async (db, t, p) => (await db.get(
+    'SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?', [t.id, p.id])).profile_confirmed
+  const putProfile = (app, raw, payload) => app.inject({
+    method: 'PUT', url: '/api/participant/profile', headers: { authorization: `Bearer ${raw}` }, payload,
+  })
+
+  it('PUT /participant/profile with every required field set confirms the profile', async () => {
     const { app, db } = await makeTestApp()
     const p = await createPerson(db)
     const t = await createTrip(db)
     const raw = await seedLink(app, db, t, p)
-    const res = await app.inject({
-      method: 'PUT', url: '/api/participant/profile',
-      headers: { authorization: `Bearer ${raw}` },
-      payload: { dietary: 'vegan', interests: ['food'] },
-    })
+    const res = await putProfile(app, raw, { phone: '+91 98450 00000', emergency_contact: 'Amma 98450 11111', dietary: 'vegan', interests: ['food'] })
     expect(res.statusCode).toBe(200)
     expect(res.json().person).toMatchObject({ dietary: 'vegan', interests: ['food'] })
-    const row = await db.get('SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?', [t.id, p.id])
-    expect(row.profile_confirmed).toBe(1)
+    expect(res.json()).toMatchObject({ profile_confirmed: 1, missing_fields: [] })
+    expect(await confirmedOf(db, t, p)).toBe(1)
+  })
+
+  // tripper.md §6/§9 D2 (trip-planner-4hi): confirmed means complete.
+  it('PUT /participant/profile with a required field blank saves but does not confirm, and says what is missing', async () => {
+    const { app, db } = await makeTestApp()
+    const p = await createPerson(db)
+    const t = await createTrip(db)
+    const raw = await seedLink(app, db, t, p)
+    const res = await putProfile(app, raw, { phone: '+91 98450 00000', emergency_contact: '   ', dietary: null, allergies: 'peanuts' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().person).toMatchObject({ phone: '+91 98450 00000', allergies: 'peanuts' })
+    expect(res.json()).toMatchObject({ profile_confirmed: 0, missing_fields: ['emergency_contact', 'dietary'] })
+    expect(await confirmedOf(db, t, p)).toBe(0)
+  })
+
+  it('PUT /participant/profile un-confirms when a later save blanks a required field', async () => {
+    const { app, db } = await makeTestApp()
+    const p = await createPerson(db)
+    const t = await createTrip(db)
+    const raw = await seedLink(app, db, t, p)
+    await putProfile(app, raw, { phone: '1', emergency_contact: '2', dietary: 'veg' })
+    expect(await confirmedOf(db, t, p)).toBe(1)
+    const res = await putProfile(app, raw, { phone: null })
+    expect(res.json()).toMatchObject({ profile_confirmed: 0, missing_fields: ['phone'] })
+    expect(await confirmedOf(db, t, p)).toBe(0)
+  })
+
+  it('GET /participant/me reports the missing required fields', async () => {
+    const { app, db } = await makeTestApp()
+    const p = await createPerson(db, { phone: '1' })
+    const t = await createTrip(db)
+    const raw = await seedLink(app, db, t, p)
+    const res = await app.inject({ method: 'GET', url: '/api/participant/me', headers: { authorization: `Bearer ${raw}` } })
+    expect(res.json().missing_fields).toEqual(['emergency_contact', 'dietary'])
   })
 
   it('expired link returns 401', async () => {
@@ -175,5 +211,23 @@ describe('participant self-service', () => {
     const { app } = await makeTestApp()
     const res = await app.inject({ method: 'GET', url: '/api/participant/itinerary.ics' })
     expect(res.statusCode).toBe(401)
+  })
+})
+
+// trip-planner-4hi: rows confirmed by the old "any save confirms" rule while a
+// required field was blank are un-confirmed; complete ones keep their state.
+describe('007_confirmed_means_complete', () => {
+  it('un-confirms incomplete profiles only', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { db } = await makeTestApp()
+    const t = await createTrip(db)
+    const done = await createPerson(db, { phone: '1', emergency_contact: '2', dietary: 'veg' })
+    const blank = await createPerson(db, { phone: '1', emergency_contact: ' ', dietary: 'veg' })
+    for (const p of [done, blank])
+      await db.run('INSERT INTO trip_participants (trip_id,person_id,profile_confirmed) VALUES (?,?,1)', [t.id, p.id])
+    await db.exec(readFileSync(new URL('../src/migrations/007_confirmed_means_complete.sql', import.meta.url), 'utf8'))
+    const rows = await db.all('SELECT person_id, profile_confirmed FROM trip_participants WHERE trip_id = ?', [t.id])
+    const by = Object.fromEntries(rows.map((r) => [r.person_id, r.profile_confirmed]))
+    expect(by).toEqual({ [done.id]: 1, [blank.id]: 0 })
   })
 })

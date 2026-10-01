@@ -5,6 +5,7 @@ import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
+import Message from 'primevue/message'
 import { useParticipantStore } from '../stores/participant.js'
 
 const store = useParticipantStore()
@@ -37,7 +38,7 @@ function blank() {
 
 const form = reactive(blank())
 const saving = ref(false)
-const confirmed = ref(false)
+const saved = ref(false)
 
 function loadFrom(src) {
   const b = blank()
@@ -64,10 +65,10 @@ async function submit() {
     home_city: form.home_city || null
   }
   saving.value = true
-  confirmed.value = false
+  saved.value = false
   try {
     await store.saveProfile(fields)
-    confirmed.value = true
+    saved.value = true
   } catch {
     /* store.error surfaced by parent view */
   } finally {
@@ -79,26 +80,27 @@ async function submit() {
 <template>
   <section class="card">
     <h2>Your details</h2>
+    <p class="pf-legend"><span class="pf-req" aria-hidden="true">*</span> Needed before the trip</p>
     <form @submit.prevent="submit">
       <div class="field">
         <label for="pf-name">Name</label>
         <InputText id="pf-name" v-model="form.name" required fluid />
       </div>
       <div class="field">
-        <label for="pf-phone">Phone</label>
-        <InputText id="pf-phone" v-model="form.phone" fluid />
+        <label for="pf-phone">Phone <span class="pf-req" aria-hidden="true">*</span></label>
+        <InputText id="pf-phone" v-model="form.phone" aria-required="true" fluid />
       </div>
       <div class="field">
         <label for="pf-email">Email</label>
         <InputText id="pf-email" type="email" v-model="form.email" fluid />
       </div>
       <div class="field">
-        <label for="pf-emergency">Emergency contact</label>
-        <InputText id="pf-emergency" v-model="form.emergency_contact" fluid />
+        <label for="pf-emergency">Emergency contact <span class="pf-req" aria-hidden="true">*</span></label>
+        <InputText id="pf-emergency" v-model="form.emergency_contact" aria-required="true" fluid />
       </div>
       <div class="field">
-        <label for="pf-dietary">Dietary</label>
-        <Select label-id="pf-dietary" v-model="form.dietary" :options="dietaryOptions" option-label="label" option-value="value" fluid />
+        <label for="pf-dietary">Dietary <span class="pf-req" aria-hidden="true">*</span></label>
+        <Select label-id="pf-dietary" v-model="form.dietary" :options="dietaryOptions" option-label="label" option-value="value" :pt="{ label: { 'aria-required': 'true' } }" fluid />
       </div>
       <div class="field">
         <label for="pf-allergies">Allergies</label>
@@ -125,7 +127,8 @@ async function submit() {
         <InputText id="pf-city" v-model="form.home_city" fluid />
       </div>
       <Button type="submit" :label="saving ? 'Saving…' : 'Save'" :disabled="saving" />
-      <Tag v-if="confirmed" value="Profile confirmed ✓" severity="success" class="pf-confirmed" />
+      <Tag v-if="saved && store.profileConfirmed" value="Profile confirmed ✓" severity="success" class="pf-confirmed" />
+      <Message v-else-if="saved" severity="warn" :closable="false" class="pf-still">Saved. Still needed: {{ store.stillNeeded.join(', ') }}</Message>
     </form>
   </section>
 </template>
@@ -133,5 +136,16 @@ async function submit() {
 <style scoped>
 .pf-confirmed {
   margin-left: 0.75rem;
+}
+.pf-still {
+  margin-top: 0.75rem;
+}
+.pf-req {
+  color: var(--app-danger);
+}
+.pf-legend {
+  margin: 0 0 0.75rem;
+  color: var(--app-text-muted);
+  font-size: 0.875rem;
 }
 </style>

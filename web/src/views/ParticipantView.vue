@@ -46,7 +46,7 @@ const checklistItems = computed(() => [...store.packing, ...store.tasks])
 const checklistDone = computed(() => checklistItems.value.filter((i) => i.done).length)
 
 const steps = computed(() => [
-  { key: 'profile', n: 1, title: 'Your profile', done: store.profileConfirmed, hint: store.profileConfirmed ? 'Confirmed' : 'Confirm your details' },
+  { key: 'profile', n: 1, title: 'Your profile', done: store.profileConfirmed, hint: store.profileConfirmed ? 'Confirmed' : store.stillNeeded.length ? `Still needed: ${store.stillNeeded.join(', ')}` : 'Confirm your details' },
   { key: 'docs', n: 2, title: 'Documents', done: store.documents.length > 0, hint: store.documents.length ? `${store.documents.length} uploaded` : 'Upload passport / ID / tickets' },
   { key: 'checklist', n: 3, title: 'Checklist', done: checklistItems.value.length > 0 && checklistDone.value === checklistItems.value.length, hint: checklistItems.value.length ? `${checklistDone.value}/${checklistItems.value.length} done` : 'Nothing assigned yet' }
 ])

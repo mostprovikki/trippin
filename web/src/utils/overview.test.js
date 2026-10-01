@@ -22,8 +22,15 @@ describe('missingRows', () => {
     expect(out.rows[0]).toMatchObject({ severity: 'warn', pills: [{ level: 'warning', label: 'Passport expires 20 Jan 2027' }] })
     expect(out.rows[0].reasons).toEqual(['Passport expires within 6 months of the trip end — many countries refuse entry'])
   })
-  it('unconfirmed profile is a reason on its own, field gaps not repeated', () => {
+  // trip-planner-4hi: unconfirmed now means a required field is blank (or the
+  // person never saved), so name the fields — the same ones /p says are
+  // "Still needed" — and fall back to "Hasn't confirmed" only when none is blank.
+  it('unconfirmed with field gaps names the fields, once', () => {
     const out = missingRows([{ ...base, name: 'Arun', profile_confirmed: 0, missing_fields: ['phone'] }], '2026-11-15')
+    expect(out.rows[0].reasons).toEqual(['No phone'])
+  })
+  it('unconfirmed with every field filled reads as not confirmed', () => {
+    const out = missingRows([{ ...base, name: 'Arun', profile_confirmed: 0 }], '2026-11-15')
     expect(out.rows[0].reasons).toEqual(["Hasn't confirmed their details"])
   })
   it('missing docs read as not uploaded', () => {

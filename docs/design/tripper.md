@@ -99,6 +99,9 @@ Workbench controls.
 **On a phone, "one click" means visible without scrolling.** The top-5 tabs (Overview,
 Itinerary, Budget, Checklists, People) must fit a 390px bar. Only Details ▾ may overflow.
 
+**On a phone (< 640px) every control is at least 44px tall**, app-wide: buttons, inputs,
+selects, nav links. This covers more than the tab bar and row actions (owner D7, 2026-10-02).
+
 ## 5. Density and action stance
 
 - **Trip overview**: no button in the page header. Actions live on the row they act on (copy
@@ -109,6 +112,10 @@ Itinerary, Budget, Checklists, People) must fit a 390px bar. Only Details ▾ ma
   not as visible buttons. Owner call 2026-09-26: "AI buttons everywhere" is over-promoted today.
 - **Itinerary during the trip** also marks today and opens scrolled to it (as well as the
   Overview's Today card).
+- **Per-card management actions** (save as template, delete, add from template) live under
+  the card's `⋯`. A Save button shows only when there is something to save (owner D8, 2026-10-02).
+- **Trip header**: shows the status chip, but no next-status button ("Activate"). Status changes
+  live in Details ▾ Settings (owner D9, 2026-10-02).
 - **Admin forms**: one Save per section.
 - **Tabs**: Overview · Itinerary · Budget · Checklists · People · Details ▾ (Dates,
   Destination + Goals, Settings). Goals no longer has its own tab; it folds into Destination/Dates.
@@ -205,3 +212,7 @@ Nothing AI-related shows at rest.
 | 2026-10-01 | `during` also needs today inside the trip dates; an active trip outside them gets the before layout | phase-aware build | otherwise an early-activated trip shows an empty Today |
 | 2026-10-01 | Quick reference source = `stay` itinerary items + item phone/booking ref + trip "Local emergency numbers" (Details ▾ Destination) | owner (D4) | §9 gap; no stays table, no per-destination data |
 | 2026-10-01 | Today heading is `Today · ⟨date⟩` (no city) | phase-aware build | no structured city per day; the trip line already says where |
+| 2026-10-02 | §4: every control ≥ 44px on a phone, app-wide | owner (D7), smoke-2026-10 | finding 12: 31–40px controls on every admin page |
+| 2026-10-02 | §5: per-card management actions under the card's `⋯`; Save only when dirty | owner (D8), smoke-2026-10 | findings 5, 8 |
+| 2026-10-02 | §5: header keeps the status chip; next-status button moves to Details ▾ Settings | owner (D9), smoke-2026-10 | §7 cut the stepper as a status field at rest; §5 no header button |
+| 2026-10-02 | §2: Trips list keeps status groups (Idea / Confirmed / Archived); who's missing shows per trip (cpp) | owner (D10), smoke-2026-10 | "needs me" comes from per-trip missing, not regrouping |

@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import { useParticipantStore } from '../stores/participant.js'
 import { mountWithBase } from '../test-utils.js'
 import ParticipantProfileForm from './ParticipantProfileForm.vue'
 
@@ -61,6 +64,49 @@ describe('ParticipantProfileForm label/Select wiring', () => {
 
     expect(document.activeElement).toBe(target)
 
+    wrapper.unmount()
+  })
+})
+
+// trip-planner-4hi: tripper.md §6/§9 D2 — phone, emergency contact, dietary
+// are required; Save must never say "confirmed" while one is blank.
+describe('ParticipantProfileForm required fields', () => {
+  afterEach(() => { document.body.innerHTML = '' })
+
+  function mountWith(saveResult) {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useParticipantStore()
+    store.saveProfile = vi.fn().mockImplementation(async () => Object.assign(store, saveResult))
+    const wrapper = mountWithBase(ParticipantProfileForm, { pinia, attachTo: document.body })
+    return { wrapper, store }
+  }
+
+  it('marks exactly the three required fields', () => {
+    const { wrapper } = mountWith({})
+    const marked = wrapper.findAll('label').filter((l) => l.find('.pf-req').exists()).map((l) => l.attributes('for'))
+    expect(marked).toEqual(['pf-phone', 'pf-emergency', 'pf-dietary'])
+    for (const id of ['pf-phone', 'pf-emergency', 'pf-dietary'])
+      expect(document.getElementById(id).getAttribute('aria-required'), id).toBe('true')
+    expect(document.getElementById('pf-email').getAttribute('aria-required')).not.toBe('true')
+    wrapper.unmount()
+  })
+
+  it('Save with a required field blank says what is still needed, not confirmed', async () => {
+    const { wrapper } = mountWith({ profileConfirmed: false, missingFields: ['emergency_contact', 'dietary'] })
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Saved. Still needed: Emergency contact, Dietary')
+    expect(wrapper.text()).not.toContain('Profile confirmed')
+    wrapper.unmount()
+  })
+
+  it('Save with every required field set says confirmed', async () => {
+    const { wrapper } = mountWith({ profileConfirmed: true, missingFields: [] })
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Profile confirmed ✓')
+    expect(wrapper.text()).not.toContain('Still needed')
     wrapper.unmount()
   })
 })

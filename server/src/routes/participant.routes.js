@@ -1,4 +1,5 @@
 import { recordEvent } from '../lib/events.js'
+import { missingFieldsOf } from '../lib/missing.js'
 import rateLimit from '@fastify/rate-limit'
 import { personToJson } from './people.routes.js'
 import { budgetShape } from './budget.routes.js'
@@ -70,6 +71,7 @@ export default async function routes(app) {
       },
       person,
       profile_confirmed: tp?.profile_confirmed ?? 0,
+      missing_fields: missingFieldsOf(person),
       itinerary,
       budget,
       companions,
@@ -83,8 +85,10 @@ export default async function routes(app) {
   }, async (req) => {
     const { tripId, personId } = req.participant
     // "Since you last looked" only hears about a save that changed something —
-    // or the first save, which confirms the profile (a no-op re-save would
-    // otherwise flood the organizer's 20-row feed).
+    // or the save that confirms the profile (a no-op re-save would otherwise
+    // flood the organizer's 20-row feed). Confirmed means complete (tripper.md
+    // §6/§9 D2): recomputed on every save, so blanking a required field
+    // un-confirms.
     const before = await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])
     const wasConfirmed = !!(await app.db.get('SELECT profile_confirmed FROM trip_participants WHERE trip_id = ? AND person_id = ?', [tripId, personId]))?.profile_confirmed
     const stored = (f, v) => (f === 'interests' ? JSON.stringify(v) : v)
@@ -94,9 +98,12 @@ export default async function routes(app) {
         `UPDATE persons SET ${f} = ?, updated_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
         [f === 'interests' ? JSON.stringify(req.body[f]) : req.body[f], personId]
       )
-    await app.db.run('UPDATE trip_participants SET profile_confirmed = 1 WHERE trip_id = ? AND person_id = ?', [tripId, personId])
-    if (changed || !wasConfirmed) await recordEvent(app.db, { tripId, personId, kind: 'profile_saved' })
-    return { person: personToJson(await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])) }
+    const after = await app.db.get('SELECT * FROM persons WHERE id = ?', [personId])
+    const missing = missingFieldsOf(after)
+    const confirmed = missing.length ? 0 : 1
+    await app.db.run('UPDATE trip_participants SET profile_confirmed = ? WHERE trip_id = ? AND person_id = ?', [confirmed, tripId, personId])
+    if (changed || (confirmed && !wasConfirmed)) await recordEvent(app.db, { tripId, personId, kind: 'profile_saved' })
+    return { person: personToJson(after), profile_confirmed: confirmed, missing_fields: missing }
   })
 
   app.get('/participant/itinerary.ics', { preHandler: app.requireParticipant }, async (req, reply) => {

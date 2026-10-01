@@ -54,6 +54,17 @@ describe('ParticipantView', () => {
     expect(wrapper.text()).toContain('Goa 2026')
   })
 
+  it('profile step hint names what is still needed (trip-planner-4hi)', async () => {
+    const { wrapper } = await mountView({
+      trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },
+      person: { id: 'p1', name: 'Bob' },
+      profileConfirmed: false, missingFields: ['phone'], documents: [], packing: [], tasks: [],
+    })
+    const step = wrapper.findAll('.step-card')[0]
+    expect(step.classes()).not.toContain('step-done')
+    expect(step.text()).toContain('Still needed: Phone')
+  })
+
   it('passes itinerary/budget/companions through to ParticipantItinerary', async () => {
     const { wrapper } = await mountView({
       trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },

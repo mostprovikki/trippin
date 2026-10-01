@@ -3,13 +3,15 @@
 // shouldn't read as complete.
 export const REQUIRED_FIELDS = ['phone', 'emergency_contact', 'dietary']
 
+export const missingFieldsOf = (person) => REQUIRED_FIELDS.filter((f) => !String(person?.[f] ?? '').trim())
+
 export async function missingFieldsByPerson(db, tripId) {
   const rows = await db.all(
     `SELECT p.id, ${REQUIRED_FIELDS.map((f) => `p.${f}`).join(', ')}
      FROM trip_participants tp JOIN persons p ON p.id = tp.person_id WHERE tp.trip_id = ?`,
     [tripId]
   )
-  return new Map(rows.map((r) => [r.id, REQUIRED_FIELDS.filter((f) => !String(r[f] ?? '').trim())]))
+  return new Map(rows.map((r) => [r.id, missingFieldsOf(r)]))
 }
 
 // Required doc types (trips.required_doc_types) a participant has no document

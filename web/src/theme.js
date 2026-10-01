@@ -119,6 +119,16 @@ export const TripperPreset = definePreset(Aura, {
           text: { danger: { color: '{red.600}' } }
         }
       }
+    },
+    message: {
+      colorScheme: {
+        light: {
+          // Aura's warn Message text is {yellow.600} on a yellow-50 wash: 2.94:1,
+          // under AA for /p's "Saved. Still needed: …" (qa-participant-profile).
+          // yellow.800 keeps the hue. Dark already passes.
+          warn: { color: '{yellow.800}' }
+        }
+      }
     }
   }
 })

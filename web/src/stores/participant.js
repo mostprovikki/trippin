@@ -1,12 +1,17 @@
 import { defineStore } from 'pinia'
 import { participantApi } from '../api/client.js'
 
+// tripper.md §9 D2: the server's REQUIRED_FIELDS (server/src/lib/missing.js),
+// in the labels the /p form uses.
+export const REQUIRED_FIELD_LABEL = { phone: 'Phone', emergency_contact: 'Emergency contact', dietary: 'Dietary' }
+
 export const useParticipantStore = defineStore('participant', {
   state: () => ({
     token: null,
     trip: null,
     person: null,
     profileConfirmed: false,
+    missingFields: [],
     documents: [],
     packing: [],
     tasks: [],
@@ -16,6 +21,9 @@ export const useParticipantStore = defineStore('participant', {
     companionCount: 0,
     error: null
   }),
+  getters: {
+    stillNeeded: (s) => s.missingFields.map((f) => REQUIRED_FIELD_LABEL[f] || f)
+  },
   actions: {
     async load(token) {
       this.token = token
@@ -29,6 +37,7 @@ export const useParticipantStore = defineStore('participant', {
         this.trip = me.trip
         this.person = me.person
         this.profileConfirmed = !!me.profile_confirmed
+        this.missingFields = me.missing_fields || []
         this.itinerary = me.itinerary || []
         this.budget = me.budget || null
         this.companions = me.companions || []
@@ -48,7 +57,9 @@ export const useParticipantStore = defineStore('participant', {
       try {
         const res = await capi.put('/api/participant/profile', fields)
         this.person = res.person
-        this.profileConfirmed = true
+        // confirmed means complete — the server decides (trip-planner-4hi)
+        this.profileConfirmed = !!res.profile_confirmed
+        this.missingFields = res.missing_fields || []
       } catch (e) {
         this.error = e.message
         throw e
