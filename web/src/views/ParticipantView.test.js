@@ -194,4 +194,20 @@ describe('ParticipantView', () => {
     expect(wrapper.findAll('.step-card .card')).toHaveLength(0)
     expect(wrapper.findAll('.step-card')[2].text()).toContain('due 20 Jul 2026')
   })
+
+  it('empty checklist says so once, in the hint', async () => {
+    const { wrapper } = await mountView({ ...base, documents: [] })
+    const step = wrapper.findAll('.step-card')[2]
+    expect(step.find('.step-hint').text()).toBe('Nothing assigned yet')
+    expect(step.text()).not.toContain('Nothing to pack yet')
+    expect(step.text()).not.toContain('No tasks assigned')
+  })
+
+  it('each hero meta item keeps its icon with its text', async () => {
+    const { wrapper } = await mountView({ ...base, documents: [] })
+    const items = wrapper.findAll('.p-meta .p-meta-item')
+    expect(items).toHaveLength(2)
+    expect(items[1].find('.pi-calendar').exists()).toBe(true)
+    expect(items[1].text()).toContain('Sat 1 Aug')
+  })
 })

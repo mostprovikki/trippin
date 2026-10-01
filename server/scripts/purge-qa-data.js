@@ -42,6 +42,7 @@ const TRIP_PATTERNS = [
   'Overview QA *',  // e2e/qa-overview.mjs
   'Profile QA *',   // e2e/qa-participant-profile.mjs
   'People QA *',     // e2e/qa-people.mjs
+  'Phone QA *',      // e2e/qa-participant-phone.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]
@@ -61,7 +62,8 @@ const PERSON_PATTERNS = [
   'Probe Person *',
   'Overview QA Person *', // e2e/qa-overview.mjs
   'Profile QA Person *',  // e2e/qa-participant-profile.mjs
-  'People QA Person *'    // e2e/qa-people.mjs
+  'People QA Person *',   // e2e/qa-people.mjs
+  'Phone QA *'            // e2e/qa-participant-phone.mjs (trip 'Phone QA <ts>', person 'Phone QA Person <ts>')
 ]
 
 const db = await makeDb()

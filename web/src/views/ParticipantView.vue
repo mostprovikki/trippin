@@ -137,9 +137,11 @@ async function downloadIcs() {
         <p v-if="store.person" class="p-greeting">Hi {{ store.person.name }} 👋</p>
         <h1>{{ store.trip.name }}</h1>
         <p class="p-meta">
-          <i class="pi pi-map-marker" /> {{ store.trip.destination || 'Destination TBD' }}
+          <!-- one nowrap item per icon+text, so a wrap never strands the
+               calendar icon at the end of the line above its date -->
+          <span class="p-meta-item"><i class="pi pi-map-marker" /> {{ store.trip.destination || 'Destination TBD' }}</span>
           <span class="p-sep" aria-hidden="true">·</span>
-          <i class="pi pi-calendar" /> {{ dateRange }}
+          <span class="p-meta-item"><i class="pi pi-calendar" /> {{ dateRange }}</span>
         </p>
         <p v-if="store.trip.description" class="p-desc">{{ store.trip.description }}</p>
         <div v-if="(store.trip.vibe_tags || []).length" class="p-tags">
@@ -173,7 +175,8 @@ async function downloadIcs() {
         </header>
         <ParticipantProfileForm v-if="step.key === 'profile'" />
         <ParticipantDocs v-else-if="step.key === 'docs'" />
-        <ParticipantChecklist v-else />
+        <!-- empty: the hint already says "Nothing assigned yet" -->
+        <ParticipantChecklist v-else-if="checklistItems.length" />
       </section>
 
       <!-- after the steps: filling them is why the participant opened the
@@ -213,6 +216,7 @@ async function downloadIcs() {
 .p-hero h1 { margin: 0 0 0.375rem; }
 .p-greeting { margin: 0 0 0.25rem; color: var(--app-text-muted); font-size: 0.875rem; }
 .p-meta { margin: 0; color: var(--app-text-muted); display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap; }
+.p-meta-item { display: inline-flex; align-items: center; gap: 0.375rem; white-space: nowrap; }
 .p-sep { color: var(--app-text-subtle); }
 .p-desc { margin: 0.625rem 0 0; }
 .p-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.625rem; }

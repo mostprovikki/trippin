@@ -140,9 +140,10 @@ else {
   // ---------------------------------------------------- required markers
   await openP('light')
   const marks = await page.evaluate(() => {
-    const labels = [...document.querySelectorAll('form label')]
+    // dietary is a radio group since trip-planner-0qh: its * sits on the legend
+    const labels = [...document.querySelectorAll('form label[for], form fieldset[id] > legend')]
     return {
-      marked: labels.filter((l) => l.querySelector('.pf-req')).map((l) => l.getAttribute('for')),
+      marked: labels.filter((l) => l.querySelector('.pf-req')).map((l) => l.getAttribute('for') || l.parentElement.id),
       aria: ['pf-phone', 'pf-emergency', 'pf-dietary', 'pf-email'].map((id) => [id, document.getElementById(id)?.getAttribute('aria-required')]),
       starColor: getComputedStyle(document.querySelector('label .pf-req') || document.body).color,
       starVisible: !!document.querySelector('label .pf-req')?.getBoundingClientRect().width,
@@ -162,8 +163,10 @@ else {
 
   const before = await profileStep()
   if (!before) fail('/p: profile step card present', 'no .step-card')
-  else if (before.done || before.hint !== 'Still needed: Emergency contact, Dietary') fail('/p: step hint names what is still needed', JSON.stringify(before))
-  else ok('/p: step hint names what is still needed', before.hint)
+  // trip-planner-0qh: the names appear once, beside Save — the step hint is
+  // empty until the profile is confirmed
+  else if (before.done || before.hint) fail('/p: step hint stays empty until confirmed', JSON.stringify(before))
+  else ok('/p: step hint stays empty until confirmed')
 
   // -------------------------------------------- Save with blanks (the bug)
   const blank = await save()
@@ -202,9 +205,8 @@ else {
   // ------------------------------------------------- complete it → confirmed
   await openP('light')
   await page.locator('#pf-emergency').fill('Amma +91 98450 11111')
-  await page.locator('#pf-dietary').click()
-  const opt = page.getByRole('option', { name: 'Veg', exact: true })
-  if (!(await opt.isVisible({ timeout: 3000 }).catch(() => false))) fail('/p: dietary option opens', 'no "Veg" option')
+  const opt = page.locator('#pf-dietary .pf-choice', { hasText: /^\s*Veg\s*$/ })
+  if (!(await opt.count())) fail('/p: dietary Veg choice present', 'no "Veg" radio')
   else await opt.click()
   await page.waitForTimeout(300)
   const done = await save()
