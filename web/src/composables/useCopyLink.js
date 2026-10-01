@@ -25,34 +25,44 @@ export function useCopyLink() {
   const confirm = useConfirm()
   const notify = useNotify()
 
-  async function write(url, name) {
+  // Settles once: accept → true; Cancel, ×, Escape → false. onHide also fires
+  // after accept, but by then the promise has already settled.
+  const ask = (name) => new Promise((settle) => confirm.require({
+    ...replaceLinkConfirm(name, () => settle(true)),
+    reject: () => settle(false),
+    onHide: () => settle(false)
+  }))
+  const mint = async (tripId, personId) =>
+    location.origin + (await api.post(`/api/trips/${tripId}/participants/${personId}/link`)).url
+
+  // The person's absolute link, or null when the organizer cancelled or it
+  // failed (already reported). `replace` skips the re-read: a new link, after
+  // asking when there is an active one to revoke.
+  async function resolve(tripId, personId, name, { hasActiveLink = false, replace = false } = {}) {
     try {
-      await navigator.clipboard.writeText(location.origin + url)
-      notify.success(`${name}'s link copied`)
+      if (!replace) {
+        try { return location.origin + (await api.get(`/api/trips/${tripId}/participants/${personId}/link`)).url }
+        catch (e) { if (e.code !== 'NO_RECOVERABLE_LINK') throw e }
+      }
+      if (hasActiveLink && !(await ask(name))) return null
+      return await mint(tripId, personId)
+    } catch (e) { notify.error(e.message); return null }
+  }
+
+  // `compose(url)` turns the link into the text to copy (the message that goes
+  // with it). Returns the link, or null when nothing was copied.
+  async function copy(tripId, personId, name, opts = {}) {
+    const url = await resolve(tripId, personId, name, opts)
+    if (!url) return null
+    const what = opts.compose ? 'message' : 'link'
+    try {
+      await navigator.clipboard.writeText(opts.compose ? opts.compose(url) : url)
+      notify.success(`${name}'s ${what} copied`)
     } catch {
-      notify.error('Could not access clipboard — copy the link manually')
+      notify.error(`Could not access clipboard — copy the ${what} manually`)
     }
+    return url
   }
 
-  async function mintAndWrite(tripId, personId, name) {
-    try {
-      const { url } = await api.post(`/api/trips/${tripId}/participants/${personId}/link`)
-      await write(url, name)
-    } catch (e) { notify.error(e.message) }
-  }
-
-  async function copy(tripId, personId, name, { hasActiveLink }) {
-    let url
-    try {
-      url = (await api.get(`/api/trips/${tripId}/participants/${personId}/link`)).url
-    } catch (e) {
-      if (e.code !== 'NO_RECOVERABLE_LINK') { notify.error(e.message); return }
-      if (!hasActiveLink) return mintAndWrite(tripId, personId, name)
-      confirm.require(replaceLinkConfirm(name, () => mintAndWrite(tripId, personId, name)))
-      return
-    }
-    await write(url, name)
-  }
-
-  return { copy }
+  return { copy, resolve }
 }
