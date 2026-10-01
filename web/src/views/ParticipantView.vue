@@ -13,6 +13,7 @@ import ParticipantChecklist from '../components/ParticipantChecklist.vue'
 import ParticipantItinerary from '../components/ParticipantItinerary.vue'
 import { docTypeLabel } from '../utils/format.js'
 import { missingDocTypes } from '../utils/requiredDocs.js'
+import { formatDayDate, formatShortDate } from '../utils/dates.js'
 
 const route = useRoute()
 const store = useParticipantStore()
@@ -61,13 +62,15 @@ const docsStep = computed(() => {
 })
 
 const steps = computed(() => [
-  { key: 'profile', n: 1, title: 'Your profile', done: store.profileConfirmed, hint: store.profileConfirmed ? 'Confirmed' : store.stillNeeded.length ? `Still needed: ${store.stillNeeded.join(', ')}` : 'Confirm your details' },
+  // No hint until confirmed: what's still needed is named once, beside Save
+  // (ParticipantProfileForm), not repeated up here (trip-planner-0qh).
+  { key: 'profile', n: 1, title: 'Your details', done: store.profileConfirmed, hint: store.profileConfirmed ? 'Confirmed' : '' },
   { key: 'docs', n: 2, title: 'Documents', ...docsStep.value },
   { key: 'checklist', n: 3, title: 'Checklist', done: checklistItems.value.length > 0 && checklistDone.value === checklistItems.value.length, hint: checklistItems.value.length ? `${checklistDone.value}/${checklistItems.value.length} done` : 'Nothing assigned yet' }
 ])
 
 const dateRange = computed(() =>
-  store.trip?.start_date && store.trip?.end_date ? `${store.trip.start_date} – ${store.trip.end_date}` : 'Dates TBD'
+  store.trip?.start_date && store.trip?.end_date ? `${formatDayDate(store.trip.start_date)} – ${formatDayDate(store.trip.end_date)}` : 'Dates TBD'
 )
 
 // Mirrors ParticipantDocs.vue's download() exactly — a bearer token can't
@@ -131,7 +134,7 @@ async function downloadIcs() {
            they used to render anyway, three empty forms bound to null under an
            error message, with nothing to retry and nowhere to go. -->
       <section class="card p-hero">
-        <p v-if="store.person" class="p-greeting">Hi {{ store.person.name }} 👋 you're invited to</p>
+        <p v-if="store.person" class="p-greeting">Hi {{ store.person.name }} 👋</p>
         <h1>{{ store.trip.name }}</h1>
         <p class="p-meta">
           <i class="pi pi-map-marker" /> {{ store.trip.destination || 'Destination TBD' }}
@@ -145,21 +148,12 @@ async function downloadIcs() {
         <ul v-if="(store.trip.goals || []).length" class="p-goals">
           <li v-for="(goal, idx) in store.trip.goals" :key="idx">
             <i class="pi pi-flag" /> {{ goal.title }}
-            <span v-if="goal.fixed_date"> — {{ goal.fixed_date }}</span>
+            <span v-if="goal.fixed_date"> — {{ formatShortDate(goal.fixed_date) }}</span>
             <span v-if="goal.fixed_place"> @ {{ goal.fixed_place }}</span>
           </li>
         </ul>
-        <Button label="Add to calendar (.ics)" icon="pi pi-calendar-plus" outlined size="small" class="p-ics-btn" @click="downloadIcs" />
+        <Button label="Add to calendar (.ics)" icon="pi pi-calendar-plus" outlined class="p-ics-btn" @click="downloadIcs" />
       </section>
-
-      <ParticipantItinerary
-        v-if="store.trip"
-        :itinerary="store.itinerary"
-        :trip="store.trip"
-        :budget="store.budget"
-        :companions="store.companions"
-        :companion-count="store.companionCount"
-      />
 
       <section
         v-for="step in steps"
@@ -174,13 +168,24 @@ async function downloadIcs() {
           </span>
           <div>
             <h2>{{ step.title }}</h2>
-            <p class="step-hint">{{ step.hint }}</p>
+            <p v-if="step.hint" class="step-hint">{{ step.hint }}</p>
           </div>
         </header>
         <ParticipantProfileForm v-if="step.key === 'profile'" />
         <ParticipantDocs v-else-if="step.key === 'docs'" />
         <ParticipantChecklist v-else />
       </section>
+
+      <!-- after the steps: filling them is why the participant opened the
+           link (tripper.md §2 /p top job); the plan is reference -->
+      <ParticipantItinerary
+        v-if="store.trip"
+        :itinerary="store.itinerary"
+        :trip="store.trip"
+        :budget="store.budget"
+        :companions="store.companions"
+        :companion-count="store.companionCount"
+      />
     </template>
   </main>
 </template>
@@ -228,4 +233,16 @@ async function downloadIcs() {
   font-weight: 700; font-size: 0.875rem;
 }
 .step-done .step-num { background: var(--app-primary); color: var(--app-primary-contrast); }
+
+/* tripper.md §4 (D7): every control ≥44px on a phone. Scoped to /p here;
+   app-wide is trip-planner-cdl. Radios/checkboxes get the 44px from their
+   row (.pf-choice, checklist li), not from the control itself. */
+@media (max-width: 640px) {
+  .p-page :deep(.p-button),
+  .p-page :deep(input:not([type='checkbox']):not([type='radio'])),
+  .p-page :deep(.p-select),
+  .p-page :deep(textarea) {
+    min-height: 2.75rem;
+  }
+}
 </style>

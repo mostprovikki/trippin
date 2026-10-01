@@ -54,15 +54,17 @@ describe('ParticipantView', () => {
     expect(wrapper.text()).toContain('Goa 2026')
   })
 
-  it('profile step hint names what is still needed (trip-planner-4hi)', async () => {
-    const { wrapper } = await mountView({
-      trip: { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] },
-      person: { id: 'p1', name: 'Bob' },
-      profileConfirmed: false, missingFields: ['phone'], documents: [], packing: [], tasks: [],
-    })
-    const step = wrapper.findAll('.step-card')[0]
+  // trip-planner-0qh: the names of what's missing appear once, beside Save
+  // (ParticipantProfileForm) — the step hint used to repeat them.
+  it('profile step has no hint until complete, then says Confirmed', async () => {
+    const trip = { name: 'Goa 2026', status: 'confirmed', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', vibe_tags: [], goals: [] }
+    const open = await mountView({ trip, person: { id: 'p1', name: 'Bob' }, profileConfirmed: false, missingFields: ['phone'], documents: [], packing: [], tasks: [] })
+    const step = open.wrapper.findAll('.step-card')[0]
     expect(step.classes()).not.toContain('step-done')
-    expect(step.text()).toContain('Still needed: Phone')
+    expect(step.find('.step-hint').exists()).toBe(false)
+    expect(step.text()).not.toContain('Still needed')
+    const done = await mountView({ trip, person: { id: 'p1', name: 'Bob' }, profileConfirmed: true, missingFields: [], documents: [], packing: [], tasks: [] })
+    expect(done.wrapper.findAll('.step-card')[0].find('.step-hint').text()).toBe('Confirmed')
   })
 
   it('passes itinerary/budget/companions through to ParticipantItinerary', async () => {
@@ -164,5 +166,32 @@ describe('ParticipantView', () => {
     expect(empty.wrapper.findAll('.step-card')[1].find('.step-hint').text()).toBe('Optional — passport, ID or tickets')
     const one = await mountView({ ...base, trip, documents: [{ id: 'd1', doc_type: 'other' }] })
     expect(one.wrapper.findAll('.step-card')[1].classes()).toContain('step-done')
+  })
+
+  it('greets without "invite" and shows readable dates (trip-planner-0qh)', async () => {
+    const { wrapper } = await mountView({ ...base, trip: { ...base.trip, goals: [{ title: 'Sunset', fixed_date: '2026-08-02' }] }, documents: [] })
+    const hero = wrapper.find('.p-hero').text()
+    expect(hero).toContain('Hi Asha')
+    expect(hero).not.toMatch(/invite/i)
+    expect(hero).not.toMatch(/\d{4}-\d{2}-\d{2}/)
+    expect(hero).toContain('Sat 1 Aug – Wed 5 Aug')
+  })
+
+  it('one date missing → Dates TBD', async () => {
+    const { wrapper } = await mountView({ ...base, trip: { ...base.trip, end_date: null }, documents: [] })
+    expect(wrapper.find('.p-hero').text()).toContain('Dates TBD')
+  })
+
+  it('the three steps come before the itinerary', async () => {
+    const { wrapper } = await mountView({ ...base, documents: [], itinerary: [{ day_date: '2026-08-01', items: [] }] })
+    const html = wrapper.html()
+    expect(html.indexOf('pi-heading')).toBeGreaterThan(-1)
+    expect(html.indexOf('step-card')).toBeLessThan(html.indexOf('pi-heading'))
+  })
+
+  it('no card nested inside a step card; due dates readable', async () => {
+    const { wrapper } = await mountView({ ...base, documents: [], tasks: [{ id: 't1', title: 'Book cab', done: 0, due_date: '2026-07-20' }] })
+    expect(wrapper.findAll('.step-card .card')).toHaveLength(0)
+    expect(wrapper.findAll('.step-card')[2].text()).toContain('due 20 Jul 2026')
   })
 })

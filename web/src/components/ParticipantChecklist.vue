@@ -2,6 +2,7 @@
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import { useParticipantStore } from '../stores/participant.js'
+import { formatShortDate } from '../utils/dates.js'
 
 const store = useParticipantStore()
 
@@ -19,8 +20,8 @@ async function toggle(item) {
 </script>
 
 <template>
-  <section class="card">
-    <h2>Your checklist</h2>
+  <!-- no card or heading: ParticipantView's step card is the card (trip-planner-0qh) -->
+  <div class="pcl">
 
     <h3>Packing</h3>
     <ul v-if="store.packing.length" class="participant-items">
@@ -37,14 +38,15 @@ async function toggle(item) {
       <li v-for="item in store.tasks" :key="item.id">
         <Checkbox :model-value="!!item.done" binary :input-id="`pcl-task-${item.id}`" @update:model-value="toggle(item)" />
         <label :for="`pcl-task-${item.id}`">{{ item.title }}</label>
-        <Tag v-if="item.due_date" :value="`due ${item.due_date}`" :severity="isOverdue(item) ? 'warn' : 'secondary'" />
+        <Tag v-if="item.due_date" :value="`due ${formatShortDate(item.due_date)}`" :severity="isOverdue(item) ? 'warn' : 'secondary'" />
       </li>
     </ul>
     <p v-else>No tasks assigned to you.</p>
-  </section>
+  </div>
 </template>
 
 <style scoped>
 .participant-items { list-style: none; padding: 0; }
-.participant-items li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+.participant-items li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; min-height: 2.75rem; }
+.participant-items label { flex: 1; align-self: stretch; display: flex; align-items: center; cursor: pointer; }
 </style>
