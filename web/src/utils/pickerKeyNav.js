@@ -136,32 +136,34 @@ async function pageAndFocus(panel, forward, dayNumber) {
       moveFocus(null, span)
       stable = 0
     }
+    // A key queued behind this page is waiting on us: focus is on the target
+    // day now, so hand over rather than burn the remaining stability frames.
+    if (queued.length && document.activeElement === span) return true
     await nextTick()
     await frame()
   }
   return stable >= STABLE_FRAMES
 }
 
-export async function handleCalendarArrowKey(event) {
-  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return false
-  // Let the browser's own text-caret movement win when a modifier is held.
-  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false
-  const span = event.target
-  if (!span || !span.classList || !span.classList.contains('p-datepicker-day')) return false
-  const panel = span.closest(PANEL_SELECTOR)
-  if (!panel) return false
+// Paging is async (click, re-render, focus hand-off, stability check), and a
+// held key repeats faster than that. A key arriving mid-page used to be lost
+// (focus is on PrimeVue's nav button, not a day, so the handler bailed) or, worse,
+// moved focus on the freshly landed day only for the still-running stability loop
+// above to drag it back. So while a page is in flight we claim every horizontal
+// arrow in the panel and queue it, then replay the queue one step at a time from
+// wherever focus has settled. Never two steps in flight at once.
+let paging = false
+const queued = []
 
+// One day in `forward` direction from `span`.
+async function stepFrom(span, forward) {
+  const panel = span.closest(PANEL_SELECTOR)
+  if (!panel) return
   const td = span.parentElement
   const cells = dayCells(panel)
   const index = cells.indexOf(td)
-  if (index < 0) return false
-
-  const forward = event.key === 'ArrowRight'
+  if (index < 0) return
   const neighbour = cells[index + (forward ? 1 : -1)]
-
-  // Claim the event before PrimeVue's row-scoped handler can page a month.
-  event.preventDefault()
-  event.stopPropagation()
 
   // No neighbour cell at all — not "no filler days" (showOtherMonths is on
   // everywhere else in this grid), but the current day sits at the table's
@@ -174,11 +176,11 @@ export async function handleCalendarArrowKey(event) {
   // neighbour would.
   if (!neighbour) {
     await pageAndFocus(panel, forward, forward ? 1 : null)
-    return true
+    return
   }
 
   const neighbourSpan = spanOf(neighbour)
-  if (!neighbourSpan) return true
+  if (!neighbourSpan) return
 
   if (isOtherMonth(neighbour)) {
     // A grey filler day. Page to the month it really belongs to and land on it
@@ -188,9 +190,49 @@ export async function handleCalendarArrowKey(event) {
     await pageAndFocus(panel, forward, Number(neighbourSpan.textContent.trim()))
   } else if (isDisabled(neighbourSpan)) {
     // A real min/max boundary: stop the caret rather than leaping the range.
-    return true
   } else {
     moveFocus(span, neighbourSpan)
+  }
+}
+
+export async function handleCalendarArrowKey(event) {
+  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return false
+  // Let the browser's own text-caret movement win when a modifier is held.
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false
+  const forward = event.key === 'ArrowRight'
+  const target = event.target
+
+  if (paging) {
+    // Mid-page the target may be the nav button, so match on the panel alone.
+    if (!target || !target.closest || !target.closest(PANEL_SELECTOR)) return false
+    event.preventDefault()
+    event.stopPropagation()
+    queued.push(forward)
+    return true
+  }
+
+  const span = target
+  if (!span || !span.classList || !span.classList.contains('p-datepicker-day')) return false
+  const panel = span.closest(PANEL_SELECTOR)
+  if (!panel) return false
+  if (dayCells(panel).indexOf(span.parentElement) < 0) return false
+
+  // Claim the event before PrimeVue's row-scoped handler can page a month.
+  event.preventDefault()
+  event.stopPropagation()
+
+  paging = true
+  try {
+    await stepFrom(span, forward)
+    while (queued.length) {
+      const fwd = queued.shift()
+      const active = document.activeElement
+      if (!active || !active.classList || !active.classList.contains('p-datepicker-day')) continue
+      await stepFrom(active, fwd)
+    }
+  } finally {
+    paging = false
+    queued.length = 0
   }
   return true
 }

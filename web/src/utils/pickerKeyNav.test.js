@@ -263,4 +263,76 @@ describe('handleCalendarArrowKey', () => {
     expect(event.defaultPrevented).toBe(true)
     expect(prevClicks).toBe(1)
   })
+
+  // Racing keys while a month page is in flight. The fixture re-renders on a
+  // timer after the next-button click and, like PrimeVue's updateFocus(), parks
+  // focus on the nav button — so a fast second keypress can arrive (a) while
+  // focus is on the button, or (b) on the freshly landed day while the first
+  // call's focus-stability loop is still running.
+  function pagingFixture() {
+    const mar = marchGrid()
+    document.body.innerHTML = ''
+    const p = buildPanel(mar)
+    const label = document.createElement('span')
+    label.className = 'p-datepicker-select-month'
+    label.textContent = 'March'
+    p.querySelector('.p-datepicker-header').append(label)
+    const next = p.querySelector('.p-datepicker-next-button')
+    let stolen
+    const stolenP = new Promise((r) => { stolen = r })
+    next.addEventListener('click', () => {
+      setTimeout(() => {
+        const apr = []
+        for (let d = 1; d <= 30; d++) apr.push({ day: d })
+        const tmp = buildPanel(apr)
+        tmp.remove()
+        p.querySelector('tbody').replaceWith(tmp.querySelector('tbody'))
+        label.textContent = 'April'
+        next.focus() // PrimeVue updateFocus() steals focus to the nav button
+        stolen()
+      }, 0)
+    })
+    return { p, next, stolenP }
+  }
+  const frames = (n) => new Promise((r) => {
+    const tick = (i) => (i === 0 ? r() : requestAnimationFrame(() => tick(i - 1)))
+    tick(n)
+  })
+
+  it('a key pressed while focus sits on the nav button mid-page is not lost', async () => {
+    const { p, next, stolenP } = pagingFixture()
+    const mar31 = spanFor(p, 31)
+    mar31.focus()
+    const first = handleCalendarArrowKey(press(mar31, 'ArrowRight'))
+    await stolenP // re-rendered, focus on nav button
+    expect(document.activeElement).toBe(next)
+    const second = press(next, 'ArrowRight')
+    const secondDone = handleCalendarArrowKey(second)
+    await Promise.all([first, secondDone])
+    await frames(8)
+    expect(second.defaultPrevented).toBe(true)
+    expect(document.activeElement.textContent.trim()).toBe('2')
+    expect(document.activeElement.parentElement.getAttribute('data-p-other-month')).not.toBe('true')
+  })
+
+  it('a key pressed on the landed day does not get undone by the earlier call re-asserting focus', async () => {
+    const { p } = pagingFixture()
+    const mar31 = spanFor(p, 31)
+    mar31.focus()
+    const first = handleCalendarArrowKey(press(mar31, 'ArrowRight'))
+    // wait until focus has landed on April 1 (first call still verifying)
+    for (let i = 0; i < 100; i++) {
+      const a = document.activeElement
+      if (a && a.classList.contains('p-datepicker-day') && a.textContent.trim() === '1') break
+      await new Promise((r) => setTimeout(r, 1))
+    }
+    const apr1 = document.activeElement
+    expect(apr1.textContent.trim()).toBe('1')
+    await handleCalendarArrowKey(press(apr1, 'ArrowRight'))
+    await first
+    // the earlier call must not drag focus back to April 1 once it finishes
+    expect(document.activeElement.textContent.trim()).toBe('2')
+    await frames(8)
+    expect(document.activeElement.textContent.trim()).toBe('2')
+  })
 })

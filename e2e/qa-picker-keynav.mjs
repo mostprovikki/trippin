@@ -119,11 +119,17 @@ function resolveDate(s) {
 // Crossing a month edge pages the panel, which is an async Vue re-render plus a
 // focus hand-off, so a fixed short delay samples it mid-flight and reports a
 // bogus "focus is not on a day cell". Poll until focus settles back onto a day.
-async function settledFocusState(page, timeoutMs = 2000) {
+//
+// `prev` is the date focus was on before the press. Focus sitting on a day is not
+// proof the press has been handled: the picker queues keys that arrive while a
+// month page is in flight, so a sample taken then still shows the OLD day. When
+// given, keep polling until the resolved date moves off `prev`; a swallowed key
+// still fails, just after the timeout instead of instantly.
+async function settledFocusState(page, timeoutMs = 2000, prev = null) {
   const deadline = Date.now() + timeoutMs
   let last = await focusState(page)
-  while (last.error && Date.now() < deadline) {
-    await page.waitForTimeout(60)
+  while ((last.error || (prev && resolveDate(last) === prev)) && Date.now() < deadline) {
+    await page.waitForTimeout(30)
     last = await focusState(page)
   }
   return last
@@ -178,14 +184,23 @@ if (!(await page.locator('input.p-datepicker-input').count())) {
 }
 const input = page.locator('input.p-datepicker-input').first()
 await input.click({ force: true }).catch(() => {})
-// ArrowDown on the input opens the overlay and hands focus to a day cell.
+// Focus opens the overlay; ArrowDown then hands focus to the panel's roving day
+// (the one PrimeVue's initFocusableCell gives tabindex=0). Pressed in the same
+// frame as the open, before that tabindex exists, PrimeVue's trapFocus falls
+// back to the first button — the prev-month arrow. Measured: 1 of 2 presses at
+// 0ms landed there, 0 of 5 at >=50ms. No person types within one frame of
+// focusing, so wait for the roving day rather than racing it.
+await page.locator('.p-datepicker-panel span.p-datepicker-day[tabindex="0"]').first()
+  .waitFor({ state: 'attached', timeout: 3000 }).catch(() => {})
 await input.press('ArrowDown')
 const panel = page.locator('.p-datepicker-panel').first()
 if (!(await panel.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false))) {
   fail('open picker', 'panel never became visible')
 } else {
   await page.waitForTimeout(400)
-  let st = await focusState(page)
+  // Opening is async too (overlay show, then the day-cell focus hand-off), so
+  // poll rather than sample once while focus still sits on the prev button.
+  let st = await settledFocusState(page, 3000)
   if (st.error) {
     // Some builds leave focus on the input; nudge once more.
     await page.keyboard.press('ArrowDown')
@@ -209,7 +224,7 @@ if (!(await panel.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).
       for (let i = 0; i < WALK; i++) {
         await page.keyboard.press('ArrowRight')
         await page.waitForTimeout(90)
-        const s2 = await settledFocusState(page)
+        const s2 = await settledFocusState(page, 2000, cur)
         if (s2.error) {
           firstBreak = firstBreak || { at: cur, why: s2.error, activeClass: s2.activeClass }
           break
@@ -244,7 +259,7 @@ if (!(await panel.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).
       for (let i = 0; i < WALK; i++) {
         await page.keyboard.press('ArrowLeft')
         await page.waitForTimeout(90)
-        const s2 = await settledFocusState(page)
+        const s2 = await settledFocusState(page, 2000, back)
         if (s2.error) {
           backBreak = backBreak || { at: back, why: s2.error, activeClass: s2.activeClass }
           break
