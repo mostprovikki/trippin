@@ -82,3 +82,70 @@ export function openChecklistItems(checklists = []) {
   }
   return out.sort((a, b) => Number(b.unassigned) - Number(a.unassigned))
 }
+
+// §9 gap "next item timing": time_range is free text ('09:30–11:00', '9am',
+// 'morning'). The first clock time in it is the start; a bare number isn't one
+// ('Day 2'), so a time needs minutes or am/pm. Unparseable → null, and such an
+// item is listed but never "Next".
+export function parseStartMinutes(timeRange) {
+  const s = String(timeRange ?? '')
+  const re = /\b(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\b/gi
+  for (const m of s.matchAll(re)) {
+    const [, hh, mm, ap] = m
+    if (mm == null && !ap) continue
+    let h = Number(hh)
+    const min = mm == null ? 0 : Number(mm)
+    if (min > 59) return null
+    if (ap) {
+      if (h < 1 || h > 12) return null
+      h = (h % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0)
+    } else if (h > 23) return null
+    return h * 60 + min
+  }
+  return null
+}
+
+// §2 Today: done items dimmed, the next one marked "Next · in N min".
+// `next` is the first timed item starting at or after now; timed items before
+// it are done. Untimed items go last and are never next (Review Focus 3).
+export function todayTimeline(items = [], nowMinutes) {
+  const withStart = items.map((it, i) => ({ ...it, start: parseStartMinutes(it.time_range), i }))
+  const timed = withStart.filter((r) => r.start != null).sort((a, b) => a.start - b.start || a.i - b.i)
+  const untimed = withStart.filter((r) => r.start == null)
+  const next = timed.find((r) => r.start >= nowMinutes) || null
+  const rows = [
+    ...timed.map((r) => ({ ...r, state: r === next ? 'next' : next ? (r.start < next.start ? 'done' : 'later') : 'done' })),
+    ...untimed.map((r) => ({ ...r, state: 'untimed' }))
+  ].map(({ i, ...r }) => r)
+  return { rows, minutesToNext: next ? next.start - nowMinutes : null }
+}
+
+// §2 Quick reference "Tonight": the last stay booked on the latest day up to today.
+export function tonightStay(days = [], todayIso) {
+  const past = days.filter((d) => d.day_date <= todayIso).sort((a, b) => (a.day_date < b.day_date ? 1 : -1))
+  for (const d of past) {
+    const stays = (d.items || []).filter((i) => i.category === 'stay')
+    if (stays.length) return stays[stays.length - 1]
+  }
+  return null
+}
+
+// §2 Before tomorrow: open checklist items due on or before tomorrow (overdue
+// included). Items ticked this session stay listed (ticked) so a tick doesn't
+// pull the row — and keyboard focus — out from under the organizer.
+export function dueByTomorrow(checklists = [], tomorrowIso, keep = new Set()) {
+  const out = []
+  for (const list of checklists || []) {
+    for (const item of list.items || []) {
+      if (!item.due_date || item.due_date > tomorrowIso) continue
+      if (item.done && !keep.has(item.id)) continue
+      out.push(item)
+    }
+  }
+  return out.map((it, i) => ({ it, i })).sort((a, b) => (a.it.due_date < b.it.due_date ? -1 : a.it.due_date > b.it.due_date ? 1 : a.i - b.i)).map((x) => x.it)
+}
+
+// §7: maps are a link out to Google Maps, never embedded.
+export function mapsUrl(location) {
+  return location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}` : null
+}

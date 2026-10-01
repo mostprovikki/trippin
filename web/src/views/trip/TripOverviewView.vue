@@ -1,12 +1,11 @@
 <script setup>
 // Trip overview — a phase-aware Monitor (docs/design/tripper.md §2). Before the
 // trip: Who's missing what + Since you last looked | Itinerary, Budget,
-// Checklists. During: Today (Task 7 of the 2026-10-01 plan builds the rest).
+// Checklists. During: Today | Quick reference, Tomorrow, Before tomorrow.
 // After: trip line, Itinerary, Budget. No button in the page header (§5);
 // every action sits on the row it acts on.
-import { computed, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
@@ -21,8 +20,13 @@ import SinceCard from '../../components/overview/SinceCard.vue'
 import ItineraryCard from '../../components/overview/ItineraryCard.vue'
 import BudgetCard from '../../components/overview/BudgetCard.vue'
 import ChecklistsCard from '../../components/overview/ChecklistsCard.vue'
-import { overviewPhase } from '../../utils/overview.js'
-import { toIsoDate, dayHeader } from '../../utils/dates.js'
+import TodayCard from '../../components/overview/TodayCard.vue'
+import QuickRefCard from '../../components/overview/QuickRefCard.vue'
+import TomorrowCard from '../../components/overview/TomorrowCard.vue'
+import BeforeTomorrowCard from '../../components/overview/BeforeTomorrowCard.vue'
+import { useNotify } from '../../composables/useNotify.js'
+import { overviewPhase, tonightStay } from '../../utils/overview.js'
+import { toIsoDate } from '../../utils/dates.js'
 
 const route = useRoute()
 const trips = useTripsStore()
@@ -32,21 +36,37 @@ const itinerary = useItineraryStore()
 const checklists = useChecklistsStore()
 const overview = useOverviewStore()
 const { copy: copyLink } = useCopyLink()
+const notify = useNotify()
 
 const tripId = computed(() => route.params.id)
 const trip = computed(() => trips.current)
 const participants = computed(() => readiness.data?.participants || [])
 const hasActiveLink = (personId) => !!participants.value.find((p) => p.person_id === personId)?.has_active_link
 
-const todayIso = computed(() => toIsoDate(new Date()))
+// A minute clock: "Next · in N min" moves on, and the phase flips at midnight
+// without a reload.
+const now = ref(new Date())
+let clock = null
+onMounted(() => { clock = setInterval(() => { now.value = new Date() }, 60_000) })
+onUnmounted(() => clearInterval(clock))
+const todayIso = computed(() => toIsoDate(now.value))
+const tomorrowIso = computed(() => { const d = new Date(now.value); d.setDate(d.getDate() + 1); return toIsoDate(d) })
+const nowMinutes = computed(() => now.value.getHours() * 60 + now.value.getMinutes())
 const phase = computed(() => overviewPhase(trip.value, todayIso.value))
 // Stores are shared across trips; show only data that belongs to this one.
 const mine = (store) => store.lastTripId === tripId.value
 const itineraryDays = computed(() => (mine(itinerary) ? itinerary.days : []))
 const tripChecklists = computed(() => (mine(checklists) ? checklists.checklists : []))
 
-const todayHeading = computed(() => `Today — ${dayHeader(todayIso.value)}`)
-const todayItems = computed(() => itineraryDays.value.find((d) => d.day_date === todayIso.value)?.items || [])
+const itemsOn = (iso) => itineraryDays.value.find((d) => d.day_date === iso)?.items || []
+const todayItems = computed(() => itemsOn(todayIso.value))
+const tomorrowItems = computed(() => itemsOn(tomorrowIso.value))
+const isLastDay = computed(() => todayIso.value === trip.value?.end_date)
+const stay = computed(() => tonightStay(itineraryDays.value, todayIso.value))
+
+async function toggleItem(item, done) {
+  try { await checklists.updateItem(item.id, { done }) } catch (e) { notify.error(e.message) }
+}
 
 async function load() {
   // Readiness is guarded: TripLayout fetches it for the tab badges, and
@@ -58,7 +78,7 @@ async function load() {
   if (itinerary.lastTripId !== tripId.value) {
     pending.push(itinerary.fetchItinerary(tripId.value).catch(() => { /* card shows its empty state */ }))
   }
-  if (phase.value === 'before' && checklists.lastTripId !== tripId.value) {
+  if (phase.value !== 'after' && checklists.lastTripId !== tripId.value) {
     pending.push(checklists.fetchForTrip(tripId.value).catch(() => { /* card shows Nothing open */ }))
   }
   // Records this visit for "Since you last looked" — once per open, never
@@ -104,22 +124,16 @@ watch(tripId, load)
       </div>
     </div>
 
+    <!-- §2: on a phone the columns stack Today → Quick reference → Tomorrow →
+         Before tomorrow, which is this DOM order. Missing, Since, Budget hidden. -->
     <div v-else-if="phase === 'during'" class="overview-grid">
       <div class="overview-col">
-        <section class="card today-card">
-          <h2>{{ todayHeading }}</h2>
-          <ul v-if="todayItems.length" class="day-items">
-            <li v-for="item in todayItems" :key="item.id" class="day-item">
-              <Tag v-if="item.time_range" :value="item.time_range" severity="secondary" />
-              <strong>{{ item.title }}</strong>
-              <span v-if="item.location">— {{ item.location }}</span>
-            </li>
-          </ul>
-          <p v-else class="today-empty">Nothing planned today — open the itinerary to add something</p>
-          <RouterLink class="action-link" :to="{ name: 'trip-itinerary', params: { id: trip.id } }">
-            <i class="pi pi-arrow-right" /> Open itinerary
-          </RouterLink>
-        </section>
+        <TodayCard :day-iso="todayIso" :items="todayItems" :now-minutes="nowMinutes" />
+      </div>
+      <div class="overview-col">
+        <QuickRefCard :stay="stay" :today-items="todayItems" :emergency-info="trip.emergency_info || null" />
+        <TomorrowCard :day-iso="isLastDay ? null : tomorrowIso" :items="tomorrowItems" :is-last-day="isLastDay" />
+        <BeforeTomorrowCard :checklists="tripChecklists" :tomorrow-iso="tomorrowIso" @toggle="toggleItem" />
       </div>
     </div>
 
@@ -142,10 +156,4 @@ watch(tripId, load)
 }
 .overview-col { min-width: 0; }
 
-/* Matches DayCard.vue's .day-items/.day-item row idiom. */
-.today-card .day-items { list-style: none; padding: 0; margin: 0 0 0.75rem; }
-.today-card .day-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--app-border); flex-wrap: wrap; }
-.today-empty { color: var(--app-text-muted); margin: 0 0 0.75rem; }
-.action-link { display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; font-weight: 500; }
-.action-link:hover { text-decoration: underline; }
 </style>

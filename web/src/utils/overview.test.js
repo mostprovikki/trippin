@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { missingRows, overviewPhase, emptyDays, openChecklistItems } from './overview.js'
+import { missingRows, overviewPhase, emptyDays, openChecklistItems, parseStartMinutes, todayTimeline, tonightStay, dueByTomorrow, mapsUrl } from './overview.js'
 
 const base = { person_id: 'p', profile_confirmed: 1, doc_warnings: [], missing_fields: [], missing_docs: [] }
 
@@ -93,4 +93,73 @@ describe('openChecklistItems', () => {
     expect(out[1].unassigned).toBe(false)
   })
   it('no lists → []', () => { expect(openChecklistItems(undefined)).toEqual([]) })
+})
+
+describe('parseStartMinutes (§9 gap: next-item timing from free-text time_range)', () => {
+  it.each([
+    ['09:30–11:00', 570], ['9:05-10', 545], ['01:40–11:25', 100], ['18:00', 1080],
+    ['9am', 540], ['9.30pm', 1290], ['12am', 0], ['12:15 pm', 735], ['around 7:00', 420]
+  ])('%s → %s', (input, want) => { expect(parseStartMinutes(input)).toBe(want) })
+  it.each([['morning'], [''], [null], [undefined], ['after lunch'], ['25:00'], ['9:75']])('%s → null (Review Focus 3)', (input) => {
+    expect(parseStartMinutes(input)).toBe(null)
+  })
+})
+
+describe('todayTimeline', () => {
+  const items = [
+    { id: 'c', title: 'Dinner', time_range: '19:00' },
+    { id: 'u', title: 'Shopping', time_range: 'afternoon' },
+    { id: 'a', title: 'Breakfast', time_range: '08:00–09:00' },
+    { id: 'b', title: 'Taxi', time_range: '10:30' }
+  ]
+  it('sorts by start, untimed last; next = first starting at/after now; earlier = done', () => {
+    const { rows, minutesToNext } = todayTimeline(items, 600) // 10:00
+    expect(rows.map((r) => [r.id, r.state])).toEqual([['a', 'done'], ['b', 'next'], ['c', 'later'], ['u', 'untimed']])
+    expect(minutesToNext).toBe(30)
+  })
+  it('after the last timed item: nothing is next, untimed never becomes next', () => {
+    const { rows, minutesToNext } = todayTimeline(items, 1200)
+    expect(rows.filter((r) => r.state === 'next')).toEqual([])
+    expect(rows.find((r) => r.id === 'u').state).toBe('untimed')
+    expect(minutesToNext).toBe(null)
+  })
+  it('moves on as the clock passes', () => {
+    expect(todayTimeline(items, 631).rows.find((r) => r.state === 'next').id).toBe('c')
+  })
+})
+
+describe('tonightStay', () => {
+  const days = [
+    { day_date: '2026-11-06', items: [{ id: 's1', category: 'stay', title: 'La Siesta' }] },
+    { day_date: '2026-11-07', items: [{ id: 'x', category: 'food' }] },
+    { day_date: '2026-11-09', items: [{ id: 's2', category: 'stay', title: 'Anantara' }] }
+  ]
+  it('latest stay on or before today', () => {
+    expect(tonightStay(days, '2026-11-07').id).toBe('s1')
+    expect(tonightStay(days, '2026-11-09').id).toBe('s2')
+  })
+  it('none before today → null', () => { expect(tonightStay(days, '2026-11-05')).toBe(null) })
+})
+
+describe('dueByTomorrow (§2 Before tomorrow)', () => {
+  const lists = [{ kind: 'tasks', items: [
+    { id: 'o', title: 'Overdue', due_date: '2026-11-01', done: 0 },
+    { id: 't', title: 'Tomorrow', due_date: '2026-11-08', done: 0 },
+    { id: 'l', title: 'Later', due_date: '2026-11-09', done: 0 },
+    { id: 'n', title: 'No date', due_date: null, done: 0 },
+    { id: 'd', title: 'Done', due_date: '2026-11-07', done: 1 }
+  ] }]
+  it('open items due on or before tomorrow, soonest first', () => {
+    expect(dueByTomorrow(lists, '2026-11-08').map((i) => i.id)).toEqual(['o', 't'])
+  })
+  it('keeps items ticked this session so a tick does not pull the row away', () => {
+    expect(dueByTomorrow(lists, '2026-11-08', new Set(['d'])).map((i) => i.id)).toEqual(['o', 'd', 't'])
+  })
+})
+
+describe('mapsUrl (§7: link out, never embed)', () => {
+  it('Google Maps search for the location', () => {
+    expect(mapsUrl('27 Hang Be, Hanoi')).toBe('https://www.google.com/maps/search/?api=1&query=27%20Hang%20Be%2C%20Hanoi')
+  })
+  it('no location → null', () => { expect(mapsUrl('')).toBe(null) })
 })

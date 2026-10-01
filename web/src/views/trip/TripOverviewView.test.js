@@ -136,27 +136,58 @@ describe('TripOverviewView — before the trip (tripper.md §2)', () => {
 })
 
 describe('TripOverviewView — during the trip', () => {
-  const ACTIVE_IN_RANGE = { id: 't1', name: 'Goa 2026', status: 'active', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', participants: [] }
-  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 7, 3)) })
+  const ACTIVE_IN_RANGE = { id: 't1', name: 'Goa 2026', status: 'active', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-05', participants: [], emergency_info: 'Police 100' }
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 7, 3, 10, 0)) })
   afterEach(() => { vi.useRealTimers() })
+  const DAYS = [
+    { id: 'd0', day_date: '2026-08-02', items: [{ id: 's', title: 'Taj Exotica', category: 'stay', location: 'Benaulim' }] },
+    { id: 'd1', day_date: '2026-08-03', items: [
+      { id: 'i1', title: 'Beach walk', time_range: '09:00-10:00', location: 'Baga' },
+      { id: 'i2', title: 'Spice farm', time_range: '10:30', location: 'Ponda' }
+    ] },
+    { id: 'd2', day_date: '2026-08-04', items: [{ id: 'i3', title: 'Fly home', time_range: '07:00' }] }
+  ]
 
-  it("renders Today with today's items; Missing, Since, Budget, Checklists hidden (§2)", async () => {
-    const { wrapper, itinerary, overview, lists } = await mountView({
-      trip: ACTIVE_IN_RANGE,
-      itineraryDays: [{ id: 'd1', day_date: '2026-08-03', items: [{ id: 'i1', title: 'Beach walk', time_range: '09:00-11:00', location: 'Baga' }] }]
-    })
-    const card = wrapper.find('.today-card')
-    expect(card.text()).toContain('Today —')
-    expect(card.text()).toContain('Beach walk')
-    expect(itinerary.fetchItinerary).toHaveBeenCalledWith('t1')
+  it('Today → Quick reference → Tomorrow → Before tomorrow, in DOM (= phone) order; before-trip cards hidden (§2)', async () => {
+    const { wrapper, overview } = await mountView({ trip: ACTIVE_IN_RANGE, itineraryDays: DAYS })
+    const html = wrapper.html()
+    const order = ['today-card', 'quickref-card', 'tomorrow-card', 'before-tomorrow-card'].map((c) => html.indexOf(c))
+    expect(order.every((i) => i >= 0)).toBe(true)
+    expect([...order].sort((a, b) => a - b)).toEqual(order)
     for (const gone of ['.missing-card', '.since-card', '.budget-card', '.checklists-card', '.itinerary-card']) expect(wrapper.find(gone).exists()).toBe(false)
     expect(overview.fetchSeen).not.toHaveBeenCalled()
-    expect(lists.fetchForTrip).not.toHaveBeenCalled()
+    expect(wrapper.find('.today-card h2').text()).toBe('Today · Mon 3 Aug')
+    expect(wrapper.find('.today-card .is-done').text()).toContain('Beach walk')
+    expect(wrapper.find('.today-card .is-next').text()).toContain('Next · in 30 min')
+    expect(wrapper.find('.quickref-card').text()).toContain('Tonight: Taj Exotica')
+    expect(wrapper.find('.quickref-card').text()).toContain('Police 100')
+    expect(wrapper.find('.tomorrow-card').text()).toContain('Fly home')
   })
 
-  it('empty state when today has no items', async () => {
-    const { wrapper } = await mountView({ trip: ACTIVE_IN_RANGE, itineraryDays: [{ id: 'd1', day_date: '2026-08-03', items: [] }] })
-    expect(wrapper.find('.today-card').text()).toContain('Nothing planned today — open the itinerary to add something')
+  it('the minute clock moves Next on without a reload', async () => {
+    const { wrapper } = await mountView({ trip: ACTIVE_IN_RANGE, itineraryDays: DAYS })
+    expect(wrapper.find('.is-next').text()).toContain('in 30 min')
+    vi.setSystemTime(new Date(2026, 7, 3, 10, 19)) // the tick below lands on 10:20
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(wrapper.find('.is-next').text()).toContain('in 10 min')
+  })
+
+  it('ticking Before tomorrow writes through the checklists store', async () => {
+    const { wrapper, lists } = await mountView({
+      trip: ACTIVE_IN_RANGE,
+      itineraryDays: DAYS,
+      checklists: [{ kind: 'tasks', items: [{ id: 'c1', title: 'Pack charger', due_date: '2026-08-04', done: 0 }] }]
+    })
+    expect(lists.fetchForTrip).toHaveBeenCalledWith('t1')
+    lists.updateItem = vi.fn().mockResolvedValue({})
+    await wrapper.find('.before-tomorrow-card input[type="checkbox"]').setValue(true)
+    expect(lists.updateItem).toHaveBeenCalledWith('c1', { done: true })
+  })
+
+  it('last day: Tomorrow says so', async () => {
+    vi.setSystemTime(new Date(2026, 7, 5, 9, 0))
+    const { wrapper } = await mountView({ trip: ACTIVE_IN_RANGE, itineraryDays: DAYS })
+    expect(wrapper.find('.tomorrow-card').text()).toContain('Last day — no plan for tomorrow.')
   })
 
   it('active trip whose dates do not cover today gets the before layout, not an empty Today (Review Focus 4)', async () => {
