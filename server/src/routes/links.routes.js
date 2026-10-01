@@ -1,5 +1,7 @@
 import { randomUUID, randomBytes } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { config } from '../config.js'
+import { encryptToken, decryptToken } from '../lib/linkCrypto.js'
 
 export default async function routes(app) {
   app.post('/trips/:tripId/participants/:personId/link', { preHandler: app.requireOrganizer }, async (req, reply) => {
@@ -21,11 +23,33 @@ export default async function routes(app) {
     // compare it against.
     const days = req.body?.expires_in_days || null
     await app.db.run(
-      `INSERT INTO participant_links (id,trip_id,person_id,token_hash,expires_at)
-       VALUES (?,?,?,?, CASE WHEN ?::double precision IS NULL THEN NULL ELSE
+      `INSERT INTO participant_links (id,trip_id,person_id,token_hash,token_enc,expires_at)
+       VALUES (?,?,?,?,?, CASE WHEN ?::double precision IS NULL THEN NULL ELSE
          to_char((now() AT TIME ZONE 'UTC') + (?::double precision * INTERVAL '1 day'), 'YYYY-MM-DD HH24:MI:SS') END)`,
-      [randomUUID(), tripId, personId, app.hashToken(token), days, days])
+      [randomUUID(), tripId, personId, app.hashToken(token), encryptToken(token, config.jwtSecret), days, days])
     return reply.code(201).send({ token, url: `/p/${token}` })
+  })
+
+  // The active link's url again, for Copy ⟨Name⟩'s link (one click, no revoke).
+  // 404 NO_RECOVERABLE_LINK when there is none to re-read — revoked, expired, or
+  // minted before token_enc existed — and the client offers to mint a new one.
+  app.get('/trips/:tripId/participants/:personId/link', { preHandler: app.requireOrganizer }, async (req, reply) => {
+    const { tripId, personId } = req.params
+    if (!(await app.ownedTrip(req, tripId))) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    const row = await app.db.get(
+      `SELECT token_enc FROM participant_links
+       WHERE trip_id = ? AND person_id = ? AND revoked_at IS NULL
+         AND (expires_at IS NULL OR expires_at > to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))
+       ORDER BY created_at DESC LIMIT 1`,
+      [tripId, personId]
+    )
+    if (!row?.token_enc) return httpError(reply, 404, 'NO_RECOVERABLE_LINK', 'No link to copy — create a new one')
+    let token
+    try { token = decryptToken(row.token_enc, config.jwtSecret) } catch {
+      // JWT_SECRET rotated since this link was minted
+      return httpError(reply, 404, 'NO_RECOVERABLE_LINK', 'No link to copy — create a new one')
+    }
+    return { url: `/p/${token}` }
   })
 
   app.get('/trips/:tripId/links', { preHandler: app.requireOrganizer }, async (req, reply) => {

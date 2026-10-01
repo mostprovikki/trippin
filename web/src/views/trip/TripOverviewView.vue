@@ -6,7 +6,9 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { useItineraryStore } from '../../stores/itinerary.js'
+import Button from 'primevue/button'
 import MissingCard from '../../components/overview/MissingCard.vue'
+import { useCopyLink } from '../../composables/useCopyLink.js'
 import { nextActions, readinessPercent } from '../../utils/tripNav.js'
 import { tripCountdown, toIsoDate, dayHeader } from '../../utils/dates.js'
 import { formatMoney } from '../../utils/format.js'
@@ -18,6 +20,8 @@ const trips = useTripsStore()
 const readiness = useReadinessStore()
 const budget = useBudgetStore()
 const itinerary = useItineraryStore()
+const { copy: copyLink } = useCopyLink()
+const hasActiveLink = (personId) => !!participants.value.find((p) => p.person_id === personId)?.has_active_link
 
 const tripId = computed(() => route.params.id)
 const trip = computed(() => trips.current)
@@ -85,7 +89,17 @@ watch(tripId, load)
     <!-- tripper.md §2: before the trip, Who's missing what leads (job 2, zero
          clicks); during the trip it is hidden. Rest of the page is rebuilt
          around it in plan Task 5. -->
-    <MissingCard v-if="trip.status !== 'active'" :participants="participants" :trip-end="trip.end_date || null" />
+    <MissingCard v-if="trip.status !== 'active'" :participants="participants" :trip-end="trip.end_date || null">
+      <template #row-action="{ personId, name }">
+        <Button
+          size="small"
+          outlined
+          icon="pi pi-copy"
+          :label="`Copy ${name}'s link`"
+          @click="copyLink(trip.id, personId, name, { hasActiveLink: hasActiveLink(personId) })"
+        />
+      </template>
+    </MissingCard>
     <section v-if="showTodayCard" class="card today-card">
       <h2>{{ todayHeading }}</h2>
       <ul v-if="todayItems.length" class="day-items">

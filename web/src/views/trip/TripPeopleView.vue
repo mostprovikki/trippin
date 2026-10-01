@@ -8,6 +8,7 @@ import Tag from 'primevue/tag'
 import { useTripsStore } from '../../stores/trips.js'
 import { usePeopleStore } from '../../stores/people.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { replaceLinkConfirm } from '../../composables/useCopyLink.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 import EmptyState from '../../components/EmptyState.vue'
 import QRCode from 'qrcode'
@@ -108,15 +109,7 @@ function createLink(personId, personName) {
     mintLink(personId)
     return
   }
-  confirm.require({
-    message: `${personName || 'This person'}'s current link stops working immediately — anyone using it loses access. A new link will be created.`,
-    header: `Replace ${personName || 'this person'}'s link?`,
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Replace',
-    acceptClass: 'p-button-danger',
-    rejectLabel: 'Cancel',
-    accept: () => mintLink(personId)
-  })
+  confirm.require(replaceLinkConfirm(personName, () => mintLink(personId)))
 }
 
 async function copyLink(url) {

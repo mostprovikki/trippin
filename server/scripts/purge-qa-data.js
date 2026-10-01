@@ -39,6 +39,7 @@ const TRIP_PATTERNS = [
   'Light QA *',     // e2e/qa-light-contrast.mjs
   'Aesth QA *',     // e2e/qa-aesthetics.mjs
   'Rhythm QA *',    // e2e/qa-field-rhythm.mjs
+  'Overview QA *',  // e2e/qa-overview.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]
@@ -55,7 +56,8 @@ const PERSON_PATTERNS = [
   'QA DP Person *',
   'QA Person *',
   'UI Walk Person *',
-  'Probe Person *'
+  'Probe Person *',
+  'Overview QA Person *' // e2e/qa-overview.mjs
 ]
 
 const db = await makeDb()

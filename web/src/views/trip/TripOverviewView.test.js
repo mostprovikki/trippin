@@ -4,6 +4,9 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 import { mountWithBase } from '../../test-utils.js'
 import TripOverviewView from './TripOverviewView.vue'
+
+const copySpy = vi.fn()
+vi.mock('../../composables/useCopyLink.js', () => ({ useCopyLink: () => ({ copy: copySpy }) }))
 import { useTripsStore } from '../../stores/trips.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
@@ -72,6 +75,30 @@ describe('TripOverviewView', () => {
     expect(card.find('[data-doc-level="expired"]').exists()).toBe(true)
     const html = wrapper.html()
     expect(html.indexOf('missing-card')).toBeLessThan(html.indexOf('class="card hero"'))
+  })
+
+  it("each incomplete row has one Copy ⟨name⟩'s link button; no bulk copy (tripper.md §1, §5)", async () => {
+    copySpy.mockClear()
+    const ok = { profile_confirmed: 1, missing_fields: [], missing_docs: [], doc_warnings: [] }
+    const { wrapper } = await mountView({
+      trip: { id: 't1', name: 'Goa 2026', status: 'confirmed', start_date: '2026-11-06', end_date: '2026-11-15', participants: [] },
+      readiness: {
+        decisions: {},
+        participants: [
+          { ...ok, person_id: 'a', name: 'Asha' },
+          { ...ok, person_id: 'm', name: 'Meena', missing_fields: ['dietary'], has_active_link: true },
+          { ...ok, person_id: 'r', name: 'Ravi', profile_confirmed: 0, has_active_link: false }
+        ],
+        checklists: { total_items: 0, done_items: 0, overdue: [] }
+      }
+    })
+    const buttons = wrapper.findAll('.missing-card button')
+    expect(buttons.map((b) => b.text())).toEqual(["Copy Meena's link", "Copy Ravi's link"])
+    expect(wrapper.text()).not.toMatch(/copy all/i)
+    await buttons[0].trigger('click')
+    expect(copySpy).toHaveBeenCalledWith('t1', 'm', 'Meena', { hasActiveLink: true })
+    await buttons[1].trigger('click')
+    expect(copySpy).toHaveBeenLastCalledWith('t1', 'r', 'Ravi', { hasActiveLink: false })
   })
 
   it("hides Who's missing what during the trip (tripper.md §2)", async () => {

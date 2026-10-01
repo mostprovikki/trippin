@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { makeTestApp, loginOrganizer, authedInject, createPerson, createTrip } from './helpers.js'
+import { makeTestApp, loginOrganizer, authedInject, createPerson, createTrip, createOrganizer } from './helpers.js'
 
 async function join(db, t, p) { await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p.id]) }
 
@@ -74,5 +74,57 @@ describe('participant links', () => {
     const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
     const p = await createPerson(db); const t = await createTrip(db)
     expect((await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/participants/${p.id}/link`, payload: {} })).statusCode).toBe(404)
+  })
+})
+
+// Copy ⟨Name⟩'s link (tripper.md §1, §4: one click; owner decision D1) re-reads
+// the active link instead of minting a new one, which would revoke the copy the
+// participant already has.
+describe('GET current participant link', () => {
+  async function setup() {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db); const t = await createTrip(db); await join(db, t, p)
+    const url = `/api/trips/${t.id}/participants/${p.id}/link`
+    const get = () => authedInject(app, cookie, { method: 'GET', url })
+    const mint = () => authedInject(app, cookie, { method: 'POST', url, payload: {} })
+    return { app, db, cookie, p, t, get, mint }
+  }
+  it('returns the url minted last, without revoking it', async () => {
+    const { app, get, mint } = await setup()
+    const minted = (await mint()).json()
+    const res = await get()
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ url: minted.url })
+    const me = await app.inject({ method: 'GET', url: '/api/participant/me', headers: { authorization: `Bearer ${minted.token}` } })
+    expect(me.statusCode).toBe(200)
+  })
+  it('revoked link → 404 NO_RECOVERABLE_LINK', async () => {
+    const { db, get, mint } = await setup()
+    await mint()
+    await db.run("UPDATE participant_links SET revoked_at = '2026-01-01 00:00:00'")
+    const res = await get()
+    expect(res.statusCode).toBe(404)
+    expect(res.json().error.code).toBe('NO_RECOVERABLE_LINK')
+  })
+  it('expired link → 404 NO_RECOVERABLE_LINK', async () => {
+    const { db, get, mint } = await setup()
+    await mint()
+    await db.run("UPDATE participant_links SET expires_at = '2020-01-01 00:00:00'")
+    expect((await get()).json().error.code).toBe('NO_RECOVERABLE_LINK')
+  })
+  it('link minted before encryption (no token_enc) → 404 NO_RECOVERABLE_LINK', async () => {
+    const { db, get, mint } = await setup()
+    await mint()
+    await db.run('UPDATE participant_links SET token_enc = NULL')
+    expect((await get()).json().error.code).toBe('NO_RECOVERABLE_LINK')
+  })
+  it("another organizer's trip → 404 NOT_FOUND", async () => {
+    const { app, db, cookie } = await setup()
+    const other = await createOrganizer(db, { email: 'other-links@x.dev' })
+    const t2 = await createTrip(db, { organizer_id: other.id })
+    const p2 = await createPerson(db, { organizer_id: other.id }); await join(db, t2, p2)
+    const res = await authedInject(app, cookie, { method: 'GET', url: `/api/trips/${t2.id}/participants/${p2.id}/link` })
+    expect(res.statusCode).toBe(404)
+    expect(res.json().error.code).toBe('NOT_FOUND')
   })
 })

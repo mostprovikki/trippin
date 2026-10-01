@@ -192,3 +192,4 @@ Nothing AI-related shows at rest.
 | 2026-10-01 | Required profile fields = phone, emergency contact, dietary; an unconfirmed profile is Missing | owner (D2) | §6 "Missing" had no field list |
 | 2026-10-01 | Doc copy says "expires before the trip ends", not "expired" | 5p9 build | the server's `expired` level means expired by trip end, not today |
 | 2026-10-01 | Per-destination doc rules (visa lead time, country 6-month rule) parked; reason copy is generic | 5p9 build | no destination→country data; restore if a trip is refused on a rule we could have shown |
+| 2026-10-01 | Participant-link tokens stored encrypted (key derived from JWT_SECRET) so Copy ⟨Name⟩'s link is one click and never revokes | owner (D1) | hashed-only tokens forced "Replace link?" on every copy |

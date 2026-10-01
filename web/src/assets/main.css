@@ -202,6 +202,11 @@ a { color: var(--app-primary); }
 .overview-row-name { font-weight: 600; }
 .overview-row-reason { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--app-text-muted); }
 .overview-card-foot { margin: 0.75rem 0 0; font-size: 0.875rem; color: var(--app-text-muted); }
+/* Row actions are tapped one-handed on a phone (tripper.md §1 quick check /
+   on the trip): 44px floor there, compact on desktop. */
+@media (max-width: 640px) {
+  .overview-row .p-button { min-height: 44px; }
+}
 
 /* Form field */
 .field { display: block; margin-bottom: 1rem; }
