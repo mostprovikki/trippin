@@ -9,7 +9,7 @@ import { useReadinessStore } from '../../stores/readiness.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { useItineraryStore } from '../../stores/itinerary.js'
 
-const SECTIONS = ['trip-dates', 'trip-destination', 'trip-budget', 'trip-itinerary', 'trip-people', 'trip-checklists', 'trip-readiness']
+const SECTIONS = ['trip-dates', 'trip-destination', 'trip-budget', 'trip-itinerary', 'trip-people', 'trip-checklists', 'trip-readiness', 'trip-settings']
 
 async function mountView({ readiness, trip, itineraryDays } = {}) {
   const router = createRouter({
@@ -56,6 +56,30 @@ describe('TripOverviewView', () => {
     expect(wrapper.find('.status-step-current').text()).toBe('planning')
     expect(wrapper.text()).toContain('Decide the destination')
     expect(wrapper.text()).toContain('Readiness')
+  })
+
+  it("puts Who's missing what first for a trip that hasn't started (tripper.md §2, 5p9)", async () => {
+    const { wrapper } = await mountView({
+      trip: { id: 't1', name: 'Goa 2026', status: 'confirmed', start_date: '2026-11-06', end_date: '2026-11-15', participants: [] },
+      readiness: {
+        decisions: {},
+        participants: [{ person_id: 'p1', name: 'Priya', profile_confirmed: 1, missing_fields: [], missing_docs: [], doc_warnings: [{ doc_type: 'passport', level: 'expired', expiry_date: '2026-06-30' }] }],
+        checklists: { total_items: 0, done_items: 0, overdue: [] }
+      }
+    })
+    const card = wrapper.find('.missing-card')
+    expect(card.exists()).toBe(true)
+    expect(card.find('[data-doc-level="expired"]').exists()).toBe(true)
+    const html = wrapper.html()
+    expect(html.indexOf('missing-card')).toBeLessThan(html.indexOf('class="card hero"'))
+  })
+
+  it("hides Who's missing what during the trip (tripper.md §2)", async () => {
+    const { wrapper } = await mountView({
+      trip: { id: 't1', name: 'Goa 2026', status: 'active', start_date: '2020-01-01', end_date: '2020-01-02', participants: [] },
+      readiness: { decisions: {}, participants: [], checklists: { total_items: 0, done_items: 0, overdue: [] } }
+    })
+    expect(wrapper.find('.missing-card').exists()).toBe(false)
   })
 
   it('Readiness stat is not a link (its route redirects back to this Overview)', async () => {

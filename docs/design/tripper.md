@@ -189,3 +189,6 @@ Nothing AI-related shows at rest.
 | 2026-09-26 | Itinerary marks and scrolls to today during the trip | smoke test — accepted | already built; now a rule |
 | 2026-09-26 | Regenerate day cut | smoke test — owner chose cut over "keep under ⋯" | see §7 |
 | 2026-09-26 | Paste path lives in ⋯ next to Draft with AI | owner | reconciles d5d.4 "always available" with §5 |
+| 2026-10-01 | Required profile fields = phone, emergency contact, dietary; an unconfirmed profile is Missing | owner (D2) | §6 "Missing" had no field list |
+| 2026-10-01 | Doc copy says "expires before the trip ends", not "expired" | 5p9 build | the server's `expired` level means expired by trip end, not today |
+| 2026-10-01 | Per-destination doc rules (visa lead time, country 6-month rule) parked; reason copy is generic | 5p9 build | no destination→country data; restore if a trip is refused on a rule we could have shown |

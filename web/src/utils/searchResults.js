@@ -5,6 +5,8 @@
 // /people/:id and an itinerary hit opens the trip's itinerary section. Both the
 // palette and the full results page use it, so they can never drift into
 // linking the same result to two different destinations.
+import { docTypeLabel } from './format.js'
+
 const ICONS = {
   trip: 'pi pi-map',
   person: 'pi pi-user',
@@ -12,15 +14,6 @@ const ICONS = {
   itinerary: 'pi pi-list',
   template: 'pi pi-check-square',
   archive: 'pi pi-box'
-}
-
-const DOC_TYPE_LABELS = {
-  passport: 'Passport',
-  visa: 'Visa',
-  national_id: 'National ID',
-  driving_license: 'Driving licence',
-  vaccination: 'Vaccination',
-  other: 'Document'
 }
 
 // The rest of the app renders ISO dates verbatim (TripOverview, ParticipantView,
@@ -42,7 +35,7 @@ function subtitleFor(kind, r) {
     return [r.home_city, r.email].filter(Boolean).join(' · ') || 'No contact details'
   }
   if (kind === 'document') {
-    const type = DOC_TYPE_LABELS[r.doc_type] || r.doc_type
+    const type = docTypeLabel(r.doc_type)
     const expiry = r.expiry_date ? `expires ${r.expiry_date}` : null
     return [r.person_name, type, expiry].filter(Boolean).join(' · ')
   }

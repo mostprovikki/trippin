@@ -83,27 +83,42 @@ const diet = await page.evaluate(() => {
 if (!diet.raw && diet.human) ok('dietary humanized', 'Non-veg shown, non_veg gone')
 else fail('dietary', JSON.stringify(diet))
 
-// 4. Doc expiry: expired pill is danger-red, future warning pill stays amber.
-// The Readiness view that showed these was cut in 0xv.4 and nothing replaced it
-// yet (bead trip-planner-5p9), so this fails until the Overview shows them —
-// deliberately: a skipped check would hide the regression.
-await page.goto(`${BASE}/trips/${TRIP}/readiness`, { waitUntil: 'networkidle' })
+// 4. Doc expiry on the Overview's Who's missing what (tripper.md §2, §6
+// "Missing"; trip-planner-5p9 — restores what the Readiness view showed before
+// 0xv.4 cut it). Expired-by-trip-end pill is danger-red, within-6-months pill
+// stays amber. Both arms must be present: the flagship seeds Priya's passport
+// 2026-06-30 (expired by the 2026-11-15 end) and Priya's visa / Ravi's passport
+// inside the 6-month horizon — a missing arm fails rather than passes vacuously.
+await page.goto(`${BASE}/trips/${TRIP}`, { waitUntil: 'networkidle' })
 await page.waitForTimeout(500)
 const pills = await page.evaluate(() => {
-  const tags = [...document.querySelectorAll('.p-tag')].filter((t) => /expired|warning/.test(t.textContent))
+  const tags = [...document.querySelectorAll('[data-doc-level]')]
   const read = (t) => {
     const cs = getComputedStyle(t)
-    const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(cs.backgroundColor + '|' + cs.color)
     return { text: t.textContent.trim(), bg: cs.backgroundColor, color: cs.color }
   }
   return {
-    expired: tags.filter((t) => /expired/.test(t.textContent)).map(read),
-    warning: tags.filter((t) => /warning/.test(t.textContent)).map(read)
+    expired: tags.filter((t) => t.dataset.docLevel === 'expired').map(read),
+    warning: tags.filter((t) => t.dataset.docLevel === 'warning').map(read)
   }
 })
-const redish = (s) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s); return m && Number(m[1]) > Number(m[2]) + 30 && Number(m[1]) > Number(m[3]) + 30 }
-const amberish = (s) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s); return m && Number(m[1]) > Number(m[3]) && Number(m[2]) > Number(m[3]) }
-if (!pills.expired.length) fail('expired pill present', 'no expired pill found (readiness view cut in 0xv.4; see trip-planner-5p9)')
+// Classify by hue, not by channel ordering: PrimeVue's warn text
+// (rgb(194, 65, 12), hue ~18°) passed the old "red > green + 30" test, so an
+// expired pill rendered amber went green (caught 2026-10-01 by breaking it on
+// purpose). Red = hue within 10° of 0; amber/orange = 15°–50°.
+const hue = (s) => {
+  const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s)
+  if (!m) return null
+  const [r, g, b] = m.slice(1, 4).map((x) => Number(x) / 255)
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min
+  if (d < 0.15) return null // greyish: no meaningful hue
+  let h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4
+  h *= 60
+  return h < 0 ? h + 360 : h
+}
+const redish = (s) => { const h = hue(s); return h != null && (h <= 10 || h >= 350) }
+const amberish = (s) => { const h = hue(s); return h != null && h >= 15 && h <= 50 }
+if (!pills.expired.length) fail('expired pill present', "no expired pill on the Overview's Who's missing what (trip-planner-5p9)")
 else if (pills.expired.every((p) => redish(p.color) || redish(p.bg))) ok('expired pills are red', pills.expired.map((p) => `${p.text} ${p.color}`).join('; '))
 else fail('expired pill colour', JSON.stringify(pills.expired))
 if (!pills.warning.length) fail('warning pill present', 'no warning pill found — other arm vacuous')

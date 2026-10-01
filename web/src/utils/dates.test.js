@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso, formatDayDate, dayHeader, tripCountdown, formatLongDate } from './dates.js'
+import { parseIsoDate, toIsoDate, startOfToday, isExpiredIso, formatDayDate, dayHeader, tripCountdown, formatLongDate, formatShortDate } from './dates.js'
 
 afterEach(() => { vi.useRealTimers() })
 
@@ -123,5 +123,16 @@ describe('formatLongDate', () => {
   it('returns invalid input unchanged rather than "Invalid Date"', () => {
     expect(formatLongDate('not-a-date')).toBe('not-a-date')
     expect(formatLongDate(null)).toBe(null)
+  })
+})
+
+describe('formatShortDate', () => {
+  it('day, short month and year, no weekday', () => {
+    expect(formatShortDate('2026-06-30')).toBe('30 Jun 2026')
+    expect(formatShortDate('2027-03-02')).toBe('2 Mar 2027')
+  })
+  it('falls back to the input when unparseable', () => {
+    expect(formatShortDate('')).toBe('')
+    expect(formatShortDate(null)).toBe('')
   })
 })

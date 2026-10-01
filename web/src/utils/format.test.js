@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatAmount, humanizeEnum, formatMoney, budgetCategoryLabel } from './format.js'
+import { formatAmount, humanizeEnum, formatMoney, budgetCategoryLabel, docTypeLabel } from './format.js'
 
 describe('formatMoney', () => {
   it('renders known currencies with their symbol, thousands-separated', () => {
@@ -56,5 +56,17 @@ describe('budgetCategoryLabel', () => {
   })
   it('title-cases each word', () => {
     expect(budgetCategoryLabel('stay')).toBe('Stay')
+  })
+})
+
+describe('docTypeLabel', () => {
+  it('labels every document type', () => {
+    expect(docTypeLabel('passport')).toBe('Passport')
+    expect(docTypeLabel('national_id')).toBe('National ID')
+    expect(docTypeLabel('driving_license')).toBe('Driving licence')
+    expect(docTypeLabel('other')).toBe('Document')
+  })
+  it('unknown type falls back to the raw value', () => {
+    expect(docTypeLabel('ticket')).toBe('ticket')
   })
 })

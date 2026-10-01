@@ -58,6 +58,14 @@ export function formatDayDate(iso) {
   return `${WEEKDAY_FMT.format(d)} ${d.getDate()} ${MONTH_FMT.format(d)}`
 }
 
+// '30 Jun 2026' — a date that needs its year (document expiry), without the
+// weekday formatDayDate leads with.
+export function formatShortDate(iso) {
+  const d = parseIsoDate(iso)
+  if (!d) return iso || ''
+  return `${d.getDate()} ${MONTH_FMT.format(d)} ${d.getFullYear()}`
+}
+
 export function dayHeader(iso, index) {
   const date = formatDayDate(iso)
   return index != null ? `${date} · Day ${index}` : date

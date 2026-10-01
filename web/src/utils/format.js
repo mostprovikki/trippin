@@ -39,3 +39,17 @@ export function formatMoney(amount, currency, { compact = false } = {}) {
   }
   return `${symbol}${num.toLocaleString('en-US')}`
 }
+
+// One label per documents.doc_type, shared by search results and the
+// Overview's Who's missing what (was private to searchResults.js).
+const DOC_TYPE_LABELS = {
+  passport: 'Passport',
+  visa: 'Visa',
+  national_id: 'National ID',
+  driving_license: 'Driving licence',
+  vaccination: 'Vaccination',
+  other: 'Document'
+}
+export function docTypeLabel(type) {
+  return DOC_TYPE_LABELS[type] || type
+}

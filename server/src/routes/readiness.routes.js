@@ -1,5 +1,6 @@
 import { httpError } from '../lib/errors.js'
 import { expiryWarnings } from '../lib/expiry.js'
+import { missingFieldsByPerson } from '../lib/missing.js'
 
 export default async function routes(app) {
   app.get('/trips/:id/readiness', { preHandler: app.requireOrganizer }, async (req, reply) => {
@@ -44,6 +45,7 @@ export default async function routes(app) {
       [tripId]
     )
     const activeLinkByPerson = new Map(activeLinks.map((r) => [r.person_id, r.has_active_link]))
+    const missingFields = await missingFieldsByPerson(app.db, tripId)
 
     const participants = people.map((p) => ({
       person_id: p.person_id,
@@ -52,6 +54,8 @@ export default async function routes(app) {
       docs_count: docsCountByPerson.get(p.person_id) ?? 0,
       doc_warnings: warningsByPerson.get(p.person_id) || [],
       has_active_link: !!activeLinkByPerson.get(p.person_id),
+      missing_fields: missingFields.get(p.person_id) || [],
+      missing_docs: [],
     }))
 
     const dates_confirmed = !!(trip.date_mode === 'confirmed' && trip.start_date && trip.end_date)
