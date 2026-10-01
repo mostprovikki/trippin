@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>What to pack</title>
+<style>
+  /* ===================================================================
+     Do not edit this stylesheet to change trip content. All content
+     lives in the DATA block in the <script> at the bottom of the file.
+     Only touch CSS to restyle (e.g. a different accent hue).
+     =================================================================== */
+  :root {
+    --paper:#F2F4F1; --surface:#FBFCFA; --surface-2:#E9EEEA;
+    --ink:#18231F; --ink-2:#4E5D58; --ink-3:#818F8A;
+    --line:#D6DFDA; --line-2:#C3CFC8;
+    --accent:#0C6A56; --cold:#2C6C9C; --mild:#8E6714; --hot:#B24A22; --ok:#2E7D5B;
+    --cold-bg:#E5EFF6;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  /* Dark theme: redefine tokens only, never restyle components inside the query. */
+  @media (prefers-color-scheme:dark) {
+    :root {
+      --paper:#0F1614; --surface:#17211E; --surface-2:#1D2825;
+      --ink:#E9EFEA; --ink-2:#A5B4AF; --ink-3:#71827C;
+      --line:#28342F; --line-2:#35423D;
+      --accent:#42CCA8; --cold:#66B1DF; --mild:#DDAA48; --hot:#F07B4E; --ok:#4FBF8B;
+      --cold-bg:#162B39;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#F2F4F1; --surface:#FBFCFA; --surface-2:#E9EEEA;
+    --ink:#18231F; --ink-2:#4E5D58; --ink-3:#818F8A;
+    --line:#D6DFDA; --line-2:#C3CFC8;
+    --accent:#0C6A56; --cold:#2C6C9C; --mild:#8E6714; --hot:#B24A22; --ok:#2E7D5B;
+    --cold-bg:#E5EFF6;
+  }
+  :root[data-theme="dark"] {
+    --paper:#0F1614; --surface:#17211E; --surface-2:#1D2825;
+    --ink:#E9EFEA; --ink-2:#A5B4AF; --ink-3:#71827C;
+    --line:#28342F; --line-2:#35423D;
+    --accent:#42CCA8; --cold:#66B1DF; --mild:#DDAA48; --hot:#F07B4E; --ok:#4FBF8B;
+    --cold-bg:#162B39;
+  }
+
+  *, *::before, *::after { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+         font-size:15.5px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  button { font:inherit; color:inherit; }
+  .wrap { max-width:1060px; margin:0 auto; padding:0 22px 72px; }
+  h1,h2 { text-wrap:balance; margin:0; }
+
+  header.mast { padding:48px 0 22px; border-bottom:1px solid var(--line-2); }
+  .eyebrow { font-family:var(--mono); font-size:10.5px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--accent); font-weight:600; }
+  h1 { font-size:clamp(27px,4.4vw,40px); font-weight:700; letter-spacing:-.025em;
+       line-height:1.08; margin:9px 0 12px; }
+  .lede { font-size:16px; color:var(--ink-2); max-width:64ch; }
+  .lede strong { color:var(--ink); font-weight:600; }
+  .mast-meta { display:flex; flex-wrap:wrap; gap:6px 24px; margin-top:16px;
+               font-family:var(--mono); font-size:11.5px; color:var(--ink-2); }
+  .mast-meta b { color:var(--ink); font-weight:600; }
+
+  section { padding-top:38px; }
+  .sec-head { display:flex; align-items:baseline; gap:11px; flex-wrap:wrap;
+              border-bottom:1px solid var(--line-2); padding-bottom:7px; margin-bottom:16px; }
+  .sec-head h2 { font-size:19px; font-weight:700; letter-spacing:-.02em; }
+  .sec-head .hint { font-family:var(--mono); font-size:11px; color:var(--ink-3); margin-left:auto; }
+
+  /* day table — wide content scrolls in its own box so the page never scrolls sideways */
+  .tbl-scroll { overflow-x:auto; border:1px solid var(--line-2); border-radius:3px;
+                background:var(--surface); }
+  table { border-collapse:collapse; width:100%; min-width:840px; }
+  th, td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--line);
+           font-size:13.5px; vertical-align:top; }
+  th { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+       color:var(--ink-2); font-weight:600; background:var(--surface-2); white-space:nowrap; }
+  tr:last-child td { border-bottom:0; }
+  td.d { font-family:var(--mono); font-size:11.5px; color:var(--ink-3); white-space:nowrap; }
+  td.d b { display:block; color:var(--ink); font-size:12.5px; font-weight:600; }
+  td.where { font-weight:600; min-width:150px; }
+  td.t { font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:13px;
+         font-weight:600; white-space:nowrap; }
+  td.t.cold { color:var(--cold); } td.t.hot { color:var(--hot); } td.t.mild { color:var(--mild); }
+  td em { font-style:normal; font-weight:600; color:var(--ink); }
+  td.pk { color:var(--ink-2); min-width:170px; }
+  tr.hi td { background:var(--cold-bg); }
+
+  .note-line { font-size:14px; color:var(--ink-2); margin:14px 0 0;
+               padding-left:11px; border-left:2px solid var(--accent); }
+  .note-line b { color:var(--ink); }
+
+  /* weight meter */
+  .meter { position:sticky; top:0; z-index:20; background:var(--surface);
+           border:1px solid var(--line-2); border-radius:3px; padding:10px 14px; margin-bottom:4px;
+           display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .meter-big { font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:20px;
+               font-weight:600; letter-spacing:-.02em; }
+  .meter-big small { font-size:11.5px; color:var(--ink-3); font-weight:400; }
+  .track { flex:1 1 180px; min-width:140px; height:8px; background:var(--surface-2);
+           border-radius:4px; overflow:hidden; }
+  .fill { height:100%; width:0; background:var(--ok); border-radius:4px; transition:width .18s ease; }
+  .track.over .fill { background:var(--mild); } .track.bust .fill { background:var(--hot); }
+  .meter-note { font-family:var(--mono); font-size:11.5px; color:var(--ink-2);
+                font-variant-numeric:tabular-nums; }
+  .meter-note b { color:var(--ink); font-weight:600; }
+  @media (prefers-reduced-motion:reduce) { .fill { transition:none; } }
+
+  /* variant toggles */
+  .controls { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-end; margin:0 0 14px; }
+  .ctrl-label { font-family:var(--mono); font-size:9.5px; letter-spacing:.12em;
+                text-transform:uppercase; color:var(--ink-3); display:block; margin-bottom:5px; }
+  .seg { display:inline-flex; border:1px solid var(--line-2); border-radius:3px;
+         overflow:hidden; background:var(--surface); }
+  .seg button { font-family:var(--mono); font-size:11.5px; padding:6px 11px; border:0;
+                background:transparent; color:var(--ink-2); cursor:pointer; }
+  .seg button + button { border-left:1px solid var(--line-2); }
+  .seg button[aria-pressed="true"] { background:var(--ink); color:var(--paper); font-weight:600; }
+  .seg button:focus-visible, .linkish:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  .linkish { font-family:var(--mono); font-size:11.5px; background:none; border:0;
+             color:var(--accent); cursor:pointer; padding:6px 0; text-decoration:underline;
+             text-underline-offset:3px; }
+
+  /* compact packing grid — cards, not one long column */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(292px,1fr));
+          gap:10px; align-items:start; }
+  .cat { background:var(--surface); border:1px solid var(--line); border-radius:3px;
+         padding:9px 11px 5px; break-inside:avoid; }
+  .cat-head { display:flex; align-items:baseline; gap:8px; padding-bottom:5px;
+              border-bottom:1px solid var(--line); margin-bottom:2px; }
+  .cat-head h3 { font-size:11px; font-weight:700; letter-spacing:.07em;
+                 text-transform:uppercase; margin:0; }
+  .cat-head .w { margin-left:auto; font-family:var(--mono); font-size:10.5px;
+                 color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .row { display:grid; grid-template-columns:15px 1fr auto auto; gap:2px 8px;
+         align-items:baseline; padding:4px 0; border-bottom:1px solid var(--line); }
+  .cat .row:last-child { border-bottom:0; }
+  .row input { width:14px; height:14px; margin:2px 0 0; accent-color:var(--accent); cursor:pointer; }
+  .row.off .nm, .row.off .qty, .row.off .g { opacity:.42; }
+  .row.off .nm { text-decoration:line-through; }
+  .nm { font-size:13.5px; line-height:1.35; }
+  .nm i { font-style:normal; color:var(--ink-3); font-size:12px; }
+  .nm .cab { font-family:var(--mono); font-size:8.5px; letter-spacing:.06em;
+             text-transform:uppercase; color:var(--accent); border:1px solid var(--accent);
+             border-radius:2px; padding:0 3px; margin-left:5px; white-space:nowrap; }
+  .qty, .g { font-family:var(--mono); font-size:11.5px; font-variant-numeric:tabular-nums;
+             color:var(--ink-3); white-space:nowrap; }
+  .g { min-width:46px; text-align:right; }
+
+  /* quantity stepper — replaces the tick on anything you'd carry several of */
+  .step { display:inline-flex; align-items:center; border:1px solid var(--line-2);
+          border-radius:3px; overflow:hidden; background:var(--paper); }
+  .step button { width:19px; height:19px; padding:0; border:0; background:transparent;
+                 color:var(--ink-2); font-family:var(--mono); font-size:13px; line-height:1;
+                 cursor:pointer; }
+  .step button:hover:not([disabled]) { background:var(--surface-2); color:var(--ink); }
+  .step button:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+  .step button[disabled] { opacity:.32; cursor:default; }
+  .step .ct { min-width:19px; text-align:center; font-family:var(--mono); font-size:12px;
+              font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); }
+  .row.off .step .ct { color:var(--ink-3); }
+
+  .foot { margin-top:44px; padding-top:16px; border-top:1px solid var(--line-2);
+          font-family:var(--mono); font-size:11px; color:var(--ink-3); line-height:1.65; }
+
+  @media print {
+    .meter { position:static; } .controls { display:none; }
+    body { background:#fff; color:#000; font-size:10pt; }
+    .grid { grid-template-columns:repeat(3,1fr); }
+  }
+  /* Narrow screens keep all four row columns — the stepper lives in .qty. */
+  @media (max-width:560px) {
+    .nm { font-size:13px; }
+    .g { min-width:42px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="title"></h1>
+    <p class="lede" id="lede"></p>
+    <div class="mast-meta" id="mastMeta"></div>
+  </header>
+
+  <section id="days">
+    <div class="sec-head">
+      <h2 id="daysHeading"></h2>
+      <span class="hint" id="daysHint"></span>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr id="dayHead"></tr></thead>
+        <tbody id="dayBody"></tbody>
+      </table>
+    </div>
+    <p class="note-line" id="noteLine"></p>
+  </section>
+
+  <section id="list">
+    <div class="sec-head">
+      <h2>The list</h2>
+      <span class="hint">set the counts, tick the rest — the meter follows</span>
+    </div>
+    <div class="controls" id="controls"></div>
+    <div class="meter" id="meter">
+      <div class="meter-big" id="total">—</div>
+      <div class="track" id="track"><div class="fill" id="fill"></div></div>
+      <div class="meter-note" id="verdict">—</div>
+    </div>
+    <div class="grid" id="cats"></div>
+  </section>
+
+  <section id="extras">
+    <div class="sec-head">
+      <h2>Nice to have</h2>
+      <span class="hint">all at zero — add what appeals</span>
+    </div>
+    <div class="grid" id="extraCats"></div>
+  </section>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   ██  EDIT ONLY THIS DATA BLOCK.  ██
+   Everything below the "END DATA BLOCK" line is generic machinery that
+   already works — leave it alone. Replace the sample Vietnam trip with
+   your own TRIP / DAYS / ITEMS and the page rebuilds itself.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+var TRIP = {
+  storageKey: "trip-pack-vietnam-2026",   // unique per trip, or two pages overwrite each other
+  eyebrow: "Vietnam · 9 nights, 10 days · 7–16 August 2026",
+  title: "What to pack",
+  // <strong> allowed. Say the shape of the trip and the one rule that drives the list.
+  lede: "Hanoi, a night on Halong Bay, two in Sapa, then Danang and Hoi An. Warm and humid " +
+        "almost everywhere — <strong>with one genuinely cold morning</strong> at the top of " +
+        "Fansipan, which is the only reason a fleece earns its place. One rule underpins the " +
+        "list: <strong>choose merino or synthetic over cotton</strong>, because at this humidity " +
+        "cotton will not dry overnight.",
+  meta: [                                  // [label, value] chips under the lede
+    ["Allowance", "15 kg checked + 7 kg cabin"],
+    ["Range", "7 °C to 41 °C felt"],
+    ["Packs to", "8–10 kg"]
+  ],
+  targetKg: 15,                            // the number you are aiming under
+  ceilingKg: 20,                           // hard airline limit; the bar maxes out here
+  cabinKg: 7,
+  daysHeading: "Day by day — what to wear, what to bring",
+  daysHint: "felt temperature, not the thermometer",
+  noteLine: "<b>On rain:</b> expect some most days. The umbrella is the nicer option in warm " +
+            "city drizzle; the hooded shell is the one you want in the hills.",
+  foot: "Temperatures are felt (apparent) values from Open-Meteo, retrieved 30 July 2026. " +
+        "Figures for the last three days are August averages, not forecast.<br>" +
+        "Item weights are typical for lightweight travel gear — worth putting the bag on a scale.",
+
+  /* Two independent toggles. Relabel them for ANY pair of variants:
+     men's/women's, summer/winter, carry-on only/checked, adult/child.
+     - who  keys are used by an item's  s:  field ("a" = applies to both)
+     - plan keys are used by an item's  q:  field (a quantity for each) */
+  who:  { label: "Packing for", options: [["m", "Men's"], ["w", "Women's"]] },
+  plan: { label: "Laundry",     options: [["L", "Wash mid-trip"], ["N", "None"]] }
+};
+
+/* One row per day.
+   feels: a number (band colour is picked for you) OR a string like "34° → 24°"
+          plus an explicit band: "cold" | "mild" | "hot"
+   hi:    true tints the row — use it for the single most unusual day, if any
+   <em>text</em> emphasises a phrase inside any cell                          */
+var DAYS = [
+  { n:1, date:"7 Aug", where:"Hanoi, landing 18:35", feels:37,
+    wear:"Tee and shorts. Something long within reach for tomorrow.",
+    feet:"Trainers",
+    bring:"A change of clothes in the cabin bag, in case the checked one is slow." },
+
+  { n:2, date:"8 Aug", where:"Hanoi city — Mausoleum, Old Quarter", feels:39,
+    wear:"<em>Long trousers and a sleeved top.</em> The Mausoleum asks for covered knees and " +
+         "shoulders and does check.",
+    feet:"Slip-on trainers — shoes come off in some temple halls",
+    bring:"Umbrella, hat, sunscreen. Hats off indoors." },
+
+  { n:3, date:"9 Aug", where:"Halong Bay — kayak, swim, night on the boat", feels:39,
+    wear:"Swimwear on under a tee and shorts; rash guard for the water.",
+    feet:"Sandals with grip; decks get wet",
+    bring:"<em>Pack an overnight bag</em> — the big case stays with the van. Dry bag for your phone." },
+
+  { n:4, date:"10 Aug", where:"Halong morning, then the road up to Sapa", feels:"34° → 24°", band:"mild",
+    wear:"Start light, add long trousers and the fleece as you climb.",
+    feet:"Trainers",
+    bring:"Motion-sickness tablets and a scarf — five winding hours, fierce air-conditioning." },
+
+  { n:5, date:"11 Aug", where:"Fansipan by cable car, Cat Cat village", feels:7, hi:true,
+    wear:"<em>Fleece and rain shell over long trousers</em> — the summit is 3,143 m and sits " +
+         "near 9 °C. The temples up there want covered shoulders anyway.",
+    feet:"Trainers with real grip — wet stone steps",
+    bring:"Beanie, and the poncho over your daypack." },
+
+  { n:6, date:"12 Aug", where:"Sapa, then the flight to Danang", feels:"20° → 38°", band:"mild",
+    wear:"Hill layers in the morning, your lightest things for the evening.",
+    feet:"Trainers",
+    bring:"Repack tonight — fleece and rain kit to the bottom. Hand in laundry." },
+
+  { n:7, date:"13 Aug", where:"Marble Mountains, Hoi An old town", feels:37,
+    wear:"Light long trousers or a midi, with sleeves for the pagodas.",
+    feet:"<em>Slip-ons</em> — shoes off at the cave shrines",
+    bring:"Socks for bare-floor shrines, water, a scarf for shoulders." },
+
+  { n:8, date:"14 Aug", where:"Danang city and My Khe beach", feels:38,
+    wear:"Your second swimwear set, and a loose cover-up for the pagoda.",
+    feet:"Sandals",
+    bring:"Sunscreen and hat. Hotels lend beach towels." },
+
+  { n:9, date:"15 Aug", where:"Back to Hanoi — rest and shopping", feels:38,
+    wear:"Whatever is most comfortable.",
+    feet:"Trainers or sandals",
+    bring:"The foldable tote. This is the day the spare kilos are for." },
+
+  { n:10, date:"16 Aug", where:"Depart Hanoi, 11:30", feels:36,
+    wear:"Travel clothes, with a layer for the plane.",
+    feet:"Trainers, worn to save space",
+    bring:"Power bank in the cabin bag — it cannot travel in the hold." }
+];
+
+/* Category order for the essentials grid, then the optional grid. */
+var CATS = [
+  ["bags",    "Bags"],
+  ["clothes", "Clothes"],
+  ["layers",  "Warm &amp; waterproof"],
+  ["swim",    "Swim"],
+  ["base",    "Underwear &amp; sleep"],
+  ["shoes",   "Footwear"],
+  ["sun",     "Sun &amp; heat"],
+  ["wash",    "Toiletries"],
+  ["med",     "Health"],
+  ["tech",    "Electronics"],
+  ["doc",     "Documents &amp; money"]
+];
+var EXTRA_CATS = [["nice", "Optional"]];
+
+/* ITEMS — the whole list.
+   c    category id, must match a CATS / EXTRA_CATS id
+   n    name
+   i    optional short aside, shown dimmed after an em dash
+   g    grams EACH (not total)
+   q    {L: qty under plan L, N: qty under plan N}
+   s    "a" both variants · "m" first only · "w" second only
+   bag  "checked" (counts to the target) · "cabin" (counts to the cabin figure)
+        · "worn" (weighs nothing — you have it on)
+   step true  → −/+ counter, and 0 means not taking it. USE THIS for anything
+        you would carry several of: shirts, socks, underwear, sachets.
+        Omit for genuine one-offs (a fleece, a passport) which get a checkbox.
+   nice true  → lives in the Optional block and starts at zero                */
+var ITEMS = [
+  {c:"bags", n:"Soft duffel or light trolley", i:"a hard shell eats 3 kg empty", g:1400, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"bags", n:"Daypack, 30–35 L", i:"cabin bag and overnighter", g:900, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"bags", n:"Packing cubes", g:50, q:{L:3,N:3}, s:"a", bag:"checked", step:true},
+  {c:"bags", n:"Dry bag for worn clothes", g:60, q:{L:1,N:1}, s:"a", bag:"checked"},
+
+  {c:"clothes", n:"Quick-dry T-shirts", i:"merino or synthetic", g:130, q:{L:5,N:8}, s:"m", bag:"checked", step:true},
+  {c:"clothes", n:"Light long-sleeve shirts", i:"sun cover and temples", g:170, q:{L:2,N:2}, s:"m", bag:"checked", step:true},
+  {c:"clothes", n:"Light long trousers", i:"not jeans", g:300, q:{L:2,N:2}, s:"m", bag:"checked", step:true},
+  {c:"clothes", n:"Quick-dry shorts", g:200, q:{L:2,N:3}, s:"m", bag:"checked", step:true},
+  {c:"clothes", n:"Quick-dry tops", i:"merino or synthetic", g:120, q:{L:4,N:6}, s:"w", bag:"checked", step:true},
+  {c:"clothes", n:"Loose midi dresses", i:"temple-ready and cooler than trousers", g:220, q:{L:2,N:3}, s:"w", bag:"checked", step:true},
+  {c:"clothes", n:"Leggings", g:180, q:{L:1,N:2}, s:"w", bag:"checked", step:true},
+  {c:"clothes", n:"Light long trousers", i:"not jeans", g:280, q:{L:1,N:1}, s:"w", bag:"checked", step:true},
+
+  {c:"layers", n:"Fleece midlayer", i:"for the summit", g:320, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"layers", n:"Merino base layer top", i:"doubles as sleepwear in the hills", g:180, q:{L:1,N:1}, s:"a", bag:"checked", step:true},
+  {c:"layers", n:"Beanie", g:45, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"layers", n:"Hooded rain shell", i:"taped seams", g:280, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"layers", n:"Poncho", i:"goes over the daypack", g:120, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"layers", n:"Compact umbrella", i:"also shade", g:230, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"layers", n:"Zip pouches", i:"passport, phone, chargers", g:20, q:{L:3,N:3}, s:"a", bag:"cabin", step:true},
+
+  {c:"swim", n:"Swim shorts", i:"two — the first will not dry", g:150, q:{L:2,N:2}, s:"m", bag:"checked", step:true},
+  {c:"swim", n:"Swimwear sets", i:"two — the first will not dry", g:180, q:{L:2,N:2}, s:"w", bag:"checked", step:true},
+  {c:"swim", n:"Rash guard", i:"no shade on the water", g:160, q:{L:1,N:1}, s:"a", bag:"checked", step:true},
+
+  {c:"base", n:"Underwear", i:"synthetic, rinses overnight", g:45, q:{L:6,N:10}, s:"m", bag:"checked", step:true},
+  {c:"base", n:"Underwear", i:"synthetic, rinses overnight", g:35, q:{L:6,N:10}, s:"w", bag:"checked", step:true},
+  {c:"base", n:"Bras, two of them sports", g:70, q:{L:4,N:4}, s:"w", bag:"checked", step:true},
+  {c:"base", n:"Ankle socks", g:40, q:{L:4,N:6}, s:"a", bag:"checked", step:true},
+  {c:"base", n:"Light sleepwear", g:200, q:{L:1,N:1}, s:"a", bag:"checked", step:true},
+
+  {c:"shoes", n:"Cushioned trainers", i:"wear them on the plane", g:0, q:{L:1,N:1}, s:"a", bag:"worn"},
+  {c:"shoes", n:"Sandals with a heel strap", i:"wet decks, beach, evenings", g:500, q:{L:1,N:1}, s:"a", bag:"checked"},
+
+  {c:"sun", n:"Hat", g:90, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"sun", n:"Sunglasses", g:30, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"sun", n:"Sunscreen SPF 50", i:"100 ml, top up locally", g:120, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"sun", n:"Electrolyte sachets", i:"six days above 36° felt", g:5, q:{L:12,N:12}, s:"a", bag:"checked", step:true},
+
+  {c:"wash", n:"Toothbrush and paste", g:100, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"wash", n:"Deodorant", g:80, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"wash", n:"Shampoo and wash", i:"decanted; hotels cover the basics", g:150, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"wash", n:"Wet wipes", g:120, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"wash", n:"Detergent sheets", i:"for sink rinses", g:30, q:{L:1,N:1}, s:"a", bag:"checked"},
+
+  {c:"med", n:"Motion-sickness tablets", i:"the boat and the mountain road", g:20, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"med", n:"Mosquito repellent", i:"DEET or picaridin", g:110, q:{L:1,N:1}, s:"a", bag:"checked"},
+  {c:"med", n:"Paracetamol", g:20, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"med", n:"Anti-diarrhoeal and rehydration", g:30, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"med", n:"Plasters and blister plasters", g:50, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"med", n:"Prescriptions and a copy", i:"keep these in the cabin", g:100, q:{L:1,N:1}, s:"a", bag:"cabin"},
+
+  {c:"tech", n:"Power bank", i:"cabin only — never the hold", g:200, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"tech", n:"Universal adapter", i:"check the socket type before you fly", g:90, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"tech", n:"Multi-port charger", g:120, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"tech", n:"Cables", g:30, q:{L:2,N:2}, s:"a", bag:"cabin", step:true},
+
+  {c:"doc", n:"Passport and printed visa", g:60, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"doc", n:"Flight and hotel printouts", g:40, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"doc", n:"Insurance copy", g:20, q:{L:1,N:1}, s:"a", bag:"cabin"},
+  {c:"doc", n:"Cash and cards", g:60, q:{L:1,N:1}, s:"a", bag:"cabin"},
+
+  {c:"nice", n:"Flip-flops", g:170, q:{L:1,N:1}, s:"a", bag:"checked", nice:true},
+  {c:"nice", n:"Light gloves", i:"if you feel the cold", g:50, q:{L:1,N:1}, s:"a", bag:"checked", nice:true},
+  {c:"nice", n:"Beach towel", i:"hotels usually lend them", g:180, q:{L:1,N:1}, s:"a", bag:"checked", nice:true},
+  {c:"nice", n:"Camera and spare battery", g:600, q:{L:1,N:1}, s:"a", bag:"cabin", nice:true},
+  {c:"nice", n:"Earbuds", g:60, q:{L:1,N:1}, s:"a", bag:"cabin", nice:true},
+  {c:"nice", n:"Foldable tote", i:"for the shopping day", g:80, q:{L:1,N:1}, s:"a", bag:"checked", nice:true},
+  {c:"nice", n:"Passport photocopies", g:20, q:{L:2,N:2}, s:"a", bag:"checked", nice:true}
+];
+
+/* ═══════════════════ END DATA BLOCK — do not edit below ═══════════════════ */
+
+(function () {
+  "use strict";
+  var MAX_QTY = 24;
+  var WHO = TRIP.who.options.map(function (o) { return o[0]; });
+  var PLANS = TRIP.plan.options.map(function (o) { return o[0]; });
+  var who = WHO[0], plan = PLANS[0], unticked = {}, counts = {};
+
+  try {
+    var saved = JSON.parse(localStorage.getItem(TRIP.storageKey) || "{}");
+    if (WHO.indexOf(saved.who) > -1) who = saved.who;
+    if (PLANS.indexOf(saved.plan) > -1) plan = saved.plan;
+    if (saved.unticked) unticked = saved.unticked;
+    if (saved.counts) counts = saved.counts;
+  } catch (e) { /* private mode — run without persistence */ }
+
+  function save() {
+    try {
+      localStorage.setItem(TRIP.storageKey,
+        JSON.stringify({who:who, plan:plan, unticked:unticked, counts:counts}));
+    } catch (e) { /* ignore */ }
+  }
+
+  function key(it) { return it.c + "|" + it.n + "|" + it.s; }
+  function hasOwn(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function visible(it) { return it.s === "a" || it.s === who; }
+  function esc(s) { return String(s).replace(/"/g, "&quot;"); }
+  function fmt(g) { return g >= 1000 ? (g / 1000).toFixed(2) + " kg" : g + " g"; }
+
+  var BY_KEY = {};
+  ITEMS.forEach(function (it) { BY_KEY[key(it)] = it; });
+
+  /* A count set by hand beats the plan's suggestion and survives switching plans.
+     "Start over" clears it. Optional extras start at zero. */
+  function qtyOf(it) {
+    var k = key(it);
+    if (hasOwn(counts, k)) return counts[k];
+    return it.nice ? 0 : it.q[plan];
+  }
+  function ticked(it) {
+    if (it.step) return qtyOf(it) > 0;
+    var k = key(it);
+    if (hasOwn(unticked, k)) return !unticked[k];
+    return !it.nice;
+  }
+
+  /* ---------- masthead, day table, footer ---------- */
+  function band(d) {
+    if (d.band) return d.band;
+    var t = typeof d.feels === "number" ? d.feels : parseFloat(d.feels);
+    if (isNaN(t)) return "mild";
+    return t < 15 ? "cold" : (t < 30 ? "mild" : "hot");
+  }
+  function staticParts() {
+    document.getElementById("eyebrow").innerHTML = TRIP.eyebrow || "";
+    document.getElementById("title").innerHTML = TRIP.title || "What to pack";
+    document.title = (TRIP.title || "What to pack") + (TRIP.eyebrow ? " — " + TRIP.eyebrow.replace(/<[^>]*>/g, "") : "");
+    document.getElementById("lede").innerHTML = TRIP.lede || "";
+    document.getElementById("mastMeta").innerHTML = (TRIP.meta || []).map(function (m) {
+      return "<span>" + m[0] + " <b>" + m[1] + "</b></span>";
+    }).join("");
+    document.getElementById("daysHeading").innerHTML = TRIP.daysHeading || "Day by day";
+    document.getElementById("daysHint").innerHTML = TRIP.daysHint || "";
+    document.getElementById("noteLine").innerHTML = TRIP.noteLine || "";
+    document.getElementById("foot").innerHTML = TRIP.foot || "";
+    if (!TRIP.noteLine) document.getElementById("noteLine").style.display = "none";
+
+    document.getElementById("dayHead").innerHTML =
+      ["Day", "Where", "Feels", "Wear", "On your feet", "Bring for the day"]
+        .map(function (h) { return "<th>" + h + "</th>"; }).join("");
+
+    document.getElementById("dayBody").innerHTML = DAYS.map(function (d) {
+      var f = typeof d.feels === "number" ? d.feels + "°" : d.feels;
+      return '<tr' + (d.hi ? ' class="hi"' : "") + ">" +
+        '<td class="d"><b>Day ' + d.n + "</b>" + d.date + "</td>" +
+        '<td class="where">' + d.where + "</td>" +
+        '<td class="t ' + band(d) + '">' + f + "</td>" +
+        "<td>" + (d.wear || "") + "</td>" +
+        "<td>" + (d.feet || "") + "</td>" +
+        '<td class="pk">' + (d.bring || "") + "</td></tr>";
+    }).join("");
+  }
+
+  /* ---------- controls ---------- */
+  function controls() {
+    function seg(cfg, current, idPrefix) {
+      return '<div><span class="ctrl-label">' + cfg.label + '</span>' +
+        '<div class="seg" role="group" aria-label="' + esc(cfg.label) + '">' +
+        cfg.options.map(function (o) {
+          return '<button type="button" id="' + idPrefix + o[0] + '" data-v="' + o[0] +
+            '" aria-pressed="' + (o[0] === current) + '">' + o[1] + "</button>";
+        }).join("") + "</div></div>";
+    }
+    var el = document.getElementById("controls");
+    el.innerHTML =
+      (TRIP.who.options.length > 1 ? seg(TRIP.who, who, "who-") : "") +
+      (TRIP.plan.options.length > 1 ? seg(TRIP.plan, plan, "plan-") : "") +
+      '<button class="linkish" id="reset">Start over</button>';
+
+    el.querySelectorAll(".seg button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var v = b.getAttribute("data-v");
+        if (b.id.indexOf("who-") === 0) who = v; else plan = v;
+        save(); render();
+      });
+    });
+    document.getElementById("reset").addEventListener("click", function () {
+      unticked = {}; counts = {}; save(); render();
+    });
+  }
+
+  /* ---------- the list ---------- */
+  function buildGrid(list) {
+    return list.map(function (pair) {
+      var cid = pair[0], label = pair[1];
+      var rows = ITEMS.filter(function (it) { return it.c === cid && visible(it); });
+      if (!rows.length) return "";
+      var sub = rows.reduce(function (a, it) {
+        return a + (ticked(it) ? it.g * qtyOf(it) : 0);
+      }, 0);
+      var html = '<div class="cat" data-cat="' + cid + '"><div class="cat-head"><h3>' + label +
+        '</h3><span class="w">' + fmt(sub) + "</span></div>";
+      rows.forEach(function (it) {
+        var k = key(it), on = ticked(it), qty = qtyOf(it), safe = esc(it.n.toLowerCase());
+        var control = it.step
+          ? '<span class="step" data-k="' + esc(k) + '">' +
+              '<button type="button" class="dec" aria-label="One fewer ' + safe + '"' +
+                (qty <= 0 ? " disabled" : "") + ">−</button>" +
+              '<span class="ct">' + qty + "</span>" +
+              '<button type="button" class="inc" aria-label="One more ' + safe + '"' +
+                (qty >= MAX_QTY ? " disabled" : "") + ">+</button></span>"
+          : "";
+        html += '<div class="row' + (on ? "" : " off") + '">' +
+          (it.step ? "<span></span>"
+                   : '<input type="checkbox"' + (on ? " checked" : "") +
+                     ' data-k="' + esc(k) + '" aria-label="' + safe + '">') +
+          '<span class="nm">' + it.n +
+            (it.bag === "cabin" ? '<span class="cab">cabin</span>' : "") +
+            (it.i ? " <i>— " + it.i + "</i>" : "") + "</span>" +
+          '<span class="qty">' + control + "</span>" +
+          '<span class="g">' + (it.bag === "worn" ? "worn" : fmt(it.g * qty)) + "</span></div>";
+      });
+      return html + "</div>";
+    }).join("");
+  }
+
+  function refreshCat(catEl) {
+    if (!catEl) return;
+    var cid = catEl.getAttribute("data-cat");
+    var sub = ITEMS.reduce(function (a, it) {
+      return a + (it.c === cid && visible(it) && ticked(it) ? it.g * qtyOf(it) : 0);
+    }, 0);
+    catEl.querySelector(".w").textContent = fmt(sub);
+  }
+
+  function meter() {
+    var checked = 0, cabin = 0;
+    ITEMS.forEach(function (it) {
+      if (!visible(it) || !ticked(it)) return;
+      var t = it.g * qtyOf(it);
+      if (it.bag === "cabin") cabin += t;
+      else if (it.bag !== "worn") checked += t;
+    });
+    var targetG = TRIP.targetKg * 1000, ceilG = TRIP.ceilingKg * 1000;
+    document.getElementById("total").innerHTML =
+      (checked / 1000).toFixed(2) + " <small>kg checked</small>";
+    var track = document.getElementById("track"), verdict = document.getElementById("verdict");
+    document.getElementById("fill").style.width = Math.min(100, (checked / ceilG) * 100) + "%";
+    track.classList.toggle("over", checked > targetG && checked <= ceilG);
+    track.classList.toggle("bust", checked > ceilG);
+    if (checked > ceilG) {
+      verdict.innerHTML = "<b>" + fmt(checked - ceilG) + " over the " + TRIP.ceilingKg + " kg ceiling.</b>";
+    } else if (checked > targetG) {
+      verdict.innerHTML = "<b>" + fmt(checked - targetG) + " past " + TRIP.targetKg +
+        " kg</b>, still under " + TRIP.ceilingKg + ".";
+    } else {
+      verdict.innerHTML = "<b>" + fmt(targetG - checked) + " spare</b> under " + TRIP.targetKg +
+        " kg · cabin " + (cabin / 1000).toFixed(2) + " kg of " + TRIP.cabinKg;
+    }
+  }
+
+  function render() {
+    controls();
+    document.getElementById("cats").innerHTML = buildGrid(CATS);
+    document.getElementById("extraCats").innerHTML = buildGrid(EXTRA_CATS);
+    document.getElementById("extras").style.display =
+      document.getElementById("extraCats").innerHTML ? "" : "none";
+    meter();
+  }
+
+  /* Patch the row in place. Re-rendering here would destroy the control being
+     used and throw keyboard focus to the top of the page. */
+  function onChange(e) {
+    var box = e.target.closest("input[type=checkbox]");
+    if (!box) return;
+    unticked[box.getAttribute("data-k")] = !box.checked;
+    save();
+    box.closest(".row").classList.toggle("off", !box.checked);
+    refreshCat(box.closest(".cat"));
+    meter();
+  }
+  function onStep(e) {
+    var btn = e.target.closest(".step button");
+    if (!btn || btn.disabled) return;
+    var wrap = btn.closest(".step"), it = BY_KEY[wrap.getAttribute("data-k")];
+    if (!it) return;
+    var cur = qtyOf(it);
+    var next = Math.max(0, Math.min(MAX_QTY, cur + (btn.classList.contains("inc") ? 1 : -1)));
+    if (next === cur) return;
+    counts[key(it)] = next;
+    save();
+    wrap.querySelector(".ct").textContent = next;
+    wrap.querySelector(".dec").disabled = next <= 0;
+    wrap.querySelector(".inc").disabled = next >= MAX_QTY;
+    var row = btn.closest(".row");
+    row.classList.toggle("off", next <= 0);
+    row.querySelector(".g").textContent = it.bag === "worn" ? "worn" : fmt(it.g * next);
+    refreshCat(btn.closest(".cat"));
+    meter();
+  }
+  ["cats", "extraCats"].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.addEventListener("change", onChange);
+    el.addEventListener("click", onStep);
+  });
+
+  /* ---------- self-check ----------
+     Catches the misses that actually happen when this template is adapted, and says so
+     on the page rather than failing quietly. Delete this block once the page is final. */
+  function selfCheck() {
+    var w = [];
+    if (TRIP.storageKey === "trip-pack-vietnam-2026")
+      w.push("<b>TRIP.storageKey</b> is still the sample value — set it to something unique " +
+             "for this trip, or two pages will share saved ticks.");
+
+    var metaText = (TRIP.meta || []).map(function (m) { return m[1]; }).join(" ");
+    if (metaText && String(metaText).indexOf(String(TRIP.targetKg)) === -1)
+      w.push("<b>TRIP.targetKg is " + TRIP.targetKg + " kg</b> but the allowance chip says \"" +
+             metaText + "\". One of them is stale — the meter measures against targetKg, so " +
+             "if that number is wrong every verdict on the page is wrong.");
+
+    var vis = ITEMS.filter(visible);
+    var stepShare = vis.filter(function (it) { return it.step; }).length / (vis.length || 1);
+    if (stepShare < 0.2)
+      w.push("Only <b>" + Math.round(stepShare * 100) + "%</b> of items have <b>step:true</b>. " +
+             "Anything you carry more than one of — shirts, socks, underwear, sachets, cables — " +
+             "should have a counter, not a checkbox.");
+
+    var ids = CATS.concat(EXTRA_CATS).map(function (c) { return c[0]; });
+    var orphans = ITEMS.filter(function (it) { return ids.indexOf(it.c) === -1; });
+    if (orphans.length)
+      w.push(orphans.length + " item(s) have a <b>category id not in CATS</b> and are invisible: " +
+             orphans.map(function (it) { return it.n; }).join(", "));
+
+    var badQty = ITEMS.filter(function (it) {
+      return PLANS.some(function (p) { return typeof it.q[p] !== "number"; });
+    });
+    if (badQty.length)
+      w.push(badQty.length + " item(s) are <b>missing a quantity</b> for one of the two plans: " +
+             badQty.map(function (it) { return it.n; }).join(", "));
+
+    if (!w.length) return;
+    var el = document.createElement("div");
+    el.setAttribute("role", "status");
+    el.style.cssText = "margin:14px 0 0;padding:12px 14px;border:1px solid var(--hot);" +
+      "border-left-width:3px;border-radius:3px;background:var(--surface);font-size:13.5px;" +
+      "line-height:1.5;color:var(--ink-2)";
+    el.innerHTML = '<b style="color:var(--hot)">Template self-check</b>' +
+      '<ul style="margin:7px 0 0;padding-left:19px">' +
+      w.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    document.querySelector("header.mast").appendChild(el);
+  }
+
+  staticParts();
+  render();
+  selfCheck();
+})();
+</script>
+</body>
+</html>
