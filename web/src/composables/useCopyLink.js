@@ -25,8 +25,9 @@ export function useCopyLink() {
   const confirm = useConfirm()
   const notify = useNotify()
 
-  // Settles once: accept → true; Cancel, ×, Escape → false. onHide also fires
-  // after accept, but by then the promise has already settled.
+  // Settles once: accept → true; Cancel → false. × and Escape call only onHide
+  // (PrimeVue ConfirmDialog binds it to the Dialog's own close), so onHide
+  // must settle too or the caller waits forever.
   const ask = (name) => new Promise((settle) => confirm.require({
     ...replaceLinkConfirm(name, () => settle(true)),
     reject: () => settle(false),

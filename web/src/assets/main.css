@@ -410,3 +410,8 @@ input[type='file']::file-selector-button:hover {
     min-height: 2.75rem;
   }
 }
+
+/* A destructive item in a ⋯ menu (People: "Remove from trip") — same token as
+   danger buttons, AA in both schemes. */
+.p-menu-item.menu-danger .p-menu-item-label,
+.p-menu-item.menu-danger .p-menu-item-icon { color: var(--app-danger); }
