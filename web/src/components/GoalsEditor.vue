@@ -83,7 +83,7 @@ function remove(id) {
       <div class="field"><label>Fixed date</label><DateField v-model="form.fixed_date" /></div>
       <div class="field"><label>Fixed place</label><InputText id="ge-place-new" name="ge-place-new" v-model="form.fixed_place" fluid /></div>
       <div class="field"><label>Notes</label><Textarea v-model="form.notes" fluid auto-resize /></div>
-      <Button type="submit" label="Add goal" />
+      <Button type="submit" label="Add goal" severity="secondary" outlined />
     </form>
   </div>
 </template>

@@ -125,14 +125,15 @@ async function submitManual() {
     <div v-for="c in candidates" :key="c.id" class="card dest-card">
       <h3>{{ c.name }}
         <Tag :severity="c.source === 'ai' ? 'success' : 'secondary'" :value="c.source" />
-        <Tag v-if="c.decided" severity="success" value="decided" />
+        <Tag v-if="c.decided" severity="success" value="Decided" />
       </h3>
       <p v-if="c.rationale">{{ c.rationale }}</p>
       <p v-if="c.best_dates"><strong>Best dates:</strong> {{ c.best_dates }}</p>
       <p v-if="c.est_budget_per_person != null"><strong>Est. budget/person:</strong> {{ formatMoney(c.est_budget_per_person, store.current?.currency) }}</p>
       <p v-if="c.caveats"><strong>Caveats:</strong> {{ c.caveats }}</p>
       <template v-if="!readonly">
-      <Button type="button" label="Mark decided" :disabled="!!c.decided" @click="markDecided(c.id, c.name)" />
+      <!-- One primary per section (tripper.md §5): the decided card says so via its tag. -->
+      <Button v-if="!c.decided" type="button" label="Mark decided" severity="secondary" outlined @click="markDecided(c.id, c.name)" />
       <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${c.name}`" :disabled="!!c.decided" @click="removeCandidate(c.id)" />
       </template>
     </div>
@@ -144,7 +145,7 @@ async function submitManual() {
       <div class="field"><label>Best dates</label><InputText id="dest-best-dates" name="dest-best-dates" v-model="form.best_dates" fluid /></div>
       <div class="field"><label>Est. budget per person</label><InputNumber input-id="dest-budget-per-person" name="dest-budget-per-person" v-model="form.est_budget_per_person" fluid /></div>
       <div class="field"><label>Caveats</label><Textarea v-model="form.caveats" fluid auto-resize /></div>
-      <Button type="submit" label="Add candidate" />
+      <Button type="submit" label="Add candidate" severity="secondary" outlined />
     </form>
   </div>
 </template>

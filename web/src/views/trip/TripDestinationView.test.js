@@ -48,16 +48,18 @@ describe('TripDestinationView — Goals folded in', () => {
 
 // The during-trip Overview's Quick reference shows these (tripper.md §2; owner D4)
 describe('TripDestinationView — local emergency numbers', () => {
-  it('seeds from the trip, saves with its own Save, disabled until changed', async () => {
+  it('seeds from the trip, saves with its own Save, shown only when changed (D8)', async () => {
     const { wrapper, store } = await mountView()
     store.updateTrip = vi.fn().mockImplementation(async (_id, body) => ({ ...store.current, ...body }))
     const label = wrapper.findAll('label').find((l) => l.text() === 'Local emergency numbers')
     const ta = wrapper.find(`#${label.attributes('for')}`)
     expect(ta.element.value).toBe('Police 100')
-    const save = wrapper.findAll('button').find((b) => b.text() === 'Save emergency numbers')
-    expect(save.attributes('disabled')).toBeDefined()
+    const saveBtn = () => wrapper.findAll('button').find((b) => b.text() === 'Save emergency numbers')
+    expect(saveBtn()).toBeUndefined()
     await ta.setValue('Police 113 · Ambulance 115')
-    expect(save.attributes('disabled')).toBeUndefined()
+    const save = saveBtn()
+    expect(save.exists()).toBe(true)
+    expect(save.classes()).not.toContain('p-button-outlined')
     await save.trigger('click')
     await flushPromises()
     expect(store.updateTrip).toHaveBeenCalledWith('t1', { emergency_info: 'Police 113 · Ambulance 115' })

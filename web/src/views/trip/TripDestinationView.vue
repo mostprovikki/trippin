@@ -67,7 +67,7 @@ async function onDeleteGoal(goalId) {
 }
 
 // Local emergency numbers, shown in the during-trip Overview's Quick reference
-// (tripper.md §2; owner decision D4). One Save for this section (§5).
+// (tripper.md §2; owner decision D4). One Save for this section (§5), shown only when dirty (D8).
 const emergencyDraft = ref('')
 watch(() => trips.current?.emergency_info, (v) => { emergencyDraft.value = v || '' }, { immediate: true })
 const emergencyDirty = computed(() => emergencyDraft.value !== (trips.current?.emergency_info || ''))
@@ -112,7 +112,8 @@ async function saveEmergency() {
         <label for="trip-emergency">Local emergency numbers</label>
         <Textarea id="trip-emergency" v-model="emergencyDraft" rows="3" auto-resize fluid placeholder="e.g. Police 113 · Ambulance 115 · Embassy +84 24 3824 0990" />
       </div>
-      <Button label="Save emergency numbers" :disabled="!emergencyDirty" @click="saveEmergency" />
+      <!-- Shown only when dirty (D8): no filled button at rest. -->
+      <Button v-if="emergencyDirty" label="Save emergency numbers" @click="saveEmergency" />
       </template>
     </section>
   </div>

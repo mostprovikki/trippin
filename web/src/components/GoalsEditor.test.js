@@ -22,4 +22,12 @@ describe('GoalsEditor', () => {
     expect(wrapper.emitted('delete')).toEqual([['g1']])
     dialogWrapper.unmount()
   })
+
+  // trip-planner-h3i.10: one primary per section (tripper.md §5)
+  it('Add goal is outlined, not a filled primary', () => {
+    const wrapper = mountWithBase(GoalsEditor, { props: { goals: [] } })
+    const add = wrapper.findAll('button').find((b) => b.text() === 'Add goal')
+    expect(add.classes()).toContain('p-button-outlined')
+    expect(add.classes()).toContain('p-button-secondary')
+  })
 })

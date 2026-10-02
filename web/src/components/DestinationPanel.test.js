@@ -16,6 +16,30 @@ function mountPanel(candidates) {
 }
 
 describe('DestinationPanel', () => {
+  // trip-planner-h3i.10: one primary per section (tripper.md §5)
+  it('decided candidate shows Decided tag, no Mark decided', () => {
+    const { wrapper } = mountPanel([
+      { id: 'c1', name: 'Hanoi', source: 'manual', decided: 1 },
+      { id: 'c2', name: 'Hue', source: 'manual', decided: 0 }
+    ])
+    const [decided, open] = wrapper.findAll('.dest-card')
+    expect(decided.find('.p-tag').exists()).toBe(true)
+    expect(decided.findAll('.p-tag').some((t) => t.text() === 'Decided')).toBe(true)
+    expect(decided.findAll('button').some((b) => b.text() === 'Mark decided')).toBe(false)
+    expect(open.findAll('.p-tag').some((t) => t.text() === 'Decided')).toBe(false)
+    expect(open.findAll('button').some((b) => b.text() === 'Mark decided')).toBe(true)
+  })
+
+  it('Mark decided and Add candidate are outlined, not filled primaries', () => {
+    const { wrapper } = mountPanel([{ id: 'c2', name: 'Hue', source: 'manual', decided: 0 }])
+    const mark = wrapper.findAll('button').find((b) => b.text() === 'Mark decided')
+    const add = wrapper.findAll('button').find((b) => b.text() === 'Add candidate')
+    for (const b of [mark, add]) {
+      expect(b.classes()).toContain('p-button-outlined')
+      expect(b.classes()).toContain('p-button-secondary')
+    }
+  })
+
   it('confirms (non-danger) before marking a candidate decided, and calls store.decide on accept', async () => {
     const { wrapper, store } = mountPanel([
       { id: 'cand1', name: 'Hanoi', source: 'manual', decided: 0 }
