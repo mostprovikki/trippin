@@ -8,7 +8,7 @@ import { useTripsStore } from '../stores/trips.js'
 import { useNotify } from '../composables/useNotify.js'
 import EmptyState from '../components/EmptyState.vue'
 import Tag from 'primevue/tag'
-import { tripCountdown } from '../utils/dates.js'
+import { formatDayDate, tripCountdown } from '../utils/dates.js'
 import { vibeAccentColor } from '../utils/vibeAccent.js'
 
 const store = useTripsStore()
@@ -78,7 +78,7 @@ onMounted(load)
         >
           <h3>{{ trip.name }}</h3>
           <p class="trip-meta"><i class="pi pi-map-marker" /> {{ trip.destination || 'Destination TBD' }}</p>
-          <p class="trip-meta"><i class="pi pi-calendar" /> {{ trip.start_date && trip.end_date ? `${trip.start_date} – ${trip.end_date}` : 'Dates TBD' }}</p>
+          <p class="trip-meta"><i class="pi pi-calendar" /> {{ trip.start_date && trip.end_date ? `${formatDayDate(trip.start_date)} – ${formatDayDate(trip.end_date)}` : 'Dates TBD' }}</p>
           <!-- tripper.md §2 "the trip that needs me": the Overview's who's-missing number (§6); nobody chases an archived trip -->
           <p v-if="trip.missing_count > 0 && trip.status !== 'archived'" class="trip-meta trip-missing" data-test="trip-missing"><i class="pi pi-exclamation-circle" /> {{ trip.missing_count }} of {{ trip.participant_count }} {{ trip.participant_count === 1 ? 'person' : 'people' }} missing</p>
           <p v-else class="trip-meta"><i class="pi pi-users" /> {{ trip.participant_count }} participant{{ trip.participant_count === 1 ? '' : 's' }}</p>

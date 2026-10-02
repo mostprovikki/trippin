@@ -131,6 +131,31 @@ describe('TripSettingsView', () => {
     expect(wrapper.text()).toContain('฿12,000')
     expect(wrapper.text()).not.toMatch(/est\. 12000\b/)
   })
+
+  // trip-planner-h3i.11: "Archived at: 2026-09-26 12:08:00" read as a raw
+  // server stamp. Midday UTC so the local day is the 26th in any common zone.
+  it('shows Archived at as a human date with no time', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/trips/:id/settings', name: 'trip-settings', component: TripSettingsView }]
+    })
+    await router.push('/trips/t1/settings')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const trips = useTripsStore()
+    trips.current = { id: 't1', name: 'Goa 2026', status: 'archived', description: '', origin_city: '', vibe_tags: [] }
+    const archive = useArchiveStore()
+    archive.fetchArchive = vi.fn().mockImplementation(async () => {
+      archive.snapshot = { budget: { lines: [] }, itinerary: [], checklists: [] }
+      archive.archived_at = '2026-09-26 12:08:00'
+    })
+    const wrapper = mountWithBase(TripSettingsView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Archived at: 26 Sep 2026')
+    expect(wrapper.text()).not.toContain('12:08')
+  })
 })
 
 // tripper.md §2 Archived (D11): Basics are read-only; the archive cards stay editable.

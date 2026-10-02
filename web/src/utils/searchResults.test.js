@@ -32,7 +32,13 @@ describe('decorate', () => {
     const t = decorate('trip', {
       id: 't1', title: 'Goa', destination: 'Goa', start_date: '2026-08-01', end_date: '2026-08-08'
     })
-    expect(t.subtitle).toBe('Goa · 2026-08-01 – 2026-08-08')
+    expect(t.subtitle).toBe('Goa · Sat 1 Aug – Sat 8 Aug')
+  })
+
+  // trip-planner-h3i.11: same human day format as the Overview trip line, not ISO
+  it('shows an itinerary hit day as a human date', () => {
+    const i = decorate('itinerary', { id: 'i1', title: 'Dinner', trip_name: 'Goa', day_date: '2026-11-09', location: 'Panjim' })
+    expect(i.subtitle).toBe('Goa · Mon 9 Nov · Panjim')
   })
 
   it('falls back to a readable subtitle when a trip has nothing set', () => {
@@ -44,7 +50,7 @@ describe('decorate', () => {
       id: 'd1', person_id: 'p1', person_name: 'Asha Kumar',
       doc_type: 'national_id', expiry_date: '2035-04-30'
     })
-    expect(d.subtitle).toBe('Asha Kumar · National ID · expires 2035-04-30')
+    expect(d.subtitle).toBe('Asha Kumar · National ID · expires 30 Apr 2035')
   })
 
   it('omits the expiry clause when a document has no expiry', () => {

@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, watch, ref, onMounted, useId } from 'vue'
 import InputText from 'primevue/inputtext'
+import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Button from 'primevue/button'
@@ -42,7 +43,7 @@ onMounted(() => {
 })
 
 const form = reactive({
-  title: '', time_range: '', location: '', category: 'activity', est_cost: '', notes: '', link: '', booking_ref: '', phone: ''
+  title: '', time_range: '', location: '', category: 'activity', est_cost: null, notes: '', link: '', booking_ref: '', phone: ''
 })
 
 function load(item) {
@@ -50,7 +51,7 @@ function load(item) {
   form.time_range = item?.time_range || ''
   form.location = item?.location || ''
   form.category = item?.category || 'activity'
-  form.est_cost = item?.est_cost ?? ''
+  form.est_cost = item?.est_cost ?? null
   form.notes = item?.notes || ''
   form.link = item?.link || ''
   form.booking_ref = item?.booking_ref || ''
@@ -65,7 +66,7 @@ function submit() {
     time_range: form.time_range || null,
     location: form.location || null,
     category: form.category,
-    est_cost: form.est_cost === '' ? null : Number(form.est_cost),
+    est_cost: form.est_cost == null ? null : Number(form.est_cost),
     notes: form.notes || null,
     link: form.link || null,
     booking_ref: form.booking_ref || null,
@@ -91,7 +92,10 @@ function submit() {
       </div>
       <div class="field iif-cost">
         <label :for="ids.cost">Cost</label>
-        <InputText :id="ids.cost" name="iif-est-cost" v-model="form.est_cost" type="number" step="0.01" fluid />
+        <!-- Grouped like the row's ₹57,000 (formatMoney is en-US grouping for every
+             currency). InputNumber only commits its model on blur/Enter, so
+             @input keeps form.est_cost current for a submit mid-typing. -->
+        <InputNumber :input-id="ids.cost" name="iif-est-cost" v-model="form.est_cost" locale="en-US" :min="0" :max-fraction-digits="2" fluid @input="form.est_cost = $event.value" />
       </div>
       <div class="field iif-location">
         <label :for="ids.location">Location</label>

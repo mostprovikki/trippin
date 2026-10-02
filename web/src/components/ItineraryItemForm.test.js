@@ -71,4 +71,26 @@ describe('ItineraryItemForm', () => {
     expect(wrapper.emitted().cancel).toBeTruthy()
     wrapper.unmount()
   })
+
+  // trip-planner-h3i.11: the row shows ₹57,000, so the edit field groups digits
+  // the same way — but what gets submitted is still a plain number.
+  it('groups cost digits in the input and submits a number', async () => {
+    const wrapper = mountWithBase(ItineraryItemForm, { attachTo: document.body, props: { item: { title: 'Stay', est_cost: 57000 } } })
+    expect(getByLabelText(wrapper, 'Cost').element.value).toBe('57,000')
+    await wrapper.find('form').trigger('submit')
+    expect(wrapper.emitted().submit[0][0].est_cost).toBe(57000)
+    wrapper.unmount()
+  })
+
+  it('submits a typed cost before blur, and blank as null', async () => {
+    const wrapper = mountWithBase(ItineraryItemForm, { attachTo: document.body })
+    const cost = wrapper.findComponent({ name: 'InputNumber' })
+    cost.vm.$emit('input', { value: 1250 })
+    await wrapper.find('form').trigger('submit')
+    expect(wrapper.emitted().submit[0][0].est_cost).toBe(1250)
+    cost.vm.$emit('input', { value: null })
+    await wrapper.find('form').trigger('submit')
+    expect(wrapper.emitted().submit[1][0].est_cost).toBeNull()
+    wrapper.unmount()
+  })
 })

@@ -35,6 +35,30 @@ describe('TripsListView', () => {
     expect(wrapper.text()).toContain('Destination TBD')
   })
 
+  // trip-planner-h3i.11: same range format as the Overview trip line, not ISO
+  it('dates render as Fri 6 Nov – Sun 15 Nov', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/', name: 'trips', component: TripsListView },
+        { path: '/trips/new', name: 'trip-new', component: { template: '<div/>' } },
+        { path: '/trips/:id', name: 'trip-overview', component: { template: '<div/>' } }
+      ]
+    })
+    await router.push('/')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTripsStore()
+    store.fetchTrips = vi.fn().mockImplementation(async () => {
+      store.trips = [{ id: 't1', name: 'Goa', status: 'planning', start_date: '2026-11-06', end_date: '2026-11-15', participant_count: 1 }]
+    })
+    const wrapper = mountWithBase(TripsListView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    expect(wrapper.findAll('.trip-meta')[1].text()).toBe('Fri 6 Nov – Sun 15 Nov')
+    expect(wrapper.text()).not.toContain('2026-11-06')
+  })
+
   it('shows a countdown chip only for confirmed/active trips with dates', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 9, 5)) // Oct 5 2026

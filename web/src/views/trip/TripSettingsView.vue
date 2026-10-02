@@ -12,6 +12,7 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useArchiveStore } from '../../stores/archive.js'
 import { useReadinessStore } from '../../stores/readiness.js'
 import { NEXT_STATUS } from '../../utils/tripStatus.js'
+import { formatShortDate, utcStampToLocalIso } from '../../utils/dates.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
 import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
@@ -249,7 +250,7 @@ async function advanceStatus() {
     <template v-if="isArchived">
       <section class="card">
         <h2>Archived</h2>
-        <p>Archived at: {{ archiveStore.archived_at }}</p>
+        <p>Archived at: {{ formatShortDate(utcStampToLocalIso(archiveStore.archived_at)) }}</p>
         <div class="field"><label for="ts-notes">Notes</label><Textarea id="ts-notes" v-model="notesDraft" rows="3" fluid /></div>
         <div class="field"><label for="ts-photos">Photo links (one per line)</label><Textarea id="ts-photos" v-model="photoLinksDraft" rows="3" fluid /></div>
         <Button label="Save notes & links" @click="saveMeta" />

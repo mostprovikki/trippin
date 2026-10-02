@@ -6,6 +6,7 @@
 // palette and the full results page use it, so they can never drift into
 // linking the same result to two different destinations.
 import { docTypeLabel } from './format.js'
+import { formatDayDate, formatShortDate } from './dates.js'
 
 const ICONS = {
   trip: 'pi pi-map',
@@ -16,13 +17,12 @@ const ICONS = {
   archive: 'pi pi-box'
 }
 
-// The rest of the app renders ISO dates verbatim (TripOverview, ParticipantView,
-// and the picker's yy-mm-dd format), so search matches that rather than
-// introducing a second date style.
+// Same day format as the Overview trip line (TripLine.vue), so a trip reads
+// the same in search as on its own page (trip-planner-h3i.11).
 function dateRange(start, end) {
   if (!start && !end) return null
-  if (start && end) return `${start} – ${end}`
-  return start || end
+  if (start && end) return `${formatDayDate(start)} – ${formatDayDate(end)}`
+  return formatDayDate(start || end)
 }
 
 // A one-line summary under the title. Kept short: the palette is a narrow
@@ -36,11 +36,11 @@ function subtitleFor(kind, r) {
   }
   if (kind === 'document') {
     const type = docTypeLabel(r.doc_type)
-    const expiry = r.expiry_date ? `expires ${r.expiry_date}` : null
+    const expiry = r.expiry_date ? `expires ${formatShortDate(r.expiry_date)}` : null
     return [r.person_name, type, expiry].filter(Boolean).join(' · ')
   }
   if (kind === 'itinerary') {
-    return [r.trip_name, r.day_date, r.location].filter(Boolean).join(' · ')
+    return [r.trip_name, r.day_date && formatDayDate(r.day_date), r.location].filter(Boolean).join(' · ')
   }
   if (kind === 'template') {
     const n = r.item_count ?? 0
