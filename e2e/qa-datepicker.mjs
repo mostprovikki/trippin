@@ -388,15 +388,23 @@ async function assertMaskedDate(p, inputLocator, label) {
   if (await errEl.isVisible().catch(() => false)) fail(`correcting to a real date clears the error: ${label}`, 'the inline error is still showing for a valid 2026-02-28')
   else ok(`correcting to a real date clears the error: ${label}`, '2026-02-28')
 
-  // incomplete + blur → autoClear must wipe it, so no partial can be saved
+  // incomplete + blur → the text stays, flagged, and the form can't submit it
+  // (trip-planner-h3i.3). Wiping it on blur was the bug: "3/10/2027" vanished
+  // with no word and the passport uploaded with no expiry.
   await clearField(p, inputLocator)
   for (const ch of '2026') { await p.keyboard.type(ch); await p.waitForTimeout(30) }
   const midEntry = await inputLocator.inputValue()
   await p.keyboard.press('Tab')
-  await p.waitForTimeout(400)
+  await errEl.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {})
   const afterBlur = await inputLocator.inputValue()
-  if (/\d/.test(afterBlur)) fail(`incomplete entry is cleared on blur: ${label}`, `typed a partial "${midEntry}" and after blur the field still holds ${JSON.stringify(afterBlur)} — a partial date must never survive to be saved`)
-  else ok(`incomplete entry is cleared on blur (autoClear): ${label}`, `${JSON.stringify(midEntry)} → ${JSON.stringify(afterBlur)}`)
+  const errText = (await errEl.isVisible().catch(() => false)) ? (await errEl.textContent()).trim() : null
+  const submit = inputLocator.locator('xpath=ancestor::form[1]//button[@type="submit"]')
+  const submitDisabled = await submit.isDisabled().catch(() => null)
+  if (!/\d/.test(afterBlur)) fail(`incomplete entry stays visible on blur: ${label}`, `typed "${midEntry}", after blur the field is ${JSON.stringify(afterBlur)} — wiping it drops the expiry without a word`)
+  else if (!errText || !/YYYY-MM-DD/.test(errText)) fail(`incomplete entry is flagged on blur: ${label}`, `"${afterBlur}" kept but no "Use YYYY-MM-DD" error (got ${JSON.stringify(errText)})`)
+  else if (submitDisabled !== true) fail(`incomplete entry blocks submit: ${label}`, `"${afterBlur}" flagged but the form's submit button is ${submitDisabled === null ? 'not found' : 'enabled'} — a partial date must never be saved`)
+  else ok(`incomplete entry stays, is flagged and blocks submit: ${label}`, `${JSON.stringify(afterBlur)} · "${errText}"`)
+  await clearField(p, inputLocator)
 }
 
 // ---------------------------------------------------------------------------
