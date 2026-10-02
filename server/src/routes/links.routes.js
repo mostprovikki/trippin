@@ -9,8 +9,9 @@ export default async function routes(app) {
     if (!(await app.ownedTrip(req, tripId))) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     const member = await app.db.get('SELECT 1 FROM trip_participants WHERE trip_id = ? AND person_id = ?', [tripId, personId])
     if (!member) return httpError(reply, 404, 'NOT_FOUND', 'Person is not a participant of this trip')
+    // token_enc goes with the link: a dead link's token is not kept recoverable
     await app.db.run(
-      `UPDATE participant_links SET revoked_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+      `UPDATE participant_links SET revoked_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'), token_enc = NULL
        WHERE trip_id = ? AND person_id = ? AND revoked_at IS NULL`,
       [tripId, personId]
     )
@@ -27,7 +28,7 @@ export default async function routes(app) {
        VALUES (?,?,?,?,?, CASE WHEN ?::double precision IS NULL THEN NULL ELSE
          to_char((now() AT TIME ZONE 'UTC') + (?::double precision * INTERVAL '1 day'), 'YYYY-MM-DD HH24:MI:SS') END)`,
       [randomUUID(), tripId, personId, app.hashToken(token), encryptToken(token, config.jwtSecret), days, days])
-    return reply.code(201).send({ token, url: `/p/${token}` })
+    return reply.code(201).header('cache-control', 'no-store').send({ token, url: `/p/${token}` })
   })
 
   // The active link's url again, for Copy ⟨Name⟩'s link (one click, no revoke).
@@ -44,6 +45,8 @@ export default async function routes(app) {
        ORDER BY created_at DESC LIMIT 1`,
       [tripId, personId]
     )
+    // the url is a live credential: never cached
+    reply.header('cache-control', 'no-store')
     const noLink = { url: null, reason: 'NO_RECOVERABLE_LINK' }
     if (!row?.token_enc) return noLink
     let token
@@ -70,7 +73,7 @@ export default async function routes(app) {
     )
     if (!link) return httpError(reply, 404, 'NOT_FOUND', 'No such link')
     await app.db.run(
-      `UPDATE participant_links SET revoked_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`,
+      `UPDATE participant_links SET revoked_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'), token_enc = NULL WHERE id = ?`,
       [req.params.linkId]
     )
     return reply.code(204).send()

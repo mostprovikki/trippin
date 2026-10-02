@@ -122,7 +122,10 @@ export default async function routes(app) {
     return { trip: await tripToJson(app.db, trip) }
   })
 
-  app.put('/trips/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
+  app.put('/trips/:id', {
+    preHandler: app.requireOrganizer,
+    schema: { body: { type: 'object', properties: { emergency_info: { type: ['string', 'null'], maxLength: 2000 } } } }
+  }, async (req, reply) => {
     const b = req.body || {}
     if (Object.prototype.hasOwnProperty.call(b, 'required_doc_types')) {
       const v = b.required_doc_types

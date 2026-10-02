@@ -7,7 +7,9 @@ import { formatDayDate, utcStampToLocalIso } from '../../utils/dates.js'
 
 const props = defineProps({
   since: { type: String, default: null },
-  events: { type: Array, default: () => [] }
+  events: { type: Array, default: () => [] },
+  // changes past the listed ones (the server lists 20)
+  more: { type: Number, default: 0 }
 })
 const TARGET_ROUTE = { people: 'trip-people', checklists: 'trip-checklists' }
 const day = (ts) => formatDayDate(utcStampToLocalIso(ts))
@@ -25,5 +27,6 @@ const sinceDay = computed(() => (props.since ? day(props.since) : ''))
         <RouterLink :to="{ name: TARGET_ROUTE[e.target] || 'trip-people' }" class="since-summary">{{ e.summary }}</RouterLink>
       </li>
     </ul>
+    <p v-if="events.length && more" class="overview-card-foot since-more">and {{ more }} more</p>
   </section>
 </template>

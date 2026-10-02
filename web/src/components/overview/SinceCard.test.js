@@ -36,4 +36,17 @@ describe('SinceCard', () => {
     expect(w.find('h2').text()).toBe('Since you last looked')
     expect(w.text()).toContain('Changes from participants will show here.')
   })
+  // trip-planner-0yh (6): the server lists 20 and counts the rest
+  it('says "and N more" past the listed changes', async () => {
+    const w = await mountCard({ since: '2026-09-19 08:00:00', more: 3, events: [
+      { id: 'e1', summary: 'Priya uploaded their visa', target: 'people', created_at: '2026-09-22 10:00:00' }
+    ] })
+    expect(w.find('.since-more').text()).toBe('and 3 more')
+  })
+  it('no "more" line when everything is listed', async () => {
+    const w = await mountCard({ since: '2026-09-19 08:00:00', more: 0, events: [
+      { id: 'e1', summary: 'Priya uploaded their visa', target: 'people', created_at: '2026-09-22 10:00:00' }
+    ] })
+    expect(w.find('.since-more').exists()).toBe(false)
+  })
 })

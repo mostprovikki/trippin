@@ -73,7 +73,7 @@ describe('readiness', () => {
     expect(byName.Ravi.has_active_link).toBe(false)
 
     expect(byName.Priya.docs_count).toBe(1)
-    expect(byName.Priya.doc_warnings).toEqual([{ doc_type: 'visa', expiry_date: '2026-09-01', level: 'expired' }])
+    expect(byName.Priya.doc_warnings).toEqual([{ doc_type: 'visa', expiry_date: '2026-09-01', level: 'expired', compared_to: 'trip_end', compared_date: expect.any(String) }])
     expect(byName.Priya.has_active_link).toBe(false)
 
     expect(body.decisions).toEqual({

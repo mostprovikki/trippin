@@ -43,3 +43,15 @@ describe('trip emergency_info', () => {
     expect((await inject({ method: 'GET', url: `/api/trips/${t.id}` })).json().trip.emergency_info).toBe('Police 113 · Ambulance 115')
   })
 })
+
+// trip-planner-0yh (5): PUT /trips types emergency_info
+describe('trip emergency_info validation', () => {
+  it('rejects a non-string and an over-long value, accepts null', async () => {
+    const { inject, t } = await setup()
+    const put = (emergency_info) => inject({ method: 'PUT', url: `/api/trips/${t.id}`, payload: { emergency_info } })
+    expect((await put({ police: 113 })).statusCode).toBe(400)
+    expect((await put('x'.repeat(2001))).statusCode).toBe(400)
+    expect((await put('x'.repeat(2000))).statusCode).toBe(200)
+    expect((await put(null)).statusCode).toBe(200)
+  })
+})

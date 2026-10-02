@@ -41,6 +41,20 @@ describe('missingRows', () => {
     const out = missingRows([{ ...base, name: 'X', doc_warnings: [{ doc_type: 'visa', level: 'expired', expiry_date: '2026-01-01' }] }], null)
     expect(out.rows[0].reasons).toEqual(['Visa expires before the trip'])
   })
+  // trip-planner-0yh (3): no trip end date — say what the server compared against
+  it('no end date, compared against the latest date window: names that date', () => {
+    const w = (level) => ({ doc_type: 'visa', level, expiry_date: '2026-01-01', compared_to: 'window_end', compared_date: '2026-11-09' })
+    expect(missingRows([{ ...base, name: 'X', doc_warnings: [w('expired')] }], null).rows[0].reasons)
+      .toEqual(['Visa expires before 9 Nov 2026, when the latest date window ends'])
+    expect(missingRows([{ ...base, name: 'X', doc_warnings: [w('warning')] }], null).rows[0].reasons)
+      .toEqual(['Visa expires within 6 months of 9 Nov 2026, when the latest date window ends — many countries refuse entry'])
+  })
+  it('no end date and no windows, compared against today', () => {
+    const w = (level) => ({ doc_type: 'visa', level, expiry_date: '2026-01-01', compared_to: 'today', compared_date: '2026-10-02' })
+    expect(missingRows([{ ...base, name: 'X', doc_warnings: [w('expired')] }], null).rows[0].reasons).toEqual(['Visa has expired'])
+    expect(missingRows([{ ...base, name: 'X', doc_warnings: [w('warning')] }], null).rows[0].reasons)
+      .toEqual(['Visa expires within 6 months of today — many countries refuse entry'])
+  })
   it('tolerates a participant without the new fields (older API)', () => {
     const out = missingRows([{ person_id: 'z', name: 'Zed', profile_confirmed: 1 }], null)
     expect(out.complete).toEqual(['Zed'])
@@ -135,6 +149,20 @@ describe('todayTimeline', () => {
   it('moves on as the clock passes', () => {
     expect(todayTimeline(items, 631).rows.find((r) => r.state === 'next').id).toBe('c')
   })
+  // trip-planner-0yh (7): an item with an end time isn't done until it ends
+  it('a started item with an end time still to come is ongoing, not done', () => {
+    const its = [
+      { id: 'a', title: 'Museum', time_range: '09:30–11:00' },
+      { id: 'b', title: 'Lunch', time_range: '12:00' }
+    ]
+    expect(todayTimeline(its, 600).rows.map((r) => [r.id, r.state])).toEqual([['a', 'ongoing'], ['b', 'next']])
+    expect(todayTimeline(its, 660).rows.map((r) => [r.id, r.state])).toEqual([['a', 'done'], ['b', 'next']])
+  })
+  it('end time borrows am/pm like the start does', () => {
+    const its = [{ id: 'a', title: 'Walk', time_range: '10–11am' }, { id: 'b', title: 'Tea', time_range: '9pm' }]
+    expect(todayTimeline(its, 630).rows[0].state).toBe('ongoing')
+    expect(todayTimeline(its, 661).rows[0].state).toBe('done')
+  })
 })
 
 describe('tonightStay', () => {
@@ -163,6 +191,16 @@ describe('dueByTomorrow (§2 Before tomorrow)', () => {
   })
   it('keeps items ticked this session so a tick does not pull the row away', () => {
     expect(dueByTomorrow(lists, '2026-11-08', new Set(['d'])).map((i) => i.id)).toEqual(['o', 'd', 't'])
+  })
+  // trip-planner-0yh (1): same who as the Checklists card (§6)
+  it('names who as the Checklists card does: Unassigned task, Everyone packing item', () => {
+    const mixed = [
+      { kind: 'tasks', items: [{ id: 'x', title: 'Book', due_date: '2026-11-01', done: 0 }] },
+      { kind: 'packing', items: [{ id: 'y', title: 'Tent', due_date: '2026-11-01', done: 0 }, { id: 'z', title: 'Hat', due_date: '2026-11-01', done: 0, assignee_person_id: 'p', assignee_name: 'Asha' }] }
+    ]
+    const who = Object.fromEntries(openChecklistItems(mixed).map((i) => [i.id, i.who]))
+    expect(dueByTomorrow(mixed, '2026-11-08').map((i) => [i.id, i.who])).toEqual([['x', who.x], ['y', who.y], ['z', who.z]])
+    expect(who).toEqual({ x: 'Unassigned', y: 'Everyone', z: 'Asha' })
   })
 })
 

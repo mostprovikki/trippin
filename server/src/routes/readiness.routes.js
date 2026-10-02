@@ -11,7 +11,7 @@ export default async function routes(app) {
     const warningsByPerson = new Map()
     for (const w of await expiryWarnings(app.db, tripId)) {
       const list = warningsByPerson.get(w.person_id) || []
-      list.push({ doc_type: w.doc_type, expiry_date: w.expiry_date, level: w.level })
+      list.push({ doc_type: w.doc_type, expiry_date: w.expiry_date, level: w.level, compared_to: w.compared_to, compared_date: w.compared_date })
       warningsByPerson.set(w.person_id, list)
     }
 

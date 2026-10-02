@@ -23,6 +23,14 @@ describe('overview store', () => {
     expect(store.lastTripId).toBe('t1')
   })
 
+  // trip-planner-0yh (6)
+  it('keeps the count of changes past the listed ones', async () => {
+    fetch.mockImplementation(() => json({ since: 's', events: [{ id: 'e1' }], more: 4 }))
+    const store = useOverviewStore()
+    await store.fetchSeen('t1')
+    expect(store.more).toBe(4)
+  })
+
   it("asking for another trip drops the previous trip's feed before the request lands", async () => {
     const store = useOverviewStore()
     fetch.mockImplementation(() => json({ since: 'x', events: [{ id: 'e1' }] }))

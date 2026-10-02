@@ -4,6 +4,23 @@ import { docTypeLabel } from './format.js'
 const FIELD_LABEL = { phone: 'no phone', emergency_contact: 'no emergency contact', dietary: 'no dietary preference' }
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
+// What a doc warning was measured against (server/src/lib/expiry.js
+// compared_to): the trip end, else the latest date window's end, else today.
+function expiryReason(w, tripEnd) {
+  const doc = docTypeLabel(w.doc_type)
+  const refuse = ' — many countries refuse entry'
+  if (w.compared_to === 'today') {
+    return w.level === 'expired' ? `${doc} has expired` : `${doc} expires within 6 months of today${refuse}`
+  }
+  if (w.compared_to === 'window_end') {
+    const when = `${formatShortDate(w.compared_date)}, when the latest date window ends`
+    return w.level === 'expired' ? `${doc} expires before ${when}` : `${doc} expires within 6 months of ${when}${refuse}`
+  }
+  return w.level === 'expired'
+    ? `${doc} expires before the trip${tripEnd || w.compared_to === 'trip_end' ? ' ends' : ''}`
+    : `${doc} expires within 6 months of the trip end${refuse}`
+}
+
 // tripper.md §2 "Who's missing what" + §6 "Missing". The server's `expired`
 // level means expired by the trip end (server/src/lib/expiry.js), not expired
 // today, so the copy says "expires before the trip ends" rather than "expired".
@@ -13,9 +30,7 @@ export function missingRows(participants = [], tripEnd) {
   for (const p of participants) {
     const warnings = p.doc_warnings || []
     const pills = warnings.map((w) => ({ level: w.level, label: `${docTypeLabel(w.doc_type)} expires ${formatShortDate(w.expiry_date)}` }))
-    const reasons = warnings.map((w) => (w.level === 'expired'
-      ? `${docTypeLabel(w.doc_type)} expires before the trip${tripEnd ? ' ends' : ''}`
-      : `${docTypeLabel(w.doc_type)} expires within 6 months of the trip end — many countries refuse entry`))
+    const reasons = warnings.map((w) => expiryReason(w, tripEnd))
     for (const d of p.missing_docs || []) reasons.push(`${docTypeLabel(d)} not uploaded`)
     // Confirmed means complete (server, trip-planner-4hi), so field gaps are
     // the reason a profile is unconfirmed: name them — /p calls the same
@@ -72,14 +87,15 @@ export function emptyDays(trip, days = []) {
 // §2 Checklists card: open items, unassigned first. On a packing list an item
 // with no assignee is the group's ("Everyone" — one shared tick, anyone may
 // tick it), so only an unassigned *task* is "Unassigned".
+const isUnassigned = (list, item) => list.kind === 'tasks' && !item.assignee_person_id
+const checklistWho = (list, item) => item.assignee_name || (isUnassigned(list, item) ? 'Unassigned' : 'Everyone')
+
 export function openChecklistItems(checklists = []) {
   const out = []
   for (const list of checklists || []) {
     for (const item of list.items || []) {
       if (item.done) continue
-      const unassigned = list.kind === 'tasks' && !item.assignee_person_id
-      const who = item.assignee_name || (unassigned ? 'Unassigned' : 'Everyone')
-      out.push({ ...item, kind: list.kind, unassigned, who })
+      out.push({ ...item, kind: list.kind, unassigned: isUnassigned(list, item), who: checklistWho(list, item) })
     }
   }
   return out.sort((a, b) => Number(b.unassigned) - Number(a.unassigned))
@@ -91,12 +107,14 @@ export function openChecklistItems(checklists = []) {
 // item is listed but never "Next".
 const to24 = (h, ap) => (h % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0)
 
+const RANGE = /\b(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*(?:[-–—]|to)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i
+
 export function parseStartMinutes(timeRange) {
   const s = String(timeRange ?? '')
   // A range's start may be a bare hour that borrows the end's am/pm:
   // '10–11am' → 10:00, '9–11pm' → 21:00, '11-1pm' → 11:00 (11pm would come
   // after its own end), '9-10:30' → 09:00 (24h).
-  const range = /\b(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\s*(?:[-–—]|to)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i.exec(s)
+  const range = RANGE.exec(s)
   if (range) {
     const [, h1, m1, ap1, h2, m2, ap2] = range
     const sm = m1 == null ? 0 : Number(m1)
@@ -128,16 +146,46 @@ export function parseStartMinutes(timeRange) {
   return null
 }
 
+// A range's end, by the same rules as its start ('10–11am' → 11:00,
+// '9am–1' → 13:00, '09:30–11:00' → 11:00). null without a range, or when the
+// end isn't after the start (overnight, unparseable).
+export function parseEndMinutes(timeRange) {
+  const range = RANGE.exec(String(timeRange ?? ''))
+  const start = parseStartMinutes(timeRange)
+  if (!range || start == null) return null
+  const [, , m1, ap1, h2s, m2s, ap2] = range
+  const h2 = Number(h2s)
+  const m2 = m2s == null ? 0 : Number(m2s)
+  if (m2 > 59) return null
+  let end
+  const ap = ap2 || ap1
+  if (ap) {
+    if (h2 < 1 || h2 > 12) return null
+    end = to24(h2, ap) * 60 + m2
+    if (!ap2 && end <= start) end = to24(h2, ap.toLowerCase() === 'am' ? 'pm' : 'am') * 60 + m2
+  } else {
+    if (h2 > 23 || (m1 == null && m2s == null)) return null
+    end = h2 * 60 + m2
+  }
+  return end > start ? end : null
+}
+
 // §2 Today: done items dimmed, the next one marked "Next · in N min".
 // `next` is the first timed item starting at or after now; timed items before
-// it are done. Untimed items go last and are never next (Review Focus 3).
+// it are done — or `ongoing` while their end time is still to come.
+// Untimed items go last and are never next (Review Focus 3).
 export function todayTimeline(items = [], nowMinutes) {
   const withStart = items.map((it, i) => ({ ...it, start: parseStartMinutes(it.time_range), i }))
   const timed = withStart.filter((r) => r.start != null).sort((a, b) => a.start - b.start || a.i - b.i)
   const untimed = withStart.filter((r) => r.start == null)
   const next = timed.find((r) => r.start >= nowMinutes) || null
   const rows = [
-    ...timed.map((r) => ({ ...r, state: r === next ? 'next' : next ? (r.start < next.start ? 'done' : 'later') : 'done' })),
+    ...timed.map((r) => {
+      if (r === next) return { ...r, state: 'next' }
+      if (next && r.start >= next.start) return { ...r, state: 'later' }
+      const end = parseEndMinutes(r.time_range)
+      return { ...r, state: end != null && end > nowMinutes ? 'ongoing' : 'done' }
+    }),
     ...untimed.map((r) => ({ ...r, state: 'untimed' }))
   ].map(({ i, ...r }) => r)
   return { rows, minutesToNext: next ? next.start - nowMinutes : null }
@@ -162,7 +210,7 @@ export function dueByTomorrow(checklists = [], tomorrowIso, keep = new Set()) {
     for (const item of list.items || []) {
       if (!item.due_date || item.due_date > tomorrowIso) continue
       if (item.done && !keep.has(item.id)) continue
-      out.push(item)
+      out.push({ ...item, who: checklistWho(list, item) })
     }
   }
   return out.map((it, i) => ({ it, i })).sort((a, b) => (a.it.due_date < b.it.due_date ? -1 : a.it.due_date > b.it.due_date ? 1 : a.i - b.i)).map((x) => x.it)

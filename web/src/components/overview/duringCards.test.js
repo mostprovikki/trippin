@@ -128,6 +128,13 @@ describe('BeforeTomorrowCard (§2: checkable in place)', () => {
     expect(w.find('h2').text()).toBe('Before tomorrow · 2 open')
     w.unmount()
   })
+  // trip-planner-0yh (1): who reads as on the Checklists card (§6), not "Anyone"
+  it('an unassigned task reads Unassigned, an unassigned packing item Everyone', async () => {
+    const checklists = [...lists(), { kind: 'packing', items: [{ id: 'k', title: 'Tent', due_date: '2026-11-10', done: 0 }] }]
+    const w = await mount(BeforeTomorrowCard, { checklists, tomorrowIso: '2026-11-11', toggle: async () => {} })
+    expect(w.findAll('li .checklist-who').map((x) => x.text())).toEqual(['Priya', 'Everyone', 'Unassigned'])
+    expect(w.text()).not.toContain('Anyone')
+  })
   it('nothing due', async () => {
     const w = await mount(BeforeTomorrowCard, { checklists: [], tomorrowIso: '2026-11-11' })
     expect(w.find('h2').text()).toBe('Before tomorrow · 0 open')

@@ -114,6 +114,14 @@ describe('TripOverviewView — before the trip (tripper.md §2)', () => {
     expect(wrapper.find('.since-card').text()).toContain('Divya updated their details')
   })
 
+  it('the feed says how many more changes there are (trip-planner-0yh)', async () => {
+    const { wrapper } = await mountView({
+      trip: CONFIRMED,
+      seen: { since: '2026-09-19 08:00:00', more: 2, events: [{ id: 'e1', summary: 'Divya updated their details', target: 'people', created_at: '2026-09-20 08:00:00' }] }
+    })
+    expect(wrapper.find('.since-card .since-more').text()).toBe('and 2 more')
+  })
+
   it('cards read the itinerary, budget and checklists for this trip', async () => {
     const { wrapper } = await mountView({
       trip: CONFIRMED,

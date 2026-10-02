@@ -136,3 +136,43 @@ describe('GET current participant link', () => {
     expect(res.json().error.code).toBe('NOT_FOUND')
   })
 })
+
+// trip-planner-0yh (4): a recoverable token is a live credential — not cached,
+// and not kept once its link is dead.
+describe('participant link token hygiene', () => {
+  async function setup() {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = await createPerson(db); const t = await createTrip(db); await join(db, t, p)
+    const url = `/api/trips/${t.id}/participants/${p.id}/link`
+    const mint = () => authedInject(app, cookie, { method: 'POST', url, payload: {} })
+    return { app, db, cookie, p, t, url, mint }
+  }
+  it('GET link is Cache-Control: no-store', async () => {
+    const { app, cookie, url, mint } = await setup()
+    await mint()
+    const res = await authedInject(app, cookie, { method: 'GET', url })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['cache-control']).toBe('no-store')
+  })
+  it('revoke endpoint nulls token_enc', async () => {
+    const { app, db, cookie, mint } = await setup()
+    await mint()
+    const { id } = await db.get('SELECT id FROM participant_links')
+    expect((await authedInject(app, cookie, { method: 'POST', url: `/api/links/${id}/revoke` })).statusCode).toBe(204)
+    expect((await db.get('SELECT token_enc FROM participant_links WHERE id = ?', [id])).token_enc).toBeNull()
+  })
+  it('minting a new link nulls the old one\'s token_enc', async () => {
+    const { db, mint } = await setup()
+    await mint(); await mint()
+    const rows = await db.all('SELECT token_enc, revoked_at FROM participant_links')
+    expect(rows.filter((r) => r.revoked_at).map((r) => r.token_enc)).toEqual([null])
+    expect(rows.filter((r) => !r.revoked_at)[0].token_enc).toBeTruthy()
+  })
+  it('archiving the trip nulls token_enc', async () => {
+    const { app, db, cookie, t, mint } = await setup()
+    await mint()
+    const res = await authedInject(app, cookie, { method: 'POST', url: `/api/trips/${t.id}/archive`, payload: {} })
+    expect(res.statusCode).toBeLessThan(300)
+    expect((await db.get('SELECT token_enc FROM participant_links')).token_enc).toBeNull()
+  })
+})

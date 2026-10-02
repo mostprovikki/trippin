@@ -71,7 +71,7 @@ export async function archiveTrip(db, trip, { notes = null, photoLinks = '[]', p
       [trip.status, trip.id]
     )
     await db.run(
-      `UPDATE participant_links SET revoked_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE trip_id = ? AND revoked_at IS NULL`,
+      `UPDATE participant_links SET revoked_at = to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'), token_enc = NULL WHERE trip_id = ? AND revoked_at IS NULL`,
       [trip.id]
     )
   })

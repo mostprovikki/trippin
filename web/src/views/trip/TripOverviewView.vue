@@ -117,6 +117,7 @@ watch(tripId, load)
         <SinceCard
           :since="mine(overview) ? overview.since : null"
           :events="mine(overview) ? overview.events : []"
+          :more="mine(overview) ? overview.more : 0"
         />
       </div>
       <div class="overview-col">

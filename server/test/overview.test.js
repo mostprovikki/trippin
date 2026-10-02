@@ -26,11 +26,41 @@ async function setup() {
 }
 
 describe('POST /trips/:id/seen', () => {
-  it('first visit: since null, no events', async () => {
-    const { seen } = await setup()
+  // trip-planner-0yh (2): a first visit seeds "last seen" to the trip's
+  // creation, so changes made before the organizer's first sitting show.
+  it('first visit: since is the trip creation, and earlier participant changes show', async () => {
+    const { db, t, seen, asParticipant } = await setup()
+    await db.run(`UPDATE trips SET created_at = to_char((now() AT TIME ZONE 'UTC') - INTERVAL '2 hours', 'YYYY-MM-DD HH24:MI:SS') WHERE id = ?`, [t.id])
+    const { created_at } = await db.get('SELECT created_at FROM trips WHERE id = ?', [t.id])
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: { dietary: 'veg' } })
     const res = await seen()
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ since: null, events: [] })
+    expect(res.json().since).toBe(created_at)
+    expect(res.json().events.map((e) => e.summary)).toEqual(['Divya updated their details'])
+    expect(res.json().more).toBe(0)
+  })
+
+  it('first visit to an old trip looks back 7 days, not to its creation', async () => {
+    const { db, t, seen, asParticipant } = await setup()
+    await db.run("UPDATE trips SET created_at = '2020-01-01 00:00:00' WHERE id = ?", [t.id])
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: { dietary: 'veg' } })
+    await db.run(`UPDATE trip_events SET created_at = to_char((now() AT TIME ZONE 'UTC') - INTERVAL '8 days', 'YYYY-MM-DD HH24:MI:SS')`)
+    await asParticipant({ method: 'PUT', url: '/api/participant/profile', payload: { dietary: 'vegan' } })
+    const res = (await seen()).json()
+    expect(res.since > '2020-01-01 00:00:00').toBe(true)
+    expect(res.events).toHaveLength(1)
+  })
+
+  // trip-planner-0yh (6): the feed lists 20 and counts the rest
+  it('past 20 changes, the rest are counted in more', async () => {
+    const { db, t, seen, backdate } = await setup()
+    await seen(); await backdate(2)
+    for (let i = 0; i < 23; i++) {
+      await db.run("INSERT INTO trip_events (id, trip_id, kind, summary, target) VALUES (?, ?, 'profile_saved', ?, 'people')", [`ev${i}`, t.id, `e${i}`])
+    }
+    const res = (await seen()).json()
+    expect(res.events).toHaveLength(20)
+    expect(res.more).toBe(3)
   })
 
   it('lists participant changes made after the previous visit, newest first, with a target', async () => {
