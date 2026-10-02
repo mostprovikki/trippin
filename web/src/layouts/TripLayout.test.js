@@ -147,4 +147,11 @@ describe('TripLayout', () => {
     expect(wrapper.text()).toContain('Trip not found')
     expect(wrapper.find('.child-stub').exists()).toBe(false)
   })
+
+  // D9 (2026-10-02): the header shows the status chip only; Settings owns the change
+  it('header shows the status chip but no next-status button', async () => {
+    const { wrapper } = await mountLayout()
+    expect(wrapper.find('.trip-head .status-tag').exists()).toBe(true)
+    expect(wrapper.find('.trip-head').findAll('button').some((b) => /Start planning|Confirm trip|Activate/.test(b.text()))).toBe(false)
+  })
 })

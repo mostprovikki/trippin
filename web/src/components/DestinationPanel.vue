@@ -9,6 +9,7 @@ import InputNumber from 'primevue/inputnumber'
 import Menu from 'primevue/menu'
 import PromptPasteDialog from './PromptPasteDialog.vue'
 import { useTripsStore } from '../stores/trips.js'
+import { formatMoney } from '../utils/format.js'
 import { useAiStatus } from '../composables/useAiStatus.js'
 import { useNotify } from '../composables/useNotify.js'
 
@@ -126,7 +127,7 @@ async function submitManual() {
       </h3>
       <p v-if="c.rationale">{{ c.rationale }}</p>
       <p v-if="c.best_dates"><strong>Best dates:</strong> {{ c.best_dates }}</p>
-      <p v-if="c.est_budget_per_person != null"><strong>Est. budget/person:</strong> {{ c.est_budget_per_person }}</p>
+      <p v-if="c.est_budget_per_person != null"><strong>Est. budget/person:</strong> {{ formatMoney(c.est_budget_per_person, store.current?.currency) }}</p>
       <p v-if="c.caveats"><strong>Caveats:</strong> {{ c.caveats }}</p>
       <Button type="button" label="Mark decided" :disabled="!!c.decided" @click="markDecided(c.id, c.name)" />
       <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${c.name}`" :disabled="!!c.decided" @click="removeCandidate(c.id)" />

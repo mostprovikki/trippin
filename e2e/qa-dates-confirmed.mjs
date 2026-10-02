@@ -53,7 +53,7 @@ for (const scheme of ['light', 'dark']) {
     }
   }
 
-  // Arm 1: confirmed trip shows banner with the exact dates + adapted description.
+  // Arm 1: confirmed trip shows banner with the exact dates (readable, as on the trip line — cdl) + adapted description.
   await page.goto(`${BASE}/trips/${CONFIRMED_TRIP}/dates`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(400)
   const a = await page.evaluate(() => {
@@ -65,7 +65,7 @@ for (const scheme of ['light', 'dark']) {
       staleDesc: main.innerText.includes('to lock the trip dates')
     }
   })
-  if (a.banner && a.banner.includes('2026-11-06') && a.banner.includes('2026-11-15') && /confirmed/i.test(a.banner)) ok(`${scheme}: confirmed trip shows banner`, a.banner)
+  if (a.banner && a.banner.includes('Fri 6 Nov') && a.banner.includes('Sun 15 Nov') && !a.banner.includes('2026-11-06') && /confirmed/i.test(a.banner)) ok(`${scheme}: confirmed trip shows banner`, a.banner)
   else fail(`${scheme}: confirmed trip banner`, JSON.stringify(a))
   if (a.desc && !a.staleDesc) ok(`${scheme}: description adapted to confirmed state`)
   else fail(`${scheme}: description`, JSON.stringify(a))

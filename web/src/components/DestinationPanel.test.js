@@ -72,4 +72,15 @@ describe('DestinationPanel', () => {
     vi.restoreAllMocks()
     document.body.innerHTML = ''
   })
+
+  // trip-planner-cdl: 'Est. budget/person: 162000' had no currency or separators
+  it('formats a candidate budget per person in the trip currency', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTripsStore()
+    store.current = { id: 't1', currency: 'INR' }
+    const wrapper = mountWithBase(DestinationPanel, { pinia, props: { tripId: 't1', candidates: [{ id: 'c1', name: 'Hanoi', source: 'manual', decided: 0, est_budget_per_person: 162000 }] } })
+    expect(wrapper.text()).toContain('₹162,000')
+    expect(wrapper.text()).not.toContain('162000')
+  })
 })

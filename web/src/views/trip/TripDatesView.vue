@@ -6,6 +6,7 @@ import RadioButton from 'primevue/radiobutton'
 import { useTripsStore } from '../../stores/trips.js'
 import { useNotify } from '../../composables/useNotify.js'
 import SectionHeader from '../../components/SectionHeader.vue'
+import { formatDayDate } from '../../utils/dates.js'
 import DateWindowsEditor from '../../components/DateWindowsEditor.vue'
 
 const trips = useTripsStore()
@@ -94,7 +95,7 @@ async function onSave(windows) {
     />
     <div v-if="confirmed" class="card dates-confirmed">
       <Tag severity="success" value="confirmed" title="Dates confirmed" aria-label="Dates confirmed" />
-      <strong>{{ confirmed.start }} &ndash; {{ confirmed.end }}</strong>
+      <strong>{{ formatDayDate(confirmed.start) }} &ndash; {{ formatDayDate(confirmed.end) }}</strong>
       <Button type="button" label="Unconfirm" severity="secondary" outlined size="small" @click="onUnconfirm" />
     </div>
     <div v-else class="card date-mode-card">
@@ -112,7 +113,7 @@ async function onSave(windows) {
     <div v-if="!confirmed && savedWindows.length" class="card">
       <ul class="dates-window-list">
         <li v-for="(w, idx) in savedWindows" :key="idx" class="dates-window-row">
-          <span class="dates-window-range">{{ w.start_date }} &ndash; {{ w.end_date }}</span>
+          <span class="dates-window-range">{{ formatDayDate(w.start_date) }} &ndash; {{ formatDayDate(w.end_date) }}</span>
           <span v-if="w.note" class="dates-window-note">{{ w.note }}</span>
           <Button type="button" label="Use as final dates" size="small" @click="useAsFinal(w)" />
         </li>

@@ -415,3 +415,20 @@ input[type='file']::file-selector-button:hover {
    danger buttons, AA in both schemes. */
 .p-menu-item.menu-danger .p-menu-item-label,
 .p-menu-item.menu-danger .p-menu-item-icon { color: var(--app-danger); }
+
+/* tripper.md §4 (owner D7): on a phone every control is ≥ 44px tall, not only
+   the tab bar and row actions. One floor here instead of per-page overrides;
+   min-height only grows a control, so desktop sizes are untouched. Last in
+   the file so it outranks same-specificity sizing like `.field .p-multiselect`.
+   Gated by e2e/qa-phone-controls.mjs. */
+@media (max-width: 640px) {
+  .p-button,
+  .p-inputtext,
+  .p-select,
+  .p-multiselect,
+  .field .p-multiselect,
+  input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]),
+  select,
+  textarea { min-height: 2.75rem; }
+  .p-select, .p-multiselect { align-items: center; }
+}

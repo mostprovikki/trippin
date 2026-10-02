@@ -46,13 +46,18 @@ describe('TripSettingsView', () => {
     expect(trips.updateTrip.mock.calls[0][1].required_doc_types).toEqual(['passport', 'visa'])
   })
 
-  it('renders basics form seeded from trip and a read-only status (advance moved to the sidebar)', async () => {
-    const { wrapper } = await mountView()
+  // D9 (2026-10-02): the header keeps only the chip; status changes live here
+  it('renders basics form seeded from trip; Status section owns the next-status action', async () => {
+    const { wrapper, trips } = await mountView()
     expect(wrapper.find('h1').text()).toBe('Settings')
     expect(wrapper.find('#ts-name').element.value).toBe('Goa 2026')
-    expect(wrapper.findAll('button').some((b) => b.text().match(/Advance|Confirm trip|Activate|Start planning/))).toBe(false)
-    expect(wrapper.text()).not.toContain('Confirm trip')
-    expect(wrapper.text()).toContain('quick action in the sidebar')
+    expect(wrapper.text()).not.toContain('sidebar')
+    trips.setStatus = vi.fn().mockResolvedValue({ ...trips.current, status: 'confirmed' })
+    const btn = wrapper.findAll('button').find((b) => b.text() === 'Confirm trip')
+    expect(btn).toBeTruthy()
+    await btn.trigger('click')
+    await flushPromises()
+    expect(trips.setStatus).toHaveBeenCalledWith('t1', 'confirmed')
   })
 
   it('restores unsaved basics draft after remount (same key as before)', async () => {

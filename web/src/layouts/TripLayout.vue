@@ -2,28 +2,19 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import Tag from 'primevue/tag'
-import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
 import { useTripsStore } from '../stores/trips.js'
 import { useReadinessStore } from '../stores/readiness.js'
-import { useNotify } from '../composables/useNotify.js'
 import { TRIP_TABS, TRIP_DETAILS, sectionHints } from '../utils/tripNav.js'
 
 const route = useRoute()
 const trips = useTripsStore()
 const readiness = useReadinessStore()
-const notify = useNotify()
 
 const loading = ref(true)
 const notFound = ref(false)
 const tripId = computed(() => route.params.id)
 
-const NEXT_STATUS = {
-  idea: { label: 'Start planning', target: 'planning' },
-  planning: { label: 'Confirm trip', target: 'confirmed' },
-  confirmed: { label: 'Activate', target: 'active' }
-}
-const nextTransition = computed(() => (trips.current ? NEXT_STATUS[trips.current.status] : null))
 const hints = computed(() => sectionHints(readiness.data))
 
 // Details ▾ (Dates, Destination, Settings). When one of those pages is open the
@@ -88,13 +79,6 @@ watch(tripId, load)
 // Cheap refresh when moving between sections so badges reflect recent edits.
 watch(() => route.name, () => { if (!loading.value && !notFound.value) refreshReadiness() })
 
-async function advanceStatus() {
-  if (!nextTransition.value) return
-  try {
-    await trips.setStatus(tripId.value, nextTransition.value.target)
-    refreshReadiness()
-  } catch (e) { notify.error(e.message) }
-}
 </script>
 
 <template>
@@ -113,7 +97,7 @@ async function advanceStatus() {
         <span class="trip-head-name">{{ trips.current.name }}</span>
         <div class="trip-head-status">
           <Tag class="status-tag" :value="trips.current.status" :severity="trips.current.status === 'archived' ? 'secondary' : 'info'" title="Trip status" :aria-label="`Trip status: ${trips.current.status}`" />
-          <Button v-if="nextTransition" :label="nextTransition.label" size="small" outlined @click="advanceStatus" />
+          <!-- chip only: the next-status action lives in Details ▾ Settings (tripper.md §5, D9) -->
         </div>
       </template>
       <Skeleton v-else height="2rem" />

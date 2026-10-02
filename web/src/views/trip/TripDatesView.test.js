@@ -169,4 +169,13 @@ describe('TripDatesView', () => {
     expect(tag.attributes('title')).toBe('Dates confirmed')
     expect(tag.attributes('aria-label')).toBe('Dates confirmed')
   })
+
+  // trip-planner-cdl: §6 one wording — the trip line says 'Sat 1 Aug', so does this page
+  it('shows confirmed dates and saved windows as readable dates, not ISO', async () => {
+    const { wrapper } = await mountView({ id: 't1', name: 'Goa', date_mode: 'confirmed', start_date: '2026-08-01', end_date: '2026-08-05', windows: [] })
+    expect(wrapper.find('.dates-confirmed').text()).toContain('Sat 1 Aug – Wed 5 Aug')
+    expect(wrapper.find('.dates-confirmed').text()).not.toContain('2026-08-01')
+    const w = await mountView({ id: 't1', name: 'Goa', date_mode: 'slight', windows: [{ start_date: '2026-11-06', end_date: '2026-11-15' }] })
+    expect(w.wrapper.find('.dates-window-range').text()).toBe('Fri 6 Nov – Sun 15 Nov')
+  })
 })

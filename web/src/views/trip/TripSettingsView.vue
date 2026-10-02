@@ -10,6 +10,8 @@ import Tag from 'primevue/tag'
 import MultiSelect from 'primevue/multiselect'
 import { useTripsStore } from '../../stores/trips.js'
 import { useArchiveStore } from '../../stores/archive.js'
+import { useReadinessStore } from '../../stores/readiness.js'
+import { NEXT_STATUS } from '../../utils/tripStatus.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
 import { budgetCategoryLabel, formatMoney, docTypeLabel } from '../../utils/format.js'
@@ -177,6 +179,17 @@ async function cloneTrip() {
     router.push({ name: 'trip-overview', params: { id: newId } })
   } catch (e) { notify.error(e.message) }
 }
+
+// Status change lives here, not in the trip header (tripper.md §5, owner D9).
+const readiness = useReadinessStore()
+const nextTransition = computed(() => (trips.current ? NEXT_STATUS[trips.current.status] : null))
+async function advanceStatus() {
+  if (!nextTransition.value) return
+  try {
+    await trips.setStatus(tripId.value, nextTransition.value.target)
+    readiness.fetch(tripId.value).catch(() => { /* tab badges refresh on next load */ })
+  } catch (e) { notify.error(e.message) }
+}
 </script>
 
 <template>
@@ -211,7 +224,7 @@ async function cloneTrip() {
         Current: <Tag class="status-tag" :value="trips.current?.status || '…'" severity="info" />
       </p>
       <p class="muted">Lifecycle: idea → planning → confirmed → active → archived. Confirming locks dates for participants; archiving (below) snapshots everything and revokes links.</p>
-      <p class="muted">Advance the status from the quick action in the sidebar.</p>
+      <Button v-if="nextTransition" :label="nextTransition.label" outlined @click="advanceStatus" />
     </section>
 
     <section v-if="!archiveLoading && !isArchived" class="card">
