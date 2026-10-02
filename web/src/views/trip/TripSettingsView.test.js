@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
@@ -156,6 +156,108 @@ describe('TripSettingsView', () => {
     expect(wrapper.text()).toContain('Archived at: 26 Sep 2026')
     expect(wrapper.text()).not.toContain('12:08')
   })
+
+  // trip-planner-1ow, tripper.md §5 (D8): per-card management under the card's ⋯;
+  // Save shows only when there is something to save.
+  describe('Status card ⋯ (Archive + Clone) and Save-when-dirty', () => {
+    const menuLabels = () => [...document.body.querySelectorAll('.p-menu-item')].map((el) => el.textContent.trim())
+    async function pick(wrapper, text) {
+      await wrapper.find('[aria-label="More actions"]').trigger('click')
+      await flushPromises()
+      ;[...document.body.querySelectorAll('.p-menu-item')].find((el) => el.textContent.includes(text)).querySelector('.p-menu-item-content').click()
+      await flushPromises()
+    }
+    async function mountArchived() {
+      const router = createRouter({
+        history: createMemoryHistory(),
+        routes: [{ path: '/trips/:id/settings', name: 'trip-settings', component: TripSettingsView }]
+      })
+      await router.push('/trips/t1/settings')
+      await router.isReady()
+      const pinia = createPinia()
+      setActivePinia(pinia)
+      const trips = useTripsStore()
+      trips.current = { id: 't1', name: 'Goa 2026', status: 'archived', description: '', origin_city: '', vibe_tags: [] }
+      const archive = useArchiveStore()
+      archive.fetchArchive = vi.fn().mockImplementation(async () => {
+        archive.snapshot = { budget: { lines: [] }, itinerary: [], checklists: [] }
+        archive.archived_at = '2026-01-01 00:00:00'
+      })
+      const wrapper = mountWithBase(TripSettingsView, { pinia, global: { plugins: [router] }, attachTo: document.body })
+      await flushPromises()
+      return { wrapper, archive }
+    }
+    afterEach(() => { document.body.innerHTML = '' })
+
+    it('live trip shows no Archive or Clone card; the Status card has a More actions button', async () => {
+      const { wrapper } = await mountView()
+      const headings = wrapper.findAll('h2').map((h) => h.text())
+      expect(headings).not.toContain('Archive')
+      expect(headings).not.toContain('Clone as new trip')
+      const status = wrapper.findAll('section.card').find((s) => s.find('h2').text() === 'Status')
+      expect(status.find('[aria-label="More actions"]').exists()).toBe(true)
+      expect(wrapper.find('#ts-clone').exists()).toBe(false)
+    })
+
+    it('⋯ lists Clone and Archive on a live trip; Archive runs the existing confirm', async () => {
+      const { wrapper, trips } = await mountView()
+      const archive = useArchiveStore()
+      archive.archive = vi.fn().mockResolvedValue()
+      trips.fetchTrip = vi.fn().mockResolvedValue(trips.current)
+      const dialogWrapper = mountWithBase(ConfirmDialog, { attachTo: document.body })
+      await wrapper.find('[aria-label="More actions"]').trigger('click')
+      await flushPromises()
+      expect(menuLabels()).toEqual(['Clone as new trip…', 'Archive trip…'])
+      ;[...document.body.querySelectorAll('.p-menu-item')].find((el) => el.textContent.includes('Archive trip…')).querySelector('.p-menu-item-content').click()
+      await flushPromises()
+      expect(document.body.textContent).toContain('Archive this trip? This will lock editing and revoke all participant links.')
+      ;[...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Archive').click()
+      await flushPromises()
+      expect(archive.archive).toHaveBeenCalledWith('t1', { notes: null, photo_links: [] })
+      dialogWrapper.unmount()
+    })
+
+    it('Clone opens a dialog with the name field and clones on click', async () => {
+      const { wrapper } = await mountView()
+      const archive = useArchiveStore()
+      archive.clone = vi.fn().mockResolvedValue('t2')
+      const router = wrapper.vm.$router
+      const push = vi.spyOn(router, 'push').mockResolvedValue()
+      await pick(wrapper, 'Clone as new trip…')
+      const dialog = document.body.querySelector('.p-dialog')
+      expect(dialog).toBeTruthy()
+      expect(dialog.textContent).toContain('Copies vibe, origin city, currency')
+      const input = dialog.querySelector('#ts-clone')
+      expect(dialog.querySelector('label[for="ts-clone"]').textContent).toBe('Name for the new trip')
+      const btn = [...dialog.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Clone trip')
+      expect(btn.disabled).toBe(true)
+      input.value = 'Goa 2027'
+      input.dispatchEvent(new Event('input'))
+      await flushPromises()
+      expect(btn.disabled).toBe(false)
+      btn.click()
+      await flushPromises()
+      expect(archive.clone).toHaveBeenCalledWith('t1', 'Goa 2027')
+      expect(push).toHaveBeenCalledWith({ name: 'trip-overview', params: { id: 't2' } })
+    })
+
+    it('archived trip: ⋯ offers Clone but not Archive; no Clone card', async () => {
+      const { wrapper } = await mountArchived()
+      expect(wrapper.findAll('h2').map((h) => h.text())).not.toContain('Clone as new trip')
+      await wrapper.find('[aria-label="More actions"]').trigger('click')
+      await flushPromises()
+      expect(menuLabels()).toEqual(['Clone as new trip…'])
+    })
+
+    it('Basics Save changes is absent when clean and appears once dirty', async () => {
+      const { wrapper } = await mountView()
+      const save = () => wrapper.findAll('button').find((b) => b.text() === 'Save changes')
+      expect(save()).toBeUndefined()
+      await wrapper.find('#ts-name').setValue('Goa 2027')
+      expect(save()).toBeTruthy()
+      expect(save().attributes('disabled')).toBeUndefined()
+    })
+  })
 })
 
 // tripper.md §2 Archived (D11): Basics are read-only; the archive cards stay editable.
@@ -201,6 +303,7 @@ describe('TripSettingsView — archived trip is read-only', () => {
   })
   it('live trip keeps its Basics form', async () => {
     const { controls } = await mountStatus('planning')
-    expect(controls).toEqual({ basicsInputs: true, saveChanges: true, archiveCards: false })
+    // Save changes stays hidden until an edit (D8, trip-planner-1ow); the form itself is there.
+    expect(controls).toEqual({ basicsInputs: true, saveChanges: false, archiveCards: false })
   })
 })

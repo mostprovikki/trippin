@@ -7,6 +7,8 @@ import Textarea from 'primevue/textarea'
 import InputNumber from 'primevue/inputnumber'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
+import Menu from 'primevue/menu'
+import Dialog from 'primevue/dialog'
 import MultiSelect from 'primevue/multiselect'
 import { useTripsStore } from '../../stores/trips.js'
 import { useArchiveStore } from '../../stores/archive.js'
@@ -81,6 +83,7 @@ const notesDraft = ref('')
 const photoLinksDraft = ref('')
 const actualsDraft = ref([])
 const cloneName = ref('')
+const cloneOpen = ref(false)
 
 function syncDraftsFromStore() {
   notesDraft.value = archiveStore.notes || ''
@@ -184,6 +187,14 @@ async function cloneTrip() {
   } catch (e) { notify.error(e.message) }
 }
 
+// tripper.md §5 (D8): Archive and Clone are card management, so they live
+// under the Status card's ⋯ rather than as full cards of their own.
+const moreMenu = ref(null)
+const moreItems = computed(() => [
+  { label: 'Clone as new trip…', icon: 'pi pi-clone', command: () => { cloneOpen.value = true } },
+  ...(isArchived.value || archiveLoading.value ? [] : [{ label: 'Archive trip…', icon: 'pi pi-box', class: 'menu-danger', command: doArchive }])
+])
+
 // Status change lives here, not in the trip header (tripper.md §5, owner D9).
 const readiness = useReadinessStore()
 const nextTransition = computed(() => (trips.current ? NEXT_STATUS[trips.current.status] : null))
@@ -227,24 +238,25 @@ async function advanceStatus() {
           fluid
         />
       </div>
-      <Button label="Save changes" :disabled="!basicsDraft.isDirty.value" @click="saveBasics" />
+      <Button v-if="basicsDraft.isDirty.value" label="Save changes" @click="saveBasics" />
       </template>
     </section>
 
     <section class="card">
-      <h2>Status</h2>
+      <div class="card-head">
+        <h2>Status</h2>
+        <Button
+          type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
+          aria-label="More actions" aria-haspopup="true" aria-controls="ts-status-more"
+          @click="moreMenu.toggle($event)"
+        />
+        <Menu id="ts-status-more" ref="moreMenu" :model="moreItems" popup />
+      </div>
       <p>
         Current: <Tag class="status-tag" :value="trips.current?.status || '…'" severity="info" />
       </p>
       <p class="muted">Lifecycle: idea → planning → confirmed → active → archived. Confirming locks dates for participants; archiving (below) snapshots everything and revokes links.</p>
       <Button v-if="nextTransition" :label="nextTransition.label" outlined @click="advanceStatus" />
-    </section>
-
-    <section v-if="!archiveLoading && !isArchived" class="card">
-      <h2>Archive</h2>
-      <p class="muted">Archiving locks the trip, snapshots the budget/itinerary/checklists, and revokes all participant links.</p>
-      <div class="field"><label for="ts-arch-notes">Notes</label><Textarea id="ts-arch-notes" v-model="notesDraft" rows="3" fluid /></div>
-      <Button label="Archive trip" severity="danger" outlined icon="pi pi-box" @click="doArchive" />
     </section>
 
     <template v-if="isArchived">
@@ -275,16 +287,19 @@ async function advanceStatus() {
       </section>
     </template>
 
-    <section class="card">
-      <h2>Clone as new trip</h2>
+    <Dialog v-model:visible="cloneOpen" modal header="Clone as new trip" :style="{ width: '32rem' }" :breakpoints="{ '640px': '95vw' }">
       <p class="muted">Copies vibe, origin city, currency, goals, participants (unconfirmed), budget lines, and checklists — without dates, destination, or itinerary.</p>
       <div class="field"><label for="ts-clone">Name for the new trip</label><InputText id="ts-clone" v-model="cloneName" fluid /></div>
-      <Button label="Clone trip" icon="pi pi-clone" :disabled="!cloneName.trim()" @click="cloneTrip" />
-    </section>
+      <template #footer>
+        <Button type="button" label="Cancel" severity="secondary" outlined @click="cloneOpen = false" />
+        <Button type="button" label="Clone trip" icon="pi pi-clone" :disabled="!cloneName.trim()" @click="cloneTrip" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <style scoped>
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .muted { color: var(--app-text-muted); font-size: 0.875rem; }
 .basics-readonly { display: grid; grid-template-columns: max-content 1fr; gap: 0.375rem 1rem; margin: 0; }
 .basics-readonly dt { color: var(--app-text-muted); font-size: 0.875rem; }
