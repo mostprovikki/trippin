@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { generate, aiGuard, LlmValidationError, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
 import { buildBudgetPrompt, budgetSchema, CATEGORIES } from '../llm/prompts/budget.js'
 
@@ -68,6 +69,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     await app.db.tx(async () => {
       // booked left out (an AI draft apply sends estimates only) keeps what was booked
       for (const l of req.body.lines) await (l.booked === undefined
@@ -108,6 +110,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     const overrides = req.body.overrides
     for (const o of overrides) {
       const isParticipant = await app.db.get(
@@ -135,6 +138,7 @@ export default async function routes(app) {
   app.post('/trips/:id/budget/ai-draft', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     if (aiGuard(reply)) return
     try {
       return await draftBudgetLines(app, trip)
@@ -147,6 +151,7 @@ export default async function routes(app) {
   app.post('/trips/:id/budget/ai-draft/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     try {
       return { lines: parseAndValidate({ text: req.body.text, schema: budgetSchema }).lines }
     } catch (err) {

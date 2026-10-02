@@ -2,6 +2,7 @@ import { recordEvent } from '../lib/events.js'
 import { randomUUID } from 'node:crypto'
 import multipart from '@fastify/multipart'
 import { httpError } from '../lib/errors.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { StorageNotFoundError } from '../storage/errors.js'
 
 const DOC_TYPES = ['passport', 'visa', 'national_id', 'driving_license', 'vaccination', 'other']
@@ -137,6 +138,7 @@ export default async function routes(app) {
 
   // --- participant routes (own person only) ---
   app.post('/participant/documents', { preHandler: app.requireParticipant }, async (req, reply) => {
+    if (await assertTripWritable(app, req.participant.tripId, reply)) return reply
     const doc = await saveUpload(req, req.participant.personId, reply)
     if (!doc) return
     await recordEvent(app.db, { tripId: req.participant.tripId, personId: req.participant.personId, kind: 'doc_uploaded', docType: doc.doc_type })
@@ -161,6 +163,7 @@ export default async function routes(app) {
   })
 
   app.delete('/participant/documents/:id', { preHandler: app.requireParticipant }, async (req, reply) => {
+    if (await assertTripWritable(app, req.participant.tripId, reply)) return reply
     const row = await getDoc(req.params.id)
     if (!row || row.person_id !== req.participant.personId) return httpError(reply, 404, 'NOT_FOUND', 'No such document')
     await removeDoc(req, row)

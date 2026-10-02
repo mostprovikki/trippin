@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
 import { buildDestinationPrompt, destinationSchema } from '../llm/prompts/destinations.js'
 import { tripToJson } from './trips.routes.js'
@@ -76,6 +77,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     const id = randomUUID()
     const b = req.body
     await app.db.run(`INSERT INTO destination_candidates
@@ -97,6 +99,7 @@ export default async function routes(app) {
   app.post('/trips/:id/candidates/ai-suggest', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     if (aiGuard(reply)) return reply
     const prefSummary = await buildPrefSummary(app.db, trip.id)
     const { system, prompt, schema } = buildDestinationPrompt(await tripToJson(app.db, trip), prefSummary.total, prefSummary)
@@ -108,6 +111,7 @@ export default async function routes(app) {
   app.post('/trips/:id/candidates/ai-suggest/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     let result
     try {
       result = parseAndValidate({ text: req.body.text, schema: destinationSchema })
@@ -121,6 +125,7 @@ export default async function routes(app) {
   app.post('/candidates/:id/decide', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const candidate = await getCandidate(req, req.params.id)
     if (!candidate) return httpError(reply, 404, 'NOT_FOUND', 'No such candidate')
+    if (await assertTripWritable(app, candidate.trip_id, reply)) return reply
     await app.db.tx(async () => {
       await app.db.run('UPDATE destination_candidates SET decided = 0 WHERE trip_id = ?', [candidate.trip_id])
       await app.db.run('UPDATE destination_candidates SET decided = 1 WHERE id = ?', [candidate.id])
@@ -133,6 +138,7 @@ export default async function routes(app) {
   app.delete('/candidates/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const candidate = await getCandidate(req, req.params.id)
     if (!candidate) return httpError(reply, 404, 'NOT_FOUND', 'No such candidate')
+    if (await assertTripWritable(app, candidate.trip_id, reply)) return reply
     if (candidate.decided) return httpError(reply, 400, 'DECIDED', 'Cannot delete a decided candidate')
     await app.db.run('DELETE FROM destination_candidates WHERE id = ?', [candidate.id])
     reply.code(204)

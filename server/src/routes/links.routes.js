@@ -1,12 +1,15 @@
 import { randomUUID, randomBytes } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { config } from '../config.js'
 import { encryptToken, decryptToken } from '../lib/linkCrypto.js'
 
 export default async function routes(app) {
   app.post('/trips/:tripId/participants/:personId/link', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const { tripId, personId } = req.params
-    if (!(await app.ownedTrip(req, tripId))) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    const trip = await app.ownedTrip(req, tripId)
+    if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     const member = await app.db.get('SELECT 1 FROM trip_participants WHERE trip_id = ? AND person_id = ?', [tripId, personId])
     if (!member) return httpError(reply, 404, 'NOT_FOUND', 'Person is not a participant of this trip')
     // token_enc goes with the link: a dead link's token is not kept recoverable

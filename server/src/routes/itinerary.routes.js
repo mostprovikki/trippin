@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
 import { buildItineraryPrompt, buildDayRegenPrompt, draftSchema, dayRegenSchema } from '../llm/prompts/itinerary.js'
 import { buildTripIcs, slugify } from '../lib/ics.js'
@@ -66,7 +67,7 @@ export default async function routes(app) {
     [req.params.dayId, req.organizer.id],
   )
   const ownedItem = (req) => app.db.get(
-    `SELECT i.* FROM itinerary_items i JOIN itinerary_days d ON d.id = i.day_id
+    `SELECT i.*, d.trip_id FROM itinerary_items i JOIN itinerary_days d ON d.id = i.day_id
      JOIN trips t ON t.id = d.trip_id WHERE i.id = ? AND t.organizer_id = ?`,
     [req.params.itemId, req.organizer.id],
   )
@@ -153,6 +154,7 @@ export default async function routes(app) {
   app.post('/trips/:id/itinerary/init', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
     await ensureDays(trip)
     return { days: await listDays(trip.id) }
@@ -161,6 +163,7 @@ export default async function routes(app) {
   app.post('/days/:dayId/items', { preHandler: app.requireOrganizer, schema: { body: itemBodySchema(['title']) } }, async (req, reply) => {
     const day = await ownedDay(req)
     if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
+    if (await assertTripWritable(app, day.trip_id, reply)) return reply
     const b = req.body
     const { maxpos } = await app.db.get('SELECT COALESCE(MAX(position), -1) AS maxpos FROM itinerary_items WHERE day_id = ?', [day.id])
     const id = randomUUID()
@@ -176,6 +179,7 @@ export default async function routes(app) {
   app.put('/items/:itemId', { preHandler: app.requireOrganizer, schema: { body: itemBodySchema([]) } }, async (req, reply) => {
     const item = await ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
+    if (await assertTripWritable(app, item.trip_id, reply)) return reply
     const b = req.body || {}
     const fields = ['title', 'time_range', 'location', 'category', 'est_cost', 'notes', 'link', 'booking_ref', 'phone']
     const updates = []; const params = []
@@ -190,6 +194,7 @@ export default async function routes(app) {
   app.delete('/items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const item = await ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
+    if (await assertTripWritable(app, item.trip_id, reply)) return reply
     await app.db.run('DELETE FROM itinerary_items WHERE id = ?', [item.id])
     reply.code(204)
     return null
@@ -201,6 +206,7 @@ export default async function routes(app) {
     async (req, reply) => {
       const day = await ownedDay(req)
       if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
+      if (await assertTripWritable(app, day.trip_id, reply)) return reply
       await app.db.tx(async () => {
         for (const [idx, itemId] of req.body.item_ids.entries())
           await app.db.run('UPDATE itinerary_items SET position = ? WHERE id = ? AND day_id = ?', [idx, itemId, day.id])
@@ -221,9 +227,10 @@ export default async function routes(app) {
   })
 
   app.post('/trips/:id/itinerary/ai-draft', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    if (aiGuard(reply)) return
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
+    if (aiGuard(reply)) return
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
     const goals = await app.db.all('SELECT title, fixed_date, fixed_place, notes FROM trip_goals WHERE trip_id = ? ORDER BY seq', [trip.id])
     const dietSummary = await computeDietSummary(trip.id)
@@ -241,6 +248,7 @@ export default async function routes(app) {
   app.post('/trips/:id/itinerary/ai-draft/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
     try {
       return parseAndValidate({ text: req.body.text, schema: draftSchema })
@@ -252,6 +260,7 @@ export default async function routes(app) {
   app.post('/trips/:id/itinerary/apply-draft', { preHandler: app.requireOrganizer, schema: { body: applyDraftBodySchema } }, async (req, reply) => {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     if (!trip.start_date || !trip.end_date) return httpError(reply, 400, 'NO_DATES', 'Trip dates are not confirmed')
     const range = dateRange(trip.start_date, trip.end_date)
     const badDay = req.body.days.map((d) => d.day_date).find((d) => !range.includes(d))
@@ -281,9 +290,10 @@ export default async function routes(app) {
   })
 
   app.post('/days/:dayId/ai-regen', { preHandler: app.requireOrganizer }, async (req, reply) => {
-    if (aiGuard(reply)) return
     const day = await ownedDay(req)
     if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
+    if (await assertTripWritable(app, day.trip_id, reply)) return reply
+    if (aiGuard(reply)) return
     const trip = await get(day.trip_id)
     const currentItems = await listItems(day.id)
     const instruction = (req.body && req.body.instruction) || null
@@ -299,6 +309,7 @@ export default async function routes(app) {
   app.post('/days/:dayId/ai-regen/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
     const day = await ownedDay(req)
     if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
+    if (await assertTripWritable(app, day.trip_id, reply)) return reply
     try {
       return parseAndValidate({ text: req.body.text, schema: dayRegenSchema })
     } catch (err) {
@@ -309,6 +320,7 @@ export default async function routes(app) {
   app.post('/days/:dayId/apply', { preHandler: app.requireOrganizer, schema: { body: applyDayBodySchema } }, async (req, reply) => {
     const day = await ownedDay(req)
     if (!day) return httpError(reply, 404, 'NOT_FOUND', 'No such day')
+    if (await assertTripWritable(app, day.trip_id, reply)) return reply
     await app.db.tx(async () => {
       await app.db.run('DELETE FROM itinerary_items WHERE day_id = ?', [day.id])
       await insertItems(day.id, req.body.items)

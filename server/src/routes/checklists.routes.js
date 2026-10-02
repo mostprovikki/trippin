@@ -1,6 +1,7 @@
 import { recordEvent } from '../lib/events.js'
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { generate, aiGuard, parseAndValidate, pasteError, pasteBodySchema } from '../llm/index.js'
 import { buildPackingPrompt, packingSchema } from '../llm/prompts/packing.js'
 
@@ -46,7 +47,7 @@ export default async function routes(app) {
     'SELECT * FROM checklists WHERE id = ? AND organizer_id = ?', [id, req.organizer.id],
   )
   const ownedItem = (req) => db.get(
-    `SELECT ci.* FROM checklist_items ci JOIN checklists c ON c.id = ci.checklist_id
+    `SELECT ci.*, c.trip_id FROM checklist_items ci JOIN checklists c ON c.id = ci.checklist_id
      WHERE ci.id = ? AND c.organizer_id = ?`, [req.params.itemId, req.organizer.id],
   )
   const nextPosition = async (checklistId) =>
@@ -91,6 +92,7 @@ export default async function routes(app) {
     if (!isTemplate) {
       const trip = await app.ownedTrip(req, b.trip_id)
       if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+      if (await assertTripWritable(app, trip, reply)) return reply
     }
     const id = randomUUID()
     await db.run(`INSERT INTO checklists (id, trip_id, is_template, kind, name, trip_type_tags, organizer_id)
@@ -104,6 +106,7 @@ export default async function routes(app) {
   app.put('/checklists/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
+    if (await assertTripWritable(app, checklist.trip_id, reply)) return reply
     const b = req.body || {}
     const updates = []
     const params = []
@@ -123,6 +126,7 @@ export default async function routes(app) {
   app.delete('/checklists/:id', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
+    if (await assertTripWritable(app, checklist.trip_id, reply)) return reply
     await db.run('DELETE FROM checklists WHERE id = ?', [checklist.id])
     reply.code(204)
     return null
@@ -145,6 +149,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
+    if (await assertTripWritable(app, checklist.trip_id, reply)) return reply
     const id = randomUUID()
     const b = req.body
     await db.run(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
@@ -157,6 +162,7 @@ export default async function routes(app) {
   app.put('/checklist-items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const item = await ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
+    if (await assertTripWritable(app, item.trip_id, reply)) return reply
     const b = req.body || {}
     const updates = []
     const params = []
@@ -176,6 +182,7 @@ export default async function routes(app) {
   app.delete('/checklist-items/:itemId', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const item = await ownedItem(req)
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
+    if (await assertTripWritable(app, item.trip_id, reply)) return reply
     await db.run('DELETE FROM checklist_items WHERE id = ?', [item.id])
     reply.code(204)
     return null
@@ -188,6 +195,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await app.ownedTrip(req, req.params.tripId)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     const template = await ownedChecklist(req, req.body.template_id)
     if (!template || !template.is_template) return httpError(reply, 404, 'NOT_FOUND', 'No such template')
 
@@ -246,6 +254,7 @@ export default async function routes(app) {
   app.post('/checklists/:id/ai-packing-suggest', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
+    if (await assertTripWritable(app, checklist.trip_id, reply)) return reply
     if (checklist.kind !== 'packing') return httpError(reply, 400, 'NOT_PACKING', 'Checklist is not a packing list')
     if (checklist.is_template) return httpError(reply, 404, 'NOT_FOUND', 'Template has no trip context')
     if (aiGuard(reply)) return
@@ -275,6 +284,7 @@ export default async function routes(app) {
   app.post('/checklists/:id/ai-packing-suggest/import', { preHandler: app.requireOrganizer, schema: { body: pasteBodySchema } }, async (req, reply) => {
     const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
+    if (await assertTripWritable(app, checklist.trip_id, reply)) return reply
     if (checklist.kind !== 'packing') return httpError(reply, 400, 'NOT_PACKING', 'Checklist is not a packing list')
     if (checklist.is_template) return httpError(reply, 404, 'NOT_FOUND', 'Template has no trip context')
     try {
@@ -314,6 +324,7 @@ export default async function routes(app) {
       FROM checklist_items ci JOIN checklists cl ON cl.id = ci.checklist_id WHERE ci.id = ?`, [req.params.itemId])
     if (!row || row.cl_trip_id !== req.participant.tripId)
       return httpError(reply, 404, 'NOT_FOUND', 'No such item')
+    if (await assertTripWritable(app, row.cl_trip_id, reply)) return reply
     if (row.assignee_person_id && row.assignee_person_id !== req.participant.personId)
       return httpError(reply, 404, 'NOT_FOUND', 'Not assigned to you')
     if (row.cl_kind === 'tasks' && row.assignee_person_id !== req.participant.personId)

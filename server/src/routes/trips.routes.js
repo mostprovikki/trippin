@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { archiveTrip } from '../lib/archive.js'
 import { missingPeopleCount } from '../lib/missing.js'
 
@@ -135,6 +136,7 @@ export default async function routes(app) {
     }
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     const updates = []
     const params = []
     for (const field of TRIP_FIELDS) {
@@ -156,6 +158,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     const target = req.body.status
     if (target === 'archived') return httpError(reply, 400, 'USE_ARCHIVE_ENDPOINT', 'Archive via POST /api/trips/:id/archive')
     if (!(TRANSITIONS[trip.status] || []).includes(target))
@@ -188,6 +191,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     await app.db.tx(async () => {
       await app.db.run('DELETE FROM trip_date_windows WHERE trip_id = ?', [trip.id])
       for (const w of req.body.windows) await app.db.run(
@@ -213,6 +217,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     const id = randomUUID()
     const b = req.body
     await app.db.run('INSERT INTO trip_goals (id, trip_id, title, fixed_date, fixed_place, notes) VALUES (?, ?, ?, ?, ?, ?)',
@@ -224,6 +229,7 @@ export default async function routes(app) {
   app.put('/goals/:goalId', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const goal = await getGoal(req, req.params.goalId)
     if (!goal) return httpError(reply, 404, 'NOT_FOUND', 'No such goal')
+    if (await assertTripWritable(app, goal.trip_id, reply)) return reply
     const b = req.body || {}
     const fields = ['title', 'fixed_date', 'fixed_place', 'notes']
     const updates = []
@@ -244,6 +250,7 @@ export default async function routes(app) {
   app.delete('/goals/:goalId', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const goal = await getGoal(req, req.params.goalId)
     if (!goal) return httpError(reply, 404, 'NOT_FOUND', 'No such goal')
+    if (await assertTripWritable(app, goal.trip_id, reply)) return reply
     await app.db.run('DELETE FROM trip_goals WHERE id = ?', [goal.id])
     reply.code(204)
     return null
@@ -255,6 +262,7 @@ export default async function routes(app) {
   }, async (req, reply) => {
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     if (!(await app.ownedPerson(req, req.body.person_id))) return httpError(reply, 404, 'NOT_FOUND', 'No such person')
     const existing = await app.db.get('SELECT 1 FROM trip_participants WHERE trip_id = ? AND person_id = ?', [trip.id, req.body.person_id])
     if (existing) return httpError(reply, 409, 'ALREADY_MEMBER', 'Person is already a participant')
@@ -266,6 +274,7 @@ export default async function routes(app) {
   app.delete('/trips/:id/participants/:personId', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
+    if (await assertTripWritable(app, trip, reply)) return reply
     await app.db.run('DELETE FROM trip_participants WHERE trip_id = ? AND person_id = ?', [trip.id, req.params.personId])
     reply.code(204)
     return null

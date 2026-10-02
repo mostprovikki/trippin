@@ -1,4 +1,5 @@
 import { recordEvent } from '../lib/events.js'
+import { assertTripWritable } from '../lib/tripWritable.js'
 import { missingFieldsOf } from '../lib/missing.js'
 import rateLimit from '@fastify/rate-limit'
 import { personToJson } from './people.routes.js'
@@ -83,8 +84,9 @@ export default async function routes(app) {
   app.put('/participant/profile', {
     preHandler: app.requireParticipant,
     schema: { body: bodySchema },
-  }, async (req) => {
+  }, async (req, reply) => {
     const { tripId, personId } = req.participant
+    if (await assertTripWritable(app, tripId, reply)) return reply
     // "Since you last looked" only hears about a save that changed something —
     // or the save that confirms the profile (a no-op re-save would otherwise
     // flood the organizer's 20-row feed). Confirmed means complete (tripper.md
