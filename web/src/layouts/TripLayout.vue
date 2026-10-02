@@ -15,7 +15,12 @@ const loading = ref(true)
 const notFound = ref(false)
 const tripId = computed(() => route.params.id)
 
-const hints = computed(() => sectionHints(readiness.data))
+// An archived trip is finished: no People/Checklists counts to chase (ux-review M2).
+const hints = computed(() => {
+  const h = sectionHints(readiness.data)
+  if (trips.current?.status === 'archived') { delete h['trip-people']; delete h['trip-checklists'] }
+  return h
+})
 
 // Details ▾ (Dates, Destination, Settings). When one of those pages is open the
 // toggle carries its name and the active state, so the bar always says where you are.

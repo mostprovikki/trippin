@@ -119,4 +119,30 @@ describe('TripsListView', () => {
     expect(alps.find('[data-test="trip-missing"]').exists()).toBe(false)
     expect(alps.text()).toContain('3 participants')
   })
+
+  // ux-review M2: nobody chases a finished trip — archived cards drop the missing line
+  it('archived trip shows no missing line; confirmed trip still does', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [
+      { path: '/', name: 'trips', component: TripsListView },
+      { path: '/trips/:id', name: 'trip-overview', component: { template: '<div/>' } }
+    ] })
+    await router.push('/')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTripsStore()
+    store.fetchTrips = vi.fn(async () => {
+      store.trips = [
+        { id: 't1', name: 'Kerala', status: 'confirmed', participant_count: 4, missing_count: 2 },
+        { id: 't2', name: 'Bali', status: 'archived', participant_count: 5, missing_count: 5 }
+      ]
+    })
+    const wrapper = mountWithBase(TripsListView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    const kerala = wrapper.findAll('.trip-card').find((c) => c.text().includes('Kerala'))
+    const bali = wrapper.findAll('.trip-card').find((c) => c.text().includes('Bali'))
+    expect(kerala.find('[data-test="trip-missing"]').text()).toBe('2 of 4 people missing')
+    expect(bali.find('[data-test="trip-missing"]').exists()).toBe(false)
+    expect(bali.text()).toContain('5 participants')
+  })
 })

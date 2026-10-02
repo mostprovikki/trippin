@@ -7,7 +7,7 @@ import TripLayout from './TripLayout.vue'
 import { useTripsStore } from '../stores/trips.js'
 import { useReadinessStore } from '../stores/readiness.js'
 
-async function mountLayout({ fetchTrip } = {}) {
+async function mountLayout({ fetchTrip, status = 'planning' } = {}) {
   const Stub = { template: '<div class="child-stub">child</div>' }
   const router = createRouter({
     history: createMemoryHistory(),
@@ -35,14 +35,14 @@ async function mountLayout({ fetchTrip } = {}) {
   setActivePinia(pinia)
   const trips = useTripsStore()
   trips.fetchTrip = fetchTrip || vi.fn().mockImplementation(async () => {
-    trips.current = { id: 't1', name: 'Goa 2026', status: 'planning' }
+    trips.current = { id: 't1', name: 'Goa 2026', status }
   })
   const readiness = useReadinessStore()
   readiness.fetch = vi.fn().mockImplementation(async () => {
     readiness.data = {
       decisions: { dates_confirmed: 0, destination_decided: 0, budget_drafted: 0, itinerary_days: 0 },
       participants: [{ profile_confirmed: 0 }],
-      checklists: { total_items: 0, done_items: 0, overdue: [] }
+      checklists: { total_items: 2, done_items: 0, overdue: [] }
     }
   })
   // Mount via a host RouterView: mounting TripLayout directly would make its
@@ -140,6 +140,17 @@ describe('TripLayout', () => {
     expect(badge.exists()).toBe(true)
     expect(badge.attributes('aria-label')).toBe('1 person missing details or documents')
     expect(badge.attributes('title')).toBe('1 person missing details or documents')
+  })
+
+  // ux-review M2: an archived trip is finished — no People/Checklists badges to chase
+  it('hides People and Checklists badges on an archived trip; a confirmed trip keeps them', async () => {
+    const badgeOf = (w, label) => w.findAll('.trip-nav-item').find((n) => n.text().includes(label)).find('.trip-nav-badge')
+    const { wrapper: confirmed } = await mountLayout({ status: 'confirmed' })
+    expect(badgeOf(confirmed, 'People').exists()).toBe(true)
+    expect(badgeOf(confirmed, 'Checklists').text()).toBe('2')
+    const { wrapper: archived } = await mountLayout({ status: 'archived' })
+    expect(badgeOf(archived, 'People').exists()).toBe(false)
+    expect(badgeOf(archived, 'Checklists').exists()).toBe(false)
   })
 
   it('shows not-found panel when the trip fails to load', async () => {
