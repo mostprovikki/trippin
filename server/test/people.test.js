@@ -29,4 +29,16 @@ describe('people', () => {
     const del = await authedInject(app, cookie, { method: 'DELETE', url: `/api/people/${p.id}` })
     expect(del.statusCode).toBe(409); expect(del.json().error.code).toBe('TRIP_MEMBER')
   })
+  it('409 with message (not 500) when deleting a person on an archived trip', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = (await authedInject(app, cookie, { method: 'POST', url: '/api/people', payload: { name: 'Z' } })).json().person
+    const t = await createTrip(db)
+    await db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?,?)', [t.id, p.id])
+    await db.run("UPDATE trips SET status = 'archived' WHERE id = ?", [t.id])
+    const del = await authedInject(app, cookie, { method: 'DELETE', url: `/api/people/${p.id}` })
+    expect(del.statusCode).toBe(409)
+    expect(del.json().error).toMatchObject({ code: 'ARCHIVED_TRIP_MEMBER' })
+    expect(del.json().error.message).toMatch(/archived trip/i)
+    expect((await authedInject(app, cookie, { method: 'GET', url: `/api/people/${p.id}` })).statusCode).toBe(200)
+  })
 })

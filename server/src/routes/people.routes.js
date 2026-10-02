@@ -50,6 +50,9 @@ export default async function routes(app) {
     const inTrip = await app.db.get(`SELECT 1 FROM trip_participants tp JOIN trips t ON t.id = tp.trip_id
       WHERE tp.person_id = ? AND t.status != 'archived'`, [req.params.id])
     if (inTrip) return httpError(reply, 409, 'TRIP_MEMBER', 'Person is part of a non-archived trip')
+    // Archived trips keep their participant rows as history, so the person stays referenced.
+    const inArchived = await app.db.get('SELECT 1 FROM trip_participants WHERE person_id = ?', [req.params.id])
+    if (inArchived) return httpError(reply, 409, 'ARCHIVED_TRIP_MEMBER', 'Person is part of an archived trip and is kept for its history')
     await app.db.run('DELETE FROM persons WHERE id = ?', [req.params.id])
     return reply.code(204).send()
   })
