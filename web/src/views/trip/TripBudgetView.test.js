@@ -165,11 +165,11 @@ describe('TripBudgetView', () => {
 
   // trip-planner-sog: tripper.md §4 phone reach (job 3), §5 D8, §6 one number one place
   describe('per-person first, Save only when dirty, empty state', () => {
-    async function mountWith({ lines = [{ category: 'stay', estimate: 1000, basis: '' }], equal = 0, count = 0, overrides = [] } = {}) {
+    async function mountWith({ lines = [{ category: 'stay', estimate: 1000, basis: '' }], equal = 0, count = 0, overrides = [], participants = [{ person_id: 'p9', name: 'Meera' }] } = {}) {
       const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/trips/:id/budget', name: 'trip-budget', component: TripBudgetView }] })
       await router.push('/trips/t1/budget')
       await router.isReady()
-      vi.spyOn(api, 'get').mockResolvedValue({ trip: { participants: [{ person_id: 'p9', name: 'Meera' }] } })
+      vi.spyOn(api, 'get').mockResolvedValue({ trip: { participants } })
       const pinia = createPinia()
       setActivePinia(pinia)
       const store = useBudgetStore()
@@ -242,6 +242,26 @@ describe('TripBudgetView', () => {
       expect(rows).toHaveLength(1)
       expect(rows[0].text()).toContain('Meera')
       expect(wrapper.text()).toContain('Save overrides')
+    })
+
+    // trip-planner-kbf: re-adding an overridden person pushed a second row with
+    // the same person_id (Vue key clash, two rows saved)
+    it('Add override picker omits people who already have an override', async () => {
+      const { wrapper } = await mountWith({
+        equal: 500, count: 2,
+        overrides: [{ person_id: 'p1', person_name: 'Asha', amount: 100, note: '' }],
+        participants: [{ person_id: 'p1', name: 'Asha' }, { person_id: 'p9', name: 'Meera' }]
+      })
+      const select = wrapper.findAllComponents({ name: 'Select' }).find((c) => c.props('inputId') === 'tb-new-override-person')
+      expect(select.props('options').map((p) => p.person_id)).toEqual(['p9'])
+      // even if p1 is forced into the picker, Add stays disabled and adds nothing
+      select.vm.$emit('update:modelValue', 'p1')
+      await flushPromises()
+      const add = wrapper.findAll('button').find((b) => b.text() === 'Add')
+      expect(add.attributes('disabled')).toBeDefined()
+      await add.trigger('click')
+      await flushPromises()
+      expect(wrapper.findAll('.override-row:not(.override-add)')).toHaveLength(1)
     })
 
     it('an all-zero budget says "No estimate yet" instead of ₹0 rows; Edit budget still opens the table', async () => {

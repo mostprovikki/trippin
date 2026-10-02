@@ -45,6 +45,10 @@ watch(() => store.overrides, (overrides) => { overridesDraft.load({ overrides: o
 
 // Save shows only when there is something to save (tripper.md §5, owner D8).
 const overridesDirty = computed(() => overridesDraft.isDirty.value)
+// one override per person — the rows are keyed by person_id
+const overriddenIds = computed(() => new Set(overridesDraft.draft.overrides.map((o) => o.person_id)))
+const overrideCandidates = computed(() => participants.value.filter((p) => !overriddenIds.value.has(p.person_id)))
+const canAddOverride = computed(() => !!newOverride.person_id && !overriddenIds.value.has(newOverride.person_id))
 // Per-person cost is job 3: it leads the tab, in the Overview's own words (§6).
 const perPersonHero = computed(() => (store.equal_share > 0 ? formatMoney(Math.round(store.equal_share), tripCurrency.value) : null))
 const perPersonSplit = computed(() => bookedSplitLabel(store.equal_share, store.equal_share_booked, tripCurrency.value))
@@ -101,7 +105,7 @@ function cancelEdit() {
 }
 
 function addOverrideRow() {
-  if (!newOverride.person_id) return
+  if (!canAddOverride.value) return
   // trip participants are { person_id, name } (GET /trips/:id), not { id }
   const person = participants.value.find((p) => p.person_id === newOverride.person_id)
   overridesDraft.draft.overrides.push({
@@ -190,10 +194,10 @@ onBeforeRouteLeave(async () => {
             <Button icon="pi pi-times" severity="secondary" text rounded class="override-del icon-danger-btn" :aria-label="`Remove override for ${o.person_name}`" @click="removeOverrideRow(o.person_id)" />
           </li>
           <li class="override-row override-add">
-            <Select class="override-name" input-id="tb-new-override-person" name="tb-new-override-person" v-model="newOverride.person_id" :options="participants" option-label="name" option-value="person_id" placeholder="Select person…" aria-label="Person" />
+            <Select class="override-name" input-id="tb-new-override-person" name="tb-new-override-person" v-model="newOverride.person_id" :options="overrideCandidates" option-label="name" option-value="person_id" placeholder="Select person…" aria-label="Person" />
             <InputNumber class="override-amount" input-id="tb-new-override-amount" name="tb-new-override-amount" v-model="newOverride.amount" :min="0" :max-fraction-digits="2" placeholder="Amount" aria-label="Amount" fluid />
             <InputText class="override-note" id="tb-new-override-note" name="tb-new-override-note" v-model="newOverride.note" placeholder="Note" aria-label="Note" />
-            <Button class="override-del" label="Add" icon="pi pi-plus" outlined :disabled="!newOverride.person_id" @click="addOverrideRow" />
+            <Button class="override-del" label="Add" icon="pi pi-plus" outlined :disabled="!canAddOverride" @click="addOverrideRow" />
           </li>
         </ul>
         <Button v-if="overridesDirty" label="Save overrides" class="override-save" @click="saveOverrides" />
