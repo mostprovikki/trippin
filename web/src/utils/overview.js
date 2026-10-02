@@ -84,11 +84,11 @@ export function emptyDays(trip, days = []) {
   return { planned: all.length - empty.length, total: all.length, empty }
 }
 
-// §2 Checklists card: open items, unassigned first. On a packing list an item
-// with no assignee is the group's ("Everyone" — one shared tick, anyone may
-// tick it), so only an unassigned *task* is "Unassigned".
+// §2 Checklists card: open items, unassigned first. D13: packing items are
+// personal and only tasks are assigned, so a packing item has no who (null —
+// not even a stale assignee_name) and only an unassigned *task* is "Unassigned".
 const isUnassigned = (list, item) => list.kind === 'tasks' && !item.assignee_person_id
-const checklistWho = (list, item) => item.assignee_name || (isUnassigned(list, item) ? 'Unassigned' : 'Everyone')
+const checklistWho = (list, item) => (list.kind === 'tasks' ? item.assignee_name || 'Unassigned' : null)
 
 export function openChecklistItems(checklists = []) {
   const out = []

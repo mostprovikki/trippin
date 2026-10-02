@@ -100,6 +100,25 @@ describe('ChecklistsCard', () => {
     expect(all.attributes('href')).toBe('/trips/t1/checklists')
     expect(w.text()).not.toContain('Done one')
   })
+  // trip-planner-h3i.6 (D13): packing items are personal, only tasks are assigned
+  it('packing item shows no assignee', async () => {
+    const w = await mount(ChecklistsCard, { checklists: [
+      { kind: 'packing', items: [
+        { id: 'p1', title: 'Dry bag', assignee_person_id: 'r', assignee_name: 'Ravi Menon', done: 0 },
+        { id: 'p2', title: 'Tent', assignee_person_id: null, assignee_name: null, done: 0 }
+      ] },
+      { kind: 'tasks', items: [{ id: 't1', title: 'Book bus', assignee_person_id: null, done: 0 }] }
+    ] })
+    expect(w.find('h2').text()).toBe('Checklists · 3 open')
+    const rows = w.findAll('li')
+    expect(rows.map((r) => r.find('.checklist-title').text())).toEqual(['Book bus', 'Dry bag', 'Tent'])
+    expect(rows[0].find('.p-tag').text()).toBe('Unassigned')
+    for (const r of rows.slice(1)) {
+      expect(r.find('.checklist-who').exists()).toBe(false)
+      expect(r.find('.p-tag').exists()).toBe(false)
+    }
+    expect(w.text()).not.toContain('Ravi Menon')
+  })
   it('nothing open', async () => {
     const w = await mount(ChecklistsCard, { checklists: [] })
     expect(w.find('h2').text()).toBe('Checklists · 0 open')

@@ -21,7 +21,7 @@ const shown = computed(() => open.value.slice(0, CAP))
       <li v-for="item in shown" :key="item.id" class="overview-row overview-row-plain">
         <span class="checklist-title">{{ item.title }}</span>
         <Tag v-if="item.unassigned" value="Unassigned" severity="warn" />
-        <span v-else class="overview-row-reason checklist-who">{{ item.who }}</span>
+        <span v-else-if="item.who" class="overview-row-reason checklist-who">{{ item.who }}</span>
       </li>
     </ul>
     <p v-if="open.length" class="overview-card-foot">

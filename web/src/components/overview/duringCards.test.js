@@ -129,11 +129,18 @@ describe('BeforeTomorrowCard (§2: checkable in place)', () => {
     w.unmount()
   })
   // trip-planner-0yh (1): who reads as on the Checklists card (§6), not "Anyone"
-  it('an unassigned task reads Unassigned, an unassigned packing item Everyone', async () => {
-    const checklists = [...lists(), { kind: 'packing', items: [{ id: 'k', title: 'Tent', due_date: '2026-11-10', done: 0 }] }]
+  // trip-planner-h3i.6 (D13): a packing item shows no who, even with an assignee set
+  it('an unassigned task reads Unassigned; a packing item shows no who', async () => {
+    const checklists = [...lists(), { kind: 'packing', items: [
+      { id: 'k', title: 'Tent', due_date: '2026-11-10', done: 0 },
+      { id: 'j', title: 'Dry bag', due_date: '2026-11-10', done: 0, assignee_person_id: 'r', assignee_name: 'Ravi Menon' }
+    ] }]
     const w = await mount(BeforeTomorrowCard, { checklists, tomorrowIso: '2026-11-11', toggle: async () => {} })
-    expect(w.findAll('li .checklist-who').map((x) => x.text())).toEqual(['Priya', 'Everyone', 'Unassigned'])
+    expect(w.findAll('li .checklist-who').map((x) => x.text())).toEqual(['Priya', 'Unassigned'])
+    expect(w.findAll('li')).toHaveLength(4)
     expect(w.text()).not.toContain('Anyone')
+    expect(w.text()).not.toContain('Everyone')
+    expect(w.text()).not.toContain('Ravi Menon')
   })
   it('nothing due', async () => {
     const w = await mount(BeforeTomorrowCard, { checklists: [], tomorrowIso: '2026-11-11' })

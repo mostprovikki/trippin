@@ -107,9 +107,9 @@ describe('openChecklistItems', () => {
       { id: 't2', title: 'Visa photos', assignee_person_id: null, assignee_name: null, done: 0 }
     ] }
   ]
-  it('open items only, unassigned tasks first; an unassigned packing item is for everyone', () => {
+  it('open items only, unassigned tasks first; a packing item has no who (D13)', () => {
     const out = openChecklistItems(lists)
-    expect(out.map((i) => [i.id, i.who])).toEqual([['t2', 'Unassigned'], ['p1', 'Everyone'], ['t1', 'Asha']])
+    expect(out.map((i) => [i.id, i.who])).toEqual([['t2', 'Unassigned'], ['p1', null], ['t1', 'Asha']])
     expect(out[0].unassigned).toBe(true)
     expect(out[1].unassigned).toBe(false)
   })
@@ -193,14 +193,14 @@ describe('dueByTomorrow (§2 Before tomorrow)', () => {
     expect(dueByTomorrow(lists, '2026-11-08', new Set(['d'])).map((i) => i.id)).toEqual(['o', 'd', 't'])
   })
   // trip-planner-0yh (1): same who as the Checklists card (§6)
-  it('names who as the Checklists card does: Unassigned task, Everyone packing item', () => {
+  it('names who as the Checklists card does: Unassigned task, no who on packing items', () => {
     const mixed = [
       { kind: 'tasks', items: [{ id: 'x', title: 'Book', due_date: '2026-11-01', done: 0 }] },
       { kind: 'packing', items: [{ id: 'y', title: 'Tent', due_date: '2026-11-01', done: 0 }, { id: 'z', title: 'Hat', due_date: '2026-11-01', done: 0, assignee_person_id: 'p', assignee_name: 'Asha' }] }
     ]
     const who = Object.fromEntries(openChecklistItems(mixed).map((i) => [i.id, i.who]))
     expect(dueByTomorrow(mixed, '2026-11-08').map((i) => [i.id, i.who])).toEqual([['x', who.x], ['y', who.y], ['z', who.z]])
-    expect(who).toEqual({ x: 'Unassigned', y: 'Everyone', z: 'Asha' })
+    expect(who).toEqual({ x: 'Unassigned', y: null, z: null })
   })
 })
 

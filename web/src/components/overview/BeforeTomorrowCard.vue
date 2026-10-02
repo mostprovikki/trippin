@@ -43,7 +43,7 @@ async function onChange(item, event) {
           <input type="checkbox" :checked="!!item.done" @change="onChange(item, $event)" />
           <span>{{ item.title }}</span>
         </label>
-        <span class="overview-row-reason checklist-who">{{ item.who }}</span>
+        <span v-if="item.who" class="overview-row-reason checklist-who">{{ item.who }}</span>
       </li>
     </ul>
     <p class="overview-card-foot">
