@@ -92,4 +92,31 @@ describe('TripsListView', () => {
     expect(cards[0].attributes('style')).toBe(cards[1].attributes('style'))
     expect(cards[2].attributes('style') || '').not.toContain('border-left-color')
   })
+
+  // trip-planner-cpp: tripper.md §2 "pick the trip that needs me" — the
+  // Overview's "N of M people" missing number on each card (§6)
+  it('says "N of M people missing" on a card when anyone is missing, else the participant count', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [
+      { path: '/', name: 'trips', component: TripsListView },
+      { path: '/trips/:id', name: 'trip-overview', component: { template: '<div/>' } }
+    ] })
+    await router.push('/')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useTripsStore()
+    store.fetchTrips = vi.fn(async () => {
+      store.trips = [
+        { id: 't1', name: 'Goa', status: 'planning', participant_count: 5, missing_count: 2 },
+        { id: 't2', name: 'Alps', status: 'planning', participant_count: 3, missing_count: 0 }
+      ]
+    })
+    const wrapper = mountWithBase(TripsListView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    const [goa, alps] = wrapper.findAll('.trip-card')
+    expect(goa.find('[data-test="trip-missing"]').text()).toBe('2 of 5 people missing')
+    expect(goa.text()).not.toContain('5 participants')
+    expect(alps.find('[data-test="trip-missing"]').exists()).toBe(false)
+    expect(alps.text()).toContain('3 participants')
+  })
 })

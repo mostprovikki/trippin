@@ -72,6 +72,7 @@ function validateStep(s) {
   return errs.length === 0
 }
 
+const STEP_NAMES = ['Basics', 'Dates', 'Destination', 'Participants']
 function next() { if (draft.step < 4 && validateStep(draft.step)) draft.step++ }
 function back() { if (draft.step > 1) { stepErrors.value = []; draft.step-- } }
 
@@ -124,12 +125,11 @@ async function submit() {
 
 <template>
   <form class="trip-wizard card" @submit.prevent="submit">
-    <Stepper :value="draft.step" linear>
+    <!-- Under 480px the four labelled steps clip ('Destinat…'); one line replaces them. -->
+    <p class="wizard-step-compact" data-test="wizard-step-compact">Step {{ draft.step }} of 4 · {{ STEP_NAMES[draft.step - 1] }}</p>
+    <Stepper class="wizard-stepper" :value="draft.step" linear>
       <StepList>
-        <Step :value="1">Basics</Step>
-        <Step :value="2">Dates</Step>
-        <Step :value="3">Destination</Step>
-        <Step :value="4">Participants</Step>
+        <Step v-for="(label, i) in STEP_NAMES" :key="label" :value="i + 1">{{ label }}</Step>
       </StepList>
     </Stepper>
 
@@ -194,6 +194,11 @@ async function submit() {
 </template>
 
 <style scoped>
+.wizard-step-compact { display: none; margin: 0 0 0.75rem; font-weight: 600; }
+@media (max-width: 480px) {
+  .wizard-step-compact { display: block; }
+  .wizard-stepper { display: none; }
+}
 .wizard-nav { display: flex; gap: 0.5rem; margin-top: 1rem; }
 .wizard-add-link {
   display: inline-flex; align-items: center; gap: 0.375rem;

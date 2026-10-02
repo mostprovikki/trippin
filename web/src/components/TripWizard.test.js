@@ -64,4 +64,11 @@ describe('TripWizard', () => {
     await wrapper.find('[data-test="wizard-next"]').trigger('click')
     expect(wrapper.text()).toContain('End date must be on or after start date')
   })
+
+  // trip-planner-cpp: the 4-step StepList clips at 390 ('Destinat…'); under
+  // 480px a one-line label replaces it (CSS swaps them; both are in the DOM)
+  it('carries a compact "Step N of 4 · Name" label that follows the step', async () => {
+    const { wrapper } = await mountWizard('/trips/new?step=3')
+    expect(wrapper.find('[data-test="wizard-step-compact"]').text()).toBe('Step 3 of 4 · Destination')
+  })
 })

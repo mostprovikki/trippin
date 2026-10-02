@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { httpError } from '../lib/errors.js'
 import { archiveTrip } from '../lib/archive.js'
+import { missingPeopleCount } from '../lib/missing.js'
 
 const TRIP_FIELDS = ['name', 'description', 'vibe_tags', 'origin_city', 'date_mode', 'start_date', 'end_date', 'flex_days', 'destination_mode', 'destination', 'required_doc_types', 'emergency_info']
 // documents.doc_type CHECK values (001_init.sql)
@@ -64,6 +65,7 @@ export default async function routes(app) {
       trips.push({
         id: row.id, name: row.name, status: row.status, destination: row.destination,
         start_date: row.start_date, end_date: row.end_date, participant_count: count,
+        missing_count: await missingPeopleCount(app.db, row.id),
         vibe_tags: JSON.parse(row.vibe_tags || '[]'),
       })
     }

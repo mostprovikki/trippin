@@ -79,7 +79,9 @@ onMounted(load)
           <h3>{{ trip.name }}</h3>
           <p class="trip-meta"><i class="pi pi-map-marker" /> {{ trip.destination || 'Destination TBD' }}</p>
           <p class="trip-meta"><i class="pi pi-calendar" /> {{ trip.start_date && trip.end_date ? `${trip.start_date} – ${trip.end_date}` : 'Dates TBD' }}</p>
-          <p class="trip-meta"><i class="pi pi-users" /> {{ trip.participant_count }} participant{{ trip.participant_count === 1 ? '' : 's' }}</p>
+          <!-- tripper.md §2 "the trip that needs me": the Overview's who's-missing number (§6) -->
+          <p v-if="trip.missing_count > 0" class="trip-meta trip-missing" data-test="trip-missing"><i class="pi pi-exclamation-circle" /> {{ trip.missing_count }} of {{ trip.participant_count }} {{ trip.participant_count === 1 ? 'person' : 'people' }} missing</p>
+          <p v-else class="trip-meta"><i class="pi pi-users" /> {{ trip.participant_count }} participant{{ trip.participant_count === 1 ? '' : 's' }}</p>
           <Tag v-if="tripCountdown(trip)" class="trip-countdown" :value="tripCountdown(trip).label" severity="info" />
         </RouterLink>
       </div>
@@ -109,4 +111,5 @@ onMounted(load)
 .trip-card-archived { opacity: 0.75; }
 .trip-meta { margin: 0.125rem 0; color: var(--app-text-muted); font-size: 0.8438rem; display: flex; align-items: center; gap: 0.375rem; }
 .trip-countdown { margin-top: 0.375rem; }
+.trip-missing { color: var(--app-accent-strong); font-weight: 600; }
 </style>
