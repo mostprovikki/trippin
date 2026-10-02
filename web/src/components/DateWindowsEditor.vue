@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import DateField from './DateField.vue'
@@ -13,10 +13,16 @@ const props = defineProps({
 const emit = defineEmits(['save'])
 
 const rows = reactive([])
+// Snapshot of the rows as last loaded from props: Save windows only renders
+// when the rows differ from it (tripper.md §5 D8 — no Save with nothing to save).
+const loaded = ref('[]')
+const serialize = (list) => JSON.stringify(list.map((r) => [r.start_date || '', r.end_date || '', r.note || '']))
+const dirty = computed(() => serialize(rows) !== loaded.value)
 
 function loadFrom(list) {
   rows.splice(0, rows.length)
   for (const w of list || []) rows.push({ start_date: w.start_date, end_date: w.end_date, note: w.note || '' })
+  loaded.value = serialize(rows)
 }
 loadFrom(props.windows)
 watch(() => props.windows, (v) => loadFrom(v))
@@ -63,7 +69,7 @@ function save() {
         : 'No date windows yet — add one to propose dates.' }}
     </p>
     <Button type="button" label="Add date window" severity="secondary" outlined @click="addRow" />
-    <Button type="button" label="Save windows" @click="save" />
+    <Button v-if="dirty" type="button" label="Save windows" @click="save" />
   </div>
 </template>
 
