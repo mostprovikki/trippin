@@ -199,6 +199,14 @@ describe('TripBudgetView', () => {
       expect(card.text()).toContain('each of 4 people · 2 set their own amount')
     })
 
+    it('shows the booked / estimated split under the per-person number (ztt)', async () => {
+      const { wrapper, store } = await mountWith({ equal: 68400, count: 6 })
+      expect(wrapper.find('[data-test="budget-split"]').exists()).toBe(false)
+      store.equal_share_booked = 41200
+      await flushPromises()
+      expect(wrapper.find('[data-test="per-person"] [data-test="budget-split"]').text()).toBe('₹41,200 booked · ₹27,200 estimated')
+    })
+
     it('Save overrides shows only once an override changed', async () => {
       const { wrapper, store } = await mountWith({ equal: 500, count: 2, overrides: [{ person_id: 'p1', person_name: 'Asha', amount: 100, note: '' }] })
       expect(wrapper.text()).not.toContain('Save overrides')

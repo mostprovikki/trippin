@@ -1,12 +1,14 @@
 <script setup>
 // tripper.md §6 per-person cost, kept on the Overview by the mockup review.
-// Estimate only: Budget has no booked flag yet (owner decision D5).
+// Booked vs estimated once any budget line is flagged booked (trip-planner-ztt).
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { formatMoney, perPersonLabel } from '../../utils/format.js'
+import { formatMoney, perPersonLabel, bookedSplitLabel } from '../../utils/format.js'
 
 const props = defineProps({
   equalShare: { type: Number, default: 0 },
+  // the booked part of equalShare (budget lines flagged booked, trip-planner-ztt)
+  equalShareBooked: { type: Number, default: 0 },
   participantCount: { type: Number, default: 0 },
   // people with their own amount (budget overrides): equal_share is what
   // each of the OTHERS pays, so the label must say so
@@ -15,6 +17,7 @@ const props = defineProps({
 })
 const route = useRoute()
 const sub = computed(() => perPersonLabel(props.participantCount, props.overrideCount))
+const split = computed(() => bookedSplitLabel(props.equalShare, props.equalShareBooked, props.currency))
 const hero = computed(() => (props.equalShare > 0 ? formatMoney(Math.round(props.equalShare), props.currency) : null))
 </script>
 
@@ -23,6 +26,7 @@ const hero = computed(() => (props.equalShare > 0 ? formatMoney(Math.round(props
     <h2 id="budget-h" class="overview-card-title">Budget · per person</h2>
     <template v-if="hero">
       <p class="budget-hero">{{ hero }}</p>
+      <p v-if="split" class="overview-row-reason" data-test="budget-split">{{ split }}</p>
       <p class="overview-row-reason">{{ sub }}</p>
     </template>
     <p v-else class="overview-empty">No estimate yet.</p>

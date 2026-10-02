@@ -4,6 +4,8 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
+import Checkbox from 'primevue/checkbox'
+import Tag from 'primevue/tag'
 import { formatMoney, budgetCategoryLabel as label } from '../utils/format.js'
 
 const props = defineProps({
@@ -46,7 +48,15 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
        375px and the page scrolls sideways instead of the table. -->
   <DataTable :value="modelValue" data-key="category" scrollable class="budget-table dense">
     <Column header="Category">
-      <template #body="{ data }">{{ label(data.category) }}</template>
+      <template #body="{ data }">
+        {{ label(data.category) }}
+        <!-- booked vs estimated (trip-planner-ztt): a booked line's estimate is what was paid -->
+        <label v-if="editing" class="booked-toggle" :for="`bt-booked-${data.category}`">
+          <Checkbox binary :input-id="`bt-booked-${data.category}`" :model-value="!!data.booked" @update:model-value="update(data.category, 'booked', !!$event)" />
+          Booked
+        </label>
+        <Tag v-else-if="data.booked" value="booked" severity="success" class="line-booked" data-test="line-booked" />
+      </template>
       <template #footer><strong>Total</strong></template>
     </Column>
     <Column header="Estimate">
@@ -99,6 +109,9 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
   padding-block: 0.5rem;
 }
 
+.booked-toggle { display: flex; align-items: center; gap: 0.375rem; margin-top: 0.25rem; font-size: 0.875rem; color: var(--app-text-muted); cursor: pointer; }
+.line-booked { margin-left: 0.375rem; }
+
 /* Read mode's basis text should wrap fully instead of clipping the way the
    fixed-width input does. */
 .budget-basis-text {
@@ -128,5 +141,7 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
   .budget-table :deep(.p-datatable-tfoot > tr > td:nth-child(2)) { text-align: right; font-variant-numeric: tabular-nums; }
   .budget-table :deep(.p-datatable-tbody > tr > td:nth-child(2) .p-inputnumber) { width: 8rem; }
   .budget-table :deep(.p-datatable-tfoot > tr > td:nth-child(n + 3)) { display: none; }
+  /* the label is the tap target for the 20px box (§4 44px) */
+  .booked-toggle { min-height: 2.75rem; margin-top: 0; }
 }
 </style>

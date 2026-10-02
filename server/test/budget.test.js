@@ -19,6 +19,30 @@ describe('budget', () => {
     expect(res.total).toBe(18000)
     expect(res.equal_share).toBe(7500)   // (18000-3000)/2
   })
+  // trip-planner-ztt: tripper.md §2 Budget card "₹41,200 booked · ₹27,200 estimated"
+  it('lines carry a booked flag; total splits into booked_total, equal share into equal_share_booked', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const t = await createTrip(db)
+    const [a, b] = await Promise.all([createPerson(db), createPerson(db)])
+    for (const p of [a, b]) await db.run('INSERT INTO trip_participants (trip_id,person_id) VALUES (?,?)', [t.id, p.id])
+    const put = (lines) => authedInject(app, cookie, { method: 'PUT', url: `/api/trips/${t.id}/budget`, payload: { lines } })
+    let res = (await put([{ category: 'stay', estimate: 12000, booked: true }, { category: 'food', estimate: 6000 }])).json()
+    const stay = res.lines.find((l) => l.category === 'stay')
+    expect(stay.booked).toBe(true)
+    expect(res.lines.find((l) => l.category === 'food').booked).toBe(false)
+    expect(res.lines.find((l) => l.category === 'misc').booked).toBe(false) // zero-filled line
+    expect(res.booked_total).toBe(12000)
+    expect(res.equal_share).toBe(9000)
+    expect(res.equal_share_booked).toBe(6000) // 9000 × 12000/18000
+    // a PUT that leaves booked out (AI draft apply) keeps what was booked
+    res = (await put([{ category: 'stay', estimate: 15000, basis: 'repriced' }])).json()
+    expect(res.lines.find((l) => l.category === 'stay')).toMatchObject({ estimate: 15000, booked: true })
+    // and booked:false un-books
+    res = (await put([{ category: 'stay', estimate: 15000, booked: false }])).json()
+    expect(res.booked_total).toBe(0)
+    expect(res.equal_share_booked).toBe(0)
+  })
+
   // Money columns must be DOUBLE PRECISION. Postgres REAL is float4 (~7 significant
   // digits), so a routine seven-figure INR budget would come back as 1234567.875 —
   // silently wrong, and wrong in the JSON body this whole migration exists to keep

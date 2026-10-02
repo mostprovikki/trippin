@@ -43,6 +43,7 @@ const TRIP_PATTERNS = [
   'Profile QA *',   // e2e/qa-participant-profile.mjs
   'People QA *',     // e2e/qa-people.mjs
   'Phone QA *',      // e2e/qa-participant-phone.mjs
+  'Booked QA *',     // e2e/qa-booked.mjs
   'Probe *',        // ad-hoc probes
   'Smoke *'         // e2e/smoke.mjs
 ]

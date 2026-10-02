@@ -121,7 +121,7 @@ watch(tripId, load)
       </div>
       <div class="overview-col">
         <ItineraryCard :trip="trip" :days="itineraryDays" />
-        <BudgetCard :equal-share="Number(budget.equal_share) || 0" :participant-count="budget.participant_count || 0" :override-count="(budget.overrides || []).length" :currency="trip.currency || 'INR'" />
+        <BudgetCard :equal-share="Number(budget.equal_share) || 0" :equal-share-booked="Number(budget.equal_share_booked) || 0" :participant-count="budget.participant_count || 0" :override-count="(budget.overrides || []).length" :currency="trip.currency || 'INR'" />
         <ChecklistsCard :checklists="tripChecklists" />
       </div>
     </div>
@@ -144,7 +144,7 @@ watch(tripId, load)
         <ItineraryCard :trip="trip" :days="itineraryDays" />
       </div>
       <div class="overview-col">
-        <BudgetCard :equal-share="Number(budget.equal_share) || 0" :participant-count="budget.participant_count || 0" :override-count="(budget.overrides || []).length" :currency="trip.currency || 'INR'" />
+        <BudgetCard :equal-share="Number(budget.equal_share) || 0" :equal-share-booked="Number(budget.equal_share_booked) || 0" :participant-count="budget.participant_count || 0" :override-count="(budget.overrides || []).length" :currency="trip.currency || 'INR'" />
       </div>
     </div>
   </div>

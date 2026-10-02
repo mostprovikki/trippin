@@ -17,17 +17,20 @@ export async function draftBudgetLines(app, trip) {
 }
 
 async function budgetShape(app, tripId) {
-  const rows = await app.db.all('SELECT category, estimate, basis FROM budget_lines WHERE trip_id = ?', [tripId])
-  const byCategory = Object.fromEntries(rows.map((r) => [r.category, r]))
-  const lines = CATEGORIES.map((category) => byCategory[category] || { category, estimate: 0, basis: null })
+  const rows = await app.db.all('SELECT category, estimate, basis, booked FROM budget_lines WHERE trip_id = ?', [tripId])
+  const byCategory = Object.fromEntries(rows.map((r) => [r.category, { ...r, booked: r.booked === 1 }]))
+  const lines = CATEGORIES.map((category) => byCategory[category] || { category, estimate: 0, basis: null, booked: false })
   const total = round2(lines.reduce((sum, l) => sum + l.estimate, 0))
+  const booked_total = round2(lines.reduce((sum, l) => sum + (l.booked ? l.estimate : 0), 0))
   const { count: participant_count } = await app.db.get(
     'SELECT COUNT(*)::int AS count FROM trip_participants WHERE trip_id = ?', [tripId])
   const overrides = await app.db.all(`SELECT bo.person_id, p.name AS person_name, bo.amount, bo.note FROM budget_overrides bo
     JOIN persons p ON p.id = bo.person_id WHERE bo.trip_id = ? ORDER BY p.name`, [tripId])
   const overrideSum = overrides.reduce((sum, o) => sum + o.amount, 0)
   const equal_share = round2((total - overrideSum) / Math.max(1, participant_count - overrides.length))
-  return { lines, total, participant_count, equal_share, overrides }
+  // the booked part of each equal share, in proportion to the booked share of the total
+  const equal_share_booked = total > 0 ? round2(equal_share * (booked_total / total)) : 0
+  return { lines, total, booked_total, participant_count, equal_share, equal_share_booked, overrides }
 }
 
 export default async function routes(app) {
@@ -55,6 +58,7 @@ export default async function routes(app) {
                 category: { type: 'string', enum: CATEGORIES },
                 estimate: { type: 'number' },
                 basis: { type: 'string' },
+                booked: { type: 'boolean' },
               },
             },
           },
@@ -65,11 +69,16 @@ export default async function routes(app) {
     const trip = await getTrip(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     await app.db.tx(async () => {
-      for (const l of req.body.lines) await app.db.run(
-        `INSERT INTO budget_lines (id, trip_id, category, estimate, basis) VALUES (?, ?, ?, ?, ?)
-         ON CONFLICT (trip_id, category) DO UPDATE SET estimate = excluded.estimate, basis = excluded.basis`,
-        [randomUUID(), trip.id, l.category, l.estimate, l.basis ?? null],
-      )
+      // booked left out (an AI draft apply sends estimates only) keeps what was booked
+      for (const l of req.body.lines) await (l.booked === undefined
+        ? app.db.run(
+          `INSERT INTO budget_lines (id, trip_id, category, estimate, basis) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT (trip_id, category) DO UPDATE SET estimate = excluded.estimate, basis = excluded.basis`,
+          [randomUUID(), trip.id, l.category, l.estimate, l.basis ?? null])
+        : app.db.run(
+          `INSERT INTO budget_lines (id, trip_id, category, estimate, basis, booked) VALUES (?, ?, ?, ?, ?, ?)
+           ON CONFLICT (trip_id, category) DO UPDATE SET estimate = excluded.estimate, basis = excluded.basis, booked = excluded.booked`,
+          [randomUUID(), trip.id, l.category, l.estimate, l.basis ?? null, l.booked ? 1 : 0]))
     })
     return await budgetShape(app, trip.id)
   })

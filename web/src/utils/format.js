@@ -63,3 +63,11 @@ export function perPersonLabel(participantCount, overrideCount = 0) {
     ? `estimate · each of ${plural(Math.max(0, participantCount - overrideCount))} · ${overrideCount} set their own amount`
     : `estimate · ${plural(participantCount)}`
 }
+
+// The §2 mockup's split of one person's share: "₹41,200 booked · ₹27,200
+// estimated". Null when nothing is booked, so callers show no line at all.
+export function bookedSplitLabel(equalShare, bookedShare, currency) {
+  if (!(bookedShare > 0)) return null
+  const booked = Math.round(bookedShare)
+  return `${formatMoney(booked, currency)} booked · ${formatMoney(Math.max(0, Math.round(equalShare) - booked), currency)} estimated`
+}

@@ -5,7 +5,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Skeleton from 'primevue/skeleton'
 import InputText from 'primevue/inputtext'
-import { formatMoney, perPersonLabel } from '../../utils/format.js'
+import { formatMoney, perPersonLabel, bookedSplitLabel } from '../../utils/format.js'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Menu from 'primevue/menu'
@@ -47,6 +47,7 @@ watch(() => store.overrides, (overrides) => { overridesDraft.load({ overrides: o
 const overridesDirty = computed(() => overridesDraft.isDirty.value)
 // Per-person cost is job 3: it leads the tab, in the Overview's own words (§6).
 const perPersonHero = computed(() => (store.equal_share > 0 ? formatMoney(Math.round(store.equal_share), tripCurrency.value) : null))
+const perPersonSplit = computed(() => bookedSplitLabel(store.equal_share, store.equal_share_booked, tripCurrency.value))
 const perPersonSub = computed(() => perPersonLabel(store.participant_count, store.overrides.length))
 // An all-zero budget is "no estimate", not eight ₹0 rows. Judged on the saved
 // lines, so typing a 0 while editing doesn't swap the table out from under you.
@@ -175,6 +176,7 @@ onBeforeRouteLeave(async () => {
         <h2>Per person</h2>
         <template v-if="perPersonHero">
           <p class="budget-hero">{{ perPersonHero }}</p>
+          <p v-if="perPersonSplit" class="budget-split" data-test="budget-split">{{ perPersonSplit }}</p>
           <p class="budget-sub">{{ perPersonSub }}</p>
         </template>
         <p v-else class="budget-sub">No estimate yet.</p>
@@ -234,6 +236,7 @@ onBeforeRouteLeave(async () => {
 
 <style scoped>
 .budget-hero { font-size: 1.75rem; font-weight: 600; margin: 0.25rem 0 0; font-variant-numeric: tabular-nums; }
+.budget-split { margin: 0.25rem 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .budget-sub { margin: 0.25rem 0 0; color: var(--app-text-muted); font-size: 0.875rem; }
 .override-head { font-size: 0.9375rem; margin: 1rem 0 0.5rem; }
 .override-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.5rem; }

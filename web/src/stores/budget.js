@@ -12,6 +12,8 @@ export const useBudgetStore = defineStore('budget', {
     lines: [],
     total: 0,
     equal_share: 0,
+    booked_total: 0,
+    equal_share_booked: 0,
     participant_count: 0,
     overrides: [],
     draft: null,
@@ -48,6 +50,8 @@ export const useBudgetStore = defineStore('budget', {
       this.lines = []
       this.total = 0
       this.equal_share = 0
+      this.booked_total = 0
+      this.equal_share_booked = 0
       this.participant_count = 0
       this.overrides = []
       this.draft = null
@@ -60,6 +64,8 @@ export const useBudgetStore = defineStore('budget', {
       this.lines = res.lines
       this.total = res.total
       this.equal_share = res.equal_share
+      this.booked_total = res.booked_total ?? 0
+      this.equal_share_booked = res.equal_share_booked ?? 0
       this.participant_count = res.participant_count
       this.overrides = res.overrides
     },

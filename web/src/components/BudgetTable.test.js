@@ -105,4 +105,17 @@ describe('BudgetTable', () => {
     })
     expect(wrapper.find('#bt-estimate-stay').exists()).toBe(true)
   })
+
+  // trip-planner-ztt: booked vs estimated per line
+  it('read mode tags booked lines; edit mode toggles booked in place', async () => {
+    const lines = [{ category: 'stay', estimate: 100, basis: '', booked: true }, { category: 'food', estimate: 50, basis: '', booked: false }]
+    const read = mountWithBase(BudgetTable, { props: { modelValue: lines } })
+    expect(read.findAll('[data-test="line-booked"]')).toHaveLength(1)
+    const edit = mountWithBase(BudgetTable, { props: { modelValue: lines, editing: true } })
+    const food = edit.find('#bt-booked-food')
+    expect(food.exists()).toBe(true)
+    await food.setValue(true)
+    const emitted = edit.emitted('update:modelValue').at(-1)[0]
+    expect(emitted.find((l) => l.category === 'food').booked).toBe(true)
+  })
 })

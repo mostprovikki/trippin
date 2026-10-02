@@ -65,6 +65,14 @@ describe('BudgetCard (§6 per-person cost; owner D5: estimate only)', () => {
     expect(w.text()).toContain('estimate · each of 4 people · 2 set their own amount')
     expect(w.text()).not.toContain('6 people')
   })
+  // trip-planner-ztt: the §2 mockup's "₹41,200 booked · ₹27,200 estimated"
+  it('splits the per-person number into booked and estimated once anything is booked', async () => {
+    const w = await mount(BudgetCard, { equalShare: 68400, equalShareBooked: 41200, participantCount: 6, currency: 'INR' })
+    expect(w.find('.budget-hero').text()).toBe('₹68,400')
+    expect(w.find('[data-test="budget-split"]').text()).toBe('₹41,200 booked · ₹27,200 estimated')
+    const none = await mount(BudgetCard, { equalShare: 68400, participantCount: 6, currency: 'INR' })
+    expect(none.find('[data-test="budget-split"]').exists()).toBe(false)
+  })
   it('no estimate yet', async () => {
     const w = await mount(BudgetCard, { equalShare: 0, participantCount: 0, currency: 'INR' })
     expect(w.text()).toContain('No estimate yet')
