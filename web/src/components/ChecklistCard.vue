@@ -28,6 +28,8 @@ const showSaveAsTemplate = ref(false)
 const templateName = ref('')
 
 const isTasks = computed(() => props.checklist.kind === 'tasks')
+// PrimeVue reads value '' as no selection, so the Selects also carry
+// placeholder="Unassigned" — otherwise an unassigned row renders blank.
 const assigneeOptions = computed(() => [
   { label: 'Unassigned', value: '' },
   ...props.participants.map((p) => ({ label: p.name, value: p.person_id }))
@@ -179,6 +181,7 @@ function discardDraft() {
             :options="assigneeOptions"
             option-label="label"
             option-value="value"
+            placeholder="Unassigned"
             aria-label="Assignee"
             @update:model-value="changeAssignee(item, $event)"
           />
@@ -198,7 +201,7 @@ function discardDraft() {
     <form class="field checklist-add" @submit.prevent="addItem">
       <input v-model="newTitle" placeholder="New item title" />
       <template v-if="isTasks">
-        <Select input-id="cl-new-assignee" name="cl-new-assignee" v-model="newAssignee" :options="assigneeOptions" option-label="label" option-value="value" aria-label="Assignee" />
+        <Select input-id="cl-new-assignee" name="cl-new-assignee" v-model="newAssignee" :options="assigneeOptions" option-label="label" option-value="value" placeholder="Unassigned" aria-label="Assignee" />
         <DateField v-model="newDueDate" class="due-date" :fluid="false" placeholder="Due date" />
       </template>
       <Button type="submit" label="Add item" />
@@ -237,6 +240,10 @@ function discardDraft() {
   .item-tick { flex: 1 1 0; min-height: 2.75rem; }
   .item-meta { order: 3; flex: 1 0 100%; min-width: 0; box-sizing: border-box; padding-left: 1.75rem; }
   .item-meta .p-select { flex: 1 1 0; min-width: 0; }
+  /* The assignee Select gets what the date gives up: at 10rem it was ~78px and
+     cut first names ('Asha …'). The date text is ~85px + the 28px icon box, so
+     8.5rem with a 2rem right pad still clears the icon by ~12px (390, measured). */
+  .item-meta .due-date :deep(.p-datepicker-input) { width: 8.5rem; padding-right: 2rem; }
 }
 .checklist-add { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .save-template { margin-top: 0.5rem; }

@@ -107,6 +107,25 @@ describe('ChecklistCard', () => {
     expect(tpl.find('[aria-label="More Beach actions"]').exists()).toBe(false)
   })
 
+  // trip-planner-typ: option value '' reads as "no selection" to PrimeVue, so an
+  // unassigned row rendered an empty Select instead of "Unassigned".
+  it('an unassigned task row and the add form read "Unassigned"; an assigned row reads the name', () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const wrapper = mountWithBase(ChecklistCard, {
+      pinia,
+      props: {
+        checklist: { id: 'c7', name: 'Chores', kind: 'tasks', items: [
+          { id: 'i1', title: 'Book taxi', done: false, assignee_person_id: null },
+          { id: 'i2', title: 'Buy SIM', done: false, assignee_person_id: 'p1' }
+        ] },
+        participants: [{ person_id: 'p1', name: 'Asha Raman' }]
+      }
+    })
+    const labels = wrapper.findAll('.p-select-label').map((el) => el.text())
+    expect(labels).toEqual(['Unassigned', 'Asha Raman', 'Unassigned'])
+  })
+
   // tripper.md §5: one primary at rest; per-card management under the card's ⋯ (D8).
   it('at rest Add item is the only filled button; Save as template and Delete live under ⋯', () => {
     const { wrapper } = mountCard({ id: 'c4', name: 'Bags', kind: 'packing', items: [{ id: 'i1', title: 'Hat', done: false }] })

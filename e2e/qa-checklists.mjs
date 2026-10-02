@@ -4,7 +4,8 @@
 //     every card has its ⋯; Save as template / Delete checklist are not visible
 //   - 390: the first item row starts on the first screen; every row is ≥44px and its
 //     label (which wraps the checkbox) is ≥44px; packing rows are one line; task rows
-//     put assignee + due on one second line
+//     put assignee + due on one second line, and each assignee Select shows its full
+//     first name (trip-planner-typ)
 // Run: node e2e/qa-checklists.mjs
 import { existsSync, readdirSync } from 'node:fs'
 import os from 'node:os'
@@ -77,7 +78,20 @@ for (const width of [1280, 390]) {
           delOnLabelLine: del && lr ? r(del).top < lr.bottom && r(del).bottom > lr.top : false,
           metaBelow: meta && lr ? r(meta).top >= lr.bottom - 1 : null,
           metaOneLine: metaKids.length ? Math.max(...metaKids) - Math.min(...metaKids) <= 2 : null,
-          metaH: meta ? r(meta).height : 0
+          metaH: meta ? r(meta).height : 0,
+          // first name + ellipsis must fit the Select's label box (canvas, same font)
+          assignee: (() => {
+            const l = meta?.querySelector('.p-select-label')
+            if (!l) return null
+            const name = l.textContent.trim()
+            const c = document.createElement('canvas').getContext('2d')
+            c.font = getComputedStyle(l).font
+            const cs = getComputedStyle(l)
+            const box = l.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+            const first = name.split(/\s+/)[0]
+            const need = c.measureText(first === name ? name : `${first} …`).width
+            return { name, fits: !!name && need <= box, need: Math.round(need), box: Math.round(box) }
+          })()
         }
       })
     })
@@ -138,6 +152,8 @@ for (const width of [1280, 390]) {
     const tasks = m.rows.filter((x) => x.kind === 'tasks')
     const taskBad = tasks.filter((x) => !x.delOnLabelLine || !x.metaBelow || !x.metaOneLine || x.h > x.labelH + x.metaH + 18)
     check(`${w}: task rows are two lines (title + ×, then assignee + due)`, !taskBad.length, taskBad.map((x) => `${x.title}=${Math.round(x.h)} below=${x.metaBelow} one=${x.metaOneLine}`).slice(0, 3).join(', ') || `max ${Math.round(Math.max(...tasks.map((x) => x.h)))}px`)
+    const cut = tasks.filter((x) => !x.assignee?.fits)
+    check(`${w}: every task assignee Select shows a full first name (or Unassigned)`, !cut.length, cut.map((x) => `${x.title}=${JSON.stringify(x.assignee)}`).slice(0, 3).join(', ') || `${tasks.length} rows`)
   }
 
   // the button reveals the create panel, and nothing was hidden that the panel doesn't hold
