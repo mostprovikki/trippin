@@ -3,7 +3,7 @@
 // Estimate only: Budget has no booked flag yet (owner decision D5).
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { formatMoney } from '../../utils/format.js'
+import { formatMoney, perPersonLabel } from '../../utils/format.js'
 
 const props = defineProps({
   equalShare: { type: Number, default: 0 },
@@ -14,11 +14,7 @@ const props = defineProps({
   currency: { type: String, default: 'INR' }
 })
 const route = useRoute()
-const sharing = computed(() => Math.max(0, props.participantCount - props.overrideCount))
-const plural = (n) => `${n} ${n === 1 ? 'person' : 'people'}`
-const sub = computed(() => (props.overrideCount
-  ? `estimate · each of ${plural(sharing.value)} · ${props.overrideCount} set their own amount`
-  : `estimate · ${plural(props.participantCount)}`))
+const sub = computed(() => perPersonLabel(props.participantCount, props.overrideCount))
 const hero = computed(() => (props.equalShare > 0 ? formatMoney(Math.round(props.equalShare), props.currency) : null))
 </script>
 

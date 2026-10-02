@@ -53,3 +53,13 @@ const DOC_TYPE_LABELS = {
 export function docTypeLabel(type) {
   return DOC_TYPE_LABELS[type] || type
 }
+
+// Who the per-person estimate applies to. equal_share is what each person
+// WITHOUT an override pays, so with overrides the label must say "each of the
+// others". One wording for the Overview Budget card and the Budget tab (§6).
+export function perPersonLabel(participantCount, overrideCount = 0) {
+  const plural = (n) => `${n} ${n === 1 ? 'person' : 'people'}`
+  return overrideCount
+    ? `estimate · each of ${plural(Math.max(0, participantCount - overrideCount))} · ${overrideCount} set their own amount`
+    : `estimate · ${plural(participantCount)}`
+}

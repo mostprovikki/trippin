@@ -105,4 +105,28 @@ const total = computed(() => props.modelValue.reduce((sum, l) => sum + (Number(l
   white-space: normal;
   word-break: break-word;
 }
+
+/* Phone (§4): the Basis column was ~60px wide, wrapping a few characters per
+   line (a 2000px table at 390). Under 640px each line becomes a block:
+   category + estimate on one line, Basis (and the AI draft) full width below. */
+@media (max-width: 640px) {
+  .budget-table :deep(.p-datatable-thead) { display: none; }
+  .budget-table :deep(.p-datatable-table) { display: block; min-width: 0 !important; }
+  .budget-table :deep(.p-datatable-tbody),
+  .budget-table :deep(.p-datatable-tfoot) { display: block; }
+  .budget-table :deep(.p-datatable-tbody > tr),
+  .budget-table :deep(.p-datatable-tfoot > tr) {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 0.75rem;
+    border-bottom: 1px solid var(--app-border);
+  }
+  .budget-table :deep(.p-datatable-tbody > tr > td),
+  .budget-table :deep(.p-datatable-tfoot > tr > td) { border: 0; padding-inline: 0; }
+  .budget-table :deep(.p-datatable-tbody > tr > td:nth-child(n + 3)) {
+    grid-column: 1 / -1; padding-top: 0; color: var(--app-text-muted); font-size: 0.875rem;
+  }
+  .budget-table :deep(.p-datatable-tbody > tr > td:nth-child(2)),
+  .budget-table :deep(.p-datatable-tfoot > tr > td:nth-child(2)) { text-align: right; font-variant-numeric: tabular-nums; }
+  .budget-table :deep(.p-datatable-tbody > tr > td:nth-child(2) .p-inputnumber) { width: 8rem; }
+  .budget-table :deep(.p-datatable-tfoot > tr > td:nth-child(n + 3)) { display: none; }
+}
 </style>

@@ -19,7 +19,8 @@ async function mountView() {
   const pinia = createPinia()
   setActivePinia(pinia)
   const store = useBudgetStore()
-  store.fetchBudget = vi.fn().mockResolvedValue()
+  // one saved non-zero line: an all-zero budget renders the empty state, not the table (sog)
+  store.fetchBudget = vi.fn(async () => { store.lines = [{ category: 'misc', estimate: 1, basis: '' }] })
   const wrapper = mountWithBase(TripBudgetView, { pinia, global: { plugins: [router] } })
   await flushPromises()
   return { wrapper, store }
@@ -160,5 +161,89 @@ describe('TripBudgetView', () => {
     expect(wrapper.findAll('[data-test="draft-pasted"]')).toHaveLength(1)
     wrapper.unmount()
     document.body.innerHTML = ''
+  })
+
+  // trip-planner-sog: tripper.md §4 phone reach (job 3), §5 D8, §6 one number one place
+  describe('per-person first, Save only when dirty, empty state', () => {
+    async function mountWith({ lines = [{ category: 'stay', estimate: 1000, basis: '' }], equal = 0, count = 0, overrides = [] } = {}) {
+      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/trips/:id/budget', name: 'trip-budget', component: TripBudgetView }] })
+      await router.push('/trips/t1/budget')
+      await router.isReady()
+      vi.spyOn(api, 'get').mockResolvedValue({ trip: { participants: [{ person_id: 'p9', name: 'Meera' }] } })
+      const pinia = createPinia()
+      setActivePinia(pinia)
+      const store = useBudgetStore()
+      store.fetchBudget = vi.fn(async () => {
+        store.lines = lines; store.equal_share = equal; store.participant_count = count; store.overrides = overrides
+      })
+      store.saveOverrides = vi.fn().mockResolvedValue()
+      const wrapper = mountWithBase(TripBudgetView, { pinia, global: { plugins: [router] } })
+      await flushPromises()
+      return { wrapper, store }
+    }
+
+    it('puts the per-person card before the category estimates', async () => {
+      const { wrapper } = await mountWith({ equal: 500, count: 2 })
+      const heads = wrapper.findAll('h2').map((h) => h.text())
+      expect(heads.indexOf('Per person')).toBeGreaterThanOrEqual(0)
+      expect(heads.indexOf('Per person')).toBeLessThan(heads.indexOf('Category estimates'))
+    })
+
+    it('says the per-person number the way the Overview does', async () => {
+      const { wrapper } = await mountWith({
+        equal: 174325, count: 6,
+        overrides: [{ person_id: 'p1', person_name: 'Asha', amount: 145000, note: '' }, { person_id: 'p2', person_name: 'Ravi', amount: 128000, note: '' }]
+      })
+      const card = wrapper.find('[data-test="per-person"]')
+      expect(card.text()).toContain('₹174,325')
+      expect(card.text()).toContain('each of 4 people · 2 set their own amount')
+    })
+
+    it('Save overrides shows only once an override changed', async () => {
+      const { wrapper, store } = await mountWith({ equal: 500, count: 2, overrides: [{ person_id: 'p1', person_name: 'Asha', amount: 100, note: '' }] })
+      expect(wrapper.text()).not.toContain('Save overrides')
+      await wrapper.find('#tb-note-p1').setValue('pays later')
+      await flushPromises()
+      const save = wrapper.findAll('button').find((b) => b.text() === 'Save overrides')
+      expect(save).toBeTruthy()
+      await save.trigger('click')
+      await flushPromises()
+      expect(store.saveOverrides).toHaveBeenCalledWith('t1', [{ person_id: 'p1', amount: 100, note: 'pays later' }])
+    })
+
+    it('overrides are stacked rows, not a table of narrow inputs', async () => {
+      const { wrapper } = await mountWith({ equal: 500, count: 2, overrides: [{ person_id: 'p1', person_name: 'Asha', amount: 100, note: '' }] })
+      const card = wrapper.find('[data-test="per-person"]')
+      expect(card.find('table').exists()).toBe(false)
+      expect(card.findAll('.override-row:not(.override-add)')).toHaveLength(1)
+    })
+
+    // participants come from GET /trips/:id as { person_id, name } — the picker
+    // read p.id, so every option was undefined and Add never enabled
+    it('Add override picks a participant by person_id and adds their row', async () => {
+      const { wrapper } = await mountWith({ equal: 500, count: 2 })
+      const select = wrapper.findAllComponents({ name: 'Select' }).find((c) => c.props('inputId') === 'tb-new-override-person')
+      expect(select.props('options')[0]).toMatchObject({ person_id: 'p9' })
+      select.vm.$emit('update:modelValue', 'p9')
+      await flushPromises()
+      const add = wrapper.findAll('button').find((b) => b.text() === 'Add')
+      expect(add.attributes('disabled')).toBeUndefined()
+      await add.trigger('click')
+      await flushPromises()
+      const rows = wrapper.findAll('.override-row:not(.override-add)')
+      expect(rows).toHaveLength(1)
+      expect(rows[0].text()).toContain('Meera')
+      expect(wrapper.text()).toContain('Save overrides')
+    })
+
+    it('an all-zero budget says "No estimate yet" instead of ₹0 rows; Edit budget still opens the table', async () => {
+      const zero = ['stay', 'food'].map((category) => ({ category, estimate: 0, basis: '' }))
+      const { wrapper } = await mountWith({ lines: zero })
+      expect(wrapper.text()).toContain('No estimate yet')
+      expect(wrapper.findComponent({ name: 'BudgetTable' }).exists()).toBe(false)
+      expect(wrapper.find('[data-test="per-person"]').text()).toContain('No estimate yet')
+      await wrapper.findAll('button').find((b) => b.text() === 'Edit budget').trigger('click')
+      expect(wrapper.findComponent({ name: 'BudgetTable' }).props('editing')).toBe(true)
+    })
   })
 })
