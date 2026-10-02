@@ -1387,7 +1387,17 @@ let personUrl = null
 {
   await page.locator('.participant-card').first().waitFor({ timeout: 3000 }).catch(() => {})
   if (await page.locator('.participant-card').count()) {
-    const linkP = page.waitForResponse((r) => /\/participants\/[^/]+\/link$/.test(r.url()) && r.ok(), { timeout: 5000 }).then(async (r) => BASE + (await r.json()).url).catch(() => null)
+    // Copy first re-reads the link (GET, 200 {url:null} when there is none — d7n) and
+    // only then mints (POST), so wait for the first /link response that carries a url.
+    const linkP = new Promise((resolve) => {
+      const timer = setTimeout(() => { page.off('response', onRes); resolve(null) }, 5000)
+      async function onRes(r) {
+        if (!/\/participants\/[^/]+\/link$/.test(r.url()) || !r.ok()) return
+        const url = (await r.json().catch(() => null))?.url
+        if (url) { clearTimeout(timer); page.off('response', onRes); resolve(BASE + url) }
+      }
+      page.on('response', onRes)
+    })
     await page.getByRole('button', { name: /^Copy .+'s link$/ }).first().click()
     participantUrl = await linkP
   }

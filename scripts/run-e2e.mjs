@@ -135,6 +135,7 @@ function runGate(filePath) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [filePath], { cwd: REPO_ROOT, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] })
     const failLines = []
+    const lastErr = [] // a crash prints no FAIL - line; keep its last stderr lines instead
     let tail = ''
     const keep = (chunk, out) => {
       out.write(chunk)
@@ -144,13 +145,20 @@ function runGate(filePath) {
       for (const l of lines) if (FAIL_LINE.test(l)) failLines.push(l)
     }
     child.stdout.on('data', (c) => keep(c, process.stdout))
-    child.stderr.on('data', (c) => keep(c, process.stderr))
+    child.stderr.on('data', (c) => {
+      keep(c, process.stderr)
+      for (const l of c.toString().split('\n')) if (l.trim()) { lastErr.push(l.trim()); if (lastErr.length > 40) lastErr.shift() }
+    })
     let error = null
     child.on('error', (e) => { error = e })
     const timer = setTimeout(() => child.kill('SIGTERM'), GATE_TIMEOUT_MS)
     child.on('close', (status, signal) => {
       clearTimeout(timer)
       if (tail && FAIL_LINE.test(tail)) failLines.push(tail)
+      if (!failLines.length && status !== 0) {
+        const msg = lastErr.find((l) => /error|Error|exception/.test(l) && !/^at |triggerUncaughtException|^\^/.test(l))
+        if (msg) failLines.push(`crash: ${msg}`)
+      }
       resolve({ status, signal, error, failLines })
     })
   })
