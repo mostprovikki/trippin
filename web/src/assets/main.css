@@ -250,6 +250,15 @@ a { color: var(--app-primary); }
 @media (max-width: 640px) {
   .overview-row .p-button { min-height: 44px; }
 }
+/* Text links count for the 44px floor too (tripper.md §4 D14), but by hit area,
+   not a bigger box: a centred 44px ::before takes the tap and moves nothing.
+   .tap-44 is the same rule for links outside these cards (AppNav). */
+@media (max-width: 639.98px) {
+  .overview-card-foot a, a.overview-row-name, .tap-44 { position: relative; }
+  .overview-card-foot a::before, a.overview-row-name::before, .tap-44::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%);
+  }
+}
 
 /* Form field */
 .field { display: block; margin-bottom: 1rem; }

@@ -64,6 +64,33 @@ for (const p of PAGES) {
   check(`${p}: every control ≥ ${MIN}px`, !bad.length, bad.slice(0, 6).join(', ') + (bad.length > 6 ? ` … +${bad.length - 6}` : ''))
 }
 
+// h3i.9 (D14): text links count too — nav links, Overview card footer links and Who's-missing
+// person names. Hit area, not box: probe 21px above and below each link's centre with
+// elementFromPoint, so a ::before that grows the target passes and one covered by a neighbour fails.
+await page.goto(`${BASE}${T}`, { waitUntil: 'networkidle' })
+await page.waitForTimeout(400)
+const links = await page.evaluate(async (min) => {
+  const groups = { nav: '.app-nav a', foot: '.overview-card-foot a', name: 'a.overview-row-name' }
+  const out = {}
+  for (const [k, sel] of Object.entries(groups)) {
+    out[k] = { n: 0, bad: [] }
+    for (const el of document.querySelectorAll(sel)) {
+      if (!el.offsetParent) continue
+      out[k].n++
+      el.scrollIntoView({ block: 'center' })
+      await new Promise((r) => requestAnimationFrame(r))
+      const r = el.getBoundingClientRect()
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2, d = min / 2 - 1
+      const hit = [cy - d, cy + d].every((y) => el.contains(document.elementFromPoint(cx, y)))
+      if (!hit) out[k].bad.push(`${el.textContent.trim().slice(0, 18)}=${Math.round(r.height)}`)
+    }
+  }
+  return out
+}, MIN)
+for (const [k, label] of [['nav', 'nav links'], ['foot', 'card footer links'], ['name', "Who's missing person names"]]) {
+  check(`Overview ${label} hit area ≥ ${MIN}px at 390`, links[k].n > 0 && !links[k].bad.length, `${links[k].n} links; short: ${links[k].bad.join(', ')}`)
+}
+
 // cdl copy/format fixes
 await page.goto(`${BASE}${T}/settings`, { waitUntil: 'networkidle' })
 const head = await page.evaluate(() => [...document.querySelectorAll('.trip-head button')].map((b) => b.textContent.trim()))

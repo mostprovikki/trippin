@@ -44,7 +44,7 @@ async function onLogout() {
 
 <template>
   <header class="app-nav">
-    <RouterLink to="/" class="app-brand"><i class="pi pi-compass" aria-hidden="true" /> Tripper</RouterLink>
+    <RouterLink to="/" class="app-brand tap-44"><i class="pi pi-compass" aria-hidden="true" /> Tripper</RouterLink>
 
     <nav class="app-crumbs" aria-label="Breadcrumb">
       <template v-for="(c, i) in crumbs" :key="i">
@@ -70,8 +70,8 @@ async function onLogout() {
         <span class="app-search-label">Search</span>
         <kbd class="app-search-kbd">{{ shortcutHint }}</kbd>
       </button>
-      <RouterLink to="/" class="app-nav-link" :class="{ 'app-nav-link-active': route.name === 'trips' || String(route.name).startsWith('trip') }">Trips</RouterLink>
-      <RouterLink to="/people" class="app-nav-link" :class="{ 'app-nav-link-active': route.name === 'people' || route.name === 'person' }">People</RouterLink>
+      <RouterLink to="/" class="app-nav-link tap-44" :class="{ 'app-nav-link-active': route.name === 'trips' || String(route.name).startsWith('trip') }">Trips</RouterLink>
+      <RouterLink to="/people" class="app-nav-link tap-44" :class="{ 'app-nav-link-active': route.name === 'people' || route.name === 'person' }">People</RouterLink>
       <Button
         type="button"
         severity="secondary"
