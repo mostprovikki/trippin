@@ -75,6 +75,9 @@ Workbench controls.
   Readiness, Budget and the change feed are hidden.
 - *After the trip*: a trip leaves `active` automatically the day after its end date, so the
   during-trip layout never outlives the trip.
+- *Archived*: read-only. Only Settings' notes, photo links, actuals (what was really spent per
+  budget category) and Unarchive stay editable; the server refuses every other write
+  (owner D11, 2026-10-02).
 - On a phone the columns stack left then right: Today → Quick reference → Tomorrow → Before tomorrow.
 
 ## 3. Frequency and session shape
@@ -101,6 +104,7 @@ Itinerary, Budget, Checklists, People) must fit a 390px bar. Only Details ▾ ma
 
 **On a phone (< 640px) every control is at least 44px tall**, app-wide: buttons, inputs,
 selects, nav links. This covers more than the tab bar and row actions (owner D7, 2026-10-02).
+Text links count too: their hit area is ≥ 44px, the text stays its size (owner D14, 2026-10-02).
 
 ## 5. Density and action stance
 
@@ -114,6 +118,9 @@ selects, nav links. This covers more than the tab bar and row actions (owner D7,
   Overview's Today card).
 - **Per-card management actions** (save as template, delete, add from template) live under
   the card's `⋯`. A Save button shows only when there is something to save (owner D8, 2026-10-02).
+  A per-row Delete stays visible on the row, and always asks for confirmation (owner D12, 2026-10-02).
+- **Packing items are personal**: nobody is assigned to them, so nothing shows a name on one.
+  Assignment belongs to task checklists (owner D13, 2026-10-02).
 - **Trip header**: shows the status chip, but no next-status button ("Activate"). Status changes
   live in Details ▾ Settings (owner D9, 2026-10-02).
 - **Admin forms**: one Save per section.
@@ -216,3 +223,7 @@ Nothing AI-related shows at rest.
 | 2026-10-02 | §5: per-card management actions under the card's `⋯`; Save only when dirty | owner (D8), smoke-2026-10 | findings 5, 8 |
 | 2026-10-02 | §5: header keeps the status chip; next-status button moves to Details ▾ Settings | owner (D9), smoke-2026-10 | §7 cut the stepper as a status field at rest; §5 no header button |
 | 2026-10-02 | §2: Trips list keeps status groups (Idea / Confirmed / Archived); who's missing shows per trip (cpp) | owner (D10), smoke-2026-10 | "needs me" comes from per-trip missing, not regrouping |
+| 2026-10-02 | §2: an archived trip is read-only except notes, photo links, actuals, Unarchive | owner (D11), ux-review-2026-10-02 | H1: Archive promised "lock editing", nothing enforced it |
+| 2026-10-02 | §5: per-row Delete stays on the row, with a confirmation | owner (D12), ux-review-2026-10-02 | L2; every row delete already confirms |
+| 2026-10-02 | §5: packing items are not assigned; tasks are | owner (D13), ux-review-2026-10-02 | M1: Overview showed names on packing items the list can't assign |
+| 2026-10-02 | §4: text links get a ≥ 44px hit area on a phone | owner (D14) after the 390px screenshot | M4: links 17–33px tall |
