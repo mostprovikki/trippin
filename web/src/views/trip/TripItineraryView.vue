@@ -28,6 +28,9 @@ const aiStatus = useAiStatus()
 const notify = useNotify()
 
 const loading = ref(true)
+// Same check as the days-init route's NO_DATES guard: without both dates
+// "Initialize days" can only fail, so the empty state points to Dates instead.
+const hasDates = computed(() => !!(trips.current?.start_date && trips.current?.end_date))
 
 // Page-wide "which single item form is open" state — passed down to every
 // DayCard as a prop. A DayCard only ever reads this (never keeps its own
@@ -194,7 +197,8 @@ function discardWholeDraft() {
     <div v-if="loading" class="card"><Skeleton v-for="i in 3" :key="i" class="skeleton-row" /></div>
 
     <EmptyState v-else-if="!store.days.length && readOnly" icon="pi pi-calendar" message="No itinerary days on this trip." />
-    <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
+    <EmptyState v-else-if="!store.days.length && hasDates" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
+    <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="Days come from the trip's confirmed dates." cta-label="Set the dates" @cta="router.push({ name: 'trip-dates', params: { id: tripId } })" />
 
     <template v-else>
       <DraftReview v-if="store.draft && !readOnly" title="AI draft preview" :busy="store.aiBusy" :pasted="store.draftPasted" @apply="applyWholeDraft" @discard="discardWholeDraft">

@@ -19,7 +19,8 @@ function makeRouter() {
     history: createMemoryHistory(),
     routes: [
       { path: '/trips/:id/itinerary', name: 'trip-itinerary', component: TripItineraryView },
-      { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } }
+      { path: '/trips/:id/itinerary/print', name: 'trip-itinerary-print', component: { template: '<div />' } },
+      { path: '/trips/:id/dates', name: 'trip-dates', component: { template: '<div />' } }
     ]
   })
 }
@@ -42,6 +43,40 @@ async function mountView(status = 'planning') {
 beforeEach(() => { localStorage.clear() })
 
 describe('TripItineraryView', () => {
+  // trip-planner-h3i.8: with no confirmed dates the days-init route always 400s
+  // NO_DATES, so the empty state must point at Dates instead of offering it.
+  async function mountEmpty(trip) {
+    const router = makeRouter()
+    await router.push('/trips/t1/itinerary')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const store = useItineraryStore()
+    store.fetchItinerary = vi.fn().mockImplementation(async () => { store.days = [] })
+    useTripsStore().current = trip
+    const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    return { wrapper, router }
+  }
+
+  it('undated trip offers Set the dates', async () => {
+    const { wrapper, router } = await mountEmpty({ id: 't1', name: 'Goa 2026', status: 'planning', start_date: null, end_date: null })
+    expect(wrapper.text()).toContain("Days come from the trip's confirmed dates.")
+    expect(wrapper.text()).not.toContain('Initialize days')
+    const cta = wrapper.findAll('button').find((b) => b.text() === 'Set the dates')
+    expect(cta).toBeTruthy()
+    await cta.trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('trip-dates')
+    expect(router.currentRoute.value.params.id).toBe('t1')
+  })
+
+  it('dated trip with no days still offers Initialize days', async () => {
+    const { wrapper } = await mountEmpty({ id: 't1', name: 'Goa 2026', status: 'planning', start_date: '2026-08-01', end_date: '2026-08-05' })
+    expect(wrapper.findAll('button').some((b) => b.text() === 'Initialize days')).toBe(true)
+    expect(wrapper.text()).not.toContain('Set the dates')
+  })
+
   it('restores an unapplied AI draft from storage after remount', async () => {
     localStorage.setItem('tripper:draft:trip:t1:itinerary-ai', JSON.stringify({
       ai: [{ day_date: '2026-08-01', items: [{ title: 'Beach walk' }] }]
