@@ -41,4 +41,13 @@ describe('people', () => {
     expect(del.json().error.message).toMatch(/archived trip/i)
     expect((await authedInject(app, cookie, { method: 'GET', url: `/api/people/${p.id}` })).statusCode).toBe(200)
   })
+  it('deleting a person assigned a template item succeeds; item becomes unassigned', async () => {
+    const { app, db } = await makeTestApp(); const { cookie } = await loginOrganizer(app, db)
+    const p = (await authedInject(app, cookie, { method: 'POST', url: '/api/people', payload: { name: 'W' } })).json().person
+    await db.run("INSERT INTO checklists (id, is_template, kind, name) VALUES ('tpl1', 1, 'tasks', 'Tpl')")
+    await db.run("INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, position) VALUES ('ci1', 'tpl1', 'Visa', ?, 0)", [p.id])
+    const del = await authedInject(app, cookie, { method: 'DELETE', url: `/api/people/${p.id}` })
+    expect(del.statusCode).toBe(204)
+    expect((await db.get("SELECT assignee_person_id FROM checklist_items WHERE id = 'ci1'")).assignee_person_id).toBeNull()
+  })
 })
