@@ -61,6 +61,14 @@ page.on('console', (m) => {
   if (m.type() === 'error') consoleErrors.push(`${m.text()} (${m.location()?.url || ''})`)
 })
 
+// QA_SEARCH_DELAY_MS=1500 holds every /api/search response back: a deterministic
+// stand-in for the loaded full-suite run where this gate flaked (trip-planner-ixb).
+if (Number(process.env.QA_SEARCH_DELAY_MS) > 0) {
+  await page.context().route('**/api/search?*', async (route) => {
+    await new Promise((r) => setTimeout(r, Number(process.env.QA_SEARCH_DELAY_MS)))
+    await route.continue()
+  })
+}
 const palette = page.locator('[data-test="search-palette"]')
 const paletteInput = page.locator('[data-test="search-palette-input"]')
 
@@ -68,10 +76,19 @@ async function openPalette() {
   await page.keyboard.press(`${MOD}+k`)
   return palette.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false)
 }
+// Waits for THIS query's response, then two frames for the render. A fixed
+// 600ms sleep was the trip-planner-ixb flake: under a loaded full-suite run the
+// debounced request hadn't landed, so positive checks failed — and the leak
+// check below could pass vacuously ("0 rows" also meant "no response yet").
+const frames = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
 async function typeQuery(q) {
+  const landed = page.waitForResponse((r) => {
+    const u = new URL(r.url())
+    return u.pathname === '/api/search' && u.searchParams.get('q') === q.trim()
+  }, { timeout: 15000 })
   await paletteInput.fill(q)
-  // Debounce is 180ms; give the request room to land.
-  await page.waitForTimeout(600)
+  await landed
+  await frames()
 }
 function rows() { return page.locator('[data-test="search-palette"] .sp-row') }
 async function activeRowText() {
@@ -193,7 +210,6 @@ if (await palette.waitFor({ state: 'hidden', timeout: 2000 }).then(() => true).c
 // ---------- 4. every kind the vision names returns a hit ----------
 await openPalette()
 await typeQuery('SRCHQA')
-await page.waitForTimeout(200)
 await page.screenshot({ path: path.join(shots, 'search-01-palette.png') })
 const kinds = await page.evaluate(() => {
   const groups = Array.from(document.querySelectorAll('[data-test="search-palette"] .sp-group'))
@@ -211,8 +227,12 @@ for (const expected of ['Trips', 'People', 'Documents', 'Itinerary', 'Checklist 
 
 // ---------- 5. arrow keys move the highlight ----------
 const firstActive = await activeRowText()
+const activeChanged = (from) => page.waitForFunction((prev) => {
+  const el = document.querySelector('[data-test="search-palette"] .sp-row[data-active="true"]')
+  return el && el.innerText !== prev
+}, from, { timeout: 3000 }).catch(() => {})
 await page.keyboard.press('ArrowDown')
-await page.waitForTimeout(150)
+await activeChanged(firstActive)
 const secondActive = await activeRowText()
 if (rowCount < 2) {
   console.log('  · only one row; arrow-move not exercised')
@@ -222,7 +242,7 @@ if (rowCount < 2) {
   fail('ArrowDown moves the highlight', `stayed on ${JSON.stringify(firstActive)}`)
 }
 await page.keyboard.press('ArrowUp')
-await page.waitForTimeout(150)
+await activeChanged(secondActive)
 const backActive = await activeRowText()
 if (rowCount < 2) { /* skipped above */ }
 else if (backActive === firstActive) ok('ArrowUp moves it back')
@@ -231,7 +251,8 @@ else fail('ArrowUp moves it back', `expected ${JSON.stringify(firstActive)}, got
 // ---------- 6. Enter navigates to the highlighted result ----------
 const targetText = await activeRowText()
 await page.keyboard.press('Enter')
-await page.waitForTimeout(800)
+await page.waitForURL((u) => /\/(trips|people)\/[\w-]+/.test(u.pathname), { timeout: 10000 }).catch(() => {})
+await palette.waitFor({ state: 'detached', timeout: 3000 }).catch(() => {})
 const landedUrl = page.url()
 if (/\/(trips|people)\/[\w-]+/.test(landedUrl)) {
   ok('Enter opens the highlighted result', `${JSON.stringify((targetText || '').split('\n')[0])} -> ${landedUrl.replace(BASE, '')}`)
@@ -243,7 +264,7 @@ else ok('the palette closes after navigating')
 
 // ---------- 7. the full results page, deep-linked ----------
 await page.goto(`${BASE}/search?q=SRCHQA`, { waitUntil: 'networkidle' })
-await page.waitForTimeout(800)
+await page.locator('[data-test="search-view-count"], [data-test="search-view-empty"]').first().waitFor({ timeout: 10000 }).catch(() => {})
 await page.screenshot({ path: path.join(shots, 'search-02-results-page.png'), fullPage: true })
 const viewInput = await page.locator('[data-test="search-view-input"]').inputValue().catch(() => null)
 if (viewInput === 'SRCHQA') ok('/search?q= populates the box from the URL')
@@ -266,7 +287,7 @@ else fail('the results page renders inside the app shell', `nav=${hasNav} breadc
 
 // ---------- 8. a miss is a clear empty state, not a blank screen ----------
 await page.goto(`${BASE}/search?q=zzzznotathing`, { waitUntil: 'networkidle' })
-await page.waitForTimeout(800)
+await page.locator('[data-test="search-view-count"], [data-test="search-view-empty"]').first().waitFor({ timeout: 10000 }).catch(() => {})
 if (await page.locator('[data-test="search-view-empty"]').count()) {
   ok('a no-match query renders an empty state')
 } else {

@@ -6,7 +6,8 @@
 // each gets its own timeout so one hung gate can't wedge the whole run.
 //
 // Usage:
-//   node scripts/run-e2e.mjs gates     # every e2e/qa-*.mjs gate (18 on 2026-10-02), fail-fast off
+//   node scripts/run-e2e.mjs gates     # every e2e/qa-*.mjs gate (22 on 2026-10-02), fail-fast off
+//   E2E_ONLY=qa-search,qa-budget node scripts/run-e2e.mjs gates   # a subset
 //   node scripts/run-e2e.mjs smoke     # smoke.mjs only
 //   node scripts/run-e2e.mjs ui-walk   # ui-walk.mjs only
 //
@@ -40,7 +41,7 @@
 // with the message above, not hang or silently start something the caller
 // didn't ask for.
 
-import { spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { createConnection } from 'node:net'
 import { readdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -116,6 +117,8 @@ const files = mode === 'smoke'
   : mode === 'ui-walk'
     ? ['ui-walk.mjs']
     : readdirSync(E2E_DIR).filter((f) => /^qa-.*\.mjs$/.test(f)).sort()
+        // E2E_ONLY=qa-search,qa-budget reruns a subset (names with or without .mjs)
+        .filter((f) => !process.env.E2E_ONLY || process.env.E2E_ONLY.split(',').some((n) => f === n.trim() || f === `${n.trim()}.mjs`))
 
 if (!files.length) {
   console.error(`FAIL: no e2e/qa-*.mjs files found in ${E2E_DIR} — a passing empty run would be silently vacuous.`)
@@ -124,26 +127,50 @@ if (!files.length) {
 
 console.log(`Running ${files.length} gate(s) sequentially (timeout ${GATE_TIMEOUT_MS}ms each): ${files.join(', ')}\n`)
 
+// A gate's own FAIL lines (and an uncaught error) are kept for the summary: the
+// suite's output runs to thousands of lines, and a one-off red whose text had
+// scrolled away was undiagnosable (2026-10-02, trip-planner-ixb).
+const FAIL_LINE = /^(FAIL - |!!! |\w*Error: )/
+function runGate(filePath) {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [filePath], { cwd: REPO_ROOT, env: process.env, stdio: ['ignore', 'pipe', 'pipe'] })
+    const failLines = []
+    let tail = ''
+    const keep = (chunk, out) => {
+      out.write(chunk)
+      const text = tail + chunk.toString()
+      const lines = text.split('\n')
+      tail = lines.pop()
+      for (const l of lines) if (FAIL_LINE.test(l)) failLines.push(l)
+    }
+    child.stdout.on('data', (c) => keep(c, process.stdout))
+    child.stderr.on('data', (c) => keep(c, process.stderr))
+    let error = null
+    child.on('error', (e) => { error = e })
+    const timer = setTimeout(() => child.kill('SIGTERM'), GATE_TIMEOUT_MS)
+    child.on('close', (status, signal) => {
+      clearTimeout(timer)
+      if (tail && FAIL_LINE.test(tail)) failLines.push(tail)
+      resolve({ status, signal, error, failLines })
+    })
+  })
+}
+
 const results = []
 for (const file of files) {
   const filePath = join(E2E_DIR, file)
   console.log(`--- ${file} ---`)
   const start = Date.now()
-  const res = spawnSync(process.execPath, [filePath], {
-    cwd: REPO_ROOT,
-    stdio: 'inherit',
-    timeout: GATE_TIMEOUT_MS,
-    env: process.env,
-  })
+  const res = await runGate(filePath)
   const ms = Date.now() - start
-  // Playwright installs its own SIGTERM handler, so a gate spawnSync kills for
-  // running past the timeout exits with a CODE (measured: status=130,
-  // signal=null), not a signal — the signal check alone never fires for a
-  // real gate. Elapsed-time is the reliable tell; keep the signal check too
-  // for the (non-Playwright) case where the child really is killed by signal.
+  // Playwright installs its own SIGTERM handler, so a gate killed for running
+  // past the timeout exits with a CODE (measured: status=130, signal=null),
+  // not a signal — the signal check alone never fires for a real gate.
+  // Elapsed-time is the reliable tell; keep the signal check too for the
+  // (non-Playwright) case where the child really is killed by signal.
   const timedOut = (res.status === null && res.signal !== null) || ms >= GATE_TIMEOUT_MS
   const ok = res.status === 0 && !timedOut && !res.error
-  results.push({ file, ok, status: res.status, signal: res.signal, ms, timedOut, error: res.error })
+  results.push({ file, ok, status: res.status, signal: res.signal, ms, timedOut, error: res.error, failLines: res.failLines })
   if (timedOut) console.error(`!!! ${file} TIMED OUT after ${GATE_TIMEOUT_MS}ms (status=${res.status} signal=${res.signal})`)
   if (res.error) console.error(`!!! ${file} failed to spawn: ${res.error.message}`)
   console.log()
@@ -159,6 +186,11 @@ for (const r of results) {
   }
   const detail = bits.length ? `  (${bits.join(' ')})` : ''
   console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.file}  ${r.ms}ms${detail}`)
+  if (!r.ok) {
+    const lines = r.failLines.length ? r.failLines : ['(no FAIL - line printed — read this gate\'s output above)']
+    for (const l of lines.slice(0, 8)) console.log(`        ${l.slice(0, 240)}`)
+    if (lines.length > 8) console.log(`        … +${lines.length - 8} more`)
+  }
 }
 const failed = results.filter((r) => !r.ok)
 console.log(failed.length ? `\n${failed.length}/${results.length} gate(s) failed` : `\nall ${results.length} gate(s) passed`)
