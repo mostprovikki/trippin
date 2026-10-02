@@ -6,7 +6,7 @@ import { mountWithBase } from '../../test-utils.js'
 import TripDestinationView from './TripDestinationView.vue'
 import { useTripsStore } from '../../stores/trips.js'
 
-async function mountView() {
+async function mountView(status = 'planning') {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ path: '/trips/:id/destination', name: 'trip-destination', component: TripDestinationView }]
@@ -16,8 +16,8 @@ async function mountView() {
   const pinia = createPinia()
   setActivePinia(pinia)
   const store = useTripsStore()
-  store.current = { id: 't1', name: 'Goa 2026', goals: [{ id: 'g1', title: 'Sunburn festival' }], emergency_info: 'Police 100' }
-  store.candidates = []
+  store.current = { id: 't1', name: 'Goa 2026', status, goals: [{ id: 'g1', title: 'Sunburn festival' }], emergency_info: 'Police 100' }
+  store.candidates = [{ id: 'c1', name: 'Hampi', source: 'manual', decided: 0 }]
   store.fetchCandidates = vi.fn().mockResolvedValue([])
   store.addGoal = vi.fn().mockResolvedValue({})
   store.deleteGoal = vi.fn().mockResolvedValue({})
@@ -70,5 +70,33 @@ describe('TripDestinationView — local emergency numbers', () => {
     await wrapper.findAll('button').find((b) => b.text() === 'Save emergency numbers').trigger('click')
     await flushPromises()
     expect(store.updateTrip).toHaveBeenCalledWith('t1', { emergency_info: null })
+  })
+})
+
+// tripper.md §2 Archived (D11): the server refuses every write, so offer none.
+describe('TripDestinationView — archived trip is read-only', () => {
+  function destinationControls(wrapper) {
+    const labels = wrapper.findAll('button').map((b) => b.text())
+    return {
+      more: wrapper.find('[aria-label="More destination actions"]').exists(),
+      decide: labels.includes('Mark decided'),
+      delCandidate: wrapper.find('[aria-label="Delete Hampi"]').exists(),
+      addCandidate: wrapper.find('form.dest-add-form').exists(),
+      editGoal: labels.includes('Edit'),
+      delGoal: wrapper.find('[aria-label="Delete Sunburn festival"]').exists(),
+      addGoal: wrapper.find('form.goal-add-form').exists(),
+      emergencyInput: wrapper.find('#trip-emergency').exists()
+    }
+  }
+  it('archived trip shows candidates, goals and emergency numbers with no edit controls', async () => {
+    const { wrapper } = await mountView('archived')
+    expect(destinationControls(wrapper)).toEqual({ more: false, decide: false, delCandidate: false, addCandidate: false, editGoal: false, delGoal: false, addGoal: false, emergencyInput: false })
+    expect(wrapper.text()).toContain('Hampi')
+    expect(wrapper.text()).toContain('Sunburn festival')
+    expect(wrapper.find('[data-test="emergency-text"]').text()).toBe('Police 100')
+  })
+  it('live trip keeps its destination and goal edit controls', async () => {
+    const { wrapper } = await mountView()
+    expect(destinationControls(wrapper)).toEqual({ more: true, decide: true, delCandidate: true, addCandidate: true, editGoal: true, delGoal: true, addGoal: true, emergencyInput: true })
   })
 })

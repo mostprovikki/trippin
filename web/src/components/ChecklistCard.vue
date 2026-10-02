@@ -14,7 +14,9 @@ import { useAiStatus } from '../composables/useAiStatus.js'
 
 const props = defineProps({
   checklist: { type: Object, required: true },
-  participants: { type: Array, default: () => [] }
+  participants: { type: Array, default: () => [] },
+  // archived trip (D11): rows show state only — no tick, edit, add or delete
+  readonly: { type: Boolean, default: false }
 })
 
 const store = useChecklistsStore()
@@ -108,7 +110,7 @@ function openSaveAsTemplate() {
 // AI actions and per-card management (save as template, delete) sit under ⋯,
 // never as buttons at rest (docs/design/tripper.md §5, D8). Templates are not
 // shown on a trip and have no trip to draft for, so they get no menu.
-const hasMenu = computed(() => !props.checklist.is_template)
+const hasMenu = computed(() => !props.checklist.is_template && !props.readonly)
 const moreMenu = ref(null)
 const menuId = computed(() => `checklist-more-${props.checklist.id}`)
 const aiItems = computed(() => !isPacking.value ? [] : [
@@ -168,12 +170,16 @@ function discardDraft() {
         <!-- The label wraps the checkbox so the whole row, not the 20px box, is
              the tick target (§4: ≥44px on a phone). -->
         <label class="item-tick" :for="`cl-item-${item.id}`">
-          <Checkbox :model-value="!!item.done" binary :input-id="`cl-item-${item.id}`" @update:model-value="toggleDone(item)" />
+          <Checkbox :model-value="!!item.done" binary :input-id="`cl-item-${item.id}`" :disabled="readonly" @update:model-value="toggleDone(item)" />
           <span class="item-title">{{ item.title }}</span>
           <Tag v-if="isOverdue(item)" value="Overdue" severity="warn" />
         </label>
 
-        <div v-if="isTasks" class="item-meta">
+        <div v-if="isTasks && readonly" class="item-meta item-meta-readonly">
+          <span>{{ assigneeName(item.assignee_person_id) || 'Unassigned' }}</span>
+          <span v-if="item.due_date">Due {{ item.due_date }}</span>
+        </div>
+        <div v-else-if="isTasks" class="item-meta">
           <Select
             :input-id="`cl-assignee-${item.id}`"
             :name="`cl-assignee-${item.id}`"
@@ -194,11 +200,11 @@ function discardDraft() {
           />
         </div>
 
-        <Button type="button" icon="pi pi-times" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="removeItem(item)" />
+        <Button v-if="!readonly" type="button" icon="pi pi-times" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="removeItem(item)" />
       </li>
     </ul>
 
-    <form class="field checklist-add" @submit.prevent="addItem">
+    <form v-if="!readonly" class="field checklist-add" @submit.prevent="addItem">
       <input v-model="newTitle" placeholder="New item title" />
       <template v-if="isTasks">
         <Select input-id="cl-new-assignee" name="cl-new-assignee" v-model="newAssignee" :options="assigneeOptions" option-label="label" option-value="value" placeholder="Unassigned" aria-label="Assignee" />
@@ -207,7 +213,7 @@ function discardDraft() {
       <Button type="submit" label="Add item" />
     </form>
 
-    <DraftReview v-if="draft" title="AI packing draft" :busy="store.aiBusy" :pasted="!!draft.pasted" @apply="applyDraft" @discard="discardDraft">
+    <DraftReview v-if="draft && !readonly" title="AI packing draft" :busy="store.aiBusy" :pasted="!!draft.pasted" @apply="applyDraft" @discard="discardDraft">
       <ul>
         <li v-for="(item, idx) in draft.items" :key="idx">{{ item.title }}</li>
       </ul>
@@ -231,6 +237,7 @@ function discardDraft() {
 .item-tick { flex: 1 1 12rem; min-width: 0; display: flex; align-items: center; gap: 0.5rem; min-height: 2.25rem; cursor: pointer; }
 .item-title { min-width: 0; overflow-wrap: anywhere; }
 .item-meta { display: flex; align-items: center; gap: 0.5rem; }
+.item-meta-readonly { color: var(--app-text-muted); font-size: 0.875rem; }
 /* Phone (§4): one tap row ≥44px. A packing row stays one line (title wraps
    inside the label); a task row puts assignee + due on ONE second line under
    the title instead of breaking into three. */

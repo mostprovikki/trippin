@@ -14,6 +14,8 @@ const props = defineProps({
   index: { type: Number, required: true },
   currency: { type: String, default: 'INR' },
   isToday: { type: Boolean, default: false },
+  // archived trip (D11): no reorder, edit, delete or add
+  readonly: { type: Boolean, default: false },
   // Shared, page-wide "which single item form is open" state, owned by
   // TripItineraryView — { dayId, itemId } where itemId === null means the
   // Add form for that day, and a real id means editing that item. null means
@@ -130,7 +132,7 @@ async function onEditSubmit(item) {
           <strong>{{ item.title }}</strong>
           <span v-if="item.location">— {{ item.location }}</span>
           <span v-if="item.est_cost != null">{{ formatMoney(item.est_cost, currency) }}</span>
-          <span class="day-item-actions">
+          <span v-if="!readonly" class="day-item-actions">
             <Button type="button" severity="secondary" outlined :disabled="idx === 0" aria-label="Move up within day" title="Move up within day" @click="move(idx, -1)">↑</Button>
             <Button type="button" severity="secondary" outlined :disabled="idx === day.items.length - 1" aria-label="Move down within day" title="Move down within day" @click="move(idx, 1)">↓</Button>
             <Button type="button" label="Edit" severity="secondary" outlined @click="openEdit(item.id, $event)" />
@@ -144,7 +146,7 @@ async function onEditSubmit(item) {
       </li>
     </ul>
 
-    <p v-if="!adding">
+    <p v-if="!adding && !readonly">
       <Button ref="addBtnRef" type="button" label="Add item" @click="openAdd" />
     </p>
     <ItineraryItemForm v-if="adding" @submit="onAddSubmit" @cancel="closeForm" />

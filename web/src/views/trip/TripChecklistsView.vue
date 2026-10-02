@@ -8,6 +8,7 @@ import Select from 'primevue/select'
 import { api } from '../../api/client.js'
 import { useChecklistsStore } from '../../stores/checklists.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
 import ChecklistCard from '../../components/ChecklistCard.vue'
 import EmptyState from '../../components/EmptyState.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
@@ -16,6 +17,7 @@ const route = useRoute()
 const tripId = computed(() => route.params.id)
 const store = useChecklistsStore()
 const notify = useNotify()
+const readOnly = useTripReadOnly()
 
 const KIND_OPTIONS = [
   { label: 'Packing', value: 'packing' },
@@ -85,7 +87,7 @@ async function addFromTemplate() {
 <template>
   <div>
     <SectionHeader title="Checklists" description="Packing lists and shared tasks, assignable to participants.">
-      <template #actions>
+      <template v-if="!readOnly" #actions>
         <Button
           type="button" data-test="new-checklist" icon="pi pi-plus" label="New checklist" severity="secondary" outlined
           :aria-expanded="String(showNew)" aria-controls="new-checklist-panel" @click="showNew = !showNew"
@@ -95,7 +97,7 @@ async function addFromTemplate() {
 
     <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
-    <div v-if="showNew" id="new-checklist-panel" class="card">
+    <div v-if="showNew && !readOnly" id="new-checklist-panel" class="card">
       <h2>New checklist</h2>
       <form class="checklist-form-row new-checklist-form" @submit.prevent="createChecklist">
         <Select input-id="cv-new-kind" name="cv-new-kind" v-model="newKind" :options="KIND_OPTIONS" option-label="label" option-value="value" aria-label="Kind" />
@@ -111,7 +113,7 @@ async function addFromTemplate() {
     <EmptyState
       v-if="!store.checklists.length"
       icon="pi pi-check-square"
-      message="No checklists yet — use New checklist to create one or start from a template."
+      :message="readOnly ? 'No checklists on this trip.' : 'No checklists yet — use New checklist to create one or start from a template.'"
     />
 
     <ChecklistCard
@@ -119,6 +121,7 @@ async function addFromTemplate() {
       :key="checklist.id"
       :checklist="checklist"
       :participants="participants"
+      :readonly="readOnly"
     />
   </div>
 </template>

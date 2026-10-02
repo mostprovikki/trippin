@@ -24,7 +24,7 @@ function makeRouter() {
   })
 }
 
-async function mountView() {
+async function mountView(status = 'planning') {
   const router = makeRouter()
   await router.push('/trips/t1/itinerary')
   await router.isReady()
@@ -33,8 +33,8 @@ async function mountView() {
   setActivePinia(pinia)
   const store = useItineraryStore()
   const trips = useTripsStore()
-  store.fetchItinerary = vi.fn().mockImplementation(async () => { store.days = [{ id: 'd1', day_date: '2026-08-01', items: [] }] })
-  trips.current = { id: 't1', name: 'Goa 2026', status: 'planning' }
+  store.fetchItinerary = vi.fn().mockImplementation(async () => { store.days = [{ id: 'd1', day_date: '2026-08-01', items: [{ id: 'i1', title: 'Boat trip', category: 'activity' }] }] })
+  trips.current = { id: 't1', name: 'Goa 2026', status }
   const wrapper = mountWithBase(TripItineraryView, { pinia, global: { plugins: [router] } })
   return { wrapper, store }
 }
@@ -262,5 +262,30 @@ describe('TripItineraryView', () => {
     getSpy.mockRestore(); postSpy.mockRestore()
     _resetAiStatus()
     document.body.innerHTML = ''
+  })
+
+  // tripper.md §2 Archived (D11): the server refuses every write, so offer none.
+  async function itineraryControls(status) {
+    const { wrapper } = await mountView(status)
+    await flushPromises()
+    await wrapper.find('[aria-label="More itinerary actions"]').trigger('click')
+    await flushPromises()
+    const menu = document.body.textContent
+    const out = {
+      edit: wrapper.findAll('button').some((b) => b.text() === 'Edit'),
+      del: wrapper.find('[aria-label="Delete Boat trip"]').exists(),
+      move: wrapper.find('[aria-label="Move up within day"]').exists(),
+      add: wrapper.findAll('button').some((b) => b.text() === 'Add item'),
+      aiDraft: menu.includes('AI draft (whole trip)') || menu.includes('Draft with your own AI'),
+      exports: menu.includes('Add to calendar (.ics)') && menu.includes('Print / PDF')
+    }
+    wrapper.unmount()
+    return out
+  }
+  it('archived trip shows no edit, delete, reorder, add or AI draft controls', async () => {
+    expect(await itineraryControls('archived')).toEqual({ edit: false, del: false, move: false, add: false, aiDraft: false, exports: true })
+  })
+  it('live trip keeps its edit controls', async () => {
+    expect(await itineraryControls('planning')).toEqual({ edit: true, del: true, move: true, add: true, aiDraft: true, exports: true })
   })
 })

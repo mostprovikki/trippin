@@ -10,6 +10,7 @@ import { useTripsStore } from '../../stores/trips.js'
 import { useAiStatus } from '../../composables/useAiStatus.js'
 import { useDraft } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
 import EmptyState from '../../components/EmptyState.vue'
 import DayCard from '../../components/DayCard.vue'
 import DraftReview from '../../components/DraftReview.vue'
@@ -120,8 +121,11 @@ async function initDays() {
 // One page-level ⋯ menu for everything that isn't adding an item
 // (docs/design/tripper.md §5: one primary at rest). The provider tag rides in
 // the AI item's label rather than repeating beside every day.
+const readOnly = useTripReadOnly()
 const moreMenu = ref(null)
 const moreItems = computed(() => [
+  // Archived (D11): the drafts would write, so only the exports stay.
+  ...(readOnly.value ? [] : [
   {
     // A disabled menu item shows no tooltip, so the reason goes in the label.
     label: (store.aiBusy ? 'Generating…' : 'AI draft (whole trip)')
@@ -131,7 +135,8 @@ const moreItems = computed(() => [
     command: draftWholeTrip
   },
   // BYO-AI: always offered, provider or not (trip-planner-d5d).
-  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } },
+  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } }
+  ]),
   { label: 'Add to calendar (.ics)', icon: 'pi pi-calendar-plus', url: `/api/trips/${tripId.value}/itinerary.ics` },
   {
     label: 'Print / PDF', icon: 'pi pi-print', target: '_blank',
@@ -188,10 +193,11 @@ function discardWholeDraft() {
 
     <div v-if="loading" class="card"><Skeleton v-for="i in 3" :key="i" class="skeleton-row" /></div>
 
+    <EmptyState v-else-if="!store.days.length && readOnly" icon="pi pi-calendar" message="No itinerary days on this trip." />
     <EmptyState v-else-if="!store.days.length" icon="pi pi-calendar" message="No itinerary days yet. Days are generated from the trip's confirmed start/end dates." cta-label="Initialize days" @cta="initDays" />
 
     <template v-else>
-      <DraftReview v-if="store.draft" title="AI draft preview" :busy="store.aiBusy" :pasted="store.draftPasted" @apply="applyWholeDraft" @discard="discardWholeDraft">
+      <DraftReview v-if="store.draft && !readOnly" title="AI draft preview" :busy="store.aiBusy" :pasted="store.draftPasted" @apply="applyWholeDraft" @discard="discardWholeDraft">
         <div v-for="d in store.draft" :key="d.day_date" class="draft-day">
           <div class="draft-day-heading">{{ formatDayDate(d.day_date) }}</div>
           <ul class="draft-day-items">
@@ -212,6 +218,7 @@ function discardWholeDraft() {
         :index="idx + 1"
         :currency="trips.current?.currency"
         :is-today="day.id === todayDayId"
+        :readonly="readOnly"
         :open-form="openForm"
         :ref="el => setTodayCardRef(day.id, el)"
         @open-form="openForm = $event"

@@ -7,7 +7,9 @@ import Textarea from 'primevue/textarea'
 import DateField from './DateField.vue'
 
 const props = defineProps({
-  goals: { type: Array, default: () => [] }
+  goals: { type: Array, default: () => [] },
+  // archived trip (D11): goals are shown, not edited, deleted or added
+  readonly: { type: Boolean, default: false }
 })
 const emit = defineEmits(['add', 'update', 'delete'])
 const confirm = useConfirm()
@@ -53,7 +55,7 @@ function remove(id) {
 
 <template>
   <div class="goals-editor">
-    <p v-if="!goals.length" class="goals-empty">No goals yet — add the first one below.</p>
+    <p v-if="!goals.length" class="goals-empty">{{ readonly ? 'No goals.' : 'No goals yet — add the first one below.' }}</p>
     <ul v-else class="goals-list">
       <li v-for="goal in goals" :key="goal.id" class="goal-item">
         <template v-if="editing[goal.id]">
@@ -69,12 +71,14 @@ function remove(id) {
           <span v-if="goal.fixed_date"> — {{ goal.fixed_date }}</span>
           <span v-if="goal.fixed_place"> @ {{ goal.fixed_place }}</span>
           <p v-if="goal.notes">{{ goal.notes }}</p>
+          <template v-if="!readonly">
           <Button type="button" label="Edit" severity="secondary" outlined @click="startEdit(goal)" />
           <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${goal.title}`" @click="remove(goal.id)" />
+          </template>
         </template>
       </li>
     </ul>
-    <form class="goal-add-form" @submit.prevent="submitAdd">
+    <form v-if="!readonly" class="goal-add-form" @submit.prevent="submitAdd">
       <div class="field"><label>New goal title</label><InputText id="ge-title-new" name="ge-title-new" v-model="form.title" placeholder="e.g. Visit temple" fluid /></div>
       <div class="field"><label>Fixed date</label><DateField v-model="form.fixed_date" /></div>
       <div class="field"><label>Fixed place</label><InputText id="ge-place-new" name="ge-place-new" v-model="form.fixed_place" fluid /></div>

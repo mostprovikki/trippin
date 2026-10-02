@@ -7,6 +7,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import Textarea from 'primevue/textarea'
 import { useTripsStore } from '../../stores/trips.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 import DestinationPanel from '../../components/DestinationPanel.vue'
 import GoalsEditor from '../../components/GoalsEditor.vue'
@@ -14,6 +15,7 @@ import GoalsEditor from '../../components/GoalsEditor.vue'
 const route = useRoute()
 const trips = useTripsStore()
 const notify = useNotify()
+const readOnly = useTripReadOnly()
 
 const tripId = computed(() => route.params.id)
 const loading = ref(true)
@@ -89,23 +91,29 @@ async function saveEmergency() {
         <Button label="Try again" icon="pi pi-refresh" outlined @click="load" />
       </div>
 
-      <DestinationPanel v-else :trip-id="tripId" :candidates="trips.candidates" />
+      <DestinationPanel v-else :trip-id="tripId" :candidates="trips.candidates" :readonly="readOnly" />
     </div>
 
     <section class="card dest-goals" aria-labelledby="trip-goals-heading">
       <h2 id="trip-goals-heading">Goals</h2>
       <p class="dest-goals-desc">What this trip is for — fixed events, must-dos, shared intentions.</p>
-      <GoalsEditor :goals="trips.current?.goals || []" @add="onAddGoal" @update="onUpdateGoal" @delete="onDeleteGoal" />
+      <GoalsEditor :goals="trips.current?.goals || []" :readonly="readOnly" @add="onAddGoal" @update="onUpdateGoal" @delete="onDeleteGoal" />
     </section>
 
     <section class="card dest-goals" aria-labelledby="trip-emergency-heading">
       <h2 id="trip-emergency-heading">On the trip</h2>
       <p class="dest-goals-desc">Shown in the Overview's Quick reference while the trip is on.</p>
+      <template v-if="readOnly">
+        <h3 class="dest-emergency-label">Local emergency numbers</h3>
+        <p class="dest-emergency-text" data-test="emergency-text">{{ trips.current?.emergency_info || 'None recorded.' }}</p>
+      </template>
+      <template v-else>
       <div class="field">
         <label for="trip-emergency">Local emergency numbers</label>
         <Textarea id="trip-emergency" v-model="emergencyDraft" rows="3" auto-resize fluid placeholder="e.g. Police 113 · Ambulance 115 · Embassy +84 24 3824 0990" />
       </div>
       <Button label="Save emergency numbers" :disabled="!emergencyDirty" @click="saveEmergency" />
+      </template>
     </section>
   </div>
 </template>
@@ -114,5 +122,7 @@ async function saveEmergency() {
 .dest-goals { margin-top: 1rem; }
 .dest-goals h2 { margin-bottom: 0.25rem; }
 .dest-goals-desc { margin: 0 0 0.75rem; color: var(--app-text-muted); font-size: 0.875rem; }
+.dest-emergency-label { margin: 0 0 0.25rem; font-size: 0.875rem; }
+.dest-emergency-text { margin: 0; white-space: pre-line; }
 .dest-error { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
 </style>

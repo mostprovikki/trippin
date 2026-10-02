@@ -15,7 +15,9 @@ import { useNotify } from '../composables/useNotify.js'
 
 const props = defineProps({
   tripId: { type: String, required: true },
-  candidates: { type: Array, default: () => [] }
+  candidates: { type: Array, default: () => [] },
+  // archived trip (D11): candidates are shown, not decided, deleted or added
+  readonly: { type: Boolean, default: false }
 })
 
 const store = useTripsStore()
@@ -105,7 +107,7 @@ async function submitManual() {
 
 <template>
   <div class="destination-panel">
-    <div class="destination-toolbar">
+    <div v-if="!readonly" class="destination-toolbar">
       <Button
         type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
         aria-label="More destination actions" aria-haspopup="true" aria-controls="destination-more-menu"
@@ -129,11 +131,13 @@ async function submitManual() {
       <p v-if="c.best_dates"><strong>Best dates:</strong> {{ c.best_dates }}</p>
       <p v-if="c.est_budget_per_person != null"><strong>Est. budget/person:</strong> {{ formatMoney(c.est_budget_per_person, store.current?.currency) }}</p>
       <p v-if="c.caveats"><strong>Caveats:</strong> {{ c.caveats }}</p>
+      <template v-if="!readonly">
       <Button type="button" label="Mark decided" :disabled="!!c.decided" @click="markDecided(c.id, c.name)" />
       <Button type="button" icon="pi pi-trash" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${c.name}`" :disabled="!!c.decided" @click="removeCandidate(c.id)" />
+      </template>
     </div>
 
-    <form class="card dest-add-form" @submit.prevent="submitManual">
+    <form v-if="!readonly" class="card dest-add-form" @submit.prevent="submitManual">
       <h3>Add destination candidate</h3>
       <div class="field"><label>Name</label><InputText id="dest-name" name="dest-name" v-model="form.name" required fluid /></div>
       <div class="field"><label>Rationale</label><Textarea v-model="form.rationale" fluid auto-resize /></div>

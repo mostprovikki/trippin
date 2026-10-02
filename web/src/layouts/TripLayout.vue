@@ -102,6 +102,9 @@ watch(() => route.name, () => { if (!loading.value && !notFound.value) refreshRe
       </template>
       <Skeleton v-else height="2rem" />
     </header>
+    <p v-if="trips.current?.status === 'archived'" class="trip-readonly-note" data-test="trip-readonly-note">
+      Archived — read-only. Unarchive from Settings.
+    </p>
 
     <div ref="tabbar" class="trip-tabbar" @keydown.esc="closeDetails({ focus: true })">
       <nav ref="tabStrip" class="trip-tabs" aria-label="Trip sections" @scroll="detailsOpen && placeMenu()">
@@ -180,6 +183,7 @@ watch(() => route.name, () => { if (!loading.value && !notFound.value) refreshRe
 
 .trip-head { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
 .trip-head-name { font-weight: 650; font-size: 1rem; letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.trip-readonly-note { margin: 0 0 0.5rem; font-size: 0.875rem; color: var(--app-text-muted); }
 .trip-head-status { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 
 .trip-tabbar {

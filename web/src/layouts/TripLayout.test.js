@@ -154,4 +154,14 @@ describe('TripLayout', () => {
     expect(wrapper.find('.trip-head .status-tag').exists()).toBe(true)
     expect(wrapper.find('.trip-head').findAll('button').some((b) => /Start planning|Confirm trip|Activate/.test(b.text()))).toBe(false)
   })
+
+  // tripper.md §2 Archived (D11)
+  it('says an archived trip is read-only under the header, and says nothing on a live trip', async () => {
+    const live = await mountLayout()
+    expect(live.wrapper.find('[data-test="trip-readonly-note"]').exists()).toBe(false)
+    const { wrapper } = await mountLayout({ fetchTrip: vi.fn().mockImplementation(async () => {
+      useTripsStore().current = { id: 't1', name: 'Goa 2026', status: 'archived' }
+    }) })
+    expect(wrapper.find('[data-test="trip-readonly-note"]').text()).toBe('Archived — read-only. Unarchive from Settings.')
+  })
 })

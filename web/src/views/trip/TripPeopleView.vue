@@ -12,6 +12,7 @@ import { useReadinessStore } from '../../stores/readiness.js'
 import { missingRows } from '../../utils/overview.js'
 import { useNotify } from '../../composables/useNotify.js'
 import { useCopyLink } from '../../composables/useCopyLink.js'
+import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 import EmptyState from '../../components/EmptyState.vue'
 import QRCode from 'qrcode'
@@ -24,6 +25,8 @@ const readiness = useReadinessStore()
 const confirm = useConfirm()
 const notify = useNotify()
 const { copy, resolve } = useCopyLink()
+// archived (D11): archiving revoked every link, so no copy/replace/QR either
+const readOnly = useTripReadOnly()
 
 const tripId = computed(() => route.params.id)
 const newParticipantId = ref(null)
@@ -187,8 +190,8 @@ function toggleHistory(personId) {
 
 <template>
   <div>
-    <SectionHeader title="People" description="Who's coming, and each person's link.">
-      <template #actions>
+    <SectionHeader title="People" :description="readOnly ? 'Who went on this trip.' : 'Who\'s coming, and each person\'s link.'">
+      <template v-if="!readOnly" #actions>
         <Select input-id="tp-new-participant" name="tp-new-participant" v-model="newParticipantId" :options="availablePeople" option-label="name" option-value="id" placeholder="Add person…" filter />
         <Button label="Add" icon="pi pi-plus" :disabled="!newParticipantId" @click="addParticipant" />
       </template>
@@ -197,7 +200,7 @@ function toggleHistory(personId) {
     <EmptyState
       v-if="!(trips.current?.participants || []).length"
       icon="pi pi-users"
-      message="No participants yet — add people, then copy each person's link."
+      :message="readOnly ? 'No participants on this trip.' : 'No participants yet — add people, then copy each person\'s link.'"
     />
 
     <div v-for="p in trips.current?.participants || []" :key="p.person_id" class="card participant-card">
@@ -209,7 +212,7 @@ function toggleHistory(personId) {
           </div>
           <p v-if="missingFor(p.person_id)" class="participant-reason">{{ missingFor(p.person_id).reasons.join(' · ') }}</p>
         </div>
-        <div class="participant-actions">
+        <div v-if="!readOnly" class="participant-actions">
           <Button size="small" outlined icon="pi pi-copy" :label="`Copy ${p.name}'s link`" @click="copyLink(p)" />
           <Button
             icon="pi pi-ellipsis-h" severity="secondary" text rounded
@@ -220,7 +223,7 @@ function toggleHistory(personId) {
         </div>
       </div>
 
-      <div v-if="qr && qr.personId === p.person_id" class="link-qr">
+      <div v-if="qr && qr.personId === p.person_id && !readOnly" class="link-qr">
         <img :src="qr.dataUrl" :alt="`QR code for ${p.name}'s link`" />
         <Button label="Close" size="small" text @click="qr = null" />
       </div>
@@ -240,7 +243,7 @@ function toggleHistory(personId) {
         <li v-for="link in linksFor(p.person_id)" :key="link.id">
           <span class="link-meta">created {{ link.created_at }}</span>
           <Tag v-if="link.revoked_at" value="revoked" severity="warn" />
-          <Button v-else icon="pi pi-times" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Revoke link for ${p.name || 'this person'}`" @click="revokeLink(link.id, p.name)" />
+          <Button v-else-if="!readOnly" icon="pi pi-times" size="small" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Revoke link for ${p.name || 'this person'}`" @click="revokeLink(link.id, p.name)" />
         </li>
       </ul>
     </div>

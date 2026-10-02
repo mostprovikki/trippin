@@ -21,7 +21,9 @@ const ok = { profile_confirmed: 1, doc_warnings: [], missing_fields: [], missing
 async function mountView({
   participants = [{ person_id: 'p1', name: 'Asha' }],
   readinessParticipants = [{ ...ok, person_id: 'p1', name: 'Asha' }],
-  readinessTrip = 't1'
+  readinessTrip = 't1',
+  status = 'planning',
+  links = []
 } = {}) {
   const router = createRouter({
     history: createMemoryHistory(),
@@ -33,7 +35,8 @@ async function mountView({
   setActivePinia(pinia)
   const trips = useTripsStore()
   const people = usePeopleStore()
-  trips.current = { id: 't1', name: 'Goa 2026', participants }
+  trips.current = { id: 't1', name: 'Goa 2026', status, participants }
+  trips.links = links
   const readiness = useReadinessStore()
   readiness.data = { participants: readinessParticipants }
   readiness.lastTripId = readinessTrip
@@ -267,5 +270,32 @@ describe('TripPeopleView', () => {
     expect(list.text()).toContain('created 2026-01-01')
     expect(list.text()).toContain('revoked')
     expect(list.text()).toContain('created 2026-01-03')
+  })
+})
+
+// tripper.md §2 Archived (D11): archiving revoked every link and the server
+// refuses every write, so no Copy/Replace link, QR, revoke, add or remove.
+describe('TripPeopleView — archived trip is read-only', () => {
+  afterEach(() => { document.body.innerHTML = '' })
+  const LINKS = [{ id: 'l1', person_id: 'p1', created_at: '2026-07-01', revoked_at: null }]
+  function peopleControls(wrapper) {
+    return {
+      add: wrapper.find('#tp-new-participant').exists(),
+      copy: wrapper.findAll('button').some((b) => b.text() === "Copy Asha's link"),
+      more: wrapper.find('[aria-label="More actions for Asha"]').exists()
+    }
+  }
+  it('archived trip shows people with no add, copy-link, replace-link or remove controls', async () => {
+    const { wrapper } = await mountView({ status: 'archived', links: LINKS })
+    expect(peopleControls(wrapper)).toEqual({ add: false, copy: false, more: false })
+    expect(wrapper.text()).toContain('Asha')
+    await wrapper.find('.history-toggle').trigger('click')
+    expect(wrapper.find('[aria-label="Revoke link for Asha"]').exists()).toBe(false)
+  })
+  it('live trip keeps its people and link controls', async () => {
+    const { wrapper } = await mountView({ links: LINKS })
+    expect(peopleControls(wrapper)).toEqual({ add: true, copy: true, more: true })
+    await wrapper.find('.history-toggle').trigger('click')
+    expect(wrapper.find('[aria-label="Revoke link for Asha"]').exists()).toBe(true)
   })
 })

@@ -5,9 +5,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mountWithBase, pasteViaMenu } from '../../test-utils.js'
 import TripBudgetView from './TripBudgetView.vue'
 import { useBudgetStore } from '../../stores/budget.js'
+import { useTripsStore } from '../../stores/trips.js'
 import { api } from '../../api/client.js'
 
-async function mountView() {
+async function mountView(status = 'planning') {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ path: '/trips/:id/budget', name: 'trip-budget', component: TripBudgetView }]
@@ -20,7 +21,11 @@ async function mountView() {
   setActivePinia(pinia)
   const store = useBudgetStore()
   // one saved non-zero line: an all-zero budget renders the empty state, not the table (sog)
-  store.fetchBudget = vi.fn(async () => { store.lines = [{ category: 'misc', estimate: 1, basis: '' }] })
+  store.fetchBudget = vi.fn(async () => {
+    store.lines = [{ category: 'misc', estimate: 1, basis: '' }]
+    store.overrides = [{ person_id: 'p1', person_name: 'Asha', amount: 100, note: '' }]
+  })
+  useTripsStore().current = { id: 't1', name: 'Goa 2026', status }
   const wrapper = mountWithBase(TripBudgetView, { pinia, global: { plugins: [router] } })
   await flushPromises()
   return { wrapper, store }
@@ -273,5 +278,25 @@ describe('TripBudgetView', () => {
       await wrapper.findAll('button').find((b) => b.text() === 'Edit budget').trigger('click')
       expect(wrapper.findComponent({ name: 'BudgetTable' }).props('editing')).toBe(true)
     })
+  })
+
+  // tripper.md §2 Archived (D11): the server refuses every write, so offer none.
+  function budgetControls(wrapper) {
+    return {
+      editBudget: wrapper.findAll('button').some((b) => b.text() === 'Edit budget'),
+      more: wrapper.find('[aria-label="More budget actions"]').exists(),
+      addOverride: wrapper.find('[aria-label="Person"]').exists(),
+      overrideInput: wrapper.find('[aria-label="Amount for Asha"]').exists(),
+      removeOverride: wrapper.find('[aria-label="Remove override for Asha"]').exists()
+    }
+  }
+  it('archived trip shows no edit budget, override or AI draft controls', async () => {
+    const { wrapper } = await mountView('archived')
+    expect(budgetControls(wrapper)).toEqual({ editBudget: false, more: false, addOverride: false, overrideInput: false, removeOverride: false })
+    expect(wrapper.find('.override-list').text()).toContain('Asha')
+  })
+  it('live trip keeps its budget edit controls', async () => {
+    const { wrapper } = await mountView()
+    expect(budgetControls(wrapper)).toEqual({ editBudget: true, more: true, addOverride: true, overrideInput: true, removeOverride: true })
   })
 })

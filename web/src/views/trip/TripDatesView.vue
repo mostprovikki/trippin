@@ -5,12 +5,14 @@ import Button from 'primevue/button'
 import RadioButton from 'primevue/radiobutton'
 import { useTripsStore } from '../../stores/trips.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 import { formatDayDate } from '../../utils/dates.js'
 import DateWindowsEditor from '../../components/DateWindowsEditor.vue'
 
 const trips = useTripsStore()
 const notify = useNotify()
+const readOnly = useTripReadOnly()
 
 // Same predicate the sidebar checkmark uses (readiness `dates_confirmed`), so
 // the nav state and this page can never contradict each other.
@@ -89,15 +91,16 @@ async function onSave(windows) {
   <div>
     <SectionHeader
       title="Dates"
-      :description="confirmed
+      :description="readOnly ? 'Trip dates as archived.' : confirmed
         ? 'Trip dates are locked. Propose new windows below if plans change.'
         : 'Propose date windows below, then use \'Use as final dates\' on one to lock the trip dates.'"
     />
     <div v-if="confirmed" class="card dates-confirmed">
       <Tag severity="success" value="confirmed" title="Dates confirmed" aria-label="Dates confirmed" />
       <strong>{{ formatDayDate(confirmed.start) }} &ndash; {{ formatDayDate(confirmed.end) }}</strong>
-      <Button type="button" label="Unconfirm" severity="secondary" outlined size="small" @click="onUnconfirm" />
+      <Button v-if="!readOnly" type="button" label="Unconfirm" severity="secondary" outlined size="small" @click="onUnconfirm" />
     </div>
+    <div v-else-if="readOnly" class="card"><p class="muted">Dates were never confirmed.</p></div>
     <div v-else class="card date-mode-card">
       <div class="field">
         <label>Date mode</label>
@@ -115,11 +118,11 @@ async function onSave(windows) {
         <li v-for="(w, idx) in savedWindows" :key="idx" class="dates-window-row">
           <span class="dates-window-range">{{ formatDayDate(w.start_date) }} &ndash; {{ formatDayDate(w.end_date) }}</span>
           <span v-if="w.note" class="dates-window-note">{{ w.note }}</span>
-          <Button type="button" label="Use as final dates" size="small" @click="useAsFinal(w)" />
+          <Button v-if="!readOnly" type="button" label="Use as final dates" size="small" @click="useAsFinal(w)" />
         </li>
       </ul>
     </div>
-    <div class="card">
+    <div v-if="!readOnly" class="card">
       <DateWindowsEditor :windows="trips.current?.windows || []" :confirmed="!!confirmed" @save="onSave" />
     </div>
   </div>

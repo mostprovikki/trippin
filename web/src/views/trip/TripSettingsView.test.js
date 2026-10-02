@@ -132,3 +132,50 @@ describe('TripSettingsView', () => {
     expect(wrapper.text()).not.toMatch(/est\. 12000\b/)
   })
 })
+
+// tripper.md §2 Archived (D11): Basics are read-only; the archive cards stay editable.
+describe('TripSettingsView — archived trip is read-only', () => {
+  async function mountStatus(status) {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/trips/:id/settings', name: 'trip-settings', component: TripSettingsView }]
+    })
+    await router.push('/trips/t1/settings')
+    await router.isReady()
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const trips = useTripsStore()
+    trips.current = { id: 't1', name: 'Goa 2026', status, description: 'Beach week', origin_city: 'Chennai', vibe_tags: ['beach'], required_doc_types: ['passport'] }
+    const archive = useArchiveStore()
+    archive.fetchArchive = status === 'archived'
+      ? vi.fn().mockImplementation(async () => {
+        archive.snapshot = { budget: { lines: [{ category: 'stay', estimate: 100 }] }, itinerary: [], checklists: [] }
+        archive.archived_at = '2026-01-01 00:00:00'
+        archive.actuals = []
+      })
+      : vi.fn().mockRejectedValue(Object.assign(new Error('not archived'), { code: 'NOT_ARCHIVED' }))
+    const wrapper = mountWithBase(TripSettingsView, { pinia, global: { plugins: [router] } })
+    await flushPromises()
+    const labels = wrapper.findAll('button').map((b) => b.text())
+    return {
+      wrapper,
+      controls: {
+        basicsInputs: wrapper.find('#ts-name').exists() || wrapper.find('#ts-desc').exists() || wrapper.find('#ts-origin').exists(),
+        saveChanges: labels.includes('Save changes'),
+        archiveCards: labels.includes('Save notes & links') && labels.includes('Save actuals') && labels.includes('Unarchive trip')
+      }
+    }
+  }
+  it('archived trip shows Basics as text with no Save changes, and keeps notes, actuals and Unarchive', async () => {
+    const { wrapper, controls } = await mountStatus('archived')
+    expect(controls).toEqual({ basicsInputs: false, saveChanges: false, archiveCards: true })
+    const basics = wrapper.find('[data-test="basics-readonly"]').text()
+    expect(basics).toContain('Goa 2026')
+    expect(basics).toContain('Chennai')
+    expect(wrapper.find('#ts-notes').exists()).toBe(true)
+  })
+  it('live trip keeps its Basics form', async () => {
+    const { controls } = await mountStatus('planning')
+    expect(controls).toEqual({ basicsInputs: true, saveChanges: true, archiveCards: false })
+  })
+})

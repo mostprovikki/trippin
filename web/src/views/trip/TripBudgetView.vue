@@ -14,6 +14,7 @@ import { useAiStatus } from '../../composables/useAiStatus.js'
 import { useBudgetStore } from '../../stores/budget.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
 import BudgetTable from '../../components/BudgetTable.vue'
 import DraftReview from '../../components/DraftReview.vue'
 import SectionHeader from '../../components/SectionHeader.vue'
@@ -29,6 +30,7 @@ const notify = useNotify()
 const loading = ref(true)
 const participants = ref([])
 const tripCurrency = ref('INR')
+const readOnly = useTripReadOnly()
 const newOverride = reactive({ person_id: '', amount: 0, note: '' })
 // trip-planner-53h: BudgetTable is read-only until the owner opts in — the
 // table was permanently in edit mode before, wasting space on inputs nobody
@@ -185,6 +187,19 @@ onBeforeRouteLeave(async () => {
         </template>
         <p v-else class="budget-sub">No estimate yet.</p>
 
+        <template v-if="readOnly">
+          <template v-if="store.overrides.length">
+            <h3 class="override-head">Own amounts</h3>
+            <ul class="override-list">
+              <li v-for="o in store.overrides" :key="o.person_id" class="override-row">
+                <span class="override-name">{{ o.person_name }}</span>
+                <span class="override-amount">{{ formatMoney(o.amount, tripCurrency) }}</span>
+                <span class="override-note">{{ o.note }}</span>
+              </li>
+            </ul>
+          </template>
+        </template>
+        <template v-else>
         <h3 class="override-head">Own amounts</h3>
         <ul class="override-list">
           <li v-for="o in overridesDraft.draft.overrides" :key="o.person_id" class="override-row">
@@ -201,12 +216,13 @@ onBeforeRouteLeave(async () => {
           </li>
         </ul>
         <Button v-if="overridesDirty" label="Save overrides" class="override-save" @click="saveOverrides" />
+        </template>
       </div>
 
       <div class="card">
         <div class="card-header-row">
           <h2>Category estimates</h2>
-          <div class="card-header-actions">
+          <div v-if="!readOnly" class="card-header-actions">
             <Button v-if="!editing" label="Edit budget" text @click="editing = true" />
             <Button
               type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
@@ -216,9 +232,9 @@ onBeforeRouteLeave(async () => {
             <Menu id="budget-more-menu" ref="moreMenu" :model="moreItems" popup />
           </div>
         </div>
-        <p v-if="noEstimate" class="budget-sub">No estimate yet — Edit budget to add one.</p>
-        <BudgetTable v-else v-model="linesDraft.draft.lines" :draft="store.draft" :currency="tripCurrency" :editing="editing" />
-        <div v-if="editing" class="budget-edit-actions">
+        <p v-if="noEstimate" class="budget-sub">{{ readOnly ? 'No estimate.' : 'No estimate yet — Edit budget to add one.' }}</p>
+        <BudgetTable v-else v-model="linesDraft.draft.lines" :draft="store.draft" :currency="tripCurrency" :editing="editing && !readOnly" />
+        <div v-if="editing && !readOnly" class="budget-edit-actions">
           <Button label="Save budget" @click="saveLines" />
           <Button label="Cancel" severity="secondary" outlined @click="cancelEdit" />
         </div>
@@ -230,7 +246,7 @@ onBeforeRouteLeave(async () => {
         @imported="onPasted"
       />
 
-      <DraftReview v-if="store.draft" title="AI draft" :busy="store.aiBusy" :pasted="store.draftPasted" @apply="applyDraft" @discard="discardDraft">
+      <DraftReview v-if="store.draft && !readOnly" title="AI draft" :busy="store.aiBusy" :pasted="store.draftPasted" @apply="applyDraft" @discard="discardDraft">
         <p>Compare the "AI draft" column above against your estimates, then apply or discard.</p>
       </DraftReview>
 

@@ -14,6 +14,7 @@ import { useReadinessStore } from '../../stores/readiness.js'
 import { NEXT_STATUS } from '../../utils/tripStatus.js'
 import { useDraft, confirmDiscard } from '../../composables/useDraft.js'
 import { useNotify } from '../../composables/useNotify.js'
+import { useTripReadOnly } from '../../composables/useTripReadOnly.js'
 import { budgetCategoryLabel, formatMoney, docTypeLabel } from '../../utils/format.js'
 import SectionHeader from '../../components/SectionHeader.vue'
 
@@ -23,6 +24,8 @@ const trips = useTripsStore()
 const archiveStore = useArchiveStore()
 const confirm = useConfirm()
 const notify = useNotify()
+// archived (D11): Basics read-only; notes, photo links, actuals and Unarchive stay
+const readOnly = useTripReadOnly()
 
 const tripId = computed(() => route.params.id)
 
@@ -198,6 +201,14 @@ async function advanceStatus() {
 
     <section class="card">
       <h2>Basics</h2>
+      <dl v-if="readOnly" class="basics-readonly" data-test="basics-readonly">
+        <dt>Name</dt><dd>{{ trips.current?.name }}</dd>
+        <dt>Description</dt><dd>{{ trips.current?.description || '—' }}</dd>
+        <dt>Origin city</dt><dd>{{ trips.current?.origin_city || '—' }}</dd>
+        <dt>Vibe tags</dt><dd>{{ (trips.current?.vibe_tags || []).join(', ') || '—' }}</dd>
+        <dt>Documents every participant needs</dt><dd>{{ (trips.current?.required_doc_types || []).map(docTypeLabel).join(', ') || 'None required' }}</dd>
+      </dl>
+      <template v-else>
       <div class="field"><label for="ts-name">Name</label><InputText id="ts-name" v-model="basics.name" fluid /></div>
       <div class="field"><label for="ts-desc">Description</label><Textarea id="ts-desc" v-model="basics.description" rows="3" fluid /></div>
       <div class="field"><label for="ts-origin">Origin city</label><InputText id="ts-origin" v-model="basics.origin_city" fluid /></div>
@@ -216,6 +227,7 @@ async function advanceStatus() {
         />
       </div>
       <Button label="Save changes" :disabled="!basicsDraft.isDirty.value" @click="saveBasics" />
+      </template>
     </section>
 
     <section class="card">
@@ -273,6 +285,10 @@ async function advanceStatus() {
 
 <style scoped>
 .muted { color: var(--app-text-muted); font-size: 0.875rem; }
+.basics-readonly { display: grid; grid-template-columns: max-content 1fr; gap: 0.375rem 1rem; margin: 0; }
+.basics-readonly dt { color: var(--app-text-muted); font-size: 0.875rem; }
+.basics-readonly dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .basics-readonly { grid-template-columns: 1fr; } .basics-readonly dd { margin-bottom: 0.375rem; } }
 .actual-row { display: flex; align-items: center; gap: 1rem; padding: 0.375rem 0; }
 .actual-cat { min-width: 8rem; font-weight: 500; }
 </style>

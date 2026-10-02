@@ -179,3 +179,32 @@ describe('TripDatesView', () => {
     expect(w.wrapper.find('.dates-window-range').text()).toBe('Fri 6 Nov – Sun 15 Nov')
   })
 })
+
+// tripper.md §2 Archived (D11): the server refuses every write, so offer none.
+describe('TripDatesView — archived trip is read-only', () => {
+  function datesControls(wrapper) {
+    const labels = wrapper.findAll('button').map((b) => b.text())
+    return {
+      unconfirm: labels.includes('Unconfirm'),
+      useAsFinal: labels.includes('Use as final dates'),
+      dateMode: wrapper.find('#tdm-broad').exists(),
+      editor: wrapper.findComponent({ name: 'DateWindowsEditor' }).exists()
+    }
+  }
+  const confirmedTrip = (status) => ({ id: 't1', name: 'Goa', status, date_mode: 'confirmed', start_date: '2026-08-01', end_date: '2026-08-05', windows: [] })
+  const openTrip = (status) => ({ id: 't1', name: 'Goa', status, date_mode: 'broad', windows: [{ start_date: '2026-08-01', end_date: '2026-08-05' }] })
+  it('archived trip shows its dates with no unconfirm, date-mode, final-date or window controls', async () => {
+    const { wrapper: locked } = await mountView(confirmedTrip('archived'))
+    expect(datesControls(locked)).toEqual({ unconfirm: false, useAsFinal: false, dateMode: false, editor: false })
+    expect(locked.find('.dates-confirmed').text()).toContain('1 Aug')
+    const { wrapper: open } = await mountView(openTrip('archived'))
+    expect(datesControls(open)).toEqual({ unconfirm: false, useAsFinal: false, dateMode: false, editor: false })
+    expect(open.find('.dates-window-range').exists()).toBe(true)
+  })
+  it('live trip keeps its date controls', async () => {
+    const { wrapper: locked } = await mountView(confirmedTrip('confirmed'))
+    expect(datesControls(locked)).toEqual({ unconfirm: true, useAsFinal: false, dateMode: false, editor: true })
+    const { wrapper: open } = await mountView(openTrip('planning'))
+    expect(datesControls(open)).toEqual({ unconfirm: false, useAsFinal: true, dateMode: true, editor: true })
+  })
+})
