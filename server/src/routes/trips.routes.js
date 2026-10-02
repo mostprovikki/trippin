@@ -275,7 +275,13 @@ export default async function routes(app) {
     const trip = await owned(req)
     if (!trip) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
     if (await assertTripWritable(app, trip, reply)) return reply
-    await app.db.run('DELETE FROM trip_participants WHERE trip_id = ? AND person_id = ?', [trip.id, req.params.personId])
+    await app.db.tx(async () => {
+      await app.db.run('DELETE FROM trip_participants WHERE trip_id = ? AND person_id = ?', [trip.id, req.params.personId])
+      // their assignments on this trip go with them (trip-planner-h3i.4)
+      await app.db.run(`UPDATE checklist_items SET assignee_person_id = NULL
+        WHERE assignee_person_id = ? AND checklist_id IN (SELECT id FROM checklists WHERE trip_id = ?)`,
+        [req.params.personId, trip.id])
+    })
     reply.code(204)
     return null
   })

@@ -11,6 +11,9 @@ async function seedParticipantLink(app, db, tripId, personId) {
   return raw
 }
 
+const join = (db, tripId, personId) =>
+  db.run('INSERT INTO trip_participants (trip_id, person_id) VALUES (?, ?)', [tripId, personId])
+
 describe('checklists routes', () => {
   let app, db, cookie
 
@@ -23,6 +26,7 @@ describe('checklists routes', () => {
   it('creates a trip checklist, adds items, and organizer can tick an item', async () => {
     const trip = await createTrip(db, { name: 'Goa Trip' })
     const person = await createPerson(db, { name: 'Alice' })
+    await join(db, trip.id, person.id)
 
     const createRes = await authedInject(app, cookie, {
       method: 'POST', url: '/api/checklists',
@@ -149,6 +153,7 @@ describe('checklists routes', () => {
   it('promote-to-template strips assignee/done/due from copied items', async () => {
     const person = await createPerson(db, { name: 'Cara' })
     const trip = await createTrip(db, { name: 'Ski Trip' })
+    await join(db, trip.id, person.id)
     const checklistRes = await authedInject(app, cookie, {
       method: 'POST', url: '/api/checklists',
       payload: { kind: 'tasks', name: 'Ski Tasks', trip_id: trip.id },
@@ -329,6 +334,8 @@ describe('checklists routes', () => {
       const otherTrip = await createTrip(db, { name: 'Trip B' })
       const me = await createPerson(db, { name: 'Dee' })
       const other = await createPerson(db, { name: 'Eve' })
+      await join(db, trip.id, me.id)
+      await join(db, trip.id, other.id)
 
       const packingRes = await authedInject(app, cookie, {
         method: 'POST', url: '/api/checklists',
@@ -429,6 +436,115 @@ describe('checklists routes', () => {
       expect(prompt).not.toContain('9998887777')
       expect(prompt).not.toContain('john@x.com')
       expect(prompt).not.toContain('diabetic')
+    })
+  })
+
+  // trip-planner-h3i.4: an assignee is always someone on the item's trip.
+  describe('assignee must be on the trip', () => {
+    async function tripChecklist(trip) {
+      return (await authedInject(app, cookie, {
+        method: 'POST', url: '/api/checklists', payload: { kind: 'packing', name: 'Packing', trip_id: trip.id },
+      })).json().checklist
+    }
+
+    it('assigning a person not on the trip is refused', async () => {
+      const trip = await createTrip(db)
+      const outsider = await createPerson(db, { name: 'Meera Nair' })
+      const checklist = await tripChecklist(trip)
+      const res = await authedInject(app, cookie, {
+        method: 'POST', url: `/api/checklists/${checklist.id}/items`,
+        payload: { title: 'Sunscreen', assignee_person_id: outsider.id },
+      })
+      expect(res.statusCode).toBe(400)
+      expect(res.json().error.code).toBe('ASSIGNEE_NOT_ON_TRIP')
+      expect(await db.all('SELECT id FROM checklist_items WHERE checklist_id = ?', [checklist.id])).toEqual([])
+    })
+
+    it('re-assigning an item to a person not on the trip is refused and leaves the row alone', async () => {
+      const trip = await createTrip(db)
+      const member = await createPerson(db)
+      const outsider = await createPerson(db)
+      await join(db, trip.id, member.id)
+      const checklist = await tripChecklist(trip)
+      const item = (await authedInject(app, cookie, {
+        method: 'POST', url: `/api/checklists/${checklist.id}/items`,
+        payload: { title: 'Hat', assignee_person_id: member.id },
+      })).json()
+      const res = await authedInject(app, cookie, {
+        method: 'PUT', url: `/api/checklist-items/${item.id}`,
+        payload: { title: 'Renamed', assignee_person_id: outsider.id },
+      })
+      expect(res.statusCode).toBe(400)
+      expect(res.json().error.code).toBe('ASSIGNEE_NOT_ON_TRIP')
+      const row = await db.get('SELECT title, assignee_person_id FROM checklist_items WHERE id = ?', [item.id])
+      expect(row).toEqual({ title: 'Hat', assignee_person_id: member.id })
+      // clearing and other edits still work
+      const clear = await authedInject(app, cookie, {
+        method: 'PUT', url: `/api/checklist-items/${item.id}`, payload: { assignee_person_id: null },
+      })
+      expect(clear.statusCode).toBe(200)
+      expect(clear.json().assignee_person_id).toBeNull()
+    })
+
+    it('a template item cannot carry an assignee', async () => {
+      const person = await createPerson(db)
+      const tpl = (await authedInject(app, cookie, {
+        method: 'POST', url: '/api/checklists', payload: { kind: 'tasks', name: 'T', is_template: true },
+      })).json().checklist
+      const res = await authedInject(app, cookie, {
+        method: 'POST', url: `/api/checklists/${tpl.id}/items`,
+        payload: { title: 'x', assignee_person_id: person.id },
+      })
+      expect(res.statusCode).toBe(400)
+      expect(res.json().error.code).toBe('ASSIGNEE_NOT_ON_TRIP')
+      const ok = await authedInject(app, cookie, {
+        method: 'POST', url: `/api/checklists/${tpl.id}/items`, payload: { title: 'y', assignee_person_id: null },
+      })
+      expect(ok.statusCode).toBe(201)
+    })
+
+    it('removing a participant unassigns their items on that trip only', async () => {
+      const trip = await createTrip(db)
+      const otherTrip = await createTrip(db)
+      const person = await createPerson(db)
+      await join(db, trip.id, person.id)
+      await join(db, otherTrip.id, person.id)
+      const here = await tripChecklist(trip)
+      const there = await tripChecklist(otherTrip)
+      const a = (await authedInject(app, cookie, {
+        method: 'POST', url: `/api/checklists/${here.id}/items`, payload: { title: 'a', assignee_person_id: person.id },
+      })).json()
+      const b = (await authedInject(app, cookie, {
+        method: 'POST', url: `/api/checklists/${there.id}/items`, payload: { title: 'b', assignee_person_id: person.id },
+      })).json()
+      const del = await authedInject(app, cookie, { method: 'DELETE', url: `/api/trips/${trip.id}/participants/${person.id}` })
+      expect(del.statusCode).toBe(204)
+      expect((await db.get('SELECT assignee_person_id FROM checklist_items WHERE id = ?', [a.id])).assignee_person_id).toBeNull()
+      expect((await db.get('SELECT assignee_person_id FROM checklist_items WHERE id = ?', [b.id])).assignee_person_id).toBe(person.id)
+    })
+
+    it('009 migration nulls assignees not on their item\'s trip', async () => {
+      const { readFileSync, readdirSync } = await import('node:fs')
+      const file = readdirSync(new URL('../src/migrations', import.meta.url)).find((f) => f.startsWith('009_'))
+      expect(file).toBeTruthy()
+      const trip = await createTrip(db)
+      const member = await createPerson(db)
+      const outsider = await createPerson(db)
+      await join(db, trip.id, member.id)
+      const checklist = await tripChecklist(trip)
+      const tpl = (await authedInject(app, cookie, {
+        method: 'POST', url: '/api/checklists', payload: { kind: 'tasks', name: 'T', is_template: true },
+      })).json().checklist
+      const rows = [['k', checklist.id, member.id], ['s', checklist.id, outsider.id], ['t', tpl.id, member.id]]
+      for (const [id, cl, p] of rows)
+        await db.run('INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, done, position) VALUES (?, ?, ?, ?, 0, 0)', [`mig-${id}`, cl, id, p])
+      await db.exec(readFileSync(new URL(`../src/migrations/${file}`, import.meta.url), 'utf8'))
+      const got = await db.all("SELECT id, assignee_person_id FROM checklist_items WHERE id LIKE 'mig-%' ORDER BY id")
+      expect(got).toEqual([
+        { id: 'mig-k', assignee_person_id: member.id },
+        { id: 'mig-s', assignee_person_id: null },
+        { id: 'mig-t', assignee_person_id: null },
+      ])
     })
   })
 })

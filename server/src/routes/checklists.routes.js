@@ -50,6 +50,16 @@ export default async function routes(app) {
     `SELECT ci.*, c.trip_id FROM checklist_items ci JOIN checklists c ON c.id = ci.checklist_id
      WHERE ci.id = ? AND c.organizer_id = ?`, [req.params.itemId, req.organizer.id],
   )
+  // An assignee must be a participant of the item's trip; a template (no trip) has
+  // no one to assign. Shared by item create + update so neither can drift.
+  const assigneeRefused = async (reply, checklist, personId) => {
+    if (personId == null) return false
+    const onTrip = checklist.trip_id && await db.get(
+      'SELECT 1 FROM trip_participants WHERE trip_id = ? AND person_id = ?', [checklist.trip_id, personId])
+    if (onTrip) return false
+    httpError(reply, 400, 'ASSIGNEE_NOT_ON_TRIP', 'Assignee is not on this trip')
+    return true
+  }
   const nextPosition = async (checklistId) =>
     (await db.get('SELECT COALESCE(MAX(position), -1) AS maxpos FROM checklist_items WHERE checklist_id = ?', [checklistId])).maxpos + 1
 
@@ -150,8 +160,9 @@ export default async function routes(app) {
     const checklist = await ownedChecklist(req, req.params.id)
     if (!checklist) return httpError(reply, 404, 'NOT_FOUND', 'No such checklist')
     if (await assertTripWritable(app, checklist.trip_id, reply)) return reply
-    const id = randomUUID()
     const b = req.body
+    if (await assigneeRefused(reply, checklist, b.assignee_person_id)) return reply
+    const id = randomUUID()
     await db.run(`INSERT INTO checklist_items (id, checklist_id, title, assignee_person_id, due_date, done, position)
       VALUES (?, ?, ?, ?, ?, 0, ?)`,
       [id, checklist.id, b.title, b.assignee_person_id ?? null, b.due_date ?? null, await nextPosition(checklist.id)])
@@ -164,6 +175,8 @@ export default async function routes(app) {
     if (!item) return httpError(reply, 404, 'NOT_FOUND', 'No such item')
     if (await assertTripWritable(app, item.trip_id, reply)) return reply
     const b = req.body || {}
+    if (Object.prototype.hasOwnProperty.call(b, 'assignee_person_id')
+      && await assigneeRefused(reply, await getChecklist(item.checklist_id), b.assignee_person_id)) return reply
     const updates = []
     const params = []
     for (const field of ITEM_FIELDS) {
