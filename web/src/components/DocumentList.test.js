@@ -111,3 +111,19 @@ describe('DocumentList open-in-tab action', () => {
     expect(wrapper.find('[aria-label="Delete passport.pdf"]').exists()).toBe(true)
   })
 })
+
+describe('DocumentList expiry validation (trip-planner-h3i.3)', () => {
+  it('Upload is disabled while the typed expiry is not a date', async () => {
+    const { wrapper } = mountList()
+    const upload = () => wrapper.find('button[type="submit"]').element
+    expect(upload().disabled).toBe(false)
+    const mask = wrapper.findComponent({ name: 'InputMask' })
+    mask.vm.$emit('update:modelValue', 'next year')
+    mask.vm.$emit('blur')
+    await wrapper.vm.$nextTick()
+    expect(upload().disabled).toBe(true)
+    mask.vm.$emit('update:modelValue', '2027-03-10')
+    await wrapper.vm.$nextTick()
+    expect(upload().disabled).toBe(false)
+  })
+})

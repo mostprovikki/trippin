@@ -21,7 +21,7 @@ const props = defineProps({
   // swaps the picker for a masked field so the keyboard is the fast path.
   typeable: { type: Boolean, default: false }
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'update:invalid'])
 
 // PrimeVue's ArrowLeft/ArrowRight only look inside the current week row, so at a
 // row edge they page a whole month instead of stepping a day. The panel is
@@ -46,31 +46,47 @@ const placeholderText = computed(
 // isn't: we never rewrite the field mid-keystroke, so the caret never moves.
 const text = ref(props.modelValue || '')
 const focused = ref(false)
-const invalid = ref(false)
+// Set once the person leaves the field, so a half-typed date doesn't nag
+// mid-entry but can't slip away unflagged either.
+const blurred = ref(false)
 const errorId = computed(() => (props.inputId ? `${props.inputId}-error` : undefined))
+
+// A mask constrains the *shape* but not the calendar: 2026-02-31 satisfies
+// 9999-99-99, and parseIsoDate rejects it rather than rolling it over to Mar 3.
+const complete = computed(() => /^\d{4}-\d{2}-\d{2}$/.test(text.value))
+const notADate = computed(() => !!text.value && !parseIsoDate(text.value))
+const errorText = computed(() => {
+  if (!notADate.value) return ''
+  if (complete.value) return 'Not a real date — check month/day.'
+  return blurred.value ? 'Use YYYY-MM-DD, e.g. 2027-03-10' : ''
+})
+const invalid = computed(() => !!errorText.value)
+// The parent never sees a non-date (nothing is emitted for one), so it needs
+// this to refuse to submit rather than save the field as blank.
+watch(notADate, (v) => emit('update:invalid', v))
 
 watch(() => props.modelValue, (v) => {
   // Never clobber what someone is actively typing.
   if (focused.value) return
   text.value = v || ''
-  invalid.value = false
+  blurred.value = false
 })
 
 function onMaskInput(next) {
   text.value = next || ''
   if (!text.value) {
-    invalid.value = false
+    blurred.value = false
     if (props.modelValue) emit('update:modelValue', '')
     return
   }
   // Mid-entry the unfilled slots render as the slotChar template, so a
-  // complete-looking date is the only thing that can parse. A mask constrains
-  // the *shape* but not the calendar: 2026-02-31 satisfies 9999-99-99, and
-  // parseIsoDate rejects it rather than rolling it over to Mar 3.
-  const complete = /^\d{4}-\d{2}-\d{2}$/.test(text.value)
-  const parsed = complete ? parseIsoDate(text.value) : null
-  invalid.value = complete && !parsed
-  if (parsed) emit('update:modelValue', text.value)
+  // complete-looking date is the only thing that can parse.
+  if (!notADate.value) emit('update:modelValue', text.value)
+}
+
+function onBlur() {
+  focused.value = false
+  blurred.value = true
 }
 </script>
 
@@ -90,10 +106,11 @@ function onMaskInput(next) {
       :fluid="fluid"
       :invalid="invalid"
       :aria-describedby="invalid ? errorId : undefined"
+      :auto-clear="false"
       inputmode="numeric"
       @update:model-value="onMaskInput"
       @focus="focused = true"
-      @blur="focused = false"
+      @blur="onBlur"
     />
     <!-- The slot always occupies its line, so showing the error can't shove the
          Upload button down under the pointer mid-typing. -->
@@ -102,7 +119,7 @@ function onMaskInput(next) {
            (participant page at 375px), and a second line would push the Upload
            button out from under the thumb. -->
       <small v-if="invalid" :id="errorId" class="date-field-error" role="alert">
-        Not a real date — check month/day.
+        {{ errorText }}
       </small>
     </div>
   </template>

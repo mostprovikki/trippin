@@ -25,6 +25,8 @@ const firstMissing = () => missingDocTypes(store.trip?.required_doc_types, store
 const docType = ref(firstMissing())
 const docNumber = ref('')
 const expiryDate = ref('')
+// A typed expiry that isn't a date would otherwise upload as no expiry at all.
+const expiryInvalid = ref(false)
 const file = ref(null)
 const fileInput = ref(null)
 const uploading = ref(false)
@@ -140,9 +142,9 @@ async function download(doc) {
         <label for="doc-expiry">Expiry (optional)</label>
         <!-- typeable: you read this off the passport in your hand, so typing
              beats 6 clicks through a calendar to 2035. -->
-        <DateField v-model="expiryDate" input-id="doc-expiry" typeable />
+        <DateField v-model="expiryDate" v-model:invalid="expiryInvalid" input-id="doc-expiry" typeable />
       </div>
-      <Button type="submit" :label="uploading ? 'Uploading…' : 'Upload'" :disabled="uploading" fluid />
+      <Button type="submit" :label="uploading ? 'Uploading…' : 'Upload'" :disabled="uploading || expiryInvalid" fluid />
     </form>
   </div>
 </template>

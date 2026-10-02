@@ -42,6 +42,20 @@ describe('ParticipantDocs (trip-planner-0qh)', () => {
     expect(w.find('#doc-type').text()).toContain('Visa')
     w.unmount()
   })
+  it('Upload is disabled while the typed expiry is not a date (h3i.3)', async () => {
+    const w = mountWith({ trip: { required_doc_types: [] }, documents: [] })
+    const upload = () => w.find('button[type="submit"]').element
+    expect(upload().disabled).toBe(false)
+    const mask = w.findComponent({ name: 'InputMask' })
+    mask.vm.$emit('update:modelValue', '3/10/2027')
+    mask.vm.$emit('blur')
+    await w.vm.$nextTick()
+    expect(upload().disabled).toBe(true)
+    mask.vm.$emit('update:modelValue', '2027-03-10')
+    await w.vm.$nextTick()
+    expect(upload().disabled).toBe(false)
+    w.unmount()
+  })
   it('no card inside the step card', () => {
     const w = mountWith({ trip: { required_doc_types: [] }, documents: [] })
     expect(w.find('.card').exists()).toBe(false)

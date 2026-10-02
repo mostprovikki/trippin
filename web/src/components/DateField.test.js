@@ -104,6 +104,48 @@ describe('DateField', () => {
       expect(w.emitted('update:modelValue')[0]).toEqual([''])
     })
 
+    // trip-planner-h3i.3: anything not a real date used to vanish on blur and
+    // upload as expiry=null with no word to the person typing it.
+    const typeAndBlur = async (w, typed) => {
+      const mask = w.findComponent({ name: 'InputMask' })
+      mask.vm.$emit('focus')
+      mask.vm.$emit('update:modelValue', typed)
+      await w.vm.$nextTick()
+      mask.vm.$emit('blur')
+      await w.vm.$nextTick()
+    }
+
+    it('keeps half-typed text on blur rather than wiping it', () => {
+      expect(mountTypeable().findComponent({ name: 'InputMask' }).props('autoClear')).toBe(false)
+    })
+
+    for (const bad of ['3/10/2027', 'next year', '3102-027m-dd']) {
+      it(`typeable shows error on blur for ${bad}`, async () => {
+        const w = mountTypeable()
+        await typeAndBlur(w, bad)
+        expect(w.text()).toContain('Use YYYY-MM-DD, e.g. 2027-03-10')
+        expect(w.find('input').attributes('aria-invalid')).toBe('true')
+        expect(w.emitted('update:modelValue')).toBeUndefined()
+        expect(w.emitted('update:invalid').at(-1)).toEqual([true])
+      })
+    }
+
+    it('does not nag while a date is still being typed', async () => {
+      const w = mountTypeable()
+      w.findComponent({ name: 'InputMask' }).vm.$emit('update:modelValue', '2027-0m-dd')
+      await w.vm.$nextTick()
+      expect(w.text()).not.toContain('Use YYYY-MM-DD')
+    })
+
+    it('2027-03-10 is valid: emitted, no error, invalid cleared', async () => {
+      const w = mountTypeable()
+      await typeAndBlur(w, '3/10/2027')
+      await typeAndBlur(w, '2027-03-10')
+      expect(w.text()).not.toContain('Use YYYY-MM-DD')
+      expect(w.emitted('update:modelValue')[0]).toEqual(['2027-03-10'])
+      expect(w.emitted('update:invalid').at(-1)).toEqual([false])
+    })
+
     it('does not clobber in-progress typing when the parent re-renders', async () => {
       const w = mountTypeable('')
       const mask = w.findComponent({ name: 'InputMask' })
