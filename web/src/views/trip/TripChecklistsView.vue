@@ -26,6 +26,9 @@ const participants = ref([])
 const newKind = ref('packing')
 const newName = ref('')
 const selectedTemplate = ref('')
+// The create forms sit behind one button so the lists, not the forms, own the
+// first screen on a phone (tripper.md §4, §5 one primary at rest).
+const showNew = ref(false)
 
 async function load() {
   // Only this view's own state is cleared here — the participant list and the
@@ -35,6 +38,7 @@ async function load() {
   newKind.value = 'packing'
   newName.value = ''
   selectedTemplate.value = ''
+  showNew.value = false
   try {
     const trip = (await api.get(`/api/trips/${tripId.value}`)).trip
     participants.value = trip?.participants || []
@@ -64,6 +68,7 @@ async function createChecklist() {
   const target = tripId.value
   await store.createChecklist({ kind: newKind.value, name: newName.value, trip_id: target })
   newName.value = ''
+  showNew.value = false
   reportOffScreenCreate(target, 'Checklist created')
 }
 
@@ -72,19 +77,27 @@ async function addFromTemplate() {
   const target = tripId.value
   await store.fromTemplate(target, selectedTemplate.value)
   selectedTemplate.value = ''
+  showNew.value = false
   reportOffScreenCreate(target, 'Checklist added from template')
 }
 </script>
 
 <template>
   <div>
-    <SectionHeader title="Checklists" description="Packing lists and shared tasks, assignable to participants." />
+    <SectionHeader title="Checklists" description="Packing lists and shared tasks, assignable to participants.">
+      <template #actions>
+        <Button
+          type="button" data-test="new-checklist" icon="pi pi-plus" label="New checklist" severity="secondary" outlined
+          :aria-expanded="String(showNew)" aria-controls="new-checklist-panel" @click="showNew = !showNew"
+        />
+      </template>
+    </SectionHeader>
 
     <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
-    <div class="card">
+    <div v-if="showNew" id="new-checklist-panel" class="card">
       <h2>New checklist</h2>
-      <form class="checklist-form-row" @submit.prevent="createChecklist">
+      <form class="checklist-form-row new-checklist-form" @submit.prevent="createChecklist">
         <Select input-id="cv-new-kind" name="cv-new-kind" v-model="newKind" :options="KIND_OPTIONS" option-label="label" option-value="value" aria-label="Kind" />
         <InputText id="checklist-name" name="checklist-name" v-model="newName" placeholder="Checklist name" />
         <Button type="submit" label="Create" />
@@ -98,7 +111,7 @@ async function addFromTemplate() {
     <EmptyState
       v-if="!store.checklists.length"
       icon="pi pi-check-square"
-      message="No checklists yet — create one or start from a template."
+      message="No checklists yet — use New checklist to create one or start from a template."
     />
 
     <ChecklistCard

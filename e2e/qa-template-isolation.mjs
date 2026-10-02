@@ -110,7 +110,10 @@ const bTrip = await api(b.page, 'POST', '/api/trips', { name: `Iso QA Trip B ${S
 async function templateOptions(page, tripId) {
   await page.goto(`${BASE}/trips/${tripId}/checklists`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(400)
+  // the template Select sits behind "New checklist" (trip-planner-jjp)
+  await page.locator('[data-test="new-checklist"]').click()
   const select = page.locator('[aria-label="Template"]').first()
+  await select.waitFor()
   await select.click()
   await page.waitForTimeout(300)
   const names = await page.locator('.p-select-option, .p-dropdown-item').allTextContents()

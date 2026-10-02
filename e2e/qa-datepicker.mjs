@@ -1278,7 +1278,10 @@ const goalIso = '2026-10-03'
 await gotoSection('Checklists')
 await shot('dp-19-checklists-empty')
 {
-  // a 'tasks' checklist is the one with due-date fields
+  // a 'tasks' checklist is the one with due-date fields; the create form sits
+  // behind "New checklist" (trip-planner-jjp)
+  await page.locator('[data-test="new-checklist"]').click()
+  await page.locator('#checklist-name').waitFor()
   await page.locator('.checklist-form-row').first().locator('.p-select').first().click()
   await page.waitForTimeout(250)
   await page.locator('.p-select-option', { hasText: /^Tasks$/ }).first().click()

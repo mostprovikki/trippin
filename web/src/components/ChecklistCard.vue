@@ -99,12 +99,17 @@ async function saveAsTemplate() {
   templateName.value = ''
   showSaveAsTemplate.value = false
 }
-// AI actions sit under ⋯, never as buttons at rest (docs/design/tripper.md §5).
-// Templates have no trip to draft for, so they get no menu.
-const hasAiMenu = computed(() => isPacking.value && !props.checklist.is_template)
+function openSaveAsTemplate() {
+  templateName.value = props.checklist.name
+  showSaveAsTemplate.value = true
+}
+// AI actions and per-card management (save as template, delete) sit under ⋯,
+// never as buttons at rest (docs/design/tripper.md §5, D8). Templates are not
+// shown on a trip and have no trip to draft for, so they get no menu.
+const hasMenu = computed(() => !props.checklist.is_template)
 const moreMenu = ref(null)
 const menuId = computed(() => `checklist-more-${props.checklist.id}`)
-const moreItems = computed(() => [
+const aiItems = computed(() => !isPacking.value ? [] : [
   {
     // A disabled menu item shows no tooltip, so the reason goes in the label.
     label: (store.aiBusy ? 'Generating…' : 'AI packing suggest')
@@ -114,7 +119,13 @@ const moreItems = computed(() => [
     command: suggestPacking
   },
   // BYO-AI: always offered, provider or not (trip-planner-d5d).
-  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } }
+  { label: 'Draft with your own AI…', icon: 'pi pi-clipboard', command: () => { pasteOpen.value = true } },
+  { separator: true }
+])
+const moreItems = computed(() => [
+  ...aiItems.value,
+  { label: 'Save as template…', icon: 'pi pi-copy', command: openSaveAsTemplate },
+  { label: 'Delete checklist…', icon: 'pi pi-trash', class: 'menu-danger', command: removeChecklist }
 ])
 const pasteOpen = ref(false)
 function onPasted(res) { store.setPastedPackingDraft(props.checklist.id, res.items) }
@@ -134,7 +145,7 @@ function discardDraft() {
   <div class="card">
     <div class="checklist-head">
       <h3>{{ checklist.name }} <Tag :value="checklist.kind" severity="secondary" /></h3>
-      <template v-if="hasAiMenu">
+      <template v-if="hasMenu">
         <Button
           type="button" icon="pi pi-ellipsis-h" severity="secondary" text rounded
           :aria-label="`More ${checklist.name} actions`" aria-haspopup="true" :aria-controls="menuId"
@@ -142,6 +153,7 @@ function discardDraft() {
         />
         <Menu :id="menuId" ref="moreMenu" :model="moreItems" popup />
         <PromptPasteDialog
+          v-if="isPacking"
           v-model:visible="pasteOpen" header="Draft packing items with your own AI"
           :prompt-url="`/api/checklists/${checklist.id}/ai-packing-suggest/prompt`" :import-url="`/api/checklists/${checklist.id}/ai-packing-suggest/import`"
           @imported="onPasted"
@@ -151,11 +163,15 @@ function discardDraft() {
 
     <ul class="checklist-items">
       <li v-for="item in checklist.items" :key="item.id">
-        <Checkbox :model-value="!!item.done" binary :input-id="`cl-item-${item.id}`" @update:model-value="toggleDone(item)" />
-        <label :for="`cl-item-${item.id}`">{{ item.title }}</label>
-        <Tag v-if="isOverdue(item)" value="Overdue" severity="warn" />
+        <!-- The label wraps the checkbox so the whole row, not the 20px box, is
+             the tick target (§4: ≥44px on a phone). -->
+        <label class="item-tick" :for="`cl-item-${item.id}`">
+          <Checkbox :model-value="!!item.done" binary :input-id="`cl-item-${item.id}`" @update:model-value="toggleDone(item)" />
+          <span class="item-title">{{ item.title }}</span>
+          <Tag v-if="isOverdue(item)" value="Overdue" severity="warn" />
+        </label>
 
-        <template v-if="isTasks">
+        <div v-if="isTasks" class="item-meta">
           <Select
             :input-id="`cl-assignee-${item.id}`"
             :name="`cl-assignee-${item.id}`"
@@ -173,7 +189,7 @@ function discardDraft() {
             :model-value="item.due_date || ''"
             @update:model-value="changeDueDate(item, $event)"
           />
-        </template>
+        </div>
 
         <Button type="button" icon="pi pi-times" severity="secondary" text rounded class="icon-danger-btn" :aria-label="`Delete ${item.title}`" @click="removeItem(item)" />
       </li>
@@ -194,22 +210,11 @@ function discardDraft() {
       </ul>
     </DraftReview>
 
-    <div class="checklist-footer">
-      <Button
-        v-if="!checklist.is_template && !showSaveAsTemplate"
-        type="button"
-        label="Save as template"
-        severity="secondary"
-        outlined
-        @click="showSaveAsTemplate = true"
-      />
-      <form v-if="showSaveAsTemplate" class="field checklist-add" @submit.prevent="saveAsTemplate">
-        <input v-model="templateName" placeholder="Template name" />
-        <Button type="submit" label="Save" />
-        <Button type="button" label="Cancel" severity="secondary" outlined @click="showSaveAsTemplate = false" />
-      </form>
-      <Button type="button" label="Delete checklist" severity="danger" outlined @click="removeChecklist" />
-    </div>
+    <form v-if="showSaveAsTemplate" class="field checklist-add save-template" @submit.prevent="saveAsTemplate">
+      <input v-model="templateName" placeholder="Template name" aria-label="Template name" />
+      <Button type="submit" label="Save template" :disabled="!templateName.trim()" />
+      <Button type="button" label="Cancel" severity="secondary" outlined @click="showSaveAsTemplate = false" />
+    </form>
   </div>
 </template>
 
@@ -220,8 +225,21 @@ function discardDraft() {
    Select + 10rem date + Delete, which is far past 375px, and without wrap the
    overflow pushes the whole page into sideways scroll rather than the row. */
 .checklist-items li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; flex-wrap: wrap; }
+.item-tick { flex: 1 1 12rem; min-width: 0; display: flex; align-items: center; gap: 0.5rem; min-height: 2.25rem; cursor: pointer; }
+.item-title { min-width: 0; overflow-wrap: anywhere; }
+.item-meta { display: flex; align-items: center; gap: 0.5rem; }
+/* Phone (§4): one tap row ≥44px. A packing row stays one line (title wraps
+   inside the label); a task row puts assignee + due on ONE second line under
+   the title instead of breaking into three. */
+@media (max-width: 640px) {
+  .checklist-items li { flex-wrap: nowrap; }
+  .checklist-items li:has(.item-meta) { flex-wrap: wrap; }
+  .item-tick { flex: 1 1 0; min-height: 2.75rem; }
+  .item-meta { order: 3; flex: 1 0 100%; min-width: 0; box-sizing: border-box; padding-left: 1.75rem; }
+  .item-meta .p-select { flex: 1 1 0; min-width: 0; }
+}
 .checklist-add { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.checklist-footer { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.save-template { margin-top: 0.5rem; }
 /* DateField is fluid by default; in these flex rows it must keep an intrinsic
    width so it can't stretch over the assignee Select and Delete button. */
 .due-date { flex: none; }

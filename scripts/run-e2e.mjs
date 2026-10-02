@@ -6,7 +6,7 @@
 // each gets its own timeout so one hung gate can't wedge the whole run.
 //
 // Usage:
-//   node scripts/run-e2e.mjs gates     # every e2e/qa-*.mjs gate (14 on 2026-10-02), fail-fast off
+//   node scripts/run-e2e.mjs gates     # every e2e/qa-*.mjs gate (18 on 2026-10-02), fail-fast off
 //   node scripts/run-e2e.mjs smoke     # smoke.mjs only
 //   node scripts/run-e2e.mjs ui-walk   # ui-walk.mjs only
 //

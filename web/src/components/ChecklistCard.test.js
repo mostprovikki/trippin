@@ -94,10 +94,61 @@ describe('ChecklistCard', () => {
     document.body.innerHTML = ''
   })
 
-  it('tasks lists and templates get no AI ⋯ menu', () => {
+  it('tasks lists get a ⋯ without AI items; templates get no ⋯ at all', async () => {
     const tasks = mountCard({ id: 'c2', name: 'Chores', kind: 'tasks', items: [] }).wrapper
-    expect(tasks.find('[aria-label="More Chores actions"]').exists()).toBe(false)
+    await tasks.find('[aria-label="More Chores actions"]').trigger('click')
+    await flushPromises()
+    const labels = [...document.body.querySelectorAll('.p-menu-item')].map((el) => el.textContent.trim())
+    expect(labels.some((l) => /AI/.test(l))).toBe(false)
+    expect(labels).toEqual(expect.arrayContaining(['Save as template…', 'Delete checklist…']))
+    tasks.unmount()
+    document.body.innerHTML = ''
     const tpl = mountCard({ id: 'c3', name: 'Beach', kind: 'packing', is_template: true, items: [] }).wrapper
     expect(tpl.find('[aria-label="More Beach actions"]').exists()).toBe(false)
+  })
+
+  // tripper.md §5: one primary at rest; per-card management under the card's ⋯ (D8).
+  it('at rest Add item is the only filled button; Save as template and Delete live under ⋯', () => {
+    const { wrapper } = mountCard({ id: 'c4', name: 'Bags', kind: 'packing', items: [{ id: 'i1', title: 'Hat', done: false }] })
+    const filled = wrapper.findAll('button.p-button').filter((b) => !/p-button-(outlined|text)/.test(b.classes().join(' ')))
+    expect(filled.map((b) => b.text())).toEqual(['Add item'])
+    expect(wrapper.text()).not.toMatch(/Save as template|Delete checklist/)
+  })
+
+  it('⋯ Save as template opens the name form prefilled; Delete checklist confirms with the cascade', async () => {
+    const { wrapper, store } = mountCard({ id: 'c5', name: 'Bags', kind: 'packing', items: [{ id: 'i1', title: 'Hat', done: false }] })
+    store.promoteToTemplate = vi.fn().mockResolvedValue()
+    store.deleteChecklist = vi.fn().mockResolvedValue()
+    const pick = async (text) => {
+      await wrapper.find('[aria-label="More Bags actions"]').trigger('click')
+      await flushPromises()
+      ;[...document.body.querySelectorAll('.p-menu-item')].find((el) => el.textContent.includes(text)).querySelector('.p-menu-item-content').click()
+      await flushPromises()
+    }
+    await pick('Save as template…')
+    const input = wrapper.find('input[placeholder="Template name"]')
+    expect(input.element.value).toBe('Bags')
+    await wrapper.find('form.save-template').trigger('submit')
+    await flushPromises()
+    expect(store.promoteToTemplate).toHaveBeenCalledWith('c5', 'Bags')
+
+    const dialogWrapper = mountWithBase(ConfirmDialog, { attachTo: document.body })
+    await pick('Delete checklist…')
+    expect(document.body.textContent).toContain('Its 1 item will be deleted with it.')
+    ;[...document.body.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Delete').click()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(store.deleteChecklist).toHaveBeenCalledWith('c5')
+    dialogWrapper.unmount()
+    wrapper.unmount()
+    document.body.innerHTML = ''
+  })
+
+  // §4 phone reach: the whole row label is the tick target, not the 20px box.
+  it('item checkbox sits inside its label so the full row toggles it', () => {
+    const { wrapper } = mountCard({ id: 'c6', name: 'Bags', kind: 'packing', items: [{ id: 'i1', title: 'Hat', done: false }] })
+    const label = wrapper.find('label.item-tick')
+    expect(label.exists()).toBe(true)
+    expect(label.find('input#cl-item-i1').exists()).toBe(true)
+    expect(label.text()).toContain('Hat')
   })
 })
