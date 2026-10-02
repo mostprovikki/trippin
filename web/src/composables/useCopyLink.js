@@ -42,8 +42,8 @@ export function useCopyLink() {
   async function resolve(tripId, personId, name, { hasActiveLink = false, replace = false } = {}) {
     try {
       if (!replace) {
-        try { return location.origin + (await api.get(`/api/trips/${tripId}/participants/${personId}/link`)).url }
-        catch (e) { if (e.code !== 'NO_RECOVERABLE_LINK') throw e }
+        const { url } = await api.get(`/api/trips/${tripId}/participants/${personId}/link`)
+        if (url) return location.origin + url
       }
       if (hasActiveLink && !(await ask(name))) return null
       return await mint(tripId, personId)

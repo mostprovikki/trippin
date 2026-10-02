@@ -51,31 +51,14 @@ const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, pe
 const page = await ctx.newPage()
 const errors = []
 page.on('pageerror', (e) => errors.push(`pageerror ${e.message}`))
-// Expected faults are tagged, not silenced (ui-verify): while `fault` is armed,
-// console errors and >=400 responses go to it instead of `errors`; closeFault()
-// accepts them only if every response is the one the window expects.
-let fault = null
 page.on('console', (m) => {
   if (m.type() !== 'error' || /favicon|sourcemap|\[vite\]|websocket/i.test(m.text())) return
-  if (fault) fault.console.push(m.text())
-  else errors.push(m.text())
+  errors.push(m.text())
 })
-function armFault(label, expectUrl) { fault = { label, expectUrl, console: [], responses: [] } }
-function closeFault() {
-  const f = fault
-  fault = null
-  const okResponses = f.responses.length === 1 && f.responses.every((r) => r.status === 404 && r.method === 'GET' && f.expectUrl.test(r.url))
-  if (okResponses && f.console.length <= f.responses.length) {
-    for (const c of f.console) console.log(`  [EXPECTED-FAULT ${f.label}] ${c}`)
-  } else {
-    errors.push(...f.console, ...f.responses.map((r) => `${r.status} ${r.method} ${r.url} (inside ${f.label})`))
-  }
-}
 
 let fx
 const bad = []
-page.on('response', (r) => { if (r.status() >= 400 && fault) fault.responses.push({ status: r.status(), method: r.request().method(), url: r.url() }) })
-page.on('response', (r) => { if (r.status() >= 400 && !fault) bad.push(`${r.status()} ${r.request().method()} ${r.url().replace(BASE, '').replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, (m) => (fx?.ids && Object.entries(fx.ids).find(([, v]) => v === m)?.[0]) || (fx?.trip === m ? 'trip' : m))}`) })
+page.on('response', (r) => { if (r.status() >= 400) bad.push(`${r.status()} ${r.request().method()} ${r.url().replace(BASE, '').replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, (m) => (fx?.ids && Object.entries(fx.ids).find(([, v]) => v === m)?.[0]) || (fx?.trip === m ? 'trip' : m))}`) })
 
 await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' })
 await page.getByLabel(/email/i).fill(EMAIL)
@@ -275,15 +258,13 @@ const bad = []
   if (activeOf(b5, fx.ids.nolink).length !== 0) fail('5: Nolink starts without a link', `n=${activeOf(b5, fx.ids.nolink).length}`)
   await setClip('')
   // useCopyLink re-reads before minting (D1: never revoke a link the page
-  // doesn't know about); for a person with none the server answers 404
-  // NO_RECOVERABLE_LINK by design, which Chrome logs. Expected exactly once.
-  armFault('5: Nolink re-read', new RegExp(`/api/trips/${fx.trip}/participants/${fx.ids.nolink}/link$`))
-  if (!(await copyFor(NAMES.nolink))) { closeFault(); fail('5: Copy button for Nolink', 'not found') }
+  // doesn't know about); for a person with none the server answers 200
+  // {url:null}, so this step must add no console error or >=400 response.
+  if (!(await copyFor(NAMES.nolink))) { fail('5: Copy button for Nolink', 'not found') }
   else {
     const sawDialog = copyFor.dialog
     const u5 = await clipChanged('')
     await page.waitForTimeout(300)
-    closeFault()
     const a5 = await links()
     if (sawDialog) fail('5: Copy with no link shows no dialog', 'dialog visible')
     else ok('5: Copy with no link shows no dialog')

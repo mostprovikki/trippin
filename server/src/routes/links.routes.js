@@ -31,8 +31,9 @@ export default async function routes(app) {
   })
 
   // The active link's url again, for Copy ⟨Name⟩'s link (one click, no revoke).
-  // 404 NO_RECOVERABLE_LINK when there is none to re-read — revoked, expired, or
-  // minted before token_enc existed — and the client offers to mint a new one.
+  // 200 {url:null} when there is none to re-read — never minted, revoked, expired,
+  // or minted before token_enc existed — and the client mints a new one. Not a 404:
+  // a new participant has no link, and that's normal, not an error to log.
   app.get('/trips/:tripId/participants/:personId/link', { preHandler: app.requireOrganizer }, async (req, reply) => {
     const { tripId, personId } = req.params
     if (!(await app.ownedTrip(req, tripId))) return httpError(reply, 404, 'NOT_FOUND', 'No such trip')
@@ -43,12 +44,11 @@ export default async function routes(app) {
        ORDER BY created_at DESC LIMIT 1`,
       [tripId, personId]
     )
-    if (!row?.token_enc) return httpError(reply, 404, 'NO_RECOVERABLE_LINK', 'No link to copy — create a new one')
+    const noLink = { url: null, reason: 'NO_RECOVERABLE_LINK' }
+    if (!row?.token_enc) return noLink
     let token
-    try { token = decryptToken(row.token_enc, config.jwtSecret) } catch {
-      // JWT_SECRET rotated since this link was minted
-      return httpError(reply, 404, 'NO_RECOVERABLE_LINK', 'No link to copy — create a new one')
-    }
+    // JWT_SECRET rotated since this link was minted
+    try { token = decryptToken(row.token_enc, config.jwtSecret) } catch { return noLink }
     return { url: `/p/${token}` }
   })
 

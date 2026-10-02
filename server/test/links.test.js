@@ -98,25 +98,33 @@ describe('GET current participant link', () => {
     const me = await app.inject({ method: 'GET', url: '/api/participant/me', headers: { authorization: `Bearer ${minted.token}` } })
     expect(me.statusCode).toBe(200)
   })
-  it('revoked link → 404 NO_RECOVERABLE_LINK', async () => {
+  // No link to re-read is the normal case for a new participant, not an error:
+  // 200 {url:null} so the browser doesn't log every first Copy as a failed request.
+  const noLink = { url: null, reason: 'NO_RECOVERABLE_LINK' }
+  it('never had a link → 200 {url:null}', async () => {
+    const res = await (await setup()).get()
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(noLink)
+  })
+  it('revoked link → 200 {url:null}', async () => {
     const { db, get, mint } = await setup()
     await mint()
     await db.run("UPDATE participant_links SET revoked_at = '2026-01-01 00:00:00'")
     const res = await get()
-    expect(res.statusCode).toBe(404)
-    expect(res.json().error.code).toBe('NO_RECOVERABLE_LINK')
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual(noLink)
   })
-  it('expired link → 404 NO_RECOVERABLE_LINK', async () => {
+  it('expired link → 200 {url:null}', async () => {
     const { db, get, mint } = await setup()
     await mint()
     await db.run("UPDATE participant_links SET expires_at = '2020-01-01 00:00:00'")
-    expect((await get()).json().error.code).toBe('NO_RECOVERABLE_LINK')
+    expect((await get()).json()).toEqual(noLink)
   })
-  it('link minted before encryption (no token_enc) → 404 NO_RECOVERABLE_LINK', async () => {
+  it('link minted before encryption (no token_enc) → 200 {url:null}', async () => {
     const { db, get, mint } = await setup()
     await mint()
     await db.run('UPDATE participant_links SET token_enc = NULL')
-    expect((await get()).json().error.code).toBe('NO_RECOVERABLE_LINK')
+    expect((await get()).json()).toEqual(noLink)
   })
   it("another organizer's trip → 404 NOT_FOUND", async () => {
     const { app, db, cookie } = await setup()

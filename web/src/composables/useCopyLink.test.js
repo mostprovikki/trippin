@@ -31,7 +31,7 @@ describe('useCopyLink', () => {
     expect(success).toHaveBeenCalledWith("Meena's link copied")
   })
   it('no link at all: mints one and copies it, no confirm (nothing to revoke)', async () => {
-    get.mockRejectedValue(new ApiError(404, 'NO_RECOVERABLE_LINK', 'x'))
+    get.mockResolvedValue({ url: null, reason: 'NO_RECOVERABLE_LINK' })
     post.mockResolvedValue({ token: 'new', url: '/p/new' })
     await useCopyLink().copy('t1', 'p1', 'Meena', { hasActiveLink: false })
     expect(require_).not.toHaveBeenCalled()
@@ -39,7 +39,7 @@ describe('useCopyLink', () => {
     expect(writeText).toHaveBeenCalledWith(`${location.origin}/p/new`)
   })
   it('active link that cannot be re-read: asks before replacing, mints only on accept', async () => {
-    get.mockRejectedValue(new ApiError(404, 'NO_RECOVERABLE_LINK', 'x'))
+    get.mockResolvedValue({ url: null, reason: 'NO_RECOVERABLE_LINK' })
     post.mockResolvedValue({ token: 'new', url: '/p/new' })
     // copy() waits on the dialog, so it can't be awaited before accept
     const pending = useCopyLink().copy('t1', 'p1', 'Meena', { hasActiveLink: true })
