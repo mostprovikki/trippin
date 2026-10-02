@@ -102,7 +102,7 @@ async function addFromTemplate() {
       <form class="checklist-form-row new-checklist-form" @submit.prevent="createChecklist">
         <Select input-id="cv-new-kind" name="cv-new-kind" v-model="newKind" :options="KIND_OPTIONS" option-label="label" option-value="value" aria-label="Kind" />
         <InputText id="checklist-name" name="checklist-name" v-model="newName" placeholder="Checklist name" />
-        <Button type="submit" label="Create" />
+        <Button type="submit" label="Create" :disabled="!newName.trim()" />
       </form>
       <form class="checklist-form-row" @submit.prevent="addFromTemplate">
         <Select input-id="cv-selected-template" name="cv-selected-template" v-model="selectedTemplate" :options="store.templates" option-label="name" option-value="id" placeholder="Select a template…" aria-label="Template" />

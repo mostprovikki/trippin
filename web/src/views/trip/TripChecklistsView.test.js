@@ -75,4 +75,16 @@ describe('TripChecklistsView', () => {
     const { wrapper } = await mountView(TASKS)
     expect(editControls(wrapper)).toEqual({ newChecklist: true, more: true, del: true, add: true, assignee: true, tickEnabled: true })
   })
+
+  // ux-review L3: an empty-name Create did nothing, silently (trip-planner-h3i.12).
+  it('Create disabled with empty name', async () => {
+    const { wrapper } = await mountView()
+    await wrapper.find('[data-test="new-checklist"]').trigger('click')
+    const create = () => wrapper.find('form.new-checklist-form button[type="submit"]')
+    expect(create().attributes('disabled')).toBeDefined()
+    await wrapper.find('#checklist-name').setValue('   ')
+    expect(create().attributes('disabled')).toBeDefined()
+    await wrapper.find('#checklist-name').setValue('Bags')
+    expect(create().attributes('disabled')).toBeUndefined()
+  })
 })
