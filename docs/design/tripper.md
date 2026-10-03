@@ -138,6 +138,7 @@ Text links count too: their hit area is ≥ 44px, the text stays its size (owner
 | ⟨Name⟩'s link | a participant's personal `/p/:token` URL | token, magic link, invite |
 | Draft | AI- or paste-generated content not yet accepted | suggestion, AI result |
 | Missing | a required profile field or doc absent, or a doc expiring within 6 months of trip end | incomplete, pending |
+| Fixed / Flexible / Vague dates | date modes: exact start+end · start+end that may shift ± N days (default 2) · a few possible ranges | Confirmed / Slight flex / Broad (stored values unchanged) |
 
 **One number, one place:** at rest the Overview shows only: people missing (`N of M`), days
 to go (or `Day N of M` during the trip), open checklist items (also on the Checklists tab count),
@@ -227,3 +228,4 @@ Nothing AI-related shows at rest.
 | 2026-10-02 | §5: per-row Delete stays on the row, with a confirmation | owner (D12), ux-review-2026-10-02 | L2; every row delete already confirms |
 | 2026-10-02 | §5: packing items are not assigned; tasks are | owner (D13), ux-review-2026-10-02 | M1: Overview showed names on packing items the list can't assign |
 | 2026-10-02 | §4: text links get a ≥ 44px hit area on a phone | owner (D14) after the 390px screenshot | M4: links 17–33px tall |
+| 2026-10-03 | §6: date modes read Fixed / Flexible / Vague dates with a hint each; Flexible = start + end ± N days; new trips start on Vague; Details dot says what's undecided | owner (D15), ux-review L5 | radios were unexplained; Flexible's one-anchor model didn't match how trips are planned |
